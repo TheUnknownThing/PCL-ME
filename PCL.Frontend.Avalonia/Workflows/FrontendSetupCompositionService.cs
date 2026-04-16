@@ -115,7 +115,7 @@ internal static class FrontendSetupCompositionService
         var logDirectories = new[]
         {
             Path.Combine(paths.LauncherAppDataDirectory, "Log"),
-            Path.Combine(paths.ExecutableDirectory, "PCL", "Log"),
+            Path.Combine(paths.DataDirectory, "Log"),
             paths.FrontendArtifactDirectory
         };
 
@@ -187,7 +187,6 @@ internal static class FrontendSetupCompositionService
             DisableRetroWrapper: ReadValue(sharedConfig, "LaunchAdvanceDisableRW", false),
             RequireDedicatedGpu: ReadValue(sharedConfig, "LaunchAdvanceGraphicCard", true),
             UseJavaExecutable: ReadValue(sharedConfig, "LaunchAdvanceNoJavaw", false),
-            MicrosoftAuthIndex: ReadValue(sharedConfig, "LoginMsAuthType", 1),
             PreferredIpStackIndex: ReadValue(sharedConfig, "LaunchPreferredIpStack", 1));
     }
 
@@ -200,7 +199,6 @@ internal static class FrontendSetupCompositionService
             DownloadSpeedLimit: ReadValue(sharedConfig, "ToolDownloadSpeed", 42),
             DownloadTimeoutSeconds: ReadValue(sharedConfig, "ToolDownloadTimeout", 8),
             AutoSelectNewInstance: ReadValue(sharedConfig, "ToolDownloadAutoSelectVersion", true),
-            UpgradePartialAuthlib: ReadValue(sharedConfig, "ToolFixAuthlib", true),
             CommunityDownloadSourceIndex: ReadValue(sharedConfig, "ToolDownloadMod", 1),
             FileNameFormatIndex: ReadValue(sharedConfig, "ToolDownloadTranslateV2", 1),
             ModLocalNameStyleIndex: ReadValue(sharedConfig, "ToolModLocalNameStyle", 0),
@@ -216,20 +214,23 @@ internal static class FrontendSetupCompositionService
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig)
     {
+        var renderingConfiguration = FrontendStartupRenderingService.Resolve(
+            paths,
+            new FrontendPlatformAdapter().GetDesktopPlatformKind());
+
         return new FrontendSetupLauncherMiscState(
             SystemActivityIndex: ReadValue(localConfig, "SystemSystemActivity", 0),
             AnimationFpsLimit: ReadValue(sharedConfig, "UiAniFPS", 59),
             MaxRealTimeLogValue: ReadValue(sharedConfig, "SystemMaxLog", 13),
-            DisableHardwareAcceleration: ReadValue(sharedConfig, "SystemDisableHardwareAcceleration", false),
+            IsHardwareAccelerationToggleAvailable: renderingConfiguration.IsHardwareAccelerationToggleAvailable,
+            DisableHardwareAcceleration: renderingConfiguration.DisableHardwareAcceleration,
             EnableDoH: ReadValue(sharedConfig, "SystemNetEnableDoH", true),
             HttpProxyTypeIndex: ReadValue(sharedConfig, "SystemHttpProxyType", 1),
-            HttpProxyAddress: ReadProtectedValue(paths, "SystemHttpProxy"),
-            HttpProxyUsername: ReadValue(sharedConfig, "SystemHttpProxyCustomUsername", string.Empty),
-            HttpProxyPassword: ReadValue(sharedConfig, "SystemHttpProxyCustomPassword", string.Empty),
+            HttpProxyAddress: FrontendHttpProxyService.ReadConfiguredProxyAddress(paths),
+            HttpProxyUsername: FrontendHttpProxyService.ReadConfiguredProxyUsername(paths),
+            HttpProxyPassword: FrontendHttpProxyService.ReadConfiguredProxyPassword(paths),
             DebugAnimationSpeed: ReadValue(sharedConfig, "SystemDebugAnim", 9),
-            SkipCopyDuringDownload: ReadValue(sharedConfig, "SystemDebugSkipCopy", false),
-            DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false),
-            DebugDelayEnabled: ReadValue(sharedConfig, "SystemDebugDelay", false));
+            DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false));
     }
 
     private static FrontendSetupJavaState BuildJavaState(
@@ -394,11 +395,6 @@ internal static class FrontendSetupCompositionService
         };
     }
 
-    private static string ReadProtectedValue(FrontendRuntimePaths paths, string key)
-    {
-        return LauncherFrontendRuntimeStateService.TryReadProtectedString(paths.SharedConfigDirectory, paths.SharedConfigPath, key) ?? string.Empty;
-    }
-
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
     {
         if (!provider.Exists(key))
@@ -418,15 +414,7 @@ internal static class FrontendSetupCompositionService
 
     private static int MapFontToIndex(string value)
     {
-        return value.Trim() switch
-        {
-            "" => 0,
-            "MiSans" => 0,
-            "SourceHanSansCN-Regular" => 1,
-            "LXGW WenKai" => 2,
-            "JetBrains Mono" => 3,
-            _ => 0
-        };
+        return FrontendAppearanceService.MapFontConfigValueToIndex(value);
     }
 
     private static string ResolveJavaFolder(string javaPath)

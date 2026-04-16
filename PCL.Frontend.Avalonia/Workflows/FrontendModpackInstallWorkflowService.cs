@@ -586,17 +586,18 @@ internal static class FrontendModpackInstallWorkflowService
         FrontendModpackInstallRequest request,
         II18nService? i18n)
     {
-        var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion, i18n);
+        var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion, request.DownloadSourceIndex, i18n);
         var primaryChoice =
-            ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion, i18n) ??
-            ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion, i18n) ??
-            ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion, i18n) ??
-            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion, i18n);
-        var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion, i18n);
+            ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion, request.DownloadSourceIndex, i18n);
+        var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion, request.DownloadSourceIndex, i18n);
 
         return new FrontendInstallApplyRequest(
             request.LauncherDirectory,
             request.InstanceName,
+            request.DownloadSourceIndex,
             minecraftChoice,
             primaryChoice,
             LiteLoaderChoice: null,
@@ -611,23 +612,28 @@ internal static class FrontendModpackInstallWorkflowService
             PreserveExistingManagedModFiles: true);
     }
 
-    private static FrontendInstallChoice ResolveMinecraftChoice(string version, II18nService? i18n)
+    private static FrontendInstallChoice ResolveMinecraftChoice(string version, int downloadSourceIndex, II18nService? i18n = null)
     {
-        var choices = FrontendInstallWorkflowService.GetMinecraftCatalogChoices(version, i18n);
+        var choices = FrontendInstallWorkflowService.GetMinecraftCatalogChoices(version, downloadSourceIndex, i18n);
         var choice = choices.FirstOrDefault(candidate =>
             string.Equals(candidate.Version, version, StringComparison.OrdinalIgnoreCase)
             || string.Equals(candidate.Metadata?["rawVersion"]?.GetValue<string>(), version, StringComparison.OrdinalIgnoreCase));
         return choice ?? throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.minecraft_choice_missing", ("version", version)));
     }
 
-    private static FrontendInstallChoice? ResolveLoaderChoice(string optionTitle, string minecraftVersion, string? requestedVersion, II18nService? i18n)
+    private static FrontendInstallChoice? ResolveLoaderChoice(
+        string optionTitle,
+        string minecraftVersion,
+        string? requestedVersion,
+        int downloadSourceIndex,
+        II18nService? i18n = null)
     {
         if (string.IsNullOrWhiteSpace(requestedVersion))
         {
             return null;
         }
 
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, i18n);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, downloadSourceIndex, i18n);
         var choice = choices.FirstOrDefault(candidate =>
             string.Equals(candidate.Version, requestedVersion, StringComparison.OrdinalIgnoreCase)
             || string.Equals(candidate.Title, requestedVersion, StringComparison.OrdinalIgnoreCase));
@@ -1151,13 +1157,9 @@ internal static class FrontendModpackInstallWorkflowService
 
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
     {
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-        })
-        {
-            Timeout = timeout
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            timeout,
+            automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
     private static TimeSpan NormalizeDownloadTimeout(TimeSpan? requestTimeout)
@@ -1397,13 +1399,9 @@ internal sealed class FrontendManagedModpackInstallTask(
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
     {
         var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-        })
-        {
-            Timeout = safeTimeout
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            safeTimeout,
+            automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
     private void UpdateFromInstallStatus(FrontendModpackInstallStatus status)
@@ -1464,6 +1462,7 @@ internal sealed record FrontendModpackInstallRequest(
     string? SourceArchivePath,
     string ArchivePath,
     string LauncherDirectory,
+    int DownloadSourceIndex,
     string InstanceName,
     string TargetDirectory,
     string? ProjectId,

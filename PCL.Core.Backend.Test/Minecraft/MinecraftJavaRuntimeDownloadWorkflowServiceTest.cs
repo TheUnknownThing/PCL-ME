@@ -149,4 +149,43 @@ public sealed class MinecraftJavaRuntimeDownloadWorkflowServiceTest
         StringAssert.Contains(result.OfficialUrls[0], "piston-meta.mojang.com");
         StringAssert.Contains(result.MirrorUrls[0], "bmclapi2.bangbang93.com");
     }
+
+    [TestMethod]
+    public void BuildDownloadWorkflowPlanSkipsKnownCompatibilityFilesWhenIgnoredHashesProvided()
+    {
+        var ignoredHashes = MinecraftJavaRuntimeDownloadSessionService.GetDefaultIgnoredSha1Hashes();
+
+        var result = MinecraftJavaRuntimeDownloadWorkflowService.BuildDownloadWorkflowPlan(
+            new MinecraftJavaRuntimeDownloadWorkflowPlanRequest(
+                """
+                {
+                  "files": {
+                    "lib/security/cacerts": {
+                      "downloads": {
+                        "raw": {
+                          "url": "https://piston-data.mojang.com/v1/lib/security/cacerts",
+                          "size": 123,
+                          "sha1": "12976a6c2b227cbac58969c1455444596c894656"
+                        }
+                      }
+                    },
+                    "bin/java": {
+                      "downloads": {
+                        "raw": {
+                          "url": "https://piston-data.mojang.com/v1/bin/java",
+                          "size": 456,
+                          "sha1": "keep-me"
+                        }
+                      }
+                    }
+                  }
+                }
+                """,
+                "/tmp/pcl-java-runtime",
+                ignoredHashes,
+                MinecraftJavaRuntimeDownloadWorkflowService.GetDefaultFileUrlRewrites()));
+
+        Assert.AreEqual(1, result.Files.Count);
+        Assert.AreEqual("bin/java", result.Files[0].RelativePath);
+    }
 }

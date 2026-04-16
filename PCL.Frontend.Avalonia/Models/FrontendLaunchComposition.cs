@@ -1,3 +1,4 @@
+using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
 using PCL.Core.Utils;
 
@@ -17,8 +18,7 @@ internal sealed record FrontendLaunchComposition(
     MinecraftLaunchPrecheckResult PrecheckResult,
     MinecraftLaunchPrompt? SupportPrompt,
     MinecraftLaunchJavaWorkflowPlan JavaWorkflow,
-    MinecraftJavaRuntimeManifestRequestPlan? JavaRuntimeManifestPlan,
-    MinecraftJavaRuntimeDownloadTransferPlan? JavaRuntimeTransferPlan,
+    FrontendJavaRuntimeInstallPlan? JavaRuntimeInstallPlan,
     MinecraftLaunchResolutionPlan ResolutionPlan,
     MinecraftLaunchClasspathPlan ClasspathPlan,
     string NativesDirectory,
@@ -64,3 +64,31 @@ internal sealed record FrontendJavaRuntimeSummary(
     bool IsEnabled,
     bool? Is64Bit,
     MachineType? Architecture);
+
+internal sealed record FrontendJavaRuntimeInstallPlan(
+    FrontendJavaRuntimeInstallPlanKind Kind,
+    string SourceName,
+    string DisplayName,
+    string VersionName,
+    string RequestedComponent,
+    string PlatformKey,
+    string RuntimeDirectory,
+    MachineType RuntimeArchitecture,
+    bool IsJre,
+    JavaBrandType? Brand,
+    MinecraftJavaRuntimeManifestRequestPlan? MojangManifestPlan = null,
+    MinecraftJavaRuntimeDownloadTransferPlan? MojangTransferPlan = null,
+    FrontendJavaRuntimeArchiveDownloadPlan? ArchivePlan = null);
+
+internal enum FrontendJavaRuntimeInstallPlanKind
+{
+    MojangManifest = 0,
+    ArchivePackage = 1
+}
+
+internal sealed record FrontendJavaRuntimeArchiveDownloadPlan(
+    string PackageName,
+    MinecraftJavaRuntimeRequestUrlPlan RequestUrls,
+    long Size,
+    string? Sha256,
+    string? ImageType);

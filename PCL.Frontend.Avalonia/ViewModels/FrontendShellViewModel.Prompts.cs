@@ -3,7 +3,9 @@ using Avalonia.Threading;
 using PCL.Core.App.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
+using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils;
 using PCL.Core.Utils.OS;
 using System.Runtime.InteropServices;
 using PCL.Frontend.Avalonia.Desktop.Animation;
@@ -327,7 +329,7 @@ internal sealed partial class FrontendShellViewModel
                 _promptCatalog[AvaloniaPromptLaneKind.Launch].Count == 0)
             {
                 _pendingLaunchAfterPrompt = false;
-                _ = StartLaunchAsync();
+                _ = StartLaunchAsync(resumeAfterPrompt: true);
             }
         }
     }
@@ -528,7 +530,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        await StartLaunchAsync();
+        await StartLaunchAsync(resumeAfterPrompt: false);
     }
 
     private void AcceptPromptConsent()
@@ -644,93 +646,180 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DownloadJavaRuntimeFromPromptAsync()
     {
-        if (_launchComposition.JavaRuntimeManifestPlan is null || _launchComposition.JavaRuntimeTransferPlan is null)
+        if (_launchComposition.JavaRuntimeInstallPlan is null)
         {
             AddFailureActivity(T("shell.prompts.activities.java_runtime_prepare_failed.title"), T("shell.prompts.activities.java_runtime_prepare_failed.body_missing_plan"));
             return;
         }
 
+        var installPlan = _launchComposition.JavaRuntimeInstallPlan;
+        var trackedRuntimeDirectory = installPlan.RuntimeDirectory;
+        var shouldResumePendingLaunch = _pendingLaunchAfterPrompt;
+        var downloadState = MinecraftJavaRuntimeDownloadSessionState.Loading;
+
+        _isLaunchBlockedByPrompt = true;
         AddActivity(T("shell.prompts.activities.java_runtime_preparing.title"), T("shell.prompts.activities.java_runtime_preparing.body"));
 
         try
         {
-            var installResult = await Task.Run(() => _shellActionService.MaterializeJavaRuntime(
-                _launchComposition.JavaRuntimeManifestPlan,
-                _launchComposition.JavaRuntimeTransferPlan));
+            var installResult = await ExecuteManagedJavaRuntimeDownloadAsync(
+                $"自动下载 {installPlan.DisplayName} ({installPlan.SourceName})",
+                installPlan);
+            downloadState = MinecraftJavaRuntimeDownloadSessionState.Finished;
+
+            try
+            {
+                await FrontendJavaInventoryService.RefreshPortableJavaScanCacheAsync();
+            }
+            catch
+            {
+                // Persisted Java storage keeps the downloaded runtime selectable even if a background scan fails.
+            }
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                var executablePath = _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory);
                 var installedRuntime = FrontendJavaInventoryService.TryResolveRuntime(
-                    _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
-                    isEnabled: true,
-                    fallbackDisplayName: T("shell.prompts.java.runtime_name", ("version", installResult.VersionName)));
+                                         executablePath,
+                                         isEnabled: true,
+                                         fallbackDisplayName: installPlan.DisplayName)
+                                     ?? FrontendJavaInventoryService.CreateStoredRuntime(
+                                         executablePath,
+                                         installPlan.DisplayName,
+                                         installPlan.VersionName,
+                                         isEnabled: true,
+                                         is64Bit: Is64BitMachineType(installPlan.RuntimeArchitecture),
+                                         isJre: installPlan.IsJre,
+                                         brand: installPlan.Brand,
+                                         architecture: installPlan.RuntimeArchitecture);
+
+                RegisterMaterializedJavaRuntime(installedRuntime);
                 _launchComposition = _launchComposition with
                 {
                     SelectedJavaRuntime = new FrontendJavaRuntimeSummary(
-                        installedRuntime?.ExecutablePath ?? _shellActionService.GetJavaExecutablePath(installResult.RuntimeDirectory),
-                        installedRuntime?.DisplayName ?? T("shell.prompts.java.runtime_name", ("version", installResult.VersionName)),
-                        installedRuntime?.MajorVersion ?? _launchComposition.JavaWorkflow.RecommendedMajorVersion,
-                        IsEnabled: installedRuntime?.IsEnabled ?? true,
-                        Is64Bit: installedRuntime?.Is64Bit ?? Environment.Is64BitOperatingSystem,
-                        Architecture: installedRuntime?.Architecture),
+                        installedRuntime.ExecutablePath,
+                        installedRuntime.DisplayName,
+                        installedRuntime.MajorVersion ?? _launchComposition.JavaWorkflow.RecommendedMajorVersion,
+                        IsEnabled: installedRuntime.IsEnabled,
+                        Is64Bit: installedRuntime.Is64Bit ?? Environment.Is64BitOperatingSystem,
+                        Architecture: installedRuntime.Architecture),
                     JavaWarningMessage = null
                 };
                 RaiseLaunchCompositionProperties();
-                RegisterMaterializedJavaRuntime(installResult);
                 _isLaunchBlockedByPrompt = false;
-                _pendingLaunchAfterPrompt = false;
-                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), T("shell.prompts.activities.navigate.java_settings"));
                 AddActivity(
                     T("shell.prompts.activities.java_runtime_ready.title"),
                     T("shell.prompts.activities.java_runtime_ready.body", ("path", installResult.RuntimeDirectory), ("downloaded_count", installResult.DownloadedFileCount), ("reused_count", installResult.ReusedFileCount)));
+
+                if (shouldResumePendingLaunch)
+                {
+                    _pendingLaunchAfterPrompt = false;
+                    AddActivity(T("shell.prompts.activities.java_runtime_ready.title"), T("shell.prompts.activities.java_runtime_resume.body"));
+                    _ = StartLaunchAsync();
+                    return;
+                }
+
+                _pendingLaunchAfterPrompt = false;
+                NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), T("shell.prompts.activities.navigate.java_settings"));
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            downloadState = MinecraftJavaRuntimeDownloadSessionState.Aborted;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _isLaunchBlockedByPrompt = false;
+                _pendingLaunchAfterPrompt = false;
+                AddActivity("Java 下载已取消", "自动下载已取消，未注册新的 Java 运行时。");
             });
         }
         catch (Exception ex)
         {
+            downloadState = MinecraftJavaRuntimeDownloadSessionState.Failed;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                _isLaunchBlockedByPrompt = false;
+                _pendingLaunchAfterPrompt = false;
                 AddFailureActivity(T("shell.prompts.activities.java_runtime_prepare_failed.title"), ex.Message);
             });
         }
-    }
-
-    private void RegisterMaterializedJavaRuntime(FrontendJavaRuntimeInstallResult installResult)
-    {
-        var key = $"downloaded-{Path.GetFileName(installResult.RuntimeDirectory)}";
-        var tags = new List<string> { T("shell.prompts.java.tags.bit64"), T("shell.prompts.java.tags.prompt_download") };
-        if (installResult.ReusedFileCount > 0)
+        finally
         {
-            tags.Add(T("shell.prompts.java.tags.reused_count", ("count", installResult.ReusedFileCount)));
-        }
+            var transitionPlan = MinecraftJavaRuntimeDownloadSessionService.ResolveStateTransition(
+                downloadState,
+                trackedRuntimeDirectory);
 
-        var newEntry = CreateJavaRuntimeEntry(
-            key,
-            T("shell.prompts.java.runtime_name", ("version", installResult.VersionName)),
-            installResult.RuntimeDirectory,
-            tags,
-            isEnabled: true);
-
-        var existingIndex = -1;
-        for (var index = 0; index < JavaRuntimeEntries.Count; index++)
-        {
-            if (JavaRuntimeEntries[index].Key == key)
+            if (!string.IsNullOrWhiteSpace(transitionPlan.CleanupLogMessage))
             {
-                existingIndex = index;
-                break;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    AddActivity("Java 下载清理", transitionPlan.CleanupLogMessage);
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(transitionPlan.CleanupDirectoryPath) &&
+                Directory.Exists(transitionPlan.CleanupDirectoryPath))
+            {
+                try
+                {
+                    Directory.Delete(transitionPlan.CleanupDirectoryPath, recursive: true);
+                }
+                catch
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        AddActivity("Java 下载清理", $"未能自动清理目录：{transitionPlan.CleanupDirectoryPath}");
+                    });
+                }
             }
         }
+    }
+
+    private void RegisterMaterializedJavaRuntime(FrontendStoredJavaRuntime installedRuntime)
+    {
+        var items = LoadStoredJavaItems();
+        var existingIndex = items.FindIndex(item =>
+            string.Equals(item.Path, installedRuntime.ExecutablePath, StringComparison.OrdinalIgnoreCase));
+        var updatedItem = new JavaStorageItem
+        {
+            Path = installedRuntime.ExecutablePath,
+            IsEnable = true,
+            Source = JavaSource.AutoInstalled,
+            Installation = new JavaStorageInstallationInfo
+            {
+                JavaExePath = installedRuntime.ExecutablePath,
+                DisplayName = installedRuntime.DisplayName,
+                Version = installedRuntime.ParsedVersion?.ToString() ?? installedRuntime.DisplayName,
+                MajorVersion = installedRuntime.MajorVersion,
+                Is64Bit = installedRuntime.Is64Bit,
+                IsJre = installedRuntime.IsJre,
+                Brand = installedRuntime.Brand,
+                Architecture = installedRuntime.Architecture
+            }
+        };
 
         if (existingIndex >= 0)
         {
-            JavaRuntimeEntries[existingIndex] = newEntry;
+            items[existingIndex] = updatedItem;
         }
         else
         {
-            JavaRuntimeEntries.Add(newEntry);
+            items.Add(updatedItem);
         }
 
-        RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
-        SelectJavaRuntime(key);
+        SaveStoredJavaItems(items);
+        SelectJavaRuntime(installedRuntime.ExecutablePath);
+        ReloadSetupComposition(initializeAllSurfaces: false);
+    }
+
+    private static bool? Is64BitMachineType(MachineType? machineType)
+    {
+        return machineType switch
+        {
+            MachineType.AMD64 or MachineType.ARM64 or MachineType.IA64 => true,
+            MachineType.I386 or MachineType.ARM or MachineType.ARMNT => false,
+            _ => null
+        };
     }
 
     private void OpenExternalTarget(string? target, string successMessage)
@@ -766,7 +855,7 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private async Task StartLaunchAsync()
+    private async Task StartLaunchAsync(bool resumeAfterPrompt = false)
     {
         try
         {
@@ -786,11 +875,44 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             RefreshGameLogSurface();
 
+            SetLaunchDialogRunningState(
+                "正在启动游戏",
+                "同步实例状态",
+                0.01d,
+                showDownload: false,
+                isError: false);
+
+            await AwaitLatestSelectedInstanceRefreshAsync();
+            launchCancellation.Token.ThrowIfCancellationRequested();
+
             await EnsureSelectedLaunchProfileReadyForLaunchAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
 
             await RefreshLaunchCompositionAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
+            AppendLaunchDebugCompositionSnapshot();
+
+            if (!_launchComposition.PrecheckResult.IsSuccess)
+            {
+                var failureMessage = GetLaunchPrecheckFailureMessage();
+                AddFailureActivity(T("shell.prompts.activities.precheck_failed.title"), failureMessage);
+                SetLaunchDialogStoppedState(T("shell.prompts.activities.precheck_failed.title"), failureMessage, isError: true);
+                return;
+            }
+
+            EnsureLaunchPromptLane();
+            if (_promptCatalog[AvaloniaPromptLaneKind.Launch].Count > 0)
+            {
+                _pendingLaunchAfterPrompt = true;
+                RebuildPromptLanes();
+                HideLaunchDialog();
+                SetPromptOverlayOpen(true);
+                SelectPromptLane(AvaloniaPromptLaneKind.Launch, updateActivity: false);
+                AddActivity("启动前提示待处理", $"{LaunchVersionSubtitle} 还有 {_promptCatalog[AvaloniaPromptLaneKind.Launch].Count} 个提示需要确认。");
+                _isLaunchInProgress = false;
+                RaiseLaunchSessionProperties();
+                return;
+            }
 
             if (_launchComposition.SelectedJavaRuntime is null)
             {
@@ -827,12 +949,26 @@ internal sealed partial class FrontendShellViewModel
                 showDownload: false,
                 isError: false);
 
-            var startResult = _shellActionService.StartLaunchSession(
+            var startResult = await Task.Run(() => _shellActionService.StartLaunchSession(
                 _launchComposition,
-                _instanceComposition.Selection.InstanceDirectory);
+                _instanceComposition.Selection.InstanceDirectory,
+                stage => Dispatcher.UIThread.Post(() => SetLaunchDialogRunningState(
+                    "正在启动游戏",
+                    stage,
+                    ResolveLaunchDialogStartupProgress(stage),
+                    showDownload: false,
+                    isError: false)),
+                launchCancellation.Token));
             _activeLaunchProcess = startResult.Process;
+            _latestLaunchScriptPath = startResult.LaunchScriptPath;
+            _latestLaunchSessionSummaryPath = startResult.SessionSummaryPath;
+            _latestLaunchRawOutputLogPath = startResult.RawOutputLogPath;
+            RefreshDebugModeSurface();
             AppendLaunchLogLine(_launchComposition.SessionStartPlan.ProcessShellPlan.StartedLogMessage);
-            AddActivity(T("launch.status.activities.game_process_started"), T("launch.status.messages.game_process_started", ("instance_name", LaunchVersionSubtitle), ("pid", startResult.Process.Id)));
+            AppendLaunchDebugLine("启动脚本", startResult.LaunchScriptPath);
+            AppendLaunchDebugLine("会话摘要", startResult.SessionSummaryPath);
+            AppendLaunchDebugLine("原始输出", startResult.RawOutputLogPath);
+                        AddActivity(T("launch.status.activities.game_process_started"), T("launch.status.messages.game_process_started", ("instance_name", LaunchVersionSubtitle), ("pid", startResult.Process.Id)));
             if (_currentRoute.Page != LauncherFrontendPageKey.Launch)
             {
                 NavigateTo(
@@ -861,6 +997,7 @@ internal sealed partial class FrontendShellViewModel
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine(T("launch.status.logs.failed", ("message", ex.Message)));
+            AppendLaunchDebugException("启动失败明细", ex);
             AddFailureActivity(T("launch.status.activities.failed"), ex.Message);
             SetLaunchDialogStoppedState(T("launch.status.stopped.failed_title"), ex.Message, isError: true);
         }
@@ -870,6 +1007,19 @@ internal sealed partial class FrontendShellViewModel
             _launchSessionCancellation = null;
             RaiseLaunchSessionProperties();
         }
+    }
+
+    private static double ResolveLaunchDialogStartupProgress(string stage)
+    {
+        return stage switch
+        {
+            "检查运行依赖" => 0.9d,
+            "同步游戏本地库" => 0.93d,
+            "写入启动前配置" => 0.95d,
+            "执行启动前命令" => 0.97d,
+            "启动游戏进程" => 0.99d,
+            _ => 0.9d
+        };
     }
 
     private async Task RefreshLaunchCompositionAsync(CancellationToken cancellationToken)
@@ -946,6 +1096,7 @@ internal sealed partial class FrontendShellViewModel
                 cancellationToken);
             var completionMessage = T("launch.status.messages.instance_verification_completed", ("downloaded_count", repairResult.DownloadedFiles.Count), ("reused_count", repairResult.ReusedFiles.Count));
             AppendLaunchLogLine(completionMessage);
+            AppendRepairDebugSummary(repairResult);
 
             if (repairResult.DownloadedFiles.Count > 0)
             {
@@ -1013,6 +1164,7 @@ internal sealed partial class FrontendShellViewModel
         catch (Exception ex)
         {
             AppendLaunchLogLine(T("shell.prompts.launch_logs.monitor_exception", ("message", ex.Message)));
+            AppendLaunchDebugException("会话监控异常明细", ex);
             AddActivity(T("shell.prompts.activities.monitor_exception.title"), ex.Message);
         }
         finally
@@ -1076,6 +1228,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RaiseLaunchCompositionProperties();
+        RefreshDebugModeSurface();
         ScheduleLaunchAvatarRefresh();
     }
 

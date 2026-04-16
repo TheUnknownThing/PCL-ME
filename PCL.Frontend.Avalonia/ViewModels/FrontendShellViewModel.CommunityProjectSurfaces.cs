@@ -151,14 +151,44 @@ internal sealed partial class FrontendShellViewModel
         _ => "?"
     };
 
-    public string CommunityProjectCurrentInstanceName => _instanceComposition.Selection.HasSelection
-        ? _instanceComposition.Selection.InstanceName
-        : T("resource_detail.current_instance.none_selected");
+    public string CommunityProjectCurrentInstanceName
+    {
+        get
+        {
+            if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
+            {
+                return _versionSavesComposition.Selection.HasSelection
+                    ? _versionSavesComposition.Selection.SaveName
+                    : T("resource_detail.current_instance.none_selected");
+            }
+
+            return _instanceComposition.Selection.HasSelection
+                ? _instanceComposition.Selection.InstanceName
+                : T("resource_detail.current_instance.none_selected");
+        }
+    }
 
     public string CommunityProjectCurrentInstanceSummary
     {
         get
         {
+            if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
+            {
+                if (!_versionSavesComposition.Selection.HasSelection)
+                {
+                    return "下载页当前还没有选中存档，无法直接安装数据包。请先在存档页打开目标存档详情。";
+                }
+
+                var datapackParts = new List<string> { _versionSavesComposition.Selection.InstanceName };
+                if (!string.IsNullOrWhiteSpace(_instanceComposition.Selection.VanillaVersion))
+                {
+                    datapackParts.Add($"Minecraft {_instanceComposition.Selection.VanillaVersion}");
+                }
+
+                datapackParts.Add(_versionSavesComposition.Selection.SavePath);
+                return string.Join(" • ", datapackParts);
+            }
+
             if (!_instanceComposition.Selection.HasSelection)
             {
                 return T("resource_detail.current_instance.summary_none_selected");
@@ -195,6 +225,12 @@ internal sealed partial class FrontendShellViewModel
             }
 
             var parts = new List<string>();
+            if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
+                && _versionSavesComposition.Selection.HasSelection)
+            {
+                parts.Add($"目标存档：{_versionSavesComposition.Selection.SaveName}");
+            }
+
             if (!string.IsNullOrWhiteSpace(release.Info))
             {
                 parts.Add(release.Info);
@@ -1281,10 +1317,30 @@ internal sealed partial class FrontendShellViewModel
 
     private bool CanInstallCommunityProjectToCurrentInstance()
     {
+        if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
+            && ResolveCurrentDatapackInstallSelection() is null)
+        {
+            return false;
+        }
+
         return _instanceComposition.Selection.HasSelection
                && _selectedCommunityProjectOriginSubpage != LauncherFrontendSubpageKey.DownloadPack
                && _selectedCommunityProjectOriginSubpage is not null
                && TryGetCommunityProjectInstallRelease(out _);
+    }
+
+    private FrontendVersionSaveSelectionState? ResolveCurrentDatapackInstallSelection()
+    {
+        return _versionSavesComposition.Selection.HasSelection
+            ? _versionSavesComposition.Selection
+            : null;
+    }
+
+    private string GetCommunityProjectInstallActivityTitle()
+    {
+        return _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
+            ? "安装到当前存档"
+            : "安装到当前实例";
     }
 
     private FrontendCommunityProjectReleaseEntry? GetSuggestedCommunityProjectInstallRelease()
@@ -1294,6 +1350,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task InstallCommunityProjectToCurrentInstanceAsync()
     {
+        var activityTitle = GetCommunityProjectInstallActivityTitle();
         if (!_instanceComposition.Selection.HasSelection)
         {
             AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.current_instance.none_selected"));
@@ -1322,6 +1379,15 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
+            var datapackSaveSelection = route == LauncherFrontendSubpageKey.DownloadDataPack
+                ? ResolveCurrentDatapackInstallSelection()
+                : null;
+            if (route == LauncherFrontendSubpageKey.DownloadDataPack && datapackSaveSelection is null)
+            {
+                AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.install.errors.no_datapack_save_selected"));
+                return;
+            }
+
             AvaloniaHintBus.Show(T("resource_detail.install.hints.analyzing"), AvaloniaHintTheme.Info);
             AddActivity(T("resource_detail.activities.install_current_instance"), T("resource_detail.install.messages.analyzing", ("instance_name", CommunityProjectCurrentInstanceName), ("project_title", CommunityProjectTitle)));
             var result = await Task.Run(() => BuildCommunityProjectInstallBuildResult(
@@ -1335,7 +1401,8 @@ internal sealed partial class FrontendShellViewModel
                 ],
                 _instanceComposition,
                 ResolveSelectedInstanceLoaderLabel(),
-                includeDependencies));
+                includeDependencies,
+                datapackSaveSelection));
 
             if (includeDependencies)
             {
@@ -1452,7 +1519,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var targetDirectory = Path.Combine(versionsDirectory, instanceName);
-        var archivePath = Path.Combine(targetDirectory, T("resource_detail.modpack.archive_name", ("extension", extension)));
+        var downloadedPath = Path.Combine(targetDirectory, T("resource_detail.modpack.archive_name", ("extension", extension)));
         var description = string.IsNullOrWhiteSpace(_communityProjectState.Summary)
             ? _communityProjectState.Description
             : _communityProjectState.Summary;
@@ -1463,8 +1530,9 @@ internal sealed partial class FrontendShellViewModel
             new FrontendModpackInstallRequest(
                 entry.Target!,
                 null,
-                archivePath,
+                downloadedPath,
                 launcherDirectory,
+                _selectedDownloadSourceIndex,
                 instanceName,
                 targetDirectory,
                 _selectedCommunityProjectId,
@@ -1944,39 +2012,61 @@ internal sealed partial class FrontendShellViewModel
 
     private string ResolveCommunityProjectReleaseFileName(FrontendCommunityProjectReleaseEntry entry, string? projectTitle = null)
     {
-        return FrontendGameManagementService.ResolveCommunityResourceFileName(
+        var fileName = FrontendGameManagementService.ResolveCommunityResourceFileName(
             projectTitle,
             entry.SuggestedFileName,
             entry.Title,
             SelectedFileNameFormatIndex);
+        return NormalizeCommunityProjectInstallArtifactFileName(_selectedCommunityProjectOriginSubpage, fileName);
+    }
+
+    private static string NormalizeCommunityProjectInstallArtifactFileName(
+        LauncherFrontendSubpageKey? route,
+        string fileName)
+    {
+        if (route != LauncherFrontendSubpageKey.DownloadDataPack)
+        {
+            return fileName;
+        }
+
+        var extension = Path.GetExtension(fileName);
+        if (string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            return fileName;
+        }
+
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return $"{fileName}.zip";
+        }
+
+        if (string.Equals(extension, ".jar", StringComparison.OrdinalIgnoreCase))
+        {
+            return Path.ChangeExtension(fileName, ".zip");
+        }
+
+        return fileName;
     }
 
     private static string FinalizeCommunityProjectInstalledArtifact(
         LauncherFrontendSubpageKey? originSubpage,
-        string downloadedPath)
+        string downloadedPath,
+        string? replacedPath = null)
     {
-        if (originSubpage != LauncherFrontendSubpageKey.DownloadWorld)
+        if (originSubpage == LauncherFrontendSubpageKey.DownloadWorld)
         {
-            return downloadedPath;
+            return FrontendWorldArchiveInstallService.ExtractInstalledWorldArchive(downloadedPath);
         }
 
-        return ExtractInstalledWorldArchive(downloadedPath);
-    }
-
-    private static string ExtractInstalledWorldArchive(string archivePath)
-    {
-        var extension = Path.GetExtension(archivePath);
-        if (!(string.Equals(extension, ".zip", StringComparison.OrdinalIgnoreCase)
-              || string.Equals(extension, ".mcworld", StringComparison.OrdinalIgnoreCase))
-            || !File.Exists(archivePath))
+        if (originSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
         {
-            return archivePath;
+            return FrontendDatapackArchiveInstallService.ExtractInstalledDatapackArchive(downloadedPath, replacedPath);
         }
 
-        var savesDirectory = Path.GetDirectoryName(archivePath)
+        var savesDirectory = Path.GetDirectoryName(downloadedPath)
             ?? throw new InvalidOperationException("The save installation directory is unavailable.");
         string? wrapperDirectory;
-        using (var archive = ZipFile.OpenRead(archivePath))
+        using (var archive = ZipFile.OpenRead(downloadedPath))
         {
             var effectiveEntries = archive.Entries
                 .Where(entry => !string.IsNullOrWhiteSpace(entry.FullName))
@@ -1991,14 +2081,14 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var finalName = string.IsNullOrWhiteSpace(wrapperDirectory)
-            ? Path.GetFileNameWithoutExtension(archivePath)
+            ? Path.GetFileNameWithoutExtension(downloadedPath)
             : wrapperDirectory;
         var finalDirectory = GetUniqueChildPath(savesDirectory, finalName);
         Directory.CreateDirectory(finalDirectory);
         string? finalPath = null;
         try
         {
-            using var archive = ZipFile.OpenRead(archivePath);
+            using var archive = ZipFile.OpenRead(downloadedPath);
             foreach (var entry in archive.Entries
                          .Where(entry => !string.IsNullOrWhiteSpace(entry.FullName))
                          .Where(entry => !IsIgnoredWorldArchiveEntry(entry.FullName)))
@@ -2030,7 +2120,7 @@ internal sealed partial class FrontendShellViewModel
 
             finalPath = finalDirectory;
             archive.Dispose();
-            File.Delete(archivePath);
+            File.Delete(downloadedPath);
             return finalPath;
         }
         catch (Exception ex)
@@ -2534,7 +2624,9 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.DownloadResourcePack => ResolveCurrentInstanceResourceDirectory("resourcepacks"),
             LauncherFrontendSubpageKey.DownloadShader => ResolveCurrentInstanceResourceDirectory("shaderpacks"),
             LauncherFrontendSubpageKey.DownloadWorld => Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves"),
-            LauncherFrontendSubpageKey.DownloadDataPack => _instanceComposition.Selection.IndieDirectory,
+            LauncherFrontendSubpageKey.DownloadDataPack => _versionSavesComposition.Selection.HasSelection
+                ? _versionSavesComposition.Selection.DatapackDirectory
+                : Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves"),
             LauncherFrontendSubpageKey.DownloadPack => _instanceComposition.Selection.InstanceDirectory,
             _ => ResolveCurrentInstanceResourceDirectory("mods")
         };
@@ -2597,7 +2689,8 @@ internal sealed class FrontendManagedFileDownloadTask(
     FrontendDownloadTransferOptions? downloadOptions = null,
     Action<string>? onStarted = null,
     Action<string>? onCompleted = null,
-    Action<string>? onFailed = null) : ITask, ITaskProgressive, ITaskProgressStatus, ITaskCancelable
+    Action<string>? onFailed = null,
+    string? userAgent = null) : ITask, ITaskProgressive, ITaskProgressStatus, ITaskCancelable
 {
     private readonly CancellationTokenSource _cancellation = new();
     private TaskProgressStatusSnapshot _progressStatus = new("0%", "0 B/s", 1, null);
@@ -2631,7 +2724,7 @@ internal sealed class FrontendManagedFileDownloadTask(
 
         try
         {
-            using var client = CreateDownloadHttpClient(requestTimeout);
+            using var client = CreateDownloadHttpClient(requestTimeout, userAgent);
             using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
             response.EnsureSuccessStatusCode();
 
@@ -2697,16 +2790,13 @@ internal sealed class FrontendManagedFileDownloadTask(
         }
     }
 
-    private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
+    private static HttpClient CreateDownloadHttpClient(TimeSpan timeout, string? userAgent)
     {
         var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
-        })
-        {
-            Timeout = safeTimeout
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            safeTimeout,
+            userAgent,
+            automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
     private void CleanupPartialDownload()

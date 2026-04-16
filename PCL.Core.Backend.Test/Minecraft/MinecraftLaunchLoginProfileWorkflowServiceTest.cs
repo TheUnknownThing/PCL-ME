@@ -137,6 +137,54 @@ public sealed class MinecraftLaunchLoginProfileWorkflowServiceTest
     }
 
     [TestMethod]
+    public void ResolveMicrosoftProfileMutationReturnsSelectedUpdateWhenUsernameChangesButUuidMatches()
+    {
+        var result = MinecraftLaunchLoginProfileWorkflowService.ResolveMicrosoftProfileMutation(
+            new MinecraftLaunchMicrosoftProfileMutationRequest(
+                IsCreatingProfile: false,
+                SelectedProfileIndex: 1,
+                Profiles:
+                [
+                    new MinecraftLaunchStoredProfile(
+                        MinecraftLaunchStoredProfileKind.Offline,
+                        "uuid-offline",
+                        "Offline",
+                        Server: null,
+                        ServerName: null,
+                        AccessToken: null,
+                        RefreshToken: null,
+                        LoginName: null,
+                        Password: null,
+                        ClientToken: null,
+                        SkinHeadId: null,
+                        RawJson: null),
+                    new MinecraftLaunchStoredProfile(
+                        MinecraftLaunchStoredProfileKind.Microsoft,
+                        "uuid-3",
+                        "OldName",
+                        Server: null,
+                        ServerName: null,
+                        AccessToken: "old",
+                        RefreshToken: "old-refresh",
+                        LoginName: null,
+                        Password: null,
+                        ClientToken: null,
+                        SkinHeadId: "uuid-3",
+                        RawJson: "old-raw")
+                ],
+                ResultUuid: "uuid-3",
+                ResultUsername: "NewName",
+                AccessToken: "new-token",
+                RefreshToken: "new-refresh",
+                ProfileJson: "new-raw"));
+
+        Assert.AreEqual(MinecraftLaunchProfileMutationKind.UpdateSelected, result.Kind);
+        Assert.AreEqual(1, result.TargetProfileIndex);
+        Assert.AreEqual("NewName", result.UpdateProfile!.Username);
+        Assert.AreEqual("new-token", result.UpdateProfile.AccessToken);
+    }
+
+    [TestMethod]
     public void ResolveAuthProfileMutationReturnsUpdatePlanForExistingProfile()
     {
         var result = MinecraftLaunchLoginProfileWorkflowService.ResolveAuthProfileMutation(

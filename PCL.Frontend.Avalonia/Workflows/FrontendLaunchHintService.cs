@@ -25,7 +25,7 @@ internal static class FrontendLaunchHintService
 
         var candidates = new[]
             {
-                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "hints.txt"),
+                Path.Combine(runtimePaths.DataDirectory, "hints.txt"),
                 FrontendLauncherAssetLocator.GetPath("Resources", "hints.txt")
             }
             .Where(File.Exists)

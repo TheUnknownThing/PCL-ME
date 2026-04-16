@@ -93,7 +93,7 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,25" Spacing="15">
       <controls:PclCard
-          Header="{Binding DownloadResourceCurrentInstanceTitleText}"
+          Header="{Binding DownloadResourceCurrentInstanceCardTitle}"
           IsVisible="{Binding ShowDownloadResourceCurrentInstanceCard}"
           ContentMargin="20,18,20,18">
         <controls:PclCard.CardContent>
@@ -114,7 +114,7 @@
                 Width="96"
                 Height="35"
                 Command="{Binding SelectDownloadResourceInstanceCommand}"
-                Text="{Binding DownloadResourceSwitchInstanceText}" />
+                Text="{Binding DownloadResourceCurrentInstanceActionText}" />
           </Grid>
         </controls:PclCard.CardContent>
       </controls:PclCard>

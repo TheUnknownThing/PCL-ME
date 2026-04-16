@@ -88,12 +88,6 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _autoSelectNewInstance, value);
     }
 
-    public bool UpgradePartialAuthlib
-    {
-        get => _upgradePartialAuthlib;
-        set => SetProperty(ref _upgradePartialAuthlib, value);
-    }
-
     public int SelectedCommunityDownloadSourceIndex
     {
         get => _selectedCommunityDownloadSourceIndex;
@@ -229,6 +223,8 @@ internal sealed partial class FrontendShellViewModel
 
     public string MaxRealTimeLogLabel => FrontendRealTimeLogSettingsService.FormatLineLimitLabel(MaxRealTimeLogValue);
 
+    public bool IsHardwareAccelerationToggleVisible => _setupComposition.LauncherMisc.IsHardwareAccelerationToggleAvailable;
+
     public bool DisableHardwareAcceleration
     {
         get => _disableHardwareAcceleration;
@@ -257,6 +253,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsNoHttpProxySelected));
                 RaisePropertyChanged(nameof(IsSystemHttpProxySelected));
                 RaisePropertyChanged(nameof(IsCustomHttpProxySelected));
+                ClearProxyTestFeedback();
             }
         }
     }
@@ -302,20 +299,58 @@ internal sealed partial class FrontendShellViewModel
     public string HttpProxyAddress
     {
         get => _httpProxyAddress;
-        set => SetProperty(ref _httpProxyAddress, value);
+        set
+        {
+            if (SetProperty(ref _httpProxyAddress, value))
+            {
+                ClearProxyTestFeedback();
+            }
+        }
     }
 
     public string HttpProxyUsername
     {
         get => _httpProxyUsername;
-        set => SetProperty(ref _httpProxyUsername, value);
+        set
+        {
+            if (SetProperty(ref _httpProxyUsername, value))
+            {
+                ClearProxyTestFeedback();
+            }
+        }
     }
 
     public string HttpProxyPassword
     {
         get => _httpProxyPassword;
-        set => SetProperty(ref _httpProxyPassword, value);
+        set
+        {
+            if (SetProperty(ref _httpProxyPassword, value))
+            {
+                ClearProxyTestFeedback();
+            }
+        }
     }
+
+    public string ProxyTestFeedbackText
+    {
+        get => _proxyTestFeedbackText;
+        private set
+        {
+            if (SetProperty(ref _proxyTestFeedbackText, value))
+            {
+                RaisePropertyChanged(nameof(IsProxyTestFeedbackVisible));
+                RaisePropertyChanged(nameof(IsProxyTestSuccessVisible));
+                RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
+            }
+        }
+    }
+
+    public bool IsProxyTestFeedbackVisible => !string.IsNullOrWhiteSpace(ProxyTestFeedbackText);
+
+    public bool IsProxyTestSuccessVisible => IsProxyTestFeedbackVisible && _isProxyTestFeedbackSuccess;
+
+    public bool IsProxyTestFailureVisible => IsProxyTestFeedbackVisible && !_isProxyTestFeedbackSuccess;
 
     public double DebugAnimationSpeed
     {
@@ -332,12 +367,6 @@ internal sealed partial class FrontendShellViewModel
     public string DebugAnimationSpeedLabel => Math.Round(DebugAnimationSpeed) > 29
         ? _i18n.T("setup.launcher_misc.labels.debug_animation_speed_off")
         : $"{Math.Round(DebugAnimationSpeed / 10 + 0.1, 1):0.0}x";
-
-    public bool SkipCopyDuringDownload
-    {
-        get => _skipCopyDuringDownload;
-        set => SetProperty(ref _skipCopyDuringDownload, value);
-    }
 
     public bool DebugModeEnabled
     {

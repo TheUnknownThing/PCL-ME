@@ -4,6 +4,7 @@
   </ResourceDictionary.MergedDictionaries>
 
   <FontFamily x:Key="LaunchFontFamily">avares://PCL.Frontend.Avalonia/Assets/Fonts#HarmonyOS Sans, Microsoft YaHei UI, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, Source Han Sans CN, WenQuanYi Micro Hei, sans-serif</FontFamily>
+  <FontFamily x:Key="LaunchMotdFontFamily">avares://PCL.Frontend.Avalonia/Assets/Fonts#HarmonyOS Sans, Microsoft YaHei UI, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, Source Han Sans CN, WenQuanYi Micro Hei, sans-serif</FontFamily>
 
   <SolidColorBrush x:Key="ComboBoxBackground" Color="{DynamicResource BaseColor_Neutral620Alpha33}" />
   <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{DynamicResource BaseColor_Blue680}" />

@@ -148,12 +148,10 @@ internal static class FrontendSetupFeedbackService
 
     private static HttpClient CreateHttpClient()
     {
-        var client = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(15)
-        };
+        var client = FrontendHttpProxyService.CreateLauncherHttpClient(
+            TimeSpan.FromSeconds(15),
+            "PCL-Frontend-Avalonia/1.0");
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("PCL-Frontend-Avalonia/1.0");
         client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
         return client;
     }

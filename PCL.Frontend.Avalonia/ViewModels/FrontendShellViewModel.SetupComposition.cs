@@ -35,7 +35,6 @@ internal sealed partial class FrontendShellViewModel
         "LaunchAdvanceDisableRW",
         "LaunchAdvanceGraphicCard",
         "LaunchAdvanceNoJavaw",
-        "LoginMsAuthType",
         "LaunchPreferredIpStack",
         "LaunchArgumentJavaSelect"
     ];
@@ -48,7 +47,6 @@ internal sealed partial class FrontendShellViewModel
         "ToolDownloadSource",
         "ToolDownloadVersion",
         "ToolDownloadAutoSelectVersion",
-        "ToolFixAuthlib",
         "ToolDownloadTranslateV2",
         "ToolDownloadMod",
         "ToolModLocalNameStyle",
@@ -69,20 +67,18 @@ internal sealed partial class FrontendShellViewModel
         "SystemLocale",
         "UiAniFPS",
         "SystemMaxLog",
-        "SystemDisableHardwareAcceleration",
+        FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
         "SystemNetEnableDoH",
         "SystemHttpProxyType",
-        "SystemHttpProxyCustomUsername",
-        "SystemHttpProxyCustomPassword",
         "SystemDebugAnim",
-        "SystemDebugSkipCopy",
-        "SystemDebugMode",
-        "SystemDebugDelay"
+        "SystemDebugMode"
     ];
 
     private static readonly string[] LauncherMiscProtectedResetKeys =
     [
-        "SystemHttpProxy"
+        "SystemHttpProxy",
+        "SystemHttpProxyCustomUsername",
+        "SystemHttpProxyCustomPassword"
     ];
 
     private static readonly string[] UpdateLocalResetKeys =
@@ -196,6 +192,8 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadSetupComposition(bool initializeAllSurfaces = true, bool applyAppearance = true)
     {
+        FrontendHttpProxyService.ApplyStoredProxySettings(_shellActionService.RuntimePaths);
+        FrontendHttpProxyService.ApplyStoredDnsSettings(_shellActionService.RuntimePaths);
         ApplySetupComposition(
             FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths, _i18n),
             initializeAllSurfaces,
@@ -283,7 +281,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(DownloadTimeoutSeconds));
                 RaisePropertyChanged(nameof(DownloadTimeoutLabel));
                 RaisePropertyChanged(nameof(AutoSelectNewInstance));
-                RaisePropertyChanged(nameof(UpgradePartialAuthlib));
                 RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
                 RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
                 RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
@@ -299,6 +296,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(AnimationFpsLabel));
                 RaisePropertyChanged(nameof(MaxRealTimeLogValue));
                 RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
+                RaisePropertyChanged(nameof(IsHardwareAccelerationToggleVisible));
                 RaisePropertyChanged(nameof(DisableHardwareAcceleration));
                 RaisePropertyChanged(nameof(EnableDoH));
                 RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
@@ -309,11 +307,13 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(HttpProxyAddress));
                 RaisePropertyChanged(nameof(HttpProxyUsername));
                 RaisePropertyChanged(nameof(HttpProxyPassword));
+                RaisePropertyChanged(nameof(ProxyTestFeedbackText));
+                RaisePropertyChanged(nameof(IsProxyTestFeedbackVisible));
+                RaisePropertyChanged(nameof(IsProxyTestSuccessVisible));
+                RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
                 RaisePropertyChanged(nameof(DebugAnimationSpeed));
                 RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
-                RaisePropertyChanged(nameof(SkipCopyDuringDownload));
                 RaisePropertyChanged(nameof(DebugModeEnabled));
-                RaisePropertyChanged(nameof(DebugDelayEnabled));
                 break;
             case LauncherFrontendSubpageKey.SetupJava:
                 RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
@@ -416,7 +416,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(DisableRetroWrapper));
                 RaisePropertyChanged(nameof(RequireDedicatedGpu));
                 RaisePropertyChanged(nameof(UseJavaExecutable));
-                RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
                 RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
                 break;
         }
@@ -510,9 +509,6 @@ internal sealed partial class FrontendShellViewModel
             case nameof(UseJavaExecutable):
                 _shellActionService.PersistSharedValue("LaunchAdvanceNoJavaw", UseJavaExecutable);
                 break;
-            case nameof(SelectedLaunchMicrosoftAuthIndex):
-                _shellActionService.PersistSharedValue("LoginMsAuthType", SelectedLaunchMicrosoftAuthIndex);
-                break;
             case nameof(SelectedLaunchPreferredIpStackIndex):
                 _shellActionService.PersistSharedValue("LaunchPreferredIpStack", SelectedLaunchPreferredIpStackIndex);
                 break;
@@ -533,9 +529,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(AutoSelectNewInstance):
                 _shellActionService.PersistSharedValue("ToolDownloadAutoSelectVersion", AutoSelectNewInstance);
-                break;
-            case nameof(UpgradePartialAuthlib):
-                _shellActionService.PersistSharedValue("ToolFixAuthlib", UpgradePartialAuthlib);
                 break;
             case nameof(SelectedCommunityDownloadSourceIndex):
                 _shellActionService.PersistSharedValue("ToolDownloadMod", SelectedCommunityDownloadSourceIndex);
@@ -573,26 +566,29 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.PersistSharedValue("SystemMaxLog", (int)Math.Round(MaxRealTimeLogValue));
                 break;
             case nameof(DisableHardwareAcceleration):
-                _shellActionService.PersistSharedValue("SystemDisableHardwareAcceleration", DisableHardwareAcceleration);
+                _shellActionService.PersistSharedValue(
+                    FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
+                    DisableHardwareAcceleration);
+                AddActivity(
+                    DisableHardwareAcceleration ? "禁用硬件加速" : "启用硬件加速",
+                    "这个设置会在下次启动启动器时生效。");
                 break;
             case nameof(EnableDoH):
                 _shellActionService.PersistSharedValue("SystemNetEnableDoH", EnableDoH);
+                FrontendHttpProxyService.ApplyDnsOverHttpsSetting(EnableDoH);
                 break;
             case nameof(SelectedHttpProxyTypeIndex):
                 _shellActionService.PersistSharedValue("SystemHttpProxyType", SelectedHttpProxyTypeIndex);
+                FrontendHttpProxyService.ApplyStoredProxySettings(_shellActionService.RuntimePaths);
                 break;
             case nameof(DebugAnimationSpeed):
                 _shellActionService.PersistSharedValue("SystemDebugAnim", (int)Math.Round(DebugAnimationSpeed));
                 FrontendShellActionService.ApplyAnimationPreferences((int)Math.Round(AnimationFpsLimit), DebugAnimationSpeed);
                 break;
-            case nameof(SkipCopyDuringDownload):
-                _shellActionService.PersistSharedValue("SystemDebugSkipCopy", SkipCopyDuringDownload);
-                break;
             case nameof(DebugModeEnabled):
                 _shellActionService.PersistSharedValue("SystemDebugMode", DebugModeEnabled);
-                break;
-            case nameof(DebugDelayEnabled):
-                _shellActionService.PersistSharedValue("SystemDebugDelay", DebugDelayEnabled);
+                RefreshDebugModeSurface();
+                AddActivity("调试模式", DebugModeEnabled ? "已启用更详细的日志与诊断信息。" : "已关闭额外的诊断输出。");
                 break;
             case nameof(SelectedDarkModeIndex):
                 _shellActionService.PersistSharedValue("UiDarkMode", SelectedDarkModeIndex);
@@ -626,9 +622,11 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedGlobalFontIndex):
                 _shellActionService.PersistLocalValue("UiFont", MapFontIndexToConfigValue(SelectedGlobalFontIndex));
+                ApplyCurrentAppearanceSettings();
                 break;
             case nameof(SelectedMotdFontIndex):
                 _shellActionService.PersistLocalValue("UiMotdFont", MapFontIndexToConfigValue(SelectedMotdFontIndex));
+                ApplyCurrentAppearanceSettings();
                 break;
             case nameof(BackgroundColorful):
                 _shellActionService.PersistLocalValue("UiBackgroundColorful", BackgroundColorful);
@@ -706,13 +704,7 @@ internal sealed partial class FrontendShellViewModel
 
     private static string MapFontIndexToConfigValue(int index)
     {
-        return index switch
-        {
-            1 => "SourceHanSansCN-Regular",
-            2 => "LXGW WenKai",
-            3 => "JetBrains Mono",
-            _ => string.Empty
-        };
+        return FrontendAppearanceService.MapFontIndexToConfigValue(index, FrontendAppearanceService.GetFontOptions());
     }
 
     private static int MapHomepageDisplayIndexToStoredValue(int displayIndex)
@@ -733,7 +725,9 @@ internal sealed partial class FrontendShellViewModel
             SelectedLightColorIndex,
             SelectedDarkColorIndex,
             CustomLightThemeColorHex,
-            CustomDarkThemeColorHex);
+            CustomDarkThemeColorHex,
+            MapFontIndexToConfigValue(SelectedGlobalFontIndex),
+            MapFontIndexToConfigValue(SelectedMotdFontIndex));
     }
 
     private void PersistCustomThemeColor(string key, string rawValue)
@@ -788,7 +782,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(DisableRetroWrapper));
         RaisePropertyChanged(nameof(RequireDedicatedGpu));
         RaisePropertyChanged(nameof(UseJavaExecutable));
-        RaisePropertyChanged(nameof(SelectedLaunchMicrosoftAuthIndex));
         RaisePropertyChanged(nameof(SelectedLaunchPreferredIpStackIndex));
         RaisePropertyChanged(nameof(SelectedDownloadSourceIndex));
         RaisePropertyChanged(nameof(SelectedVersionSourceIndex));
@@ -799,7 +792,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(DownloadTimeoutSeconds));
         RaisePropertyChanged(nameof(DownloadTimeoutLabel));
         RaisePropertyChanged(nameof(AutoSelectNewInstance));
-        RaisePropertyChanged(nameof(UpgradePartialAuthlib));
         RaisePropertyChanged(nameof(SelectedCommunityDownloadSourceIndex));
         RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
         RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
@@ -825,11 +817,13 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HttpProxyAddress));
         RaisePropertyChanged(nameof(HttpProxyUsername));
         RaisePropertyChanged(nameof(HttpProxyPassword));
+        RaisePropertyChanged(nameof(ProxyTestFeedbackText));
+        RaisePropertyChanged(nameof(IsProxyTestFeedbackVisible));
+        RaisePropertyChanged(nameof(IsProxyTestSuccessVisible));
+        RaisePropertyChanged(nameof(IsProxyTestFailureVisible));
         RaisePropertyChanged(nameof(DebugAnimationSpeed));
         RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
-        RaisePropertyChanged(nameof(SkipCopyDuringDownload));
         RaisePropertyChanged(nameof(DebugModeEnabled));
-        RaisePropertyChanged(nameof(DebugDelayEnabled));
         RaisePropertyChanged(nameof(HasJavaRuntimeEntries));
         RaisePropertyChanged(nameof(IsAutoJavaSelected));
         RaisePropertyChanged(nameof(SelectedDarkModeIndex));

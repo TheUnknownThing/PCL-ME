@@ -126,7 +126,6 @@
                 Text="{Binding SetupText.GameManage.InstallBehaviorLabel}" />
             <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,*">
               <CheckBox
-                  Grid.Column="0"
                   Foreground="{DynamicResource ColorBrush1}"
                   Content="{Binding SetupText.GameManage.AutoSelectNewInstanceLabel}"
                   IsChecked="{Binding AutoSelectNewInstance}" />

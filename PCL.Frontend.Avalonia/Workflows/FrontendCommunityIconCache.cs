@@ -100,14 +100,10 @@ internal static class FrontendCommunityIconCache
 
     private static HttpClient CreateHttpClient()
     {
-        return new HttpClient(new SocketsHttpHandler
-        {
-            AutomaticDecompression = System.Net.DecompressionMethods.GZip
-                                     | System.Net.DecompressionMethods.Deflate
-                                     | System.Net.DecompressionMethods.Brotli
-        })
-        {
-            Timeout = TimeSpan.FromSeconds(20)
-        };
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            TimeSpan.FromSeconds(20),
+            automaticDecompression: System.Net.DecompressionMethods.GZip
+                                    | System.Net.DecompressionMethods.Deflate
+                                    | System.Net.DecompressionMethods.Brotli);
     }
 }

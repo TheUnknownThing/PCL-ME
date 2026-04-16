@@ -13,19 +13,25 @@ namespace PCL.Frontend.Avalonia.Desktop;
 internal sealed class App : Application
 {
     private readonly AvaloniaCommandOptions _options;
-    private FrontendRuntimePaths? _runtimePaths;
+    private readonly FrontendRuntimePaths _runtimePaths;
+    private readonly FrontendPlatformAdapter _platformAdapter;
     private I18nService? _i18nService;
 
-    public App(AvaloniaCommandOptions options)
+    public App(
+        AvaloniaCommandOptions options,
+        FrontendRuntimePaths runtimePaths,
+        FrontendPlatformAdapter platformAdapter)
     {
         _options = options;
+        _runtimePaths = runtimePaths;
+        _platformAdapter = platformAdapter;
     }
 
     public override void Initialize()
     {
-        var platformAdapter = new FrontendPlatformAdapter();
-        _runtimePaths = FrontendRuntimePaths.Resolve(platformAdapter);
         FrontendLoggingBootstrap.Initialize(_runtimePaths);
+        FrontendHttpProxyService.ApplyStoredProxySettings(_runtimePaths);
+        FrontendHttpProxyService.ApplyStoredDnsSettings(_runtimePaths);
         FrontendShellActionService.ApplyStoredAnimationPreferences(_runtimePaths);
         AvaloniaXamlLoader.Load(this);
         FrontendAppearanceService.ApplyStoredAppearance(this, _runtimePaths);
@@ -36,13 +42,11 @@ internal sealed class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var platformAdapter = new FrontendPlatformAdapter();
-            var runtimePaths = _runtimePaths ?? FrontendRuntimePaths.Resolve(platformAdapter);
-            var startupVisual = FrontendStartupVisualCompositionService.Compose(runtimePaths);
+            var startupVisual = FrontendStartupVisualCompositionService.Compose(_runtimePaths);
             var splashSession = FrontendStartupSplashPresentationService.Show(startupVisual);
             desktop.Exit += OnDesktopExit;
             Dispatcher.UIThread.Post(
-                () => InitializeDesktop(desktop, runtimePaths, platformAdapter, splashSession),
+                () => InitializeDesktop(desktop, _runtimePaths, _platformAdapter, splashSession),
                 DispatcherPriority.Background);
         }
 

@@ -570,10 +570,10 @@ internal sealed partial class FrontendShellViewModel
                 runtimePaths.LauncherAppDataDirectory,
                 platformAdapter).Any(File.Exists)
             || FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
-                Path.Combine(runtimePaths.ExecutableDirectory, "PCL"),
+                runtimePaths.DataDirectory,
                 platformAdapter).Any(File.Exists)
             || Directory.Exists(Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log"))
-            || Directory.Exists(Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log"));
+            || Directory.Exists(Path.Combine(runtimePaths.DataDirectory, "Log"));
     }
 
     private void RefreshDynamicUtilityEntries()

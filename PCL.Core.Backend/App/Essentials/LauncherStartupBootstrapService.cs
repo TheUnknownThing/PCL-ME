@@ -13,6 +13,7 @@ public static class LauncherStartupBootstrapService
         "SystemDebugAnim",
         "SystemHttpProxy",
         "SystemHttpProxyCustomUsername",
+        "SystemHttpProxyCustomPassword",
         "SystemHttpProxyType",
         "ToolDownloadThread",
         "ToolDownloadSpeed",

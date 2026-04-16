@@ -453,20 +453,20 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.PlatformAdapter)
             .Concat(
                 FrontendLauncherPathService.EnumerateLatestLaunchScriptPaths(
-                    Path.Combine(runtimePaths.ExecutableDirectory, "PCL"),
+                    runtimePaths.DataDirectory,
                     _shellActionService.PlatformAdapter))
             .Concat(
             [
                 Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "RawOutput.log"),
                 Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "latest.log"),
                 preferredLauncherLogPath ?? Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log", "PCL.log"),
-                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "RawOutput.log"),
-                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "latest.log"),
-                Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log", "PCL.log")
+                Path.Combine(runtimePaths.DataDirectory, "Log", "RawOutput.log"),
+                Path.Combine(runtimePaths.DataDirectory, "Log", "latest.log"),
+                Path.Combine(runtimePaths.DataDirectory, "Log", "PCL.log")
             ]);
         var recentFiles = candidateFiles
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.LauncherAppDataDirectory, "Log")))
-            .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.ExecutableDirectory, "PCL", "Log")))
+            .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.DataDirectory, "Log")))
             .Concat(EnumerateLogDirectoryFiles(Path.Combine(runtimePaths.FrontendArtifactDirectory, "crash-logs")))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Where(File.Exists)
@@ -638,6 +638,7 @@ internal sealed partial class FrontendShellViewModel
                 SourceArchivePath: sourcePath,
                 ArchivePath: archivePath,
                 LauncherDirectory: launcherDirectory,
+                DownloadSourceIndex: SelectedDownloadSourceIndex,
                 InstanceName: instanceName,
                 TargetDirectory: targetDirectory,
                 ProjectId: null,

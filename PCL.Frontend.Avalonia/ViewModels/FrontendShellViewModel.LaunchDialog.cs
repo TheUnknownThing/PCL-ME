@@ -146,7 +146,7 @@ internal sealed partial class FrontendShellViewModel
     {
         Dispatcher.UIThread.Post(() =>
         {
-            var stage = ResolveLaunchRepairStage(snapshot);
+            var stage = FrontendLaunchRepairStageService.ResolveStage(snapshot);
             _launchDialogStage = stage;
             _launchDialogProgress = Math.Clamp(0.08d + snapshot.Progress * 0.72d, 0d, 0.82d);
             _launchDialogProgressText = $"{_launchDialogProgress * 100:0.00} %";

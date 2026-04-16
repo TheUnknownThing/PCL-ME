@@ -117,13 +117,14 @@ internal sealed partial class FrontendShellViewModel
         _disableRetroWrapper = _setupComposition.Launch.DisableRetroWrapper;
         _requireDedicatedGpu = _setupComposition.Launch.RequireDedicatedGpu;
         _useJavaExecutable = _setupComposition.Launch.UseJavaExecutable;
-        _selectedLaunchMicrosoftAuthIndex = _setupComposition.Launch.MicrosoftAuthIndex;
         _selectedLaunchPreferredIpStackIndex = _setupComposition.Launch.PreferredIpStackIndex;
     }
 
     private void InitializeToolsTestSurface()
     {
         var testState = _toolsComposition.Test;
+        AchievementPreviewImage = null;
+        HeadPreviewImage = null;
         _toolDownloadUrl = testState.DownloadUrl;
         _toolDownloadUserAgent = testState.DownloadUserAgent;
         _toolDownloadFolder = testState.DownloadFolder;
@@ -136,6 +137,12 @@ internal sealed partial class FrontendShellViewModel
         _showAchievementPreview = testState.ShowAchievementPreview;
         _selectedHeadSizeIndex = testState.SelectedHeadSizeIndex;
         _selectedHeadSkinPath = testState.SelectedHeadSkinPath;
+        if (_showAchievementPreview)
+        {
+            _showAchievementPreview = false;
+        }
+
+        RefreshHeadPreviewFromSelection(addActivity: false);
 
         ReplaceItems(ToolboxActions, testState.ToolboxActions.Select(CreateToolboxAction));
         InitializeMinecraftServerQuerySurface();
@@ -463,7 +470,6 @@ internal sealed partial class FrontendShellViewModel
         _downloadSpeedLimit = _setupComposition.GameManage.DownloadSpeedLimit;
         _downloadTimeoutSeconds = _setupComposition.GameManage.DownloadTimeoutSeconds;
         _autoSelectNewInstance = _setupComposition.GameManage.AutoSelectNewInstance;
-        _upgradePartialAuthlib = _setupComposition.GameManage.UpgradePartialAuthlib;
         _selectedCommunityDownloadSourceIndex = _setupComposition.GameManage.CommunityDownloadSourceIndex;
         _selectedFileNameFormatIndex = _setupComposition.GameManage.FileNameFormatIndex;
         _selectedModLocalNameStyleIndex = _setupComposition.GameManage.ModLocalNameStyleIndex;
@@ -486,11 +492,12 @@ internal sealed partial class FrontendShellViewModel
         _httpProxyAddress = _setupComposition.LauncherMisc.HttpProxyAddress;
         _httpProxyUsername = _setupComposition.LauncherMisc.HttpProxyUsername;
         _httpProxyPassword = _setupComposition.LauncherMisc.HttpProxyPassword;
+        _proxyTestFeedbackText = string.Empty;
+        _isProxyTestFeedbackSuccess = false;
         _debugAnimationSpeed = _setupComposition.LauncherMisc.DebugAnimationSpeed;
-        _skipCopyDuringDownload = _setupComposition.LauncherMisc.SkipCopyDuringDownload;
         _debugModeEnabled = _setupComposition.LauncherMisc.DebugModeEnabled;
-        _debugDelayEnabled = _setupComposition.LauncherMisc.DebugDelayEnabled;
         ApplyLaunchLogRetentionPreference();
+        RefreshDebugModeSurface();
         RefreshLaunchAnnouncements();
     }
 

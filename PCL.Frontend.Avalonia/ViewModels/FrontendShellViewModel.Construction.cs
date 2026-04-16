@@ -81,6 +81,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _exportSettingsCommand;
     private readonly ActionCommand _importSettingsCommand;
     private readonly ActionCommand _applyProxySettingsCommand;
+    private readonly ActionCommand _testProxyConnectionCommand;
     private readonly ActionCommand _addJavaRuntimeCommand;
     private readonly ActionCommand _selectAutoJavaCommand;
     private readonly ActionCommand _resetUiSettingsCommand;
@@ -157,6 +158,9 @@ internal sealed partial class FrontendShellViewModel
     private string _launchLogVisibleText = string.Empty;
     private int _launchLogVisibleStartIndex;
     private bool _isLaunchLogViewportPinned = true;
+    private string? _latestLaunchScriptPath;
+    private string? _latestLaunchSessionSummaryPath;
+    private string? _latestLaunchRawOutputLogPath;
     private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
     private string _launchPromptContextKey = string.Empty;
     private string _helpSearchQuery = string.Empty;
@@ -238,7 +242,6 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableRetroWrapper;
     private bool _requireDedicatedGpu = true;
     private bool _useJavaExecutable;
-    private int _selectedLaunchMicrosoftAuthIndex;
     private int _selectedLaunchPreferredIpStackIndex;
     private int _selectedDownloadSourceIndex;
     private int _selectedVersionSourceIndex;
@@ -246,7 +249,6 @@ internal sealed partial class FrontendShellViewModel
     private double _downloadSpeedLimit = 42;
     private double _downloadTimeoutSeconds = 8;
     private bool _autoSelectNewInstance = true;
-    private bool _upgradePartialAuthlib = true;
     private int _selectedCommunityDownloadSourceIndex = 1;
     private int _selectedFileNameFormatIndex = 1;
     private int _selectedModLocalNameStyleIndex;
@@ -268,9 +270,9 @@ internal sealed partial class FrontendShellViewModel
     private string _httpProxyUsername = string.Empty;
     private string _httpProxyPassword = string.Empty;
     private double _debugAnimationSpeed = 30;
-    private bool _skipCopyDuringDownload;
     private bool _debugModeEnabled;
     private bool _debugDelayEnabled;
+    private int _selectedLaunchMicrosoftAuthIndex;
     private int _selectedDarkModeIndex = 2;
     private int _selectedLightColorIndex;
     private int _selectedDarkColorIndex;
@@ -281,7 +283,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _lockWindowSize;
     private bool _showLaunchingHint = true;
     private int _selectedGlobalFontIndex;
-    private int _selectedMotdFontIndex = 1;
+    private int _selectedMotdFontIndex;
     private bool _backgroundColorful = true;
     private double _backgroundOpacity = 1000;
     private double _backgroundBlur;
@@ -304,6 +306,9 @@ internal sealed partial class FrontendShellViewModel
     private bool _suppressSetupPersistence;
     private bool _suppressInstancePersistence;
     private bool _suppressToolsPersistence;
+    private bool _isTestingProxyConnection;
+    private string _proxyTestFeedbackText = string.Empty;
+    private bool _isProxyTestFeedbackSuccess;
     private Task _selectedInstanceRefreshTask = Task.CompletedTask;
     private bool _hasOptimisticLaunchInstanceName;
     private string _optimisticLaunchInstanceName = string.Empty;
@@ -394,6 +399,7 @@ internal sealed partial class FrontendShellViewModel
         _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
         _importSettingsCommand = new ActionCommand(() => _ = ImportSettingsAsync());
         _applyProxySettingsCommand = new ActionCommand(ApplyProxySettings);
+        _testProxyConnectionCommand = new ActionCommand(() => _ = TestProxyConnectionAsync(), () => !_isTestingProxyConnection);
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
@@ -415,7 +421,7 @@ internal sealed partial class FrontendShellViewModel
         _startCustomDownloadCommand = new ActionCommand(() => _ = StartCustomDownloadAsync());
         _openCustomDownloadFolderCommand = new ActionCommand(OpenCustomDownloadFolder);
         _saveOfficialSkinCommand = new ActionCommand(SaveOfficialSkin);
-        _previewAchievementCommand = new ActionCommand(PreviewAchievement);
+        _previewAchievementCommand = new ActionCommand(() => _ = PreviewAchievementAsync());
         _saveAchievementCommand = new ActionCommand(() => _ = SaveAchievementAsync());
         _queryMinecraftServerCommand = new ActionCommand(() => _ = QueryMinecraftServerAsync());
         _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());

@@ -5,10 +5,14 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using System.Text.Json.Nodes;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.Tasks;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Runtime;
@@ -257,10 +261,13 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(AchievementFirstLine));
         RaisePropertyChanged(nameof(AchievementSecondLine));
         RaisePropertyChanged(nameof(ShowAchievementPreview));
+        RaisePropertyChanged(nameof(AchievementPreviewImage));
         RaisePropertyChanged(nameof(SelectedHeadSizeIndex));
         RaisePropertyChanged(nameof(SelectedHeadSkinPath));
         RaisePropertyChanged(nameof(HasSelectedHeadSkin));
         RaisePropertyChanged(nameof(HeadPreviewSize));
+        RaisePropertyChanged(nameof(HeadPreviewImage));
+        RaisePropertyChanged(nameof(HasHeadPreviewImage));
         ResetMinecraftServerQuerySurface();
         AddActivity(
             LT("shell.tools.test.refresh.title"),
@@ -677,14 +684,14 @@ internal sealed partial class FrontendShellViewModel
         AddActivity(LT("shell.tools.test.custom_download.pick_folder_activity"), ToolDownloadFolder);
     }
 
-    private async Task StartCustomDownloadAsync()
+    private Task StartCustomDownloadAsync()
     {
         if (!Uri.TryCreate(ToolDownloadUrl, UriKind.Absolute, out var uri))
         {
             AddFailureActivity(
                 LT("shell.tools.test.custom_download.start_failure"),
                 LT("shell.tools.test.custom_download.invalid_address"));
-            return;
+            return Task.CompletedTask;
         }
 
         if (string.IsNullOrWhiteSpace(ToolDownloadFolder))
@@ -692,7 +699,7 @@ internal sealed partial class FrontendShellViewModel
             AddFailureActivity(
                 LT("shell.tools.test.custom_download.start_failure"),
                 LT("shell.tools.test.custom_download.missing_folder"));
-            return;
+            return Task.CompletedTask;
         }
 
         var fileName = string.IsNullOrWhiteSpace(ToolDownloadName)
@@ -706,21 +713,28 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            using var client = CreateToolHttpClient();
-            var speedLimiter = _shellActionService.GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
-                ? new FrontendDownloadSpeedLimiter(speedLimit)
-                : null;
-            await FrontendDownloadTransferService.DownloadToPathAsync(
-                client,
+            var userAgent = string.IsNullOrWhiteSpace(ToolDownloadUserAgent)
+                ? null
+                : ToolDownloadUserAgent.Trim();
+            TaskCenter.Register(new FrontendManagedFileDownloadTask(
+                $"自定义下载：{fileName}",
                 uri.ToString(),
                 targetPath,
-                speedLimiter: speedLimiter);
+                ResolveDownloadRequestTimeout(),
+                _shellActionService.GetDownloadTransferOptions(),
+                onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
+                onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
+                onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error),
+                userAgent: userAgent));
+
             AddActivity(LT("shell.tools.test.custom_download.start_activity"), $"{uri} -> {targetPath}");
         }
         catch (Exception ex)
         {
             AddFailureActivity(LT("shell.tools.test.custom_download.start_failure"), ex.Message);
         }
+
+        return Task.CompletedTask;
     }
 
     private void SaveOfficialSkin()
@@ -880,8 +894,8 @@ internal sealed partial class FrontendShellViewModel
     private void ApplyProxySettings()
     {
         _shellActionService.PersistProtectedSharedValue("SystemHttpProxy", HttpProxyAddress);
-        _shellActionService.PersistSharedValue("SystemHttpProxyCustomUsername", HttpProxyUsername);
-        _shellActionService.PersistSharedValue("SystemHttpProxyCustomPassword", HttpProxyPassword);
+        _shellActionService.PersistProtectedSharedValue("SystemHttpProxyCustomUsername", HttpProxyUsername);
+        _shellActionService.PersistProtectedSharedValue("SystemHttpProxyCustomPassword", HttpProxyPassword);
         ReloadSetupComposition();
         AddActivity(
             LT("setup.launcher_misc.activities.apply_proxy"),
@@ -890,9 +904,86 @@ internal sealed partial class FrontendShellViewModel
                 : HttpProxyAddress);
     }
 
+    private async Task TestProxyConnectionAsync()
+    {
+        if (_isTestingProxyConnection)
+        {
+            return;
+        }
+
+        var configuration = FrontendHttpProxyService.BuildConfiguration(
+            SelectedHttpProxyTypeIndex,
+            HttpProxyAddress,
+            HttpProxyUsername,
+            HttpProxyPassword);
+        if (SelectedHttpProxyTypeIndex == 2 && configuration.CustomProxyAddress is null)
+        {
+            SetProxyTestFeedback("自定义代理地址无效。", isSuccess: false);
+            AddFailureActivity("测试代理连接失败", "自定义代理地址无效。");
+            return;
+        }
+
+        _isTestingProxyConnection = true;
+        _testProxyConnectionCommand.NotifyCanExecuteChanged();
+        AddActivity("测试代理连接", $"正在通过{DescribeProxyMode(configuration)}访问 {FrontendHttpProxyService.ProxyConnectivityProbeUri.Host}。");
+
+        try
+        {
+            using var client = FrontendHttpProxyService.CreateHttpClient(
+                configuration,
+                TimeSpan.FromSeconds(12),
+                "PCL-ME-Avalonia/1.0");
+            using var request = new HttpRequestMessage(HttpMethod.Get, FrontendHttpProxyService.ProxyConnectivityProbeUri);
+            using var response = await client.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            AddActivity(
+                "测试代理连接",
+                $"{DescribeProxyMode(configuration)}连接成功，HTTP {(int)response.StatusCode} {response.ReasonPhrase}。");
+            SetProxyTestFeedback(
+                $"{DescribeProxyMode(configuration)}连接成功，HTTP {(int)response.StatusCode} {response.ReasonPhrase}。",
+                isSuccess: true);
+            AvaloniaHintBus.Show("代理连接测试成功。", AvaloniaHintTheme.Success);
+        }
+        catch (Exception ex)
+        {
+            SetProxyTestFeedback(ex.Message, isSuccess: false);
+            AddFailureActivity("测试代理连接失败", ex.Message);
+        }
+        finally
+        {
+            _isTestingProxyConnection = false;
+            _testProxyConnectionCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private void ClearProxyTestFeedback()
+    {
+        _isProxyTestFeedbackSuccess = false;
+        ProxyTestFeedbackText = string.Empty;
+    }
+
+    private void SetProxyTestFeedback(string text, bool isSuccess)
+    {
+        _isProxyTestFeedbackSuccess = isSuccess;
+        ProxyTestFeedbackText = text;
+    }
+
+    private static string DescribeProxyMode(FrontendResolvedProxyConfiguration configuration)
+    {
+        return configuration.Mode switch
+        {
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.CustomProxy => configuration.CustomProxyAddress?.ToString() ?? "自定义代理",
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.SystemProxy => "系统代理",
+            _ => "直连"
+        };
+    }
+
     private void OpenBackgroundFolder()
     {
-        var folder = Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Pictures");
+        var folder = GetBackgroundFolderPath();
         Directory.CreateDirectory(folder);
         if (_shellActionService.TryOpenExternalTarget(folder, out var error))
         {
@@ -923,7 +1014,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenMusicFolder()
     {
-        var folder = Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Musics");
+        var folder = GetMusicFolderPath();
         Directory.CreateDirectory(folder);
         if (_shellActionService.TryOpenExternalTarget(folder, out var error))
         {
@@ -1057,14 +1148,30 @@ internal sealed partial class FrontendShellViewModel
             LT("setup.ui.homepage.activities.tutorial_shown"));
     }
 
-    private void PreviewAchievement()
+    private async Task PreviewAchievementAsync()
     {
-        ShowAchievementPreview = !ShowAchievementPreview;
-        AddActivity(
-            LT("shell.tools.test.achievement.preview_activity"),
-            ShowAchievementPreview
-                ? AchievementTitle
-                : LT("shell.tools.test.achievement.preview_hidden"));
+        var url = GetAchievementUrl();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            AddFailureActivity("预览成就图片失败", "请先填写有效的成就内容。");
+            return;
+        }
+
+        try
+        {
+            using var client = CreateToolHttpClient();
+            var bytes = await client.GetByteArrayAsync(url);
+            using var stream = new MemoryStream(bytes);
+            AchievementPreviewImage = new Bitmap(stream);
+            ShowAchievementPreview = true;
+            AddActivity("预览成就图片", $"已加载 {AchievementTitle.Trim()} 的成就图像。\n{url}");
+        }
+        catch (Exception ex)
+        {
+            ShowAchievementPreview = false;
+            AchievementPreviewImage = null;
+            AddFailureActivity("预览成就图片失败", ex.Message);
+        }
     }
 
     private async Task SelectHeadSkinAsync()
@@ -1097,14 +1204,40 @@ internal sealed partial class FrontendShellViewModel
         AddActivity(LT("shell.tools.test.head.pick_skin_activity"), SelectedHeadSkinPath);
     }
 
-    private async Task SaveHeadAsync()
+    private void RefreshHeadPreviewFromSelection(bool addActivity)
+    {
+        if (!HasSelectedHeadSkin || !File.Exists(SelectedHeadSkinPath))
+        {
+            HeadPreviewImage = null;
+            return;
+        }
+
+        try
+        {
+            HeadPreviewImage = GenerateHeadPreviewBitmap(SelectedHeadSkinPath, SelectedHeadSizeIndex);
+            if (addActivity)
+            {
+                AddActivity("头像预览", $"已生成 {HeadSizeOptions[SelectedHeadSizeIndex]} 头像预览。");
+            }
+        }
+        catch (Exception ex)
+        {
+            HeadPreviewImage = null;
+            if (addActivity)
+            {
+                AddFailureActivity("头像预览失败", ex.Message);
+            }
+        }
+    }
+
+    private Task SaveHeadAsync()
     {
         if (!HasSelectedHeadSkin || !File.Exists(SelectedHeadSkinPath))
         {
             AddActivity(
                 LT("shell.tools.test.head.save_activity"),
                 LT("shell.tools.test.head.no_skin_selected"));
-            return;
+            return Task.CompletedTask;
         }
 
         try
@@ -1113,49 +1246,56 @@ internal sealed partial class FrontendShellViewModel
             Directory.CreateDirectory(outputDirectory);
             var outputPath = Path.Combine(
                 outputDirectory,
-                $"{SanitizeFileSegment(Path.GetFileNameWithoutExtension(SelectedHeadSkinPath))}-{HeadSizeOptions[SelectedHeadSizeIndex]}.svg");
-            var bytes = await File.ReadAllBytesAsync(SelectedHeadSkinPath);
-            var svg = BuildHeadSvg(
-                Convert.ToBase64String(bytes),
-                GetImageMimeType(SelectedHeadSkinPath),
-                SelectedHeadSizeIndex switch
-                {
-                    0 => 64,
-                    1 => 96,
-                    _ => 128
-                });
-
-            await File.WriteAllTextAsync(outputPath, svg, new UTF8Encoding(false));
-            OpenInstanceTarget(
-                LT("shell.tools.test.head.save_activity"),
-                outputPath,
-                LT("shell.tools.test.head.output_missing"));
+                $"{SanitizeFileSegment(Path.GetFileNameWithoutExtension(SelectedHeadSkinPath))}-{HeadSizeOptions[SelectedHeadSizeIndex]}.png");
+            HeadPreviewImage.Save(outputPath);
+            OpenInstanceTarget("保存头像", outputPath, "导出的头像文件不存在。");
         }
         catch (Exception ex)
         {
             AddFailureActivity(LT("shell.tools.test.head.save_failure"), ex.Message);
         }
+
+        return Task.CompletedTask;
     }
 
-    private static string BuildHeadSvg(string base64Image, string mimeType, int size)
+    private static RenderTargetBitmap GenerateHeadPreviewBitmap(string skinPath, int selectedHeadSizeIndex)
     {
-        return $$"""
-            <svg xmlns="http://www.w3.org/2000/svg" width="{{size}}" height="{{size}}" viewBox="0 0 8 8" shape-rendering="crispEdges">
-              <image href="data:{{mimeType}};base64,{{base64Image}}" x="-8" y="-8" width="64" height="64" image-rendering="pixelated" />
-              <image href="data:{{mimeType}};base64,{{base64Image}}" x="-40" y="-8" width="64" height="64" image-rendering="pixelated" />
-            </svg>
-            """;
-    }
-
-    private static string GetImageMimeType(string path)
-    {
-        return Path.GetExtension(path).ToLowerInvariant() switch
+        using var skinBitmap = new Bitmap(skinPath);
+        var width = skinBitmap.PixelSize.Width;
+        var height = skinBitmap.PixelSize.Height;
+        if (width < 64 || height < 32 || width % 64 != 0)
         {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".webp" => "image/webp",
-            ".gif" => "image/gif",
-            _ => "image/png"
+            throw new InvalidOperationException("皮肤尺寸无效，需满足宽度为 64 的整数倍且高度至少为 32 像素。");
+        }
+
+        var scale = Math.Max(1, width / 64);
+        var headSize = selectedHeadSizeIndex switch
+        {
+            0 => 64,
+            1 => 96,
+            _ => 128
         };
+        var headBitmap = new RenderTargetBitmap(new PixelSize(headSize, headSize));
+        using var context = headBitmap.CreateDrawingContext();
+        using (context.PushRenderOptions(new RenderOptions
+               {
+                   BitmapInterpolationMode = BitmapInterpolationMode.None
+               }))
+        {
+            context.DrawImage(
+                skinBitmap,
+                new Rect(scale * 8, scale * 8, scale * 8, scale * 8),
+                new Rect(0, 0, headSize, headSize));
+            if (width >= 64 && height >= 32)
+            {
+                context.DrawImage(
+                    skinBitmap,
+                    new Rect(scale * 40, scale * 8, scale * 8, scale * 8),
+                    new Rect(0, 0, headSize, headSize));
+            }
+        }
+
+        return headBitmap;
     }
 
     private void ResetDownloadInstallSurface()
@@ -1577,7 +1717,8 @@ internal sealed partial class FrontendShellViewModel
             {
                 Path = items[updated].Path,
                 IsEnable = entry.IsEnabled,
-                Source = items[updated].Source
+                Source = items[updated].Source,
+                Installation = items[updated].Installation
             };
         }
         else
@@ -1687,22 +1828,22 @@ internal sealed partial class FrontendShellViewModel
 
     private string GetBackgroundFolderPath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Pictures");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Pictures");
     }
 
     private string GetMusicFolderPath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Musics");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Musics");
     }
 
     private string GetLogoImagePath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Logo.png");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Logo.png");
     }
 
     private string GetHomepageTutorialPath()
     {
-        return Path.Combine(_shellActionService.RuntimePaths.ExecutableDirectory, "PCL", "Custom.xaml");
+        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Custom.xaml");
     }
 
     private static IEnumerable<string> EnumerateMediaFiles(string folder, IEnumerable<string> allowedExtensions)
@@ -1884,11 +2025,11 @@ internal sealed partial class FrontendShellViewModel
 
     private HttpClient CreateToolHttpClient()
     {
-        var client = new HttpClient();
         var userAgent = string.IsNullOrWhiteSpace(ToolDownloadUserAgent)
             ? "PCL-ME-Avalonia/1.0"
             : ToolDownloadUserAgent.Trim();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
-        return client;
+        return FrontendHttpProxyService.CreateLauncherHttpClient(
+            TimeSpan.FromSeconds(100),
+            userAgent);
     }
 }

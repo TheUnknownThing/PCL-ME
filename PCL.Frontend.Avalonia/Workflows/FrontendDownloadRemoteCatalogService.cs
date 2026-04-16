@@ -11,7 +11,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class FrontendDownloadRemoteCatalogService
 {
     private const string SnapshotSectionKey = "snapshot_versions";
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(100));
     private static readonly object CacheSync = new();
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(5);
     private static readonly Dictionary<RemoteCatalogCacheKey, RemoteCatalogCacheEntry> Cache = [];

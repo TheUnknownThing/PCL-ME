@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
 using PCL.Frontend.Avalonia.Workflows;
@@ -87,14 +88,48 @@ internal sealed partial class FrontendShellViewModel
         _ => T("download.resource.search.default")
     };
 
-    public string DownloadResourceCurrentInstanceTitle => _instanceComposition.Selection.HasSelection
-        ? _instanceComposition.Selection.InstanceName
-        : T("download.resource.current_instance.none_selected");
+    public string DownloadResourceCurrentInstanceTitle
+    {
+        get
+        {
+            if (_currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadDataPack)
+            {
+                return _versionSavesComposition.Selection.HasSelection
+                    ? _versionSavesComposition.Selection.SaveName
+                    : T("download.resource.current_instance.none_selected");
+            }
+
+            return _instanceComposition.Selection.HasSelection
+                ? _instanceComposition.Selection.InstanceName
+                : T("download.resource.current_instance.none_selected");
+        }
+    }
+
+    public string DownloadResourceCurrentInstanceCardTitle => _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadDataPack
+        ? "当前存档"
+        : "当前实例";
 
     public string DownloadResourceCurrentInstanceSummary
     {
         get
         {
+            if (_currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadDataPack)
+            {
+                if (!_versionSavesComposition.Selection.HasSelection)
+                {
+                    return "当前下载页还没有选中存档，无法直接安装数据包。请先在存档页打开目标存档详情。";
+                }
+
+                var datapackParts = new List<string> { _versionSavesComposition.Selection.InstanceName };
+                if (!string.IsNullOrWhiteSpace(_instanceComposition.Selection.VanillaVersion))
+                {
+                    datapackParts.Add($"Minecraft {_instanceComposition.Selection.VanillaVersion}");
+                }
+
+                datapackParts.Add(_versionSavesComposition.Selection.SavePath);
+                return string.Join(" • ", datapackParts);
+            }
+
             if (!_instanceComposition.Selection.HasSelection)
             {
                 return T("download.resource.current_instance.summary_none_selected");
@@ -135,7 +170,11 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowDownloadResourceLoaderFilter => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadWorld;
 
-    public ActionCommand SelectDownloadResourceInstanceCommand => new(() => _ = SelectCommunityProjectInstanceAsync());
+    public string DownloadResourceCurrentInstanceActionText => _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadDataPack
+        ? "切换存档"
+        : "切换实例";
+
+    public ActionCommand SelectDownloadResourceInstanceCommand => new(() => _ = OpenDownloadResourceTargetContextAsync());
 
     public string DownloadResourceLoadingText
     {
@@ -776,8 +815,10 @@ internal sealed partial class FrontendShellViewModel
         SyncSelectedDownloadResourceOptions();
         RaisePropertyChanged(nameof(DownloadResourceSearchQuery));
         RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
+        RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceCardTitle));
         RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceTitle));
         RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceSummary));
+        RaisePropertyChanged(nameof(DownloadResourceCurrentInstanceActionText));
         RaisePropertyChanged(nameof(ShowDownloadResourceCurrentInstanceCard));
         RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
         RaisePropertyChanged(nameof(DownloadResourceTagOptions));
@@ -1133,6 +1174,124 @@ internal sealed partial class FrontendShellViewModel
     private string? ResolveSelectedDownloadResourceLoaderFilter()
     {
         return ResolveSelectedInstanceLoaderLabel();
+    }
+
+    private async Task OpenDownloadResourceTargetContextAsync()
+    {
+        if (_currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadDataPack)
+        {
+            await SelectCommunityProjectInstanceAsync();
+            return;
+        }
+
+        await SwitchDownloadResourceDatapackSaveAsync();
+    }
+
+    private async Task SwitchDownloadResourceDatapackSaveAsync()
+    {
+        var instances = LoadAvailableDownloadTargetInstances();
+        if (instances.Count == 0)
+        {
+            AddActivity("切换存档", "当前没有可用的实例。");
+            return;
+        }
+
+        string? selectedInstanceId;
+        try
+        {
+            selectedInstanceId = await _shellActionService.PromptForChoiceAsync(
+                "选择实例",
+                "请选择要浏览和安装数据包的实例。",
+                instances.Select(entry => new PclChoiceDialogOption(
+                    entry.Name,
+                    entry.Name,
+                    entry.Subtitle))
+                    .ToArray(),
+                _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : instances[0].Name,
+                "继续");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("选择实例失败", ex.Message);
+            return;
+        }
+
+        var selectedInstance = string.IsNullOrWhiteSpace(selectedInstanceId)
+            ? null
+            : instances.FirstOrDefault(entry => string.Equals(entry.Name, selectedInstanceId, StringComparison.OrdinalIgnoreCase));
+        if (selectedInstance is null)
+        {
+            return;
+        }
+
+        var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, selectedInstance.Name);
+        if (!targetComposition.Selection.HasSelection)
+        {
+            AddActivity("切换存档", $"{selectedInstance.Name} 当前不可用。");
+            return;
+        }
+
+        var saves = targetComposition.World.Entries;
+        if (saves.Count == 0)
+        {
+            AddActivity("切换存档", $"{selectedInstance.Name} 当前没有可用的存档。");
+            return;
+        }
+
+        var defaultSavePath = string.Equals(selectedInstance.Name, _instanceComposition.Selection.InstanceName, StringComparison.OrdinalIgnoreCase)
+                              && _versionSavesComposition.Selection.HasSelection
+            ? _versionSavesComposition.Selection.SavePath
+            : saves[0].Path;
+
+        string? selectedSavePath;
+        try
+        {
+            selectedSavePath = await _shellActionService.PromptForChoiceAsync(
+                "选择存档",
+                $"请选择 {selectedInstance.Name} 中要安装数据包的目标存档。",
+                saves.Select(entry => new PclChoiceDialogOption(
+                    entry.Path,
+                    entry.Title,
+                    entry.Summary))
+                    .ToArray(),
+                defaultSavePath,
+                "切换");
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity("选择存档失败", ex.Message);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedSavePath))
+        {
+            return;
+        }
+
+        var selectedSave = saves.FirstOrDefault(entry => string.Equals(entry.Path, selectedSavePath, StringComparison.OrdinalIgnoreCase));
+        if (selectedSave is null)
+        {
+            AddActivity("切换存档", "未找到所选存档。");
+            return;
+        }
+
+        var isSameInstance = string.Equals(selectedInstance.Name, _instanceComposition.Selection.InstanceName, StringComparison.OrdinalIgnoreCase);
+        var isSameSave = string.Equals(selectedSave.Path, _versionSavesComposition.Selection.SavePath, StringComparison.OrdinalIgnoreCase);
+        if (isSameInstance && _versionSavesComposition.Selection.HasSelection && isSameSave)
+        {
+            AddActivity("切换存档", $"{selectedInstance.Name} • {selectedSave.Title} 已经是当前存档。");
+            return;
+        }
+
+        if (!isSameInstance)
+        {
+            RefreshSelectedInstanceSmoothly(selectedInstance.Name);
+            await AwaitLatestSelectedInstanceRefreshAsync();
+        }
+
+        _selectedVersionSavePath = selectedSave.Path;
+        ReloadVersionSavesComposition();
+        AddActivity("切换存档", $"{selectedInstance.Name} • {selectedSave.Title}");
     }
 
     private bool ShouldAutoSyncDownloadResourceFiltersWithInstance()

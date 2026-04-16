@@ -104,9 +104,17 @@ internal static class FrontendVersionSavesCompositionService
         FrontendInstanceComposition instanceComposition,
         string? selectedSavePath)
     {
-        if (!string.IsNullOrWhiteSpace(selectedSavePath) && Directory.Exists(selectedSavePath))
+        if (!string.IsNullOrWhiteSpace(selectedSavePath))
         {
-            return selectedSavePath;
+            var matchedSavePath = instanceComposition.World.Entries
+                .Select(entry => entry.Path)
+                .FirstOrDefault(path =>
+                    string.Equals(path, selectedSavePath, StringComparison.OrdinalIgnoreCase)
+                    && Directory.Exists(path));
+            if (!string.IsNullOrWhiteSpace(matchedSavePath))
+            {
+                return matchedSavePath;
+            }
         }
 
         return instanceComposition.World.Entries

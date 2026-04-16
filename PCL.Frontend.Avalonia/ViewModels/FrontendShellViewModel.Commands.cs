@@ -80,6 +80,8 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand ApplyProxySettingsCommand => _applyProxySettingsCommand;
 
+    public ActionCommand TestProxyConnectionCommand => _testProxyConnectionCommand;
+
     public ActionCommand AddJavaRuntimeCommand => _addJavaRuntimeCommand;
 
     public ActionCommand SelectAutoJavaCommand => _selectAutoJavaCommand;

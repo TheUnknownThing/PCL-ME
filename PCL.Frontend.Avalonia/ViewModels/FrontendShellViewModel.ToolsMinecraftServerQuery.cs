@@ -8,10 +8,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Ae.Dns.Client;
-using Ae.Dns.Protocol;
-using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Protocol.Records;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -19,6 +15,7 @@ using PCL.Core.App.Essentials;
 using PCL.Core.Link.McPing;
 using PCL.Core.Link.McPing.Model;
 using PCL.Core.Utils;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -31,12 +28,6 @@ internal sealed partial class FrontendShellViewModel
         new(@"^\[(?<ip>.+?)\](?::(?<port>\d{1,5}))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private static readonly Regex MinecraftServerQueryTrailingPort =
         new(@":(?<port>\d{1,5})$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-    private static readonly Uri[] MinecraftServerQueryDnsEndpoints =
-    [
-        new("https://doh.pub/"),
-        new("https://doh.pysio.online/"),
-        new("https://cloudflare-dns.com/")
-    ];
     private static readonly IReadOnlyDictionary<char, IBrush> MinecraftServerQueryMotdColorMap =
         new Dictionary<char, IBrush>
         {
@@ -682,101 +673,12 @@ internal sealed partial class FrontendShellViewModel
         return (input, null);
     }
 
-    private sealed record MinecraftServerQuerySrvRecord(int Priority, int Weight, int Port, string Target);
-
-    private static async Task<List<MinecraftServerQuerySrvRecord>> QueryMinecraftServerSrvOrderedAsync(string domain, CancellationToken cancellationToken)
+    private static async Task<List<FrontendDnsSrvRecord>> QueryMinecraftServerSrvOrderedAsync(string domain, CancellationToken cancellationToken)
     {
-        var name = $"_minecraft._tcp.{TrimMinecraftServerQueryTrailingDot(domain)}";
-        foreach (var endpoint in MinecraftServerQueryDnsEndpoints)
-        {
-            try
-            {
-                using var httpClient = new HttpClient { BaseAddress = endpoint };
-                using var dnsClient = new DnsHttpClient(httpClient);
-                var response = await dnsClient.Query(DnsQueryFactory.CreateQuery(name, DnsQueryType.SRV), cancellationToken).ConfigureAwait(false);
-                if (response.Answers.Count == 0)
-                {
-                    continue;
-                }
-
-                var parsed = new List<MinecraftServerQuerySrvRecord>();
-                foreach (var answer in response.Answers)
-                {
-                    if (answer.Resource is not DnsUnknownResource rawResource)
-                    {
-                        continue;
-                    }
-
-                    var srvRecord = new MinecraftServerQuerySrvResource();
-                    var offset = 0;
-                    srvRecord.ReadBytes(rawResource.Raw, ref offset, rawResource.Raw.Length);
-                    parsed.Add(new MinecraftServerQuerySrvRecord(
-                        srvRecord.Priority,
-                        srvRecord.Weight,
-                        srvRecord.Port,
-                        srvRecord.Target));
-                }
-
-                parsed.RemoveAll(record => record.Target == ".");
-                if (parsed.Count == 0)
-                {
-                    continue;
-                }
-
-                var ordered = new List<MinecraftServerQuerySrvRecord>(parsed.Count);
-                foreach (var group in parsed.GroupBy(record => record.Priority).OrderBy(group => group.Key))
-                {
-                    var pool = group.ToList();
-                    while (pool.Count > 0)
-                    {
-                        ordered.Add(PopMinecraftServerQuerySrvByWeight(pool));
-                    }
-                }
-
-                return ordered;
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch
-            {
-                // Try the next DoH endpoint.
-            }
-        }
-
-        return [];
-    }
-
-    private static MinecraftServerQuerySrvRecord PopMinecraftServerQuerySrvByWeight(List<MinecraftServerQuerySrvRecord> pool)
-    {
-        var totalWeight = pool.Sum(record => record.Weight);
-        if (totalWeight <= 0)
-        {
-            var index = Random.Shared.Next(pool.Count);
-            var chosen = pool[index];
-            pool.RemoveAt(index);
-            return chosen;
-        }
-
-        var threshold = Random.Shared.Next(1, totalWeight + 1);
-        var cumulative = 0;
-        for (var index = 0; index < pool.Count; index++)
-        {
-            cumulative += pool[index].Weight;
-            if (cumulative < threshold)
-            {
-                continue;
-            }
-
-            var chosen = pool[index];
-            pool.RemoveAt(index);
-            return chosen;
-        }
-
-        var last = pool[^1];
-        pool.RemoveAt(pool.Count - 1);
-        return last;
+        var records = await FrontendHttpProxyService.QuerySrvRecordsOverHttpsAsync(
+            TrimMinecraftServerQueryTrailingDot(domain),
+            cancellationToken).ConfigureAwait(false);
+        return records.ToList();
     }
 
     private static async Task<(string Ip, int Port)?> ResolveMinecraftServerQueryReachableAsync(
@@ -792,7 +694,9 @@ internal sealed partial class FrontendShellViewModel
                 return result.ok ? (literalIp.ToString(), port) : null;
             }
 
-            var addresses = await Dns.GetHostAddressesAsync(TrimMinecraftServerQueryTrailingDot(hostOrIp), cancellationToken).ConfigureAwait(false);
+            var addresses = await FrontendHttpProxyService.ResolveHostAddressesAsync(
+                TrimMinecraftServerQueryTrailingDot(hostOrIp),
+                cancellationToken).ConfigureAwait(false);
             if (addresses.Length == 0)
             {
                 return null;
@@ -829,7 +733,9 @@ internal sealed partial class FrontendShellViewModel
                 return ipAddress.ToString();
             }
 
-            var addresses = await Dns.GetHostAddressesAsync(TrimMinecraftServerQueryTrailingDot(hostOrIp), cancellationToken).ConfigureAwait(false);
+            var addresses = await FrontendHttpProxyService.ResolveHostAddressesAsync(
+                TrimMinecraftServerQueryTrailingDot(hostOrIp),
+                cancellationToken).ConfigureAwait(false);
             var chosen = addresses.FirstOrDefault(address => address.AddressFamily == AddressFamily.InterNetworkV6)
                          ?? addresses.FirstOrDefault(address => address.AddressFamily == AddressFamily.InterNetwork);
             return chosen?.ToString();

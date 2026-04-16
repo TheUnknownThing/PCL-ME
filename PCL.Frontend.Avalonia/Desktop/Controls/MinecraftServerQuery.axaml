@@ -43,6 +43,7 @@
 
           <StackPanel Grid.Column="1" Margin="6" VerticalAlignment="Center" Spacing="2">
             <TextBlock
+                FontFamily="{DynamicResource LaunchMotdFontFamily}"
                 FontSize="15"
                 Foreground="{Binding MinecraftServerQueryTitleBrush}"
                 Text="{Binding MinecraftServerQueryTitle}"
@@ -62,6 +63,7 @@
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <TextBlock
+                            FontFamily="{DynamicResource LaunchMotdFontFamily}"
                             FontSize="14"
                             FontStyle="{Binding FontStyle}"
                             FontWeight="{Binding FontWeight}"

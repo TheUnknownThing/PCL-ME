@@ -1,5 +1,6 @@
 using Avalonia;
 using PCL.Frontend.Avalonia.Cli;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop;
 
@@ -12,8 +13,15 @@ internal static class AvaloniaDesktopHost
 
     internal static AppBuilder BuildAvaloniaApp(AvaloniaCommandOptions options)
     {
-        return AppBuilder.Configure(() => new App(options))
+        var platformAdapter = new FrontendPlatformAdapter();
+        var runtimePaths = FrontendRuntimePaths.Resolve(platformAdapter);
+        var renderingConfiguration = FrontendStartupRenderingService.Resolve(
+            runtimePaths,
+            platformAdapter.GetDesktopPlatformKind());
+        var builder = AppBuilder.Configure(() => new App(options, runtimePaths, platformAdapter))
             .UsePlatformDetect()
             .LogToTrace();
+
+        return FrontendStartupRenderingService.Apply(builder, renderingConfiguration);
     }
 }

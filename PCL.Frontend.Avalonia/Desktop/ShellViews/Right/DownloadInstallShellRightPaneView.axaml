@@ -160,9 +160,9 @@
                 <controls:PclCard.HeaderOverlayContent>
                   <Grid
                       Height="30"
-                      Margin="132,5,15,0"
+                      Margin="132,5,40,0"
                       VerticalAlignment="Top"
-                      ColumnDefinitions="Auto,*">
+                      ColumnDefinitions="Auto,*,Auto">
                     <Border
                         Width="18"
                         Height="18"
@@ -185,6 +185,17 @@
                         FontSize="13"
                         Text="{Binding SelectionText}"
                         TextTrimming="CharacterEllipsis" />
+                    <controls:PclIconButton
+                        Grid.Column="2"
+                        HorizontalAlignment="Right"
+                        Command="{Binding ClearCommand}"
+                        HoverBackgroundBrush="{DynamicResource ColorBrush8}"
+                        IconBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        IconData="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
+                        IconScale="0.72"
+                        IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+                        IsVisible="{Binding CanClear}"
+                        ToolTip.Tip="清除选择" />
                   </Grid>
                 </controls:PclCard.HeaderOverlayContent>
                 <controls:PclCard.CardContent>
@@ -204,7 +215,20 @@
                         Text="{Binding EmptyStateText}"
                         TextWrapping="Wrap" />
 
-                    <ItemsControl ItemsSource="{Binding Choices}">
+                    <controls:PclSearchBox
+                        IsVisible="{Binding ShowChoiceSearchBox}"
+                        Text="{Binding ChoiceSearchQuery, Mode=TwoWay}"
+                        Watermark="搜索版本" />
+
+                    <TextBlock
+                        IsVisible="{Binding ShowFilteredEmptyState}"
+                        Margin="0,2,0,8"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        FontSize="12"
+                        Text="{Binding FilteredEmptyStateText}"
+                        TextWrapping="Wrap" />
+
+                    <ItemsControl ItemsSource="{Binding VisibleChoices}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
                           <controls:PclListItem

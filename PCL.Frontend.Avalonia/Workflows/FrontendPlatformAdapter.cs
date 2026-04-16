@@ -3,8 +3,36 @@ using System.Text;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
+internal enum FrontendDesktopPlatformKind
+{
+    Windows,
+    Linux,
+    MacOS,
+    Other
+}
+
 internal sealed class FrontendPlatformAdapter
 {
+    public FrontendDesktopPlatformKind GetDesktopPlatformKind()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return FrontendDesktopPlatformKind.Windows;
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return FrontendDesktopPlatformKind.Linux;
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            return FrontendDesktopPlatformKind.MacOS;
+        }
+
+        return FrontendDesktopPlatformKind.Other;
+    }
+
     public string GetLauncherAppDataDirectory()
     {
         if (OperatingSystem.IsWindows())

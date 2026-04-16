@@ -1123,10 +1123,7 @@ internal static class FrontendCommunityResourceCatalogService
 
     private static HttpClient CreateHttpClient()
     {
-        var client = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(15)
-        };
+        var client = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(15));
         client.DefaultRequestHeaders.UserAgent.ParseAdd("PCL-ME-Frontend-Avalonia");
         return client;
     }

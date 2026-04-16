@@ -139,37 +139,19 @@
             </Grid>
 
             <Border
-                Width="320"
-                Height="64"
-                Padding="12,8"
+                Width="360"
+                Height="80"
+                Padding="8"
                 Background="{DynamicResource ColorBrushAchievementPreviewCardBackground}"
                 BorderBrush="{DynamicResource ColorBrushAchievementPreviewCardBorder}"
                 BorderThickness="1"
                 CornerRadius="5"
                 HorizontalAlignment="Center"
                 IsVisible="{Binding ShowAchievementPreview}">
-              <Grid ColumnDefinitions="40,12,*">
-                <Border
-                    Width="32"
-                    Height="32"
-                    Margin="0,2,0,0"
-                    Background="{DynamicResource ColorBrushAchievementPreviewBadgeBackground}"
-                    BorderBrush="{DynamicResource ColorBrushAchievementPreviewBadgeBorder}"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                  <TextBlock
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center"
-                      Foreground="{DynamicResource ColorBrushAchievementPreviewBadgeForeground}"
-                      FontSize="10"
-                      Text="{Binding AchievementBlockId}" />
-                </Border>
-                <StackPanel Grid.Column="2" Spacing="2">
-                  <TextBlock Foreground="{DynamicResource ColorBrushAchievementPreviewTitle}" FontSize="13" Text="{Binding AchievementTitle}" />
-                  <TextBlock Foreground="{DynamicResource ColorBrushAchievementPreviewFirstLine}" FontSize="12.5" Text="{Binding AchievementFirstLine}" />
-                  <TextBlock Foreground="{DynamicResource ColorBrushAchievementPreviewSecondLine}" FontSize="12" Text="{Binding AchievementSecondLine}" />
-                </StackPanel>
-              </Grid>
+              <Image
+                  Source="{Binding AchievementPreviewImage}"
+                  Stretch="Uniform"
+                  RenderOptions.BitmapInterpolationMode="None" />
             </Border>
           </StackPanel>
         </controls:PclCard.CardContent>
@@ -206,42 +188,17 @@
             <Border
                 Width="{Binding HeadPreviewSize}"
                 Height="{Binding HeadPreviewSize}"
-                Padding="14,12"
+                Padding="8"
                 Background="{DynamicResource ColorBrush8}"
                 BorderBrush="{DynamicResource ColorBrush6}"
                 BorderThickness="1"
                 CornerRadius="5"
                 HorizontalAlignment="Center"
-                IsVisible="{Binding HasSelectedHeadSkin}">
-              <StackPanel HorizontalAlignment="Center" Spacing="10">
-                <Border
-                    Width="{Binding HeadPreviewSize}"
-                    Height="{Binding HeadPreviewSize}"
-                    Background="{DynamicResource ColorBrush8}"
-                    BorderBrush="{DynamicResource ColorBrush6}"
-                    BorderThickness="1"
-                    CornerRadius="8">
-                  <Grid>
-                    <Border
-                        Width="{Binding HeadPreviewSize}"
-                        Height="{Binding HeadPreviewSize}"
-                        Background="{DynamicResource ColorBrush4}"
-                        CornerRadius="8" />
-                    <Border
-                        Width="{Binding HeadPreviewSize}"
-                        Height="{Binding HeadPreviewSize}"
-                        Background="{DynamicResource ColorBrush5}"
-                        CornerRadius="8"
-                        Margin="0,0,0,6" />
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource ColorBrush2}"
-                        FontSize="12"
-                        Text="{Binding ToolsTestHeadPreviewLabel}" />
-                  </Grid>
-                </Border>
-              </StackPanel>
+                IsVisible="{Binding HasHeadPreviewImage}">
+              <Image
+                  Source="{Binding HeadPreviewImage}"
+                  Stretch="Uniform"
+                  RenderOptions.BitmapInterpolationMode="None" />
             </Border>
             <TextBlock
                 HorizontalAlignment="Center"

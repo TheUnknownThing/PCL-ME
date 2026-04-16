@@ -15,7 +15,7 @@ internal sealed partial class FrontendShellViewModel
 {
     private static readonly string LaunchAvatarFallbackImagePath = FrontendLauncherAssetLocator.GetPath("Images", "Heads", "PCL-Community.png");
     private const string LaunchAvatarHeadCacheVersion = "v3";
-    private static readonly HttpClient LaunchAvatarHttpClient = new();
+    private static readonly HttpClient LaunchAvatarHttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(15));
     private string _launchAvatarImagePath = LaunchAvatarFallbackImagePath;
     private int _launchAvatarRefreshVersion;
 

@@ -385,6 +385,7 @@ internal sealed class DownloadInstallOptionCardViewModel(
     private string _emptyStateText = emptyStateText;
     private IReadOnlyList<DownloadInstallChoiceItemViewModel> _choices = choices;
     private bool _canClear = canClear;
+    private string _choiceSearchQuery = string.Empty;
 
     public string Title { get; } = title;
 
@@ -430,6 +431,8 @@ internal sealed class DownloadInstallOptionCardViewModel(
             if (SetProperty(ref _canExpand, value))
             {
                 RaisePropertyChanged(nameof(CardContentMargin));
+                RaisePropertyChanged(nameof(ShowChoiceSearchBox));
+                RaisePropertyChanged(nameof(ShowFilteredEmptyState));
             }
         }
     }
@@ -442,6 +445,7 @@ internal sealed class DownloadInstallOptionCardViewModel(
             if (SetProperty(ref _isExpanded, value))
             {
                 RaisePropertyChanged(nameof(ChevronAngle));
+                RaisePropertyChanged(nameof(ShowFilteredEmptyState));
             }
         }
     }
@@ -455,7 +459,13 @@ internal sealed class DownloadInstallOptionCardViewModel(
     public bool IsLoading
     {
         get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        set
+        {
+            if (SetProperty(ref _isLoading, value))
+            {
+                RaisePropertyChanged(nameof(ShowFilteredEmptyState));
+            }
+        }
     }
 
     public string LoadingText
@@ -479,7 +489,15 @@ internal sealed class DownloadInstallOptionCardViewModel(
     public IReadOnlyList<DownloadInstallChoiceItemViewModel> Choices
     {
         get => _choices;
-        set => SetProperty(ref _choices, value);
+        set
+        {
+            if (SetProperty(ref _choices, value))
+            {
+                RaisePropertyChanged(nameof(VisibleChoices));
+                RaisePropertyChanged(nameof(ShowChoiceSearchBox));
+                RaisePropertyChanged(nameof(ShowFilteredEmptyState));
+            }
+        }
     }
 
     public bool CanClear
@@ -487,6 +505,34 @@ internal sealed class DownloadInstallOptionCardViewModel(
         get => _canClear;
         set => SetProperty(ref _canClear, value);
     }
+
+    public string ChoiceSearchQuery
+    {
+        get => _choiceSearchQuery;
+        set
+        {
+            if (SetProperty(ref _choiceSearchQuery, value))
+            {
+                RaisePropertyChanged(nameof(VisibleChoices));
+                RaisePropertyChanged(nameof(ShowChoiceSearchBox));
+                RaisePropertyChanged(nameof(ShowFilteredEmptyState));
+                RaisePropertyChanged(nameof(FilteredEmptyStateText));
+            }
+        }
+    }
+
+    public IReadOnlyList<DownloadInstallChoiceItemViewModel> VisibleChoices => GetVisibleChoices();
+
+    public bool ShowChoiceSearchBox => CanExpand
+        && (Choices.Count >= 8 || !string.IsNullOrWhiteSpace(ChoiceSearchQuery));
+
+    public bool ShowFilteredEmptyState => CanExpand
+        && IsExpanded
+        && !IsLoading
+        && Choices.Count > 0
+        && VisibleChoices.Count == 0;
+
+    public string FilteredEmptyStateText => $"没有找到与“{ChoiceSearchQuery.Trim()}”匹配的版本。";
 
     public ActionCommand ToggleCommand { get; } = toggleCommand;
 
@@ -506,6 +552,20 @@ internal sealed class DownloadInstallOptionCardViewModel(
         EmptyStateText = other.EmptyStateText;
         Choices = other.Choices;
         CanClear = other.CanClear;
+    }
+
+    private IReadOnlyList<DownloadInstallChoiceItemViewModel> GetVisibleChoices()
+    {
+        var query = ChoiceSearchQuery.Trim();
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return Choices;
+        }
+
+        return Choices
+            .Where(choice => choice.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || choice.Summary.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
     }
 }
 

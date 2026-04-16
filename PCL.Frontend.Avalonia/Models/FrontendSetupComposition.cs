@@ -48,7 +48,6 @@ internal sealed record FrontendSetupLaunchState(
     bool DisableRetroWrapper,
     bool RequireDedicatedGpu,
     bool UseJavaExecutable,
-    int MicrosoftAuthIndex,
     int PreferredIpStackIndex);
 
 internal sealed record FrontendSetupGameManageState(
@@ -58,7 +57,6 @@ internal sealed record FrontendSetupGameManageState(
     double DownloadSpeedLimit,
     double DownloadTimeoutSeconds,
     bool AutoSelectNewInstance,
-    bool UpgradePartialAuthlib,
     int CommunityDownloadSourceIndex,
     int FileNameFormatIndex,
     int ModLocalNameStyleIndex,
@@ -72,6 +70,7 @@ internal sealed record FrontendSetupLauncherMiscState(
     int SystemActivityIndex,
     double AnimationFpsLimit,
     double MaxRealTimeLogValue,
+    bool IsHardwareAccelerationToggleAvailable,
     bool DisableHardwareAcceleration,
     bool EnableDoH,
     int HttpProxyTypeIndex,
@@ -79,9 +78,7 @@ internal sealed record FrontendSetupLauncherMiscState(
     string HttpProxyUsername,
     string HttpProxyPassword,
     double DebugAnimationSpeed,
-    bool SkipCopyDuringDownload,
-    bool DebugModeEnabled,
-    bool DebugDelayEnabled);
+    bool DebugModeEnabled);
 
 internal sealed record FrontendSetupJavaState(
     string SelectedRuntimeKey,

@@ -102,6 +102,8 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RefreshVersionSaveSurfaces();
+        RaiseDownloadResourceFilterState();
+        RaiseCommunityProjectProperties();
     }
 
     private void RefreshVersionSaveSurfaces()
@@ -307,10 +309,14 @@ internal sealed partial class FrontendShellViewModel
         }
 
         Directory.CreateDirectory(_versionSavesComposition.Selection.DatapackDirectory);
-        var targetPath = Path.Combine(_versionSavesComposition.Selection.DatapackDirectory, Path.GetFileName(sourcePath));
+        var targetFileName = NormalizeCommunityProjectInstallArtifactFileName(
+            LauncherFrontendSubpageKey.DownloadDataPack,
+            Path.GetFileName(sourcePath));
+        var targetPath = Path.Combine(_versionSavesComposition.Selection.DatapackDirectory, targetFileName);
         File.Copy(sourcePath, targetPath, true);
+        var installedPath = FrontendDatapackArchiveInstallService.ExtractInstalledDatapackArchive(targetPath);
         ReloadVersionSavesComposition();
-        AddActivity(SD("save_detail.activities.install_datapack"), $"{sourcePath} -> {targetPath}");
+        AddActivity(SD("save_detail.activities.install_datapack"), $"{sourcePath} -> {installedPath}");
     }
 
     private void ExportVersionSaveDatapackInfo()

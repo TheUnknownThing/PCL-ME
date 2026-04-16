@@ -134,7 +134,7 @@ internal sealed partial class FrontendShellViewModel
         {
             var currentVersion = GetEffectiveMinecraftVersion(isExistingInstance);
             var currentVersionId = currentVersion.Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
-            var choices = FrontendInstallWorkflowService.GetMinecraftChoices(currentVersion, _i18n);
+            var choices = FrontendInstallWorkflowService.GetMinecraftChoices(currentVersionId, SelectedDownloadSourceIndex, _i18n);
             var selectedId = isExistingInstance ? _instanceInstallMinecraftChoice?.Id : _downloadInstallMinecraftChoice?.Id;
             var result = await _shellActionService.PromptForChoiceAsync(
                 T("download.install.workflow.dialogs.select_minecraft.title"),
@@ -408,6 +408,7 @@ internal sealed partial class FrontendShellViewModel
             var request = new FrontendInstallApplyRequest(
                 _instanceComposition.Selection.LauncherDirectory,
                 targetInstanceName,
+                SelectedDownloadSourceIndex,
                 minecraftChoice,
                 primaryChoice,
                 liteLoaderChoice,
@@ -524,7 +525,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var version = GetEffectiveMinecraftVersion(isExistingInstance).Replace("Minecraft ", "", StringComparison.Ordinal);
-        return FrontendInstallWorkflowService.GetMinecraftChoices(version, _i18n)
+        return FrontendInstallWorkflowService.GetMinecraftChoices(version, SelectedDownloadSourceIndex, _i18n)
             .First(choice => string.Equals(choice.Version, version, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -577,7 +578,7 @@ internal sealed partial class FrontendShellViewModel
             return cachedChoice;
         }
 
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, _i18n);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, SelectedDownloadSourceIndex, _i18n);
         return MatchInstallChoice(choices, baselineText);
     }
 

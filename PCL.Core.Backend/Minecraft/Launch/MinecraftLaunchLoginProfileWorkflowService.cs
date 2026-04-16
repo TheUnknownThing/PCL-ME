@@ -133,12 +133,26 @@ public static class MinecraftLaunchLoginProfileWorkflowService
 
     private static int FindMicrosoftProfileIndex(IReadOnlyList<MinecraftLaunchStoredProfile> profiles, string username, string uuid)
     {
+        var hasUuid = !string.IsNullOrWhiteSpace(uuid);
         for (var index = 0; index < profiles.Count; index++)
         {
             var profile = profiles[index];
-            if (profile.Kind == MinecraftLaunchStoredProfileKind.Microsoft &&
-                string.Equals(profile.Username, username, StringComparison.Ordinal) &&
-                string.Equals(profile.Uuid, uuid, StringComparison.Ordinal))
+            if (profile.Kind != MinecraftLaunchStoredProfileKind.Microsoft)
+            {
+                continue;
+            }
+
+            if (hasUuid)
+            {
+                if (string.Equals(profile.Uuid, uuid, StringComparison.Ordinal))
+                {
+                    return index;
+                }
+
+                continue;
+            }
+
+            if (string.Equals(profile.Username, username, StringComparison.Ordinal))
             {
                 return index;
             }
