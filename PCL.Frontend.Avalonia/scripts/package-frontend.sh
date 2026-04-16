@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
@@ -16,7 +17,24 @@ linux_launcher_script="launch-pcl-me.sh"
 windows_launcher_script="Launch PCL-ME.vbs"
 icon_png="${repo_root}/PCL.Frontend.Avalonia/Assets/icon.png"
 
-default_rids=(osx-arm64 linux-x64 win-x64)
+get_default_rids() {
+  case "$(uname -s)" in
+    Darwin)
+      printf '%s\n' osx-arm64 linux-x64 win-x64
+      ;;
+    Linux)
+      printf '%s\n' linux-x64 win-x64
+      ;;
+    MINGW*|MSYS*|CYGWIN*)
+      printf '%s\n' win-x64
+      ;;
+    *)
+      printf '%s\n' linux-x64
+      ;;
+  esac
+}
+
+mapfile -t default_rids < <(get_default_rids)
 if [[ "$#" -gt 0 ]]; then
   rids=("$@")
 else
@@ -43,19 +61,53 @@ copy_tree() {
   cp -R "${source}/." "$target/"
 }
 
+create_zip_archive() {
+  local source_dir="$1"
+  local archive_path="$2"
+
+  python3 - "$source_dir" "$archive_path" <<'PY'
+import os
+import sys
+import zipfile
+
+source_dir = os.path.abspath(sys.argv[1])
+archive_path = os.path.abspath(sys.argv[2])
+archive_root = os.path.dirname(source_dir)
+
+with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    for current_root, dir_names, file_names in os.walk(source_dir):
+        dir_names.sort()
+        file_names.sort()
+        for file_name in file_names:
+            file_path = os.path.join(current_root, file_name)
+            relative_path = os.path.relpath(file_path, archive_root)
+            archive.write(file_path, relative_path)
+PY
+}
+
 build_publish() {
   local rid="$1"
   local output_dir="$2"
   local self_contained="false"
+  local publish_single_file="false"
+  local include_all_content_for_self_extract="false"
+  local enable_single_file_compression="false"
   if [[ "${publish_mode}" == "self-contained" ]]; then
     self_contained="true"
+  fi
+  if [[ "$rid" == win-* ]]; then
+    publish_single_file="true"
+    include_all_content_for_self_extract="true"
+    enable_single_file_compression="true"
   fi
 
   dotnet publish "$project_path" \
     -c "$configuration" \
     -r "$rid" \
     --self-contained "$self_contained" \
-    -p:PublishSingleFile=false \
+    -p:PublishSingleFile="$publish_single_file" \
+    -p:IncludeAllContentForSelfExtract="$include_all_content_for_self_extract" \
+    -p:EnableCompressionInSingleFile="$enable_single_file_compression" \
     -p:PublishReadyToRun=false \
     -o "$output_dir"
 }
@@ -147,27 +199,22 @@ package_windows() {
   local rid="$1"
   local publish_dir="$2"
   local rid_root="$3"
-  local package_dir="${rid_root}/$(echo "${app_name}" | tr ' ' '-')-${rid}"
-  local archive_path="${rid_root}/$(basename "$package_dir").zip"
+  local package_path="${rid_root}/$(echo "${app_name}" | tr ' ' '-')-${rid}.exe"
+  local published_executable="${publish_dir}/${executable_name}.exe"
 
-  prepare_directory "$package_dir"
-  copy_tree "$publish_dir" "$package_dir"
-  write_text_file "${package_dir}/${windows_launcher_script}" "Set shell = CreateObject(\"WScript.Shell\")
-Set fileSystem = CreateObject(\"Scripting.FileSystemObject\")
-scriptDir = fileSystem.GetParentFolderName(WScript.ScriptFullName)
-shell.Run Chr(34) & scriptDir & \"\\\\PCL.Frontend.Avalonia.exe\" & Chr(34) & \" app\", 0
-"
-  (
-    cd "$rid_root"
-    zip -qry "$archive_path" "$(basename "$package_dir")"
-  )
-  echo "$archive_path"
+  if [[ ! -f "$published_executable" ]]; then
+    echo "Published executable not found: $published_executable" >&2
+    exit 1
+  fi
+
+  cp "$published_executable" "$package_path"
+  echo "$package_path"
 }
 
 require_tool dotnet
-require_tool zip
 require_tool tar
 require_tool sed
+require_tool python3
 
 prepare_directory "$artifact_root"
 

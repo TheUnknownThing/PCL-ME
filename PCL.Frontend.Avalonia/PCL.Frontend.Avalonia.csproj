@@ -36,6 +36,7 @@
     <EmbeddedMicrosoftClientId Condition="'$(EmbeddedMicrosoftClientId)' == ''">$([System.Environment]::GetEnvironmentVariable('MS_CLIENT_ID'))</EmbeddedMicrosoftClientId>
     <EmbeddedCurseForgeApiKey>$([System.Environment]::GetEnvironmentVariable('PCL_CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
     <EmbeddedCurseForgeApiKey Condition="'$(EmbeddedCurseForgeApiKey)' == ''">$([System.Environment]::GetEnvironmentVariable('CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
+    <I18nToolProjectPath>$(MSBuildProjectDirectory)/../PCL.Tools.I18n/PCL.Tools.I18n.csproj</I18nToolProjectPath>
     <I18nToolDllPath>$(MSBuildProjectDirectory)/../PCL.Tools.I18n/bin/$(Configuration)/$(TargetFramework)/PCL.Tools.I18n.dll</I18nToolDllPath>
   </PropertyGroup>
 
@@ -80,6 +81,11 @@
   <Target Name="ValidateI18nResources"
           AfterTargets="Build"
           Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipI18nBuildValidation)' != 'true'">
+    <!-- Build a host-compatible copy of the validator so cross-RID publish can still run it locally. -->
+    <MSBuild Projects="$(I18nToolProjectPath)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)"
+             RemoveProperties="RuntimeIdentifier;SelfContained;PublishSingleFile;PublishReadyToRun" />
     <Error Text="ERROR|I18N validation tool was not built at $(I18nToolDllPath)."
            Condition="!Exists('$(I18nToolDllPath)')" />
     <Exec Command='dotnet "$(I18nToolDllPath)" validate --format msbuild --locales-dir "$(MSBuildProjectDirectory)/Locales"'

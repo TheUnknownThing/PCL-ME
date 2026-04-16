@@ -90,3 +90,4 @@ jobs:
           path: |
             artifact/*/PCL-ME-*.zip
             artifact/*/PCL-ME-*.tar.gz
+            artifact/*/PCL-ME-*.exe
