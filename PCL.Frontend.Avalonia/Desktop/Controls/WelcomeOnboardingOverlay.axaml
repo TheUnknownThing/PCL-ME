@@ -1,0 +1,320 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.WelcomeOnboardingOverlay"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <Grid x:Name="OverlayRoot" IsVisible="False">
+    <Border
+        x:Name="WelcomeBackdrop"
+        Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}" />
+
+    <Border
+        x:Name="WelcomeCard"
+        Margin="50,28"
+        Background="{DynamicResource ColorBrushBackground}"
+        BorderBrush="{DynamicResource ColorBrush6}"
+        BorderThickness="1"
+        BoxShadow="{DynamicResource ColorShadowCardBase}"
+        CornerRadius="10"
+        ZIndex="1">
+      <Grid RowDefinitions="Auto,*,Auto">
+        <TextBlock
+            x:Name="WelcomeTitleBlock"
+            Grid.Row="0"
+            Margin="64,32,64,0"
+            HorizontalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="22"
+            FontWeight="SemiBold"
+            Text="{Binding WelcomeStepTitle}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+
+        <Grid Grid.Row="1" Margin="0,16,0,0" ColumnDefinitions="54,*,54">
+          <controls:PclIconButton
+              x:Name="WelcomePreviousButton"
+              Grid.Column="0"
+              IconBrush="{DynamicResource ColorBrush1}"
+              HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+              Command="{Binding WelcomePreviousStepCommand}"
+              IsVisible="{Binding CanGoToPreviousWelcomeStep}"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              ToolTip.Tip="Back" />
+
+          <ScrollViewer
+              x:Name="WelcomeStepContentHost"
+              Grid.Column="1"
+              HorizontalScrollBarVisibility="Disabled"
+              VerticalScrollBarVisibility="Auto">
+            <Grid Margin="8,0">
+              <StackPanel
+                  IsVisible="{Binding IsWelcomeLanguageStep}"
+                  Margin="0,12"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  MaxWidth="400"
+                  Spacing="16">
+                <TextBlock
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="14"
+                    Text="{Binding WelcomeStepDescription}"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding LauncherLocaleOptions}"
+                    SelectedIndex="{Binding SelectedLauncherLocaleIndex}" />
+              </StackPanel>
+
+              <StackPanel
+                  IsVisible="{Binding IsWelcomeLicenseStep}"
+                  Margin="0,12"
+                  Spacing="14">
+                <TextBlock
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="14"
+                    Text="{Binding WelcomeStepDescription}"
+                    TextWrapping="Wrap" />
+                <Border
+                    Padding="14,12"
+                    Background="{DynamicResource ColorBrushBg1}"
+                    BorderBrush="{DynamicResource ColorBrush6}"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="13"
+                      LineHeight="20"
+                      Text="{Binding WelcomeEulaSummary}"
+                      TextWrapping="Wrap" />
+                </Border>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <controls:PclButton
+                      MinWidth="130"
+                      ColorType="Normal"
+                      Command="{Binding WelcomeOpenEulaCommand}"
+                      ContentPadding="10,5"
+                      Text="{Binding WelcomeOpenEulaButtonText}" />
+                  <controls:PclButton
+                      MinWidth="130"
+                      ColorType="Normal"
+                      Command="{Binding WelcomeDeclineCommand}"
+                      ContentPadding="10,5"
+                      Text="{Binding WelcomeDeclineButtonText}" />
+                </StackPanel>
+                <CheckBox
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Content="{Binding WelcomeEulaAcceptLabel}"
+                    IsChecked="{Binding WelcomeEulaAccepted, Mode=TwoWay}" />
+              </StackPanel>
+
+              <StackPanel
+                  IsVisible="{Binding IsWelcomeThemeStep}"
+                  Margin="0,12"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  MaxWidth="460"
+                  Spacing="16">
+                <TextBlock
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="14"
+                    Text="{Binding WelcomeStepDescription}"
+                    TextWrapping="Wrap" />
+                <StackPanel Spacing="10">
+                  <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto,10,Auto">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="13.5"
+                        Margin="0,0,20,0"
+                        Text="{Binding SetupText.Ui.ThemeLabel}" />
+                    <ComboBox
+                        Grid.Column="1"
+                        ItemsSource="{Binding DarkModeOptions}"
+                        SelectedIndex="{Binding SelectedDarkModeIndex}" />
+                    <TextBlock
+                        Grid.Row="2"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="13.5"
+                        Margin="0,0,20,0"
+                        IsVisible="{Binding IsThemeColorSwitchSupported}"
+                        Text="{Binding SetupText.Ui.LightPaletteLabel}" />
+                    <ComboBox
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        IsVisible="{Binding IsThemeColorSwitchSupported}"
+                        ItemsSource="{Binding ThemeColorOptions}"
+                        SelectedIndex="{Binding SelectedLightColorIndex}" />
+                    <TextBlock
+                        Grid.Row="4"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="13.5"
+                        Margin="0,0,20,0"
+                        IsVisible="{Binding IsThemeColorSwitchSupported}"
+                        Text="{Binding SetupText.Ui.DarkPaletteLabel}" />
+                    <ComboBox
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        IsVisible="{Binding IsThemeColorSwitchSupported}"
+                        ItemsSource="{Binding ThemeColorOptions}"
+                        SelectedIndex="{Binding SelectedDarkColorIndex}" />
+                  </Grid>
+                  <Grid
+                      IsVisible="{Binding IsLightCustomThemeColorEditorVisible}"
+                      ColumnDefinitions="92,*,28"
+                      ColumnSpacing="10">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="12.5"
+                        Text="{Binding SetupText.Ui.LightCustomLabel}" />
+                    <TextBox
+                        Grid.Column="1"
+                        Watermark="{DynamicResource ThemeColorLightSampleText}"
+                        Text="{Binding CustomLightThemeColorHex, UpdateSourceTrigger=PropertyChanged}" />
+                    <Border
+                        Grid.Column="2"
+                        Width="20"
+                        Height="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="{Binding CustomLightThemePreviewBrush}"
+                        BorderBrush="{DynamicResource ColorBrush6}"
+                        BorderThickness="1"
+                        CornerRadius="10" />
+                  </Grid>
+                  <TextBlock
+                      IsVisible="{Binding IsLightCustomThemeColorInvalid}"
+                      Margin="102,0,0,0"
+                      Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
+                      FontSize="12"
+                      Text="{Binding CustomThemeColorInputHint}" />
+                  <Grid
+                      IsVisible="{Binding IsDarkCustomThemeColorEditorVisible}"
+                      ColumnDefinitions="92,*,28"
+                      ColumnSpacing="10">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="12.5"
+                        Text="{Binding SetupText.Ui.DarkCustomLabel}" />
+                    <TextBox
+                        Grid.Column="1"
+                        Watermark="{DynamicResource ThemeColorDarkSampleText}"
+                        Text="{Binding CustomDarkThemeColorHex, UpdateSourceTrigger=PropertyChanged}" />
+                    <Border
+                        Grid.Column="2"
+                        Width="20"
+                        Height="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="{Binding CustomDarkThemePreviewBrush}"
+                        BorderBrush="{DynamicResource ColorBrush6}"
+                        BorderThickness="1"
+                        CornerRadius="10" />
+                  </Grid>
+                  <TextBlock
+                      IsVisible="{Binding IsDarkCustomThemeColorInvalid}"
+                      Margin="102,0,0,0"
+                      Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
+                      FontSize="12"
+                      Text="{Binding CustomThemeColorInputHint}" />
+                </StackPanel>
+                <Border
+                    IsVisible="{Binding IsThemeColorSwitchUnsupportedNoticeVisible}"
+                    Padding="12,10"
+                    Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+                    BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
+                      FontSize="12.5"
+                      Text="{Binding SetupText.Ui.ThemeSwitchUnsupportedNotice}"
+                      TextWrapping="Wrap" />
+                </Border>
+              </StackPanel>
+
+              <StackPanel
+                  IsVisible="{Binding IsWelcomeDoneStep}"
+                  Margin="0,12"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  MaxWidth="420"
+                  Spacing="18">
+                <TextBlock
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="14"
+                    Text="{Binding WelcomeStepDescription}"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+                <controls:PclIconButton
+                    x:Name="WelcomeDoneButton"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ButtonSize="60"
+                    IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+                    HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                    IconBrush="{DynamicResource ColorBrush2}"
+                    Command="{Binding WelcomeNextStepCommand}"
+                    ToolTip.Tip="{Binding WelcomeDoneButtonToolTip}" />
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="10">
+                  <controls:PclIconButton
+                      x:Name="WelcomeFeedbackButton"
+                      ButtonSize="30"
+                      IdleBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                      HoverBackgroundBrush="{DynamicResource ColorBrushEntryHoverBackground}"
+                      IconBrush="{DynamicResource ColorBrush1}"
+                      Command="{Binding WelcomeOpenFeedbackCommand}"
+                      ToolTip.Tip="{Binding WelcomeFeedbackButtonText}" />
+                  <controls:PclIconButton
+                      x:Name="WelcomeGitHubButton"
+                      ButtonSize="30"
+                      IdleBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                      HoverBackgroundBrush="{DynamicResource ColorBrushEntryHoverBackground}"
+                      IconBrush="{DynamicResource ColorBrush1}"
+                      Command="{Binding WelcomeOpenGitHubCommand}"
+                      ToolTip.Tip="{Binding WelcomeGitHubButtonText}" />
+                </StackPanel>
+              </StackPanel>
+            </Grid>
+          </ScrollViewer>
+
+          <controls:PclIconButton
+              x:Name="WelcomeNextButton"
+              Grid.Column="2"
+              IconBrush="{DynamicResource ColorBrush1}"
+              HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+              Command="{Binding WelcomeNextStepCommand}"
+              IsEnabled="{Binding CanGoToNextWelcomeStep}"
+              IsVisible="{Binding IsWelcomeAdvanceArrowVisible}"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              RenderTransform="scale(-1,1)"
+              RenderTransformOrigin="0.5,0.5"
+              ToolTip.Tip="Next" />
+        </Grid>
+
+        <StackPanel
+            x:Name="WelcomeStepIndicatorDots"
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal"
+            Spacing="12"
+            Margin="0,14,0,24">
+          <Ellipse Width="10" Height="10" Fill="{Binding WelcomeDot0Brush}" />
+          <Ellipse Width="10" Height="10" Fill="{Binding WelcomeDot1Brush}" />
+          <Ellipse Width="10" Height="10" Fill="{Binding WelcomeDot2Brush}" />
+          <Ellipse Width="10" Height="10" Fill="{Binding WelcomeDot3Brush}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

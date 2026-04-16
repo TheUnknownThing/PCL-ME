@@ -197,7 +197,7 @@ shell:
       active_summary: 此工具頁方陳於前。
       pinned_summary: 所固定之工具頁入口。
     status:
-      line: '即令：{command} | 啟畫：{splash} | 導深：{depth}'
+      line: "即令：{command} | 啟畫：{splash} | 導深：{depth}"
       splash_on: 啟
       splash_off: 閉
       commands:
@@ -206,7 +206,7 @@ shell:
         optimize_memory: 理記憶
         invalid: 不可
     surface_meta:
-      line: '{kind} 頁 • {sidebar_group} • {navigation_state}'
+      line: "{kind} 頁 • {sidebar_group} • {navigation_state}"
       no_sidebar_group: 無側邊欄分組
       back_available: 可返
       top_level_route: 上路
@@ -283,18 +283,18 @@ shell:
         title: 崩潰
         summary: 崩後之補救與診訊。
     inbox:
-      title: '{lane} 告'
-      empty: '{lane} 列今無待決之提示。'
+      title: "{lane} 告"
+      empty: "{lane} 列今無待決之提示。"
     activities:
       failure_default: 事敗。
       switch_lane:
         title: 提示列既易
-        body: '{lane} 列今有待決提示 {count} 條。'
+        body: "{lane} 列今有待決提示 {count} 條。"
       action:
-        title: '提示之行：{label}'
+        title: "提示之行：{label}"
       closed:
         title: 提示既閉
-        body: '{prompt_id} 已自 {lane} 列去。'
+        body: "{prompt_id} 已自 {lane} 列去。"
       reject_consent:
         title: 已卻授權
         body: 此提示未書同意之狀。
@@ -316,7 +316,7 @@ shell:
         title: 啟前檢不通
       pending_launch_prompts:
         title: 啟前提示待決
-        body: '{instance} 尚有 {count} 提示待決。'
+        body: "{instance} 尚有 {count} 提示待決。"
       accept_consent:
         title: 已允授權
         body: 授權之狀已書於共享設。
@@ -333,7 +333,7 @@ shell:
       persist_setting:
         title: 提示設已存
         body_non_ascii_disabled: 已閉非 ASCII 遊戲路徑提示。
-        body_value: '所存之設：{value}'
+        body_value: "所存之設：{value}"
       persist_java_override_failed:
         title: 不能強啟
         body: 今無可書此設之實例。
@@ -356,10 +356,10 @@ shell:
         java_settings: 提示既備執行境，而導介面至 Java 設頁。
       open_log:
         title: 覽日誌
-        body: '崩潰日誌已生，可於即時日誌頁啟之：{path}'
+        body: "崩潰日誌已生，可於即時日誌頁啟之：{path}"
       crash_report_exported:
         title: 崩潰報告既出
-        body: '{path} • 已封 {count} 檔。'
+        body: "{path} • 已封 {count} 檔。"
       java_runtime_prepare_failed:
         title: Java 執行境備之失
         body_missing_plan: 今啟之狀無可行之 Java 下載計。
@@ -368,10 +368,10 @@ shell:
         body: 方於幕後下載並註冊 Java 執行境。
       java_runtime_ready:
         title: Java 執行境既備
-        body: '{path} • 下載 {downloaded_count} 檔，復用 {reused_count} 檔。'
+        body: "{path} • 下載 {downloaded_count} 檔，復用 {reused_count} 檔。"
       game_process_ended:
         title: 遊戲程序已畢
-        body: '{instance} • ExitCode {exit_code}'
+        body: "{instance} • ExitCode {exit_code}"
       monitor_exception:
         title: 工作階異常
       crash_prompt_shown:
@@ -387,12 +387,12 @@ shell:
       continue_flow: 續程
       accept_consent: 允授權
       reject_consent: 卻授權
-      open_url: '啟連結（{value}）'
+      open_url: "啟連結（{value}）"
       exit_launcher: 退啟動器
       abort_launch: 止啟
-      append_launch_argument: '續加啟參（{value}）'
-      persist_setting: '存設（{value}）'
-      download_java_runtime: '下載 Java（{value}）'
+      append_launch_argument: "續加啟參（{value}）"
+      persist_setting: "存設（{value}）"
+      download_java_runtime: "下載 Java（{value}）"
       persist_java_override: 存 Java 相容性略設
       ignore_java_once: 此次略 Java 相容性檢
       close_prompt: 閉提示
@@ -402,33 +402,33 @@ shell:
     external_open:
       success:
         title: 已啟外部目標
-        body: '{message} {target}'
+        body: "{message} {target}"
         url: 已根據提示啟外部連結。
         crash_report_exported: 已匯出並啟崩潰報告壓縮檔。
       failure:
         title: 啟外部目標失敗
         missing_target: 缺少可啟的目標。
-        body: '{target} • {error}'
+        body: "{target} • {error}"
         unknown_error: 未知錯誤
     launch_logs:
-      process_exited: '遊戲程序既退，退碼 {exit_code}。'
-      monitor_exception: '工作階監控異常：{message}'
+      process_exited: "遊戲程序既退，退碼 {exit_code}。"
+      monitor_exception: "工作階監控異常：{message}"
     crash:
       details_header: 詳細訊：
       launch_failure:
-        exit_code: '遊戲程序異常退出，退出碼 {exit_code}。'
-        raw_output_log: '原始輸出日誌：{path}'
+        exit_code: "遊戲程序異常退出，退出碼 {exit_code}。"
+        raw_output_log: "原始輸出日誌：{path}"
     java:
-      runtime_name: 'Java {version}'
-      component_runtime_name: '{component}（Java {version}）'
+      runtime_name: "Java {version}"
+      component_runtime_name: "{component}（Java {version}）"
       tags:
         bit64: 64 位元
         prompt_download: 提示下載
-        reused_count: '重複用 {count}'
+        reused_count: "重複用 {count}"
   surface_actions:
     sidebar:
-      title: '左側操作：{action}'
-      body: '{title} • {command}'
+      title: "左側操作：{action}"
+      body: "{title} • {command}"
   game_log:
     actions:
       clear_cache: 清快取
@@ -479,7 +479,7 @@ shell:
       description: 擇一佐助條目，以覽其文、所自與可行之操。
       title: 未擇佐助條目
     failures:
-      action: '{title} 失敗'
+      action: "{title} 失敗"
       download_target_missing: 下載後之目標檔不存在。
       entry_not_found: 未得佐助條目：{reference}
       invalid_download_address: 下載位址無效。
@@ -532,7 +532,7 @@ shell:
       moved_to_trash: 已將實例 {name} 移入回收站：{path}
       permanently_deleted: 實例 {name} 已永刪。
     detail:
-      last_modified: '{path} • 末改於 {time}'
+      last_modified: "{path} • 末改於 {time}"
     empty:
       download: 下載實例
       no_match_description: 無與「{query}」相符之實例，請易關鍵字或清其尋。
@@ -568,12 +568,12 @@ shell:
       not_saved: 此夾未存，不能自列中去之。
       removed: 已自夾列去 {path}。
       removed_and_switched: 既去 {removed}，復易至 {target}。
-      still_active: '{path} 仍為今所用之實例目錄。'
+      still_active: "{path} 仍為今所用之實例目錄。"
     groups:
       api_installable: API 可安裝
       error: 異常實例
       favorites: 收藏
-      header: '{title}（{count}）'
+      header: "{title}（{count}）"
       hidden: 隱藏
       loaders:
         cleanroom: Cleanroom
@@ -655,9 +655,9 @@ shell:
       success: 已畢，歷 {duration}
       waiting: 已候 {duration}
     duration:
-      hours_minutes: '{hours} 時 {minutes} 分'
-      minutes_seconds: '{minutes} 分 {seconds} 秒'
-      seconds: '{seconds} 秒'
+      hours_minutes: "{hours} 時 {minutes} 分"
+      minutes_seconds: "{minutes} 分 {seconds} 秒"
+      seconds: "{seconds} 秒"
     empty:
       description: 今無後臺事正行。
       title: 無後臺事
@@ -676,8 +676,8 @@ shell:
       waiting_state_message: 方等待執行
     recent:
       just_now: 剛剛
-      minutes_ago: '{minutes} 分前'
-      seconds_ago: '{seconds} 秒前'
+      minutes_ago: "{minutes} 分前"
+      seconds_ago: "{seconds} 秒前"
     route:
       description: 覽背景任務之候、行、畢、敗諸狀。
       facts:
@@ -703,7 +703,7 @@ shell:
   tools:
     common:
       confirm: 定
-      failure_title: '{title} 失敗'
+      failure_title: "{title} 失敗"
     help:
       default_group: 常規
       search:
@@ -750,7 +750,7 @@ shell:
         start: 始下載
         start_activity: 開始下載自訂檔
         start_failure: 開始下載自定檔敗
-        user_agent: 'User-Agent'
+        user_agent: "User-Agent"
       head:
         no_skin_selected: 尚未擇皮膚。
         output_missing: 未生成頭像圖像。
@@ -812,7 +812,7 @@ shell:
             confirm: 建
             created_hint: 已於 {target} 建捷徑。
             failure_title: 建捷徑敗
-            location: '{title} 位置：{path}'
+            location: "{title} 位置：{path}"
             no_targets: 今系統未供可用之捷徑目錄。
             summary_warning: 此捷徑不將自去，刪或移啟動器前，宜手去之。
             targets:
@@ -896,11 +896,11 @@ launch:
       message: 今所用者，PCL 跨平台版也。此版由社群自為開發維護，與官方所行之路不同，故體驗或有殊。
       detail: 此軟體猶未經詳試，歡迎共試而陳所見。
   notifications:
-    success: '{instance_name} 啟矣。'
+    success: "{instance_name} 啟矣。"
     abort_with_hint: 啟已止：{hint}
     script_export_canceled: 啟動腳本既出，故啟流程已止。
     launch_canceled: 啟已止。
-    none: ''
+    none: ""
   precheck:
     failures:
       instance_path_reserved_chars: 實例路徑中不可包含 ! 或 ;（{path}）。
@@ -916,7 +916,7 @@ launch:
   prompts:
     non_ascii_path:
       title: 非 ASCII 路徑警告
-      message: '{instance_name} 今所用路徑含非 ASCII 字元，部分 Java 執行境或模組或以此而啟敗。'
+      message: "{instance_name} 今所用路徑含非 ASCII 字元，部分 Java 執行境或模組或以此而啟敗。"
       actions:
         continue: 強啟
         abort: 止啟
@@ -961,7 +961,7 @@ launch:
         continue: 續
     java_compatibility:
       title: Java 相容警告
-      message: '{runtime_label} 或不合今實例所需之 Java 範圍（{minimum_version} - {maximum_version}）。'
+      message: "{runtime_label} 或不合今實例所需之 Java 範圍（{minimum_version} - {maximum_version}）。"
       actions:
         force_current: 仍用今 Java
         use_compatible: 改用相容 Java
@@ -1026,9 +1026,9 @@ launch:
     instance_create:
       title: 新建檔
       status_default: 已自實例設引第三方驗證伺服器。
-      status_named: '已自實例設引 {auth_name}。'
+      status_named: "已自實例設引 {auth_name}。"
       navigation: 已自實例設轉至啟動頁，以備建第三方驗證檔。
-      completed: '已轉至啟動頁，為 {instance_name} 建第三方驗證檔。'
+      completed: "已轉至啟動頁，為 {instance_name} 建第三方驗證檔。"
     authlib:
       actions:
         login: 入
@@ -1043,10 +1043,10 @@ launch:
         required_fields: 請輸伺服器址、用者名與密碼
       password_watermark: 密碼
       server_watermark: 驗證伺服器址
-      title: 'Authlib-Injector'
+      title: "Authlib-Injector"
       user_name_watermark: 用者名稱
     chooser:
-      authlib: 'Authlib-Injector'
+      authlib: "Authlib-Injector"
       microsoft: 微軟帳號
       offline: 離線檔
     delete:
@@ -1062,7 +1062,7 @@ launch:
     hint:
       selected: 已擇檔
     kinds:
-      authlib: 'Authlib-Injector'
+      authlib: "Authlib-Injector"
       authlib_with_server: Authlib-Injector（{server_name}）
       microsoft: 微軟帳號
       offline: 離線檔
@@ -1174,7 +1174,7 @@ launch:
       game_process_started: 已啟 {instance_name}（PID {pid}）
       instance_verification_completed: 實例驗校已畢；下載 {downloaded_count} 檔，復用 {reused_count} 檔。
       returned_to_launch_page: 已返啟動頁
-    overview_title: '{instance_name} 總覽'
+    overview_title: "{instance_name} 總覽"
     steps:
       prepare_arguments: 方備啟參
       read_configuration: 方讀啟動設
@@ -1248,7 +1248,7 @@ launch:
 crash:
   prompts:
     output:
-      message: '{message}'
+      message: "{message}"
       launch_failure:
         title: 啟動失敗
         result_text: Minecraft 啟動或執行過程中發生錯誤。
@@ -1261,8 +1261,8 @@ crash:
         export_report: 匯出報告
   export:
     heading: 匯出計畫
-    suggested_archive: '- 建議壓縮包：{archive_name}'
-    source_file_count: '- 來源檔數量：{file_count}'
+    suggested_archive: "- 建議壓縮包：{archive_name}"
+    source_file_count: "- 來源檔數量：{file_count}"
 setup:
   launch:
     cards:
@@ -1387,7 +1387,7 @@ setup:
         title_local_detail_file: 先土名，次描述，末檔名
         title_file_detail_local: 先檔名，次描述，末土名
     labels:
-      download_timeout_value: '{value} 秒'
+      download_timeout_value: "{value} 秒"
     activities:
       reset: 重置遊戲管理設
       reset_completed: 下載、社羣資源與輔助功能之設，已復於今啟動器默設。
@@ -1413,7 +1413,7 @@ setup:
         action: 啟社羣頁
         command: 啟社羣倉庫
       repo:
-        title: 'PCL-ME'
+        title: "PCL-ME"
         action: 啟倉庫
         command: 啟項目倉庫
     acknowledgements:
@@ -1428,7 +1428,7 @@ setup:
         action: 啟其站
         command: 啟 MC 百科
       pysio:
-        title: 'Pysio @ Akaere Network'
+        title: "Pysio @ Akaere Network"
         summary: 貢獻者兼社羣之助者。
         action: 啟其站
         command: 啟 Pysio 之站
@@ -1502,12 +1502,12 @@ setup:
       duplicate: 重複
       other: 其他
     actions:
-      open_issue: '啟 Issue #{number}'
+      open_issue: "啟 Issue #{number}"
     summary:
       unknown_author: 未知作人
       unknown_time: 未知時
       uncategorized_type: 未分類
-      line: '{author} | {created_at} | {type}'
+      line: "{author} | {created_at} | {type}"
     activities:
       refresh: 刷反饋頁
       refresh_completed: 已同步 {count} 條 GitHub 反饋。
@@ -1550,13 +1550,13 @@ setup:
       change_mode: 易自動更新之設
       refresh: 刷更新頁
       available: 已得可用更新：{version}
-      latest: '{version} 已為最新版'
+      latest: "{version} 已為最新版"
       checking: 方檢更新...
       download_install: 下載而安更新
       no_pending_update: 今無待下載之更新。
       no_download_url: 今更新源未設可用下載址。
       download_install_failed: 下載而安更新敗
-      package_ready: '{version} 之更新包既備，啟動器將退而施其更。'
+      package_ready: "{version} 之更新包既備，啟動器將退而施其更。"
       package_ready_hint: 更新包既備，啟動器將閉而自安。
       view_detail: 覽更新詳
       view_detail_title: 更新詳：{version}
@@ -1602,7 +1602,7 @@ setup:
       title_bar:
         header: 標題欄
     fields:
-      custom_theme_hint: '可用 #RRGGBB，如 #159E95'
+      custom_theme_hint: "可用 #RRGGBB，如 #159E95"
       custom_theme_refresh_hint: 自定題色將即時刷今介面配色與標題欄對比度。
       dark_custom: 深色自定
       dark_palette: 深色配色
@@ -1786,9 +1786,9 @@ setup:
       add_completed: 已增並擇 {path}
       add_exists: Java 已存在於配置列表中：{path}
       add_unrecognized: 不能識所擇檔為可用 Java：{path}
-      open_folder: '啟 Java 夾: {title}'
-      toggle_result: '{title} • {state}'
-      view_detail: '覽 Java 詳情: {title}'
+      open_folder: "啟 Java 夾: {title}"
+      toggle_result: "{title} • {state}"
+      view_detail: "覽 Java 詳情: {title}"
     auto_select:
       description: 依遊戲所需，自擇其宜之 Java。
       label: 自動擇
@@ -1798,19 +1798,19 @@ setup:
       no: 否
       unavailable: 不可用
       yes: 是
-      architecture: '架構: {value}'
-      availability: '可用性: {value}'
-      brand: '品牌: {value}'
-      default_java: '默設 Java: {value}'
-      enabled: '已啓用: {value}'
-      executable: '可執行檔: {value}'
-      folder: '目錄: {value}'
-      major_version: '主版本: {value}'
-      path: '路徑: {value}'
-      source: '來源: {value}'
-      tags: '今標籤: {value}'
-      type: '類型: {value}'
-      version: '版本: {value}'
+      architecture: "架構: {value}"
+      availability: "可用性: {value}"
+      brand: "品牌: {value}"
+      default_java: "默設 Java: {value}"
+      enabled: "已啓用: {value}"
+      executable: "可執行檔: {value}"
+      folder: "目錄: {value}"
+      major_version: "主版本: {value}"
+      path: "路徑: {value}"
+      source: "來源: {value}"
+      tags: "今標籤: {value}"
+      type: "類型: {value}"
+      version: "版本: {value}"
     tags:
       auto_installed: 自動安裝
       auto_scanned: 自動掃描
@@ -1872,7 +1872,7 @@ setup:
       debug_mode_enabled: 已啟用更詳細的日誌與診斷訊。
       proxy_invalid_address: 自定代理位址無效。
       proxy_test_started: 方通過 {mode} 訪問 {host}。
-      proxy_test_succeeded: '{mode} 連線既成，HTTP {status_code} {reason_phrase}。'
+      proxy_test_succeeded: "{mode} 連線既成，HTTP {status_code} {reason_phrase}。"
       proxy_test_succeeded_hint: 代理連線試已成。
     options:
       http_proxy:
@@ -1895,14 +1895,14 @@ common:
     select_all: 全擇
     continue: 續
   activities:
-    failed: '{title} 失敗'
+    failed: "{title} 失敗"
   filters:
     all: 全部
     any: 任意
   memory:
     summary:
       allocation_prefix: 遊戲分配
-      size_gb: '{value} GB'
+      size_gb: "{value} GB"
       usage_header: 已用記憶體 / 已安裝記憶體
   punctuation:
     comma: 、
@@ -1911,39 +1911,39 @@ download:
     actions:
       save_installer: 儲存安裝器
     activities:
-      entry_action: '下載頁操作：{entry_title}'
-      open_entry: '啟條目：{entry_title}'
-      open_favorite_entry: '啟收藏夾條目：{entry_title}'
+      entry_action: "下載頁操作：{entry_title}"
+      open_entry: "啟條目：{entry_title}"
+      open_favorite_entry: "啟收藏夾條目：{entry_title}"
     download:
       file_type_default: 檔
       hints:
-        completed: '{file_name} 下載完成'
+        completed: "{file_name} 下載完成"
         started: 開始下載 {file_name}
-      installer_type: '{surface_name} 安裝器'
+      installer_type: "{surface_name} 安裝器"
       missing_url: 今無可用的下載網址。
       no_save_path: 無擇儲存位置。
       pick_save_path_title: 擇儲存位置
-      task_title: '下載 {file_name}'
+      task_title: "下載 {file_name}"
     errors:
       empty_description: 今不能讀遠端目錄，請稍後復試。
       empty_title: 暫無可顯之資料
-      load_failed_body: '讀遠端目錄敗。錯：{error}'
+      load_failed_body: "讀遠端目錄敗。錯：{error}"
       load_failed_title: 遠端目錄載敗
       retry_later: 請稍後復試。
       section_title: 遠端目錄
     remote:
       latest:
-        preview_published: '最新快照，發布時間 {published_at}'
-        release_published: '最新正式版，發布時間 {published_at}'
+        preview_published: "最新快照，發布時間 {published_at}"
+        release_published: "最新正式版，發布時間 {published_at}"
       groups:
         snapshot: 快照版本
       labels:
-        forge_compatible: '相容 Forge {forge_version}'
+        forge_compatible: "相容 Forge {forge_version}"
         forge_incompatible: 不相容 Forge
         installer: 安裝器
         latest: 最新
         no_display_data: 暫無可顯之資料
-        published_at: '發布時間 {published_at}'
+        published_at: "發布時間 {published_at}"
         recommended: 推薦
         separator: ，
         unknown_version: 未知版本
@@ -1952,9 +1952,9 @@ download:
         variant_red: （紅色變種）
       empty:
         cleanroom: 今無可用的 Cleanroom 遠端條目。
-        forge_version_entries: '今無適用於 {minecraft_version} 的 Forge 條目。'
+        forge_version_entries: "今無適用於 {minecraft_version} 的 Forge 條目。"
         forge_versions: Forge 遠端目錄無回傳任何 Minecraft 版本。
-        group_entries: '{group_name} 今無可用條目。'
+        group_entries: "{group_name} 今無可用條目。"
         installer_versions: 今無可用的安裝器版本。
         labymod_channels: 今無可用的 LabyMod 頻道。
         latest_versions: 遠端版本清單無回傳任何最新版本。
@@ -2048,15 +2048,15 @@ download:
       started_activity: 已開始為 {target_name} 批量安裝
       started_hint: 已開始批量安裝
       summary:
-        dependencies: '{count} 個依賴項'
+        dependencies: "{count} 個依賴項"
         none: 無任務
         skipped: 跳過了 {count} 項
-        tasks: '{count} 個任務'
+        tasks: "{count} 個任務"
     empty:
       body: 把項目加入收藏夾，後即可安裝或分享。
       title: 還無收藏項
     favorite_to:
-      already_contains_selected: '{target_name} 已經包含所有選中的收藏項'
+      already_contains_selected: "{target_name} 已經包含所有選中的收藏項"
       completed: 已將 {count} 個收藏項加入 {target_name}
       selection_prompt: 為 {count} 個已選收藏項擇目標
     remove:
@@ -2069,15 +2069,15 @@ download:
       watermark: 尋收藏項
     select_all:
       completed: 已在 {target_name} 中選取 {count} 個可見收藏項
-      empty: '{target_name} 中無可見收藏項'
+      empty: "{target_name} 中無可見收藏項"
     selection:
       summary: 已擇 {count} 項
     share_selected:
       completed: 已複製 {count} 個選中收藏項的 ID
       empty: 無可分享的已選收藏項
     meta:
-      downloads: '{value} 下載'
-      updated: '更新 {value}'
+      downloads: "{value} 下載"
+      updated: "更新 {value}"
     demo:
       entries:
         sodium:
@@ -2095,9 +2095,9 @@ download:
       empty_share_code: 分享了個寂寞啊！
       manage:
         title: 管理收藏夾
-        current_target: '今收藏夾：{target_name}'
+        current_target: "今收藏夾：{target_name}"
         failed: 管理收藏夾失敗
-        unknown_action: '未識別的收藏夾操作：{action_id}'
+        unknown_action: "未識別的收藏夾操作：{action_id}"
         options:
           share:
             label: 分享今收藏夾
@@ -2116,7 +2116,7 @@ download:
             description: 刪今收藏夾。
       share:
         activity: 分享今收藏夾
-        completed: '已複製 {target_name} 的分享代碼。'
+        completed: "已複製 {target_name} 的分享代碼。"
         failed: 分享今收藏夾失敗
       import:
         title: 匯入收藏
@@ -2124,9 +2124,9 @@ download:
         prompt: 輸入分享的收藏。
         watermark: '例如：["23333"]'
         failed: 匯入收藏失敗
-        destination_prompt: '識別到 {count} 個收藏項目，要加入到哪裡？'
-        completed_new: '已匯入到新收藏夾：{target_name}'
-        completed_current: '已匯入到今收藏夾：{target_name}'
+        destination_prompt: "識別到 {count} 個收藏項目，要加入到哪裡？"
+        completed_new: "已匯入到新收藏夾：{target_name}"
+        completed_current: "已匯入到今收藏夾：{target_name}"
         options:
           new_target:
             label: 新的收藏夾
@@ -2155,7 +2155,7 @@ download:
           目標 ID：{target_id}
           此舉不可復。
         confirm: 刪
-        completed: '已刪 {target_name}。'
+        completed: "已刪 {target_name}。"
         failed: 刪今收藏夾失敗
   install:
     refresh:
@@ -2174,7 +2174,7 @@ download:
         release: 正式版
       latest:
         preview: 最新預覽版
-        published_at: '{label}：{published_at}'
+        published_at: "{label}：{published_at}"
         release: 最新正式版
       load_failed: 載版本敗
       loading: 方載版本...
@@ -2183,33 +2183,33 @@ download:
         snapshot: 快照版
         stable: 穩定版
       summaries:
-        current_instance_with_time: '今實例 • {published_at}'
-        installer_with_time: '安裝器 • {published_at}'
-        labymod_for_minecraft: 'LabyMod 4 • {minecraft_version}'
-        loader_testing: '{loader_name} 測試版'
+        current_instance_with_time: "今實例 • {published_at}"
+        installer_with_time: "安裝器 • {published_at}"
+        labymod_for_minecraft: "LabyMod 4 • {minecraft_version}"
+        loader_testing: "{loader_name} 測試版"
         preview: 預覽版
         quilt_installer: Quilt 安裝器
         release: 正式版
         release_time_unavailable: 未記錄發佈時間
-        release_with_time: '正式版 • {published_at}'
+        release_with_time: "正式版 • {published_at}"
         stable: 穩定版
-        status_with_time: '{status} • {published_at}'
+        status_with_time: "{status} • {published_at}"
         testing: 測試版
-        april_fools_special: '發佈於 {published_at} 的愚人節特輯'
+        april_fools_special: "發佈於 {published_at} 的愚人節特輯"
         april_fools:
-          '2013': 2013 | 此秘更籌之二年，遂令遊戲更上一層！
+          "2013": 2013 | 此秘更籌之二年，遂令遊戲更上一層！
           2013_blue: 2013 | 此秘更籌之二年，遂令遊戲更上一層！（藍版）
           2013_purple: 2013 | 此秘更籌之二年，遂令遊戲更上一層！（紫版）
           2013_red: 2013 | 此秘更籌之二年，遂令遊戲更上一層！（赤版）
-          '2015': 2015 | 既為通齡之戲，則當尚和平、仁愛與擁抱。
-          '2016': 2016 | 今可引今世之技入 Minecraft 矣！
-          '2019': 2019 | 我輩於地下室廢墟中得此一九九四年之傑作！
-          '2020': 2020 | 增新維度二十億，使無窮想像化為真境！
-          '2022': 2022 | 一次一方塊！且迎新掘採、合成與騎乘之法。
-          '2023': 2023 | 研究云：玩家好為擇，且愈多愈善！
-          '2024': 2024 | 毒馬鈴薯素為人所忽且輕，故今特大強之！
-          '2025': 2025 | 凡物皆可合成，乃至爾之世界亦然！
-          '2026': 2026 | 何須物品欄？且使方塊隨子而行！
+          "2015": 2015 | 既為通齡之戲，則當尚和平、仁愛與擁抱。
+          "2016": 2016 | 今可引今世之技入 Minecraft 矣！
+          "2019": 2019 | 我輩於地下室廢墟中得此一九九四年之傑作！
+          "2020": 2020 | 增新維度二十億，使無窮想像化為真境！
+          "2022": 2022 | 一次一方塊！且迎新掘採、合成與騎乘之法。
+          "2023": 2023 | 研究云：玩家好為擇，且愈多愈善！
+          "2024": 2024 | 毒馬鈴薯素為人所忽且輕，故今特大強之！
+          "2025": 2025 | 凡物皆可合成，乃至爾之世界亦然！
+          "2026": 2026 | 何須物品欄？且使方塊隨子而行！
     generated_name:
       default: 新版本
     options:
@@ -2265,20 +2265,20 @@ download:
         copy_generated_libraries: 方複製安裝器生成的支援函式庫…
         copy_optifine_libraries: 方複製 OptiFine 生成的支援函式庫…
         creating_instance_directories: 方建立實例目錄結構…
-        download_loader_installer: '方下載 {loader_title} 安裝器…'
+        download_loader_installer: "方下載 {loader_title} 安裝器…"
         download_optifine_installer: 方下載 OptiFine 安裝器…
         downloading_asset_files: 方下載資源檔
         downloading_dependencies: 方下載依賴
-        download_vanilla_client: '方下載 Minecraft {version} 原版用戶端…'
-        extract_loader_libraries: '方解包 {loader_title} 安裝器中的支援函式庫…'
+        download_vanilla_client: "方下載 Minecraft {version} 原版用戶端…"
+        extract_loader_libraries: "方解包 {loader_title} 安裝器中的支援函式庫…"
         fetch_labymod_manifest: 方取得 LabyMod 安裝訊清單…
-        fetch_loader_manifest: '方取得 {loader_title} 安裝訊清單…'
-        fetch_vanilla_manifest: '方取得 Minecraft {version} 原版訊清單…'
+        fetch_loader_manifest: "方取得 {loader_title} 安裝訊清單…"
+        fetch_vanilla_manifest: "方取得 Minecraft {version} 原版訊清單…"
         finalizing_installation: 方整理實例目錄並完成安裝…
-        files_ready: '{completed_count}/{total_count} 個檔已就緒'
+        files_ready: "{completed_count}/{total_count} 個檔已就緒"
         generating_target_manifest: 方生成目標安裝訊清單…
         initialize_launcher_profiles: 方初始化 launcher_profiles.json…
-        inspect_loader_installer: '方解析 {loader_title} 安裝器內容…'
+        inspect_loader_installer: "方解析 {loader_title} 安裝器內容…"
         manifest_written: 訊清單已寫入
         merging_liteloader_manifest: 方合併 LiteLoader 安裝訊…
         no_asset_files_needed: 無需資源檔
@@ -2289,20 +2289,20 @@ download:
         prepare_environment: 方準備環境
         preparing_managed_dependencies: 方準備受管依賴檔…
         preparing_manifest: 方寫入安裝訊清單並準備安裝環境…
-        prepare_loader_installer: '方準備 {loader_title} 安裝器…'
-        prepare_vanilla_files: '方準備 Minecraft {version} 原版檔…'
+        prepare_loader_installer: "方準備 {loader_title} 安裝器…"
+        prepare_vanilla_files: "方準備 Minecraft {version} 原版檔…"
         processing_optifine_manifest: 方處理 OptiFine 安裝訊…
         processing_file: 方處理 {file_name}
-        progress_with_file: '{prefix}：{completed_count}/{total_count}（{file_name}）'
-        progress_without_file: '{prefix}：{completed_count}/{total_count}'
+        progress_with_file: "{prefix}：{completed_count}/{total_count}（{file_name}）"
+        progress_without_file: "{prefix}：{completed_count}/{total_count}"
         queued: 已排隊
         read_generated_manifest: 方讀取安裝器版本訊清單…
         read_optifine_manifest: 方讀取 OptiFine 生成的版本訊清單…
-        read_vanilla_version_details: '方讀取 Minecraft {version} 版本詳情…'
+        read_vanilla_version_details: "方讀取 Minecraft {version} 版本詳情…"
         repairing_game_files: 方補全遊戲主檔與支援函式庫…
-        repair_loader_dependencies: '方補全 {loader_title} 安裝依賴…'
+        repair_loader_dependencies: "方補全 {loader_title} 安裝依賴…"
         repairing_support_files: 方修復支援檔
-        run_loader_installer: '方執行 {loader_title} 安裝步驟…'
+        run_loader_installer: "方執行 {loader_title} 安裝步驟…"
         run_optifine_installer: 方執行 OptiFine 安裝器…
         support_files_completed: 支援檔已完成
         support_files_ready: 支援檔已就緒
@@ -2310,16 +2310,16 @@ download:
         waiting_execution: 等待執行
         waiting_finalize: 等待完成收尾
         waiting_support_files: 等待支援檔
-        write_loader_libraries: '方寫入 {loader_title} 支援函式庫…'
-        writing_manifest_file: '方寫入安裝訊清單檔 {file_name}…'
+        write_loader_libraries: "方寫入 {loader_title} 支援函式庫…"
+        writing_manifest_file: "方寫入安裝訊清單檔 {file_name}…"
         writing_instance_config: 方寫入實例設…
-        write_vanilla_manifest: '方寫入 Minecraft {version} 原版訊清單…'
+        write_vanilla_manifest: "方寫入 Minecraft {version} 原版訊清單…"
   resource:
     activities:
-      entry_action: '資源操作：{entry_title}'
+      entry_action: "資源操作：{entry_title}"
       install_pack: 安裝整合包
       install_pack_failed: 安裝整合包失敗
-      open_page: '啟資源頁：{entry_title}'
+      open_page: "啟資源頁：{entry_title}"
       reset_filters: 重設篩選條件
       reset_filters_message: 已重設 {surface_title} 的篩選條件
     current_instance:
@@ -2347,7 +2347,7 @@ download:
     entry:
       count_style: east_asian
       downloads_none: 暫無下載
-      downloads_with_count: '{count} 下載'
+      downloads_with_count: "{count} 下載"
       updated_unknown: 時間未知
       version_unknown: 未標註版本
     install_pack:
@@ -2376,7 +2376,7 @@ download:
     surface:
       empty: 無找到 {surface_name}
       loading: 方載入 {surface_name}...
-      title: '{surface_name}'
+      title: "{surface_name}"
     tag_groups:
       features: 特性
       performance: 效能負荷
@@ -2493,20 +2493,20 @@ resource_detail:
   copy:
     messages:
       completed: 複製成功
-      failed: '{title} 失敗'
+      failed: "{title} 失敗"
   copy_link:
     empty: 無可複製的連結
   copy_name:
     empty: 無可複製的名稱
   counts:
-    hundred_million: '{value} 億'
-    ten_thousand: '{value} 萬'
+    hundred_million: "{value} 億"
+    ten_thousand: "{value} 萬"
   compatibility:
     no_loaders: 未提供載入器訊
     no_versions: 未供 Minecraft 版本列
-    loaders: '載入器：{loaders}'
-    summary: '{version_summary} • {loader_summary}'
-    versions: 'Minecraft {versions}'
+    loaders: "載入器：{loaders}"
+    summary: "{version_summary} • {loader_summary}"
+    versions: "Minecraft {versions}"
   current_instance:
     none_selected: 未擇今實例
     summary_none_selected: 擇一個實例即可直接安裝此專案
@@ -2564,7 +2564,7 @@ resource_detail:
       required: 必需
       tool: 工具
     title: 依賴項
-    title_for_release: '{release_title} 的依賴項'
+    title_for_release: "{release_title} 的依賴項"
   download:
     dialogs:
       pick_save_path:
@@ -2604,9 +2604,9 @@ resource_detail:
       queued_in_task_center: 已加入工作中心：{task_title}
     summary:
       completed: 已為 {instance_name} 加入安裝佇列：{summary}
-      dependencies: '{count} 個依賴項'
+      dependencies: "{count} 個依賴項"
       skipped: 跳過了 {count} 項
-      tasks: '{count} 個任務'
+      tasks: "{count} 個任務"
   instance_selection:
     activities:
       select: 擇實例
@@ -2615,7 +2615,7 @@ resource_detail:
       message: 擇一個實例來安裝此專案
       title: 擇實例
     messages:
-      already_selected: '{instance_name} 已經被選取'
+      already_selected: "{instance_name} 已經被選取"
       no_instances: 無可用實例
   links:
     title: 連結
@@ -2634,7 +2634,7 @@ resource_detail:
     homepage: 專案首頁
     issues: 問題回報
     source: 原始碼倉庫
-    support_author: '助作者 · {platform}'
+    support_author: "助作者 · {platform}"
     wiki: Wiki
   loading:
     releases: 方載入版本...
@@ -2649,11 +2649,11 @@ resource_detail:
     world: 世界
   release_info:
     unavailable: 未提供版本訊
-    versions: 'Minecraft {versions}'
+    versions: "Minecraft {versions}"
   release_meta:
-    downloads: '{count} 下載'
-    published: '發布 {date}'
-    published_with_downloads: '發布 {date} • {downloads}'
+    downloads: "{count} 下載"
+    published: "發布 {date}"
+    published_with_downloads: "發布 {date} • {downloads}"
   modpack:
     activities:
       install_canceled: 已取消整合包安裝：{entry_title}
@@ -2670,7 +2670,7 @@ resource_detail:
         title: 實例名稱無效
     hints:
       download_and_install_started: 已開始下載並安裝 {file_name}
-      install_completed: '{instance_name} 已安裝完成'
+      install_completed: "{instance_name} 已安裝完成"
     messages:
       install_completed: 已將 {instance_name} 安裝到 {target_directory}
       missing_instance_name: 未提供實例名稱
@@ -2700,7 +2700,7 @@ resource_detail:
         downloading_bundled_files: 方下載整合包附帶檔…
         processing_file: 方處理 {file_name}…
         bundled_files_ready: 整合包附帶檔已處理。
-        file_ready: '{file_name} 已就緒'
+        file_ready: "{file_name} 已就緒"
         installing_game: 方安裝遊戲與載入器…
         repairing_game_files: 方補全遊戲檔…
         finalizing_instance: 方整理實例目錄…
@@ -2713,17 +2713,17 @@ resource_detail:
         curseforge_missing_files: 整合包中部分 CurseForge 檔已不存，不能續行自動安裝。
         pcl_missing_addons: 此 PCL 標準整合包未供遊戲版本附加訊，不能安裝。
         pcl_missing_game_version: 此 PCL 標準整合包未供遊戲版本訊，不能安裝。
-        missing_critical_file: '整合包缺少關鍵檔：{path}'
-        minecraft_choice_missing: '未找到可用的 Minecraft {version} 安裝方案。'
-        loader_choice_missing: '未找到 {option_title} {requested_version} 的安裝方案。'
-        file_download_failed: '不能下載整合包檔：{file_name}'
+        missing_critical_file: "整合包缺少關鍵檔：{path}"
+        minecraft_choice_missing: "未找到可用的 Minecraft {version} 安裝方案。"
+        loader_choice_missing: "未找到 {option_title} {requested_version} 的安裝方案。"
+        file_download_failed: "不能下載整合包檔：{file_name}"
         curseforge_metadata_empty: CurseForge 檔中繼資料回傳為空。
         curseforge_metadata_missing_data: CurseForge 檔中繼資料缺少 data 陣列。
-        file_path_outside_instance: '整合包檔路徑超出了實例目錄：{relative_path}'
-        archive_illegal_path: '整合包包含非法路徑：{entry_path}'
+        file_path_outside_instance: "整合包檔路徑超出了實例目錄：{relative_path}"
+        archive_illegal_path: "整合包包含非法路徑：{entry_path}"
         rar_unsupported: PCL 不能治 rar 格式壓縮檔，請先解之，復壓為 zip 格式而後試。
         archive_open_failed: 啟整合包檔失敗，檔可能損壞或為不支援的壓縮包格式。
-        json_parse_failed: '不能析整合包內之 JSON 檔：{entry_path}'
+        json_parse_failed: "不能析整合包內之 JSON 檔：{entry_path}"
   releases:
     empty:
       body: 今篩選條件下無可用版本
@@ -2741,7 +2741,7 @@ resource_detail:
   statuses:
     archived: 已封存
     draft: 草稿
-    fallback: '狀態 {status}'
+    fallback: "狀態 {status}"
     load_failed: 載入失敗
     published: 已發布
     removed: 已下架
@@ -2760,12 +2760,12 @@ resource_detail:
     legacy: 舊版
     snapshot: 快照
   warnings:
-    load_failed: '不能自即時來源載專案資料：{message}'
+    load_failed: "不能自即時來源載專案資料：{message}"
   world_archive:
-    extract_failed: '存檔壓縮檔已下載完成，但自動解壓失敗：{message}'
+    extract_failed: "存檔壓縮檔已下載完成，但自動解壓失敗：{message}"
     install_directory_unavailable: 存檔安裝目錄不可用。
     no_importable_content: 壓縮檔中無可匯入的存檔內容。
-    unsafe_path: '壓縮檔中包含不安全的路徑：{path}'
+    unsafe_path: "壓縮檔中包含不安全的路徑：{path}"
 instance:
   common:
     independent: 獨立實例
@@ -2804,7 +2804,7 @@ instance:
     info:
       launch_count: 啟動次數
       launch_count_never: 從未啟動
-      launch_count_value: '已啟動 {count} 次'
+      launch_count_value: "已啟動 {count} 次"
       modpack_version: 整合包版本
       description: 實例描述
     personalization:
@@ -2827,7 +2827,7 @@ instance:
       delete: 刪實例
       patch_core: 修補核心
     artifacts:
-      launch_script_name: '啟動 {instance_name}'
+      launch_script_name: "啟動 {instance_name}"
     messages:
       select_to_view_details: 先擇一實例，而後覽詳。
       no_instance_selected: 今未擇實例。
@@ -2837,35 +2837,35 @@ instance:
       rename_empty: 實例名不可為空。
       rename_unchanged: 實例名未變。
       rename_invalid: 實例名含無效字元。
-      rename_exists: '已存在同名實例：{name}'
+      rename_exists: "已存在同名實例：{name}"
       description_canceled: 已取消修改。
       description_restored: 已復為預設描述。
       launch_script_missing: 啟動腳本不存在。
       repair_disable_validation_hint: 先閉 [實例設 -> 設 -> 進階啟動選項 -> 關閉檔驗證]，而後更試補全檔！
-      repair_completed: '已補全 {downloaded_count} 個檔，重複用 {reused_count} 個檔。'
+      repair_completed: "已補全 {downloaded_count} 個檔，重複用 {reused_count} 個檔。"
       repair_canceled_title: 補全檔已取消
       repair_canceled: 實例檔補全流程已取消。
       reset_canceled_title: 重設實例已取消
       reset_canceled: 已取消重設。
-      reset_completed: '已重設核心檔並下載 {downloaded_count} 個檔，重複用 {reused_count} 個檔。'
-      delete_permanent: '實例 {instance_name} 已永久刪。'
-      delete_recycled: '實例 {instance_name} 已移入回收區：{trash_directory}'
+      reset_completed: "已重設核心檔並下載 {downloaded_count} 個檔，重複用 {reused_count} 個檔。"
+      delete_permanent: "實例 {instance_name} 已永久刪。"
+      delete_recycled: "實例 {instance_name} 已移入回收區：{trash_directory}"
       patch_canceled: 已取消修補。
       patch_file_canceled: 已取消擇修補檔。
       patched_core_missing: 修補後的核心檔不存在。
-      rename_completed: '已將實例 {old_name} 復命名為 {new_name}。'
-      test_instance_navigated: '已跳轉到啟動頁，準備測試啟動 {instance_name}。'
-      repair_task_title: '{action_title}：{instance_name}'
+      rename_completed: "已將實例 {old_name} 復命名為 {new_name}。"
+      test_instance_navigated: "已跳轉到啟動頁，準備測試啟動 {instance_name}。"
+      repair_task_title: "{action_title}：{instance_name}"
       repair_summary:
-        instance: '實例：{instance_name}'
-        instance_directory: '實例目錄：{path}'
-        core_json: '核心 Json：{status} • {path}'
-        core_jar: '核心 Jar：{status} • {path}'
-        backup_directory: '備份目錄：{path}'
-        downloaded_count: '下載檔數：{count}'
-        reused_count: '重複用檔數：{count}'
-        downloaded_item: '已下載：{path}'
-        reused_item: '已重複用：{path}'
+        instance: "實例：{instance_name}"
+        instance_directory: "實例目錄：{path}"
+        core_json: "核心 Json：{status} • {path}"
+        core_jar: "核心 Jar：{status} • {path}"
+        backup_directory: "備份目錄：{path}"
+        downloaded_count: "下載檔數：{count}"
+        reused_count: "重複用檔數：{count}"
+        downloaded_item: "已下載：{path}"
+        reused_item: "已重複用：{path}"
         intro: 實例修復結果如下。
         present: 已偵測到
         missing: 缺失
@@ -2900,7 +2900,7 @@ instance:
   install:
     minecraft:
       header: Minecraft
-      version: 'Minecraft {version}'
+      version: "Minecraft {version}"
     actions:
       apply_changes: 套用變更
       reset_to_scanned: 重設為掃描結果
@@ -2930,7 +2930,7 @@ instance:
       empty:
         title: 無存檔
         description: 啟存檔夾，或自剪貼簿貼世界檔、夾路徑，以匯入存檔。
-      summary: '建於：{created_at} • 末改：{modified_at}'
+      summary: "建於：{created_at} • 末改：{modified_at}"
       actions:
         open_folder: 啟存檔夾
         paste_clipboard: 貼剪貼簿內容
@@ -2942,7 +2942,7 @@ instance:
       empty:
         title: 無截圖
         description: 啟截圖夾，為今實例納入或產生截圖。
-      summary: '{created_at} • {file_size}'
+      summary: "{created_at} • {file_size}"
       actions:
         open_folder: 啟截圖夾
         open_file: 啟截圖
@@ -2966,7 +2966,7 @@ instance:
         offline: 伺服器離線
         offline_short: 離線
         connecting_short: 方連線
-        connection_failed: '不能連線：{message}'
+        connection_failed: "不能連線：{message}"
       motd:
         click_to_refresh: 按刷以覽伺服器之狀
         connecting: 方連線...
@@ -2977,15 +2977,15 @@ instance:
         refreshed_count: 已刷 {count} 伺服器。
         address_empty: 伺服器位址為空。
         no_server_info: 未回傳伺服器訊
-        no_copyable_address: '{entry_title} 無可複製之位址。'
-        copied_address: '{entry_title} • {address}'
-        no_connectable_address: '{entry_title} 無可用之伺服器位址。'
-        added: '{name} • {address}'
+        no_copyable_address: "{entry_title} 無可複製之位址。"
+        copied_address: "{entry_title} • {address}"
+        no_connectable_address: "{entry_title} 無可用之伺服器位址。"
+        added: "{name} • {address}"
         address_required: 伺服器位址不可為空。
         read_list_failed: |-
           不能讀今實例之伺服器列。
           {error}
-        launch_route_prepared: '已易至啟動頁，且備連於伺服器 {entry_title}。'
+        launch_route_prepared: "已易至啟動頁，且備連於伺服器 {entry_title}。"
         update_list_failed: |-
           不能更新今實例之伺服器列。
           {error}
@@ -3034,8 +3034,8 @@ instance:
         instance_select: 擇相容實例
         go_to_download: 前往下載
       activities:
-        open_homepage: '啟{surface_title}主頁：{entry_title}'
-        view_details: '覽{surface_title}詳情'
+        open_homepage: "啟{surface_title}主頁：{entry_title}"
+        view_details: "覽{surface_title}詳情"
       filters:
         all: 全部（{count}）
         enabled: 已啟用（{count}）
@@ -3054,34 +3054,34 @@ instance:
         folder: 夾
         root_directory: 根目錄
       summary:
-        file: '{parent_directory} • {modified_at}'
-        archive: '{modified_at} • {file_size}'
-        folder: '{modified_at} • {folder_kind}'
+        file: "{parent_directory} • {modified_at}"
+        archive: "{modified_at} • {file_size}"
+        folder: "{modified_at} • {folder_kind}"
       messages:
         no_instance_selected: 今未擇實例。
-        list_empty: '{surface_title} 之列為虛。'
-        selected_all: '{surface_title} • 已擇 {count} 項。'
+        list_empty: "{surface_title} 之列為虛。"
+        selected_all: "{surface_title} • 已擇 {count} 項。"
         no_toggleable_entries: 今無可易其狀之資源。
         no_deletable_entries: 今無可刪的資源。
         install_from_file_canceled: 已取消擇資源檔。
-        toggle_not_supported: '{surface_title} 今不支援啟用或停用操作。'
+        toggle_not_supported: "{surface_title} 今不支援啟用或停用操作。"
         no_selected: 今無選中的資源。
         already_enabled: 所選資源皆已啟。
         already_disabled: 所選資源皆已停。
-        enabled_completed: '已啟 {count} 項：{titles}'
-        disabled_completed: '已停 {count} 項：{titles}'
-        enabled_partial: '已啟 {count} 項，而 {failed_count} 項敗。'
-        disabled_partial: '已停 {count} 項，而 {failed_count} 項敗。'
+        enabled_completed: "已啟 {count} 項：{titles}"
+        disabled_completed: "已停 {count} 項：{titles}"
+        enabled_partial: "已啟 {count} 項，而 {failed_count} 項敗。"
+        disabled_partial: "已停 {count} 項，而 {failed_count} 項敗。"
         delete_canceled: 已取消刪。
         deleted_completed: 已移入回收區 {count} 項。
         export_missing: 匯出檔不在。
-        entry_missing: '{surface_title} 項目不存在。'
-        details_read_failed: '讀取附加訊失敗：{error}'
-        checked_mods_summary: '已檢 {instance_name}：啟 {enabled_count}，停 {disabled_count}，重者 {duplicate_count} 組。'
-        open_download_route: '{surface_title} 頁既易於下載頁。'
+        entry_missing: "{surface_title} 項目不存在。"
+        details_read_failed: "讀取附加訊失敗：{error}"
+        checked_mods_summary: "已檢 {instance_name}：啟 {enabled_count}，停 {disabled_count}，重者 {duplicate_count} 組。"
+        open_download_route: "{surface_title} 頁既易於下載頁。"
       dialogs:
         install_from_file:
-          title: '擇{surface_title}檔'
+          title: "擇{surface_title}檔"
           file_types:
             mod: Mod 檔
             resource_pack: 資源包檔
@@ -3089,9 +3089,9 @@ instance:
             schematic: 投影原理圖檔
         delete:
           title: 資源刪確認
-          message: '果欲以此 {count} {surface_title} 項移入回收區乎？'
+          message: "果欲以此 {count} {surface_title} 項移入回收區乎？"
           confirm: 移入回收區
-          extra_items: '- 其餘尚有 {count} 項'
+          extra_items: "- 其餘尚有 {count} 項"
       details:
         fields:
           name: 名稱
@@ -3140,7 +3140,7 @@ instance:
     java_options:
       auto_select: 自擇其宜之 Java
       launcher_relative: 擇啟動器目錄下之 Java
-      launcher_relative_selected: '啟動器目錄下之 Java | {relative_path}'
+      launcher_relative_selected: "啟動器目錄下之 Java | {relative_path}"
     launch:
       isolation: 隔離設
       window_title: 視窗標題
@@ -3196,7 +3196,7 @@ instance:
       system_default: 系統預設
   export:
     count:
-      items: '{count} 項'
+      items: "{count} 項"
     activities:
       reset: 重設匯出選項
       import_config: 讀取設
@@ -3293,8 +3293,8 @@ instance:
     messages:
       launcher_missing: 今未找到啟動目錄。
       delete_canceled: 已取消刪。
-      confirm_permanent: '果欲永刪實例 {instance_name} 乎？'
-      confirm_recycle: '果欲刪實例 {instance_name} 乎？'
+      confirm_permanent: "果欲永刪實例 {instance_name} 乎？"
+      confirm_recycle: "果欲刪實例 {instance_name} 乎？"
       confirm_indie_warning: 此實例既啟版本隔離，刪之則其所屬存檔、資源包、Mod 諸檔，亦將俱去。
       confirm_recycle_note: 實例將先徙入實例回收區，便於手自清理或復之。
 save_detail:
@@ -3361,3 +3361,23 @@ save_detail:
     cleaned_empty_backups: 已清理 {count} 個空備份檔
     install_datapack_canceled: 已取消擇資料包檔
     export_missing: 匯出的檔不存在
+
+welcome:
+  step_0:
+    title: 擇語言
+    description: 請選 PCL ME 所用之語言。
+  step_1:
+    title: 許可協議
+    description: 請閱覽並接受最終用戶許可協議，方可使用 PCL ME。
+    eula_summary: PCL ME 乃免費開源之軟件，以「現狀」提供。繼續使用即表示接受最終用戶許可協議之條款。詳情請閱全文。
+    open_eula: 閱覽全文
+    accept_label: 余已閱覽並接受協議
+    decline: 拒絕並退出
+  step_2:
+    title: 擇主題
+    description: 選擇色彩模式與強調色，可於設定中隨時更改。
+  step_3:
+    title: 設置完畢！
+    description: PCL ME 已備妥，請探索以下鏈接。
+    feedback: 提交反饋
+    github: GitHub

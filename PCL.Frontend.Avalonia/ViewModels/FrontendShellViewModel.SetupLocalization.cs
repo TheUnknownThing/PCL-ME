@@ -347,6 +347,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
         RaisePropertyChanged(nameof(BackgroundBlurLabel));
         RaisePropertyChanged(nameof(BackgroundCardHeader));
+        RaiseWelcomeLocaleProperties();
     }
 }
 
