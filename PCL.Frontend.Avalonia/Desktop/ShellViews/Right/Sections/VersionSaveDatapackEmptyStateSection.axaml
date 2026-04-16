@@ -10,12 +10,12 @@
             HorizontalAlignment="Center"
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="19"
-            Text="尚未安装数据包" />
+            Text="{Binding VersionSaveDatapackEmptyTitle}" />
         <Border Height="2" Background="{DynamicResource ColorBrush6}" />
         <TextBlock
             Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12.5"
-            Text="你可以从已经下载好的文件安装数据包。数据包需要放置在存档的 datapacks 文件夹中才能生效。"
+            Text="{Binding VersionSaveDatapackEmptyDescription}"
             TextAlignment="Center"
             TextWrapping="Wrap" />
         <WrapPanel HorizontalAlignment="Center">
@@ -24,17 +24,17 @@
               Margin="5,0"
               Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
               ColorType="Highlight"
-              Text="从文件安装" />
+              Text="{Binding VersionSaveDatapackInstallFromFileText}" />
           <controls:PclButton
               MinWidth="130"
               Margin="5,0"
               Command="{Binding DownloadVersionSaveDatapackCommand}"
-              Text="下载新数据包" />
+              Text="{Binding VersionSaveDatapackDownloadNewText}" />
           <controls:PclButton
               MinWidth="130"
               Margin="5,0"
               Command="{Binding OpenVersionSaveDatapackFolderCommand}"
-              Text="打开文件夹" />
+              Text="{Binding VersionSaveDatapackOpenFolderText}" />
         </WrapPanel>
       </StackPanel>
     </controls:PclCard.CardContent>

@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Core.App.I18n;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
@@ -3048,22 +3049,24 @@ internal static class FrontendLaunchCompositionService
             : runtime.DisplayName;
 
         return new MinecraftLaunchPrompt(
-            $"你手动选择的 Java {runtimeLabel} 与当前 Minecraft 版本不兼容。{Environment.NewLine}" +
-            $"推荐范围：{javaWorkflow.MinimumVersion} - {javaWorkflow.MaximumVersion}{Environment.NewLine}" +
-            $"你可以改用兼容 Java，或仅在本次启动中强制忽略兼容性检查后继续启动。",
-            "所选 Java 不兼容",
+            I18nText.WithArgs(
+                "launch.prompts.java_compatibility.message",
+                I18nTextArgument.String("runtime_label", runtimeLabel),
+                I18nTextArgument.String("minimum_version", javaWorkflow.MinimumVersion.ToString()),
+                I18nTextArgument.String("maximum_version", javaWorkflow.MaximumVersion.ToString())),
+            I18nText.Plain("launch.prompts.java_compatibility.title"),
             [
                 new MinecraftLaunchPromptButton(
-                    "强制使用当前 Java",
+                    I18nText.Plain("launch.prompts.java_compatibility.actions.force_current"),
                     [
                         new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.IgnoreJavaCompatibilityOnce),
                         new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)
                     ]),
                 new MinecraftLaunchPromptButton(
-                    "改用兼容 Java",
+                    I18nText.Plain("launch.prompts.java_compatibility.actions.use_compatible"),
                     [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)]),
                 new MinecraftLaunchPromptButton(
-                    "取消启动",
+                    I18nText.Plain("launch.prompts.java_compatibility.actions.abort"),
                     [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Abort)])
             ],
             IsWarning: true);

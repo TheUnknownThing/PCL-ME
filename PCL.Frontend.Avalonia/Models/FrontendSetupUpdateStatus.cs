@@ -13,4 +13,6 @@ internal sealed record FrontendSetupUpdateStatus(
     string AvailableUpdateSha256,
     string? AvailableUpdateChangelog,
     string? AvailableUpdateReleaseUrl,
-    string? AvailableUpdateDownloadUrl);
+    string? AvailableUpdateDownloadUrl,
+    string CurrentVersionTag,
+    string? AvailableUpdateTag);

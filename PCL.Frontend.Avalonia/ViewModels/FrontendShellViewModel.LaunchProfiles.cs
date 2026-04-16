@@ -19,11 +19,11 @@ internal sealed partial class FrontendShellViewModel
     private static readonly Regex OfflineUuidPattern = new("^[a-fA-F0-9]{32}$", RegexOptions.Compiled);
     private MinecraftLaunchMicrosoftDeviceCodePromptPlan? _launchMicrosoftPromptPlan;
 
-    public IReadOnlyList<string> LaunchOfflineUuidModeOptions { get; } =
+    public IReadOnlyList<string> LaunchOfflineUuidModeOptions =>
     [
-        "行业规范",
-        "旧版",
-        "自定义"
+        T("launch.profile.offline.uuid_modes.standard"),
+        T("launch.profile.offline.uuid_modes.legacy"),
+        T("launch.profile.offline.uuid_modes.custom")
     ];
 
     public bool ShowLaunchProfileSummaryCard => GetEffectiveLaunchProfileSurface() == LaunchProfileSurfaceKind.Summary;
@@ -55,8 +55,8 @@ internal sealed partial class FrontendShellViewModel
     public bool HasNoLaunchProfileEntries => !HasLaunchProfileEntries;
 
     public string LaunchProfileSelectionHint => HasLaunchProfileEntries
-        ? "选择一个档案以启动游戏"
-        : "新建并选择一个档案以启动游戏";
+        ? T("launch.profile.selection.hint")
+        : T("launch.profile.selection.hint_empty");
 
     public string LaunchOfflineUserName
     {
@@ -69,7 +69,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedLaunchOfflineUuidModeIndex;
         set
         {
-            var clampedValue = Math.Clamp(value, 0, LaunchOfflineUuidModeOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, LaunchOfflineUuidModeOptions.Count, out var clampedValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedLaunchOfflineUuidModeIndex, clampedValue))
             {
                 RaisePropertyChanged(nameof(IsLaunchOfflineCustomUuidVisible));
@@ -100,8 +104,8 @@ internal sealed partial class FrontendShellViewModel
     }
 
     public string LaunchMicrosoftPrimaryButtonText => _launchMicrosoftPromptPlan is null
-        ? "开始正版验证"
-        : "完成授权后继续";
+        ? T("launch.profile.microsoft.actions.start")
+        : T("launch.profile.microsoft.actions.continue_after_auth");
 
     public string LaunchMicrosoftDeviceCode
     {
@@ -150,7 +154,7 @@ internal sealed partial class FrontendShellViewModel
         RefreshLaunchProfileEntries();
         if (!HasLaunchProfileEntries)
         {
-            AddActivity("切换档案", "当前还没有可用档案。");
+            AddActivity(T("launch.profile.activities.switch"), T("launch.profile.selection.empty"));
             SetLaunchProfileSurface(LaunchProfileSurfaceKind.Selection);
             return Task.CompletedTask;
         }
@@ -167,7 +171,7 @@ internal sealed partial class FrontendShellViewModel
 
     private Task CreateOfflineLaunchProfileAsync()
     {
-        LaunchOfflineUserName = HasSelectedLaunchProfile && !string.Equals(LaunchUserName, "未选择档案", StringComparison.Ordinal)
+        LaunchOfflineUserName = HasSelectedLaunchProfile && !string.Equals(LaunchUserName, T("launch.profile.none_selected"), StringComparison.Ordinal)
             ? LaunchUserName
             : string.Empty;
         SelectedLaunchOfflineUuidModeIndex = 0;
@@ -180,7 +184,7 @@ internal sealed partial class FrontendShellViewModel
     private Task LoginMicrosoftLaunchProfileAsync()
     {
         ResetMicrosoftDeviceFlow();
-        LaunchMicrosoftStatusText = "点击下方按钮后，启动器会打开微软登录网页。";
+        LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.initial");
         SetLaunchProfileSurface(LaunchProfileSurfaceKind.MicrosoftEditor);
         return Task.CompletedTask;
     }
@@ -195,7 +199,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task RefreshSelectedLaunchProfileAsync()
     {
-        if (!TryBeginLaunchProfileAction("刷新档案"))
+        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.refresh")))
         {
             return;
         }
@@ -211,7 +215,7 @@ internal sealed partial class FrontendShellViewModel
                 forceRefresh: true);
             if (!result.WasChecked)
             {
-                AddActivity("刷新档案", result.Message);
+                AddActivity(T("launch.profile.activities.refresh"), result.Message);
                 return;
             }
 
@@ -221,17 +225,17 @@ internal sealed partial class FrontendShellViewModel
             }
 
             await RefreshLaunchProfileCompositionAsync();
-            AddActivity("刷新档案", result.Message);
+            AddActivity(T("launch.profile.activities.refresh"), result.Message);
             AvaloniaHintBus.Show(result.Message, AvaloniaHintTheme.Success);
         }
         catch (OperationCanceledException)
         {
-            AddActivity("刷新档案", "档案刷新已取消。");
+            AddActivity(T("launch.profile.activities.refresh"), T("launch.profile.refresh.canceled"));
         }
         catch (Exception ex)
         {
             var message = GetLaunchProfileFriendlyError(ex);
-            AddFailureActivity("刷新档案失败", message);
+            AddFailureActivity(T("launch.profile.activities.refresh_failed"), message);
             AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error);
         }
         finally
@@ -258,7 +262,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task SubmitOfflineLaunchProfileAsync()
     {
-        if (!TryBeginLaunchProfileAction("离线创建"))
+        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.create_offline")))
         {
             return;
         }
@@ -268,7 +272,7 @@ internal sealed partial class FrontendShellViewModel
             var userName = LaunchOfflineUserName.Trim();
             if (string.IsNullOrWhiteSpace(userName))
             {
-                LaunchOfflineStatusText = "玩家 ID 不能为空。";
+                LaunchOfflineStatusText = T("launch.profile.offline.errors.empty_user_name");
                 return;
             }
 
@@ -279,12 +283,12 @@ internal sealed partial class FrontendShellViewModel
             LaunchOfflineStatusText = string.Empty;
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
             await RefreshLaunchProfileCompositionAsync();
-            AddActivity("离线创建", $"已创建离线档案 {userName}。");
+            AddActivity(T("launch.profile.activities.create_offline"), T("launch.profile.offline.completed", ("user_name", userName)));
         }
         catch (Exception ex)
         {
             LaunchOfflineStatusText = ex.Message.Trim().TrimStart('$');
-            AddFailureActivity("离线创建失败", LaunchOfflineStatusText);
+            AddFailureActivity(T("launch.profile.activities.create_offline_failed"), LaunchOfflineStatusText);
         }
         finally
         {
@@ -301,14 +305,14 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (!TryBeginLaunchProfileAction("微软登录"))
+        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.microsoft_login")))
         {
             return;
         }
 
         try
         {
-            LaunchMicrosoftStatusText = "正在等待微软完成授权。";
+            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.waiting_for_auth");
             var oauthTokens = await PollMicrosoftOAuthTokensAsync(_launchMicrosoftPromptPlan, microsoftClientId);
             var xboxLiveResponseJson = await SendLaunchProfileRequestAsync(
                 MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(oauthTokens.AccessToken));
@@ -329,7 +333,7 @@ internal sealed partial class FrontendShellViewModel
                     if (decisionPrompt.Options.FirstOrDefault()?.Decision == MinecraftLaunchAccountDecisionKind.OpenUrlAndAbort &&
                         !string.IsNullOrWhiteSpace(decisionPrompt.Options[0].Url))
                     {
-                        OpenExternalTarget(decisionPrompt.Options[0].Url, "已打开相关网页。");
+                        OpenExternalTarget(decisionPrompt.Options[0].Url, T("launch.profile.microsoft.messages.opened_related_web"));
                     }
 
                     ResetMicrosoftDeviceFlow(keepStatus: true);
@@ -367,7 +371,7 @@ internal sealed partial class FrontendShellViewModel
                 if (prompt.Options.FirstOrDefault()?.Decision == MinecraftLaunchAccountDecisionKind.OpenUrlAndAbort &&
                     !string.IsNullOrWhiteSpace(prompt.Options[0].Url))
                 {
-                    OpenExternalTarget(prompt.Options[0].Url, "已打开 Minecraft 档案创建页面。");
+                    OpenExternalTarget(prompt.Options[0].Url, T("launch.profile.microsoft.messages.opened_profile_create_page"));
                 }
 
                 ResetMicrosoftDeviceFlow(keepStatus: true);
@@ -393,14 +397,14 @@ internal sealed partial class FrontendShellViewModel
             ResetMicrosoftDeviceFlow();
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
             await RefreshLaunchProfileCompositionAsync();
-            AddActivity("微软登录", $"已添加微软档案 {profileResponse.UserName}。");
+            AddActivity(T("launch.profile.activities.microsoft_login"), T("launch.profile.microsoft.completed", ("user_name", profileResponse.UserName)));
         }
         catch (Exception ex)
         {
             var message = GetLaunchProfileFriendlyError(ex);
             LaunchMicrosoftStatusText = message;
-            AddFailureActivity("微软登录失败", message);
-            if (ex is TimeoutException || message.Contains("过期", StringComparison.Ordinal))
+            AddFailureActivity(T("launch.profile.activities.microsoft_login_failed"), message);
+            if (ex is TimeoutException || message.Contains(T("launch.profile.refresh.errors.expired_keyword"), StringComparison.Ordinal))
             {
                 ResetMicrosoftDeviceFlow(keepStatus: true);
             }
@@ -413,7 +417,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task SubmitAuthlibLaunchProfileAsync()
     {
-        if (!TryBeginLaunchProfileAction("外置登录"))
+        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.authlib_login")))
         {
             return;
         }
@@ -423,14 +427,14 @@ internal sealed partial class FrontendShellViewModel
             var serverBaseUrl = NormalizeAuthlibServerBaseUrl(LaunchAuthlibServer);
             if (!Uri.TryCreate(serverBaseUrl, UriKind.Absolute, out _))
             {
-                LaunchAuthlibStatusText = "输入的验证服务器地址无效。";
+                LaunchAuthlibStatusText = T("launch.profile.authlib.errors.invalid_server");
                 return;
             }
 
             var loginName = LaunchAuthlibLoginName.Trim();
             if (string.IsNullOrWhiteSpace(loginName) || string.IsNullOrWhiteSpace(LaunchAuthlibPassword))
             {
-                LaunchAuthlibStatusText = "验证服务器、用户名与密码均不能为空。";
+                LaunchAuthlibStatusText = T("launch.profile.authlib.errors.required_fields");
                 return;
             }
 
@@ -446,7 +450,7 @@ internal sealed partial class FrontendShellViewModel
                     AuthenticateResponseJson: authenticateJson));
             if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.Fail)
             {
-                LaunchAuthlibStatusText = (authenticatePlan.FailureMessage ?? "外置登录失败。").TrimStart('$');
+                LaunchAuthlibStatusText = (authenticatePlan.FailureMessage ?? T("launch.profile.authlib.errors.login_failed")).TrimStart('$');
                 return;
             }
 
@@ -454,7 +458,7 @@ internal sealed partial class FrontendShellViewModel
                                     ?? authenticatePlan.PromptOptions.FirstOrDefault()?.Id;
             if (string.IsNullOrWhiteSpace(selectedProfileId))
             {
-                LaunchAuthlibStatusText = "该账户下没有可用角色。";
+                LaunchAuthlibStatusText = T("launch.profile.authlib.errors.no_roles");
                 return;
             }
 
@@ -476,12 +480,12 @@ internal sealed partial class FrontendShellViewModel
             LaunchAuthlibStatusText = string.Empty;
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
             await RefreshLaunchProfileCompositionAsync();
-            AddActivity("外置登录", $"已添加外置档案 {authenticateResult.Session.ProfileName}。");
+            AddActivity(T("launch.profile.activities.authlib_login"), T("launch.profile.authlib.completed", ("profile_name", authenticateResult.Session.ProfileName)));
         }
         catch (Exception ex)
         {
             LaunchAuthlibStatusText = GetLaunchProfileFriendlyError(ex);
-            AddFailureActivity("外置登录失败", LaunchAuthlibStatusText);
+            AddFailureActivity(T("launch.profile.activities.authlib_login_failed"), LaunchAuthlibStatusText);
         }
         finally
         {
@@ -491,29 +495,29 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task BeginMicrosoftDeviceLoginAsync(string microsoftClientId)
     {
-        if (!TryBeginLaunchProfileAction("微软登录"))
+        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.microsoft_login")))
         {
             return;
         }
 
         try
         {
-            LaunchMicrosoftStatusText = "正在请求设备代码。";
+            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.requesting_device_code");
             var deviceCodeJson = await SendLaunchProfileRequestAsync(
                 MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(microsoftClientId));
             var promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(deviceCodeJson);
             _launchMicrosoftPromptPlan = promptPlan;
             LaunchMicrosoftDeviceCode = promptPlan.UserCode;
             LaunchMicrosoftVerificationUrl = promptPlan.OpenBrowserUrl;
-            LaunchMicrosoftStatusText = "网页登录已打开，完成授权后点击下方按钮继续。授权码已复制到剪贴板。";
+            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.browser_opened");
             TryCopyLaunchProfileText(promptPlan.UserCode);
-            OpenExternalTarget(promptPlan.OpenBrowserUrl, "已打开微软登录网页。");
+            OpenExternalTarget(promptPlan.OpenBrowserUrl, T("launch.profile.microsoft.messages.opened_sign_in_page"));
             RaiseLaunchProfileSurfaceProperties();
         }
         catch (Exception ex)
         {
             LaunchMicrosoftStatusText = GetLaunchProfileFriendlyError(ex);
-            AddFailureActivity("微软登录失败", LaunchMicrosoftStatusText);
+            AddFailureActivity(T("launch.profile.activities.microsoft_login_failed"), LaunchMicrosoftStatusText);
             ResetMicrosoftDeviceFlow(keepStatus: true);
         }
         finally
@@ -526,7 +530,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!string.IsNullOrWhiteSpace(LaunchMicrosoftVerificationUrl))
         {
-            OpenExternalTarget(LaunchMicrosoftVerificationUrl, "已打开微软登录网页。");
+            OpenExternalTarget(LaunchMicrosoftVerificationUrl, T("launch.profile.microsoft.messages.opened_sign_in_page"));
         }
     }
 
@@ -534,14 +538,14 @@ internal sealed partial class FrontendShellViewModel
     {
         LaunchAuthlibServer = DefaultAuthlibServer;
         LaunchAuthlibStatusText = string.Empty;
-        AddActivity("设置为 LittleSkin", LaunchAuthlibServer);
+        AddActivity(T("launch.profile.authlib.activities.use_littleskin"), LaunchAuthlibServer);
     }
 
     private bool TryBeginLaunchProfileAction(string actionName)
     {
         if (_isLaunchProfileActionInProgress)
         {
-            AddActivity(actionName, "当前已有一个档案操作正在进行。");
+            AddActivity(actionName, T("launch.profile.activities.busy"));
             return false;
         }
 
@@ -579,7 +583,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!TryGetSelectedStoredLaunchProfile(out var profileDocument, out var selectedProfileIndex, out var selectedProfile))
         {
-            return new LaunchProfileRefreshResult(false, "当前还没有可用档案。");
+            return new LaunchProfileRefreshResult(false, T("launch.profile.selection.empty"));
         }
 
         return selectedProfile.Kind switch
@@ -598,7 +602,7 @@ internal sealed partial class FrontendShellViewModel
                 cancellationToken,
                 forceRefresh,
                 onStatusChanged),
-            _ => new LaunchProfileRefreshResult(false, "当前档案不需要刷新。")
+            _ => new LaunchProfileRefreshResult(false, T("launch.profile.refresh.not_required"))
         };
     }
 
@@ -615,11 +619,11 @@ internal sealed partial class FrontendShellViewModel
         {
             try
             {
-                onStatusChanged?.Invoke("校验微软档案会话");
+                onStatusChanged?.Invoke(T("launch.profile.refresh.microsoft.validate_session"));
                 await SendLaunchProfileRequestAsync(
                     MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(selectedProfile.AccessToken),
                     cancellationToken);
-                return new LaunchProfileRefreshResult(true, $"已确认微软档案 {selectedProfile.Username ?? "未命名档案"} 仍然有效。");
+                return new LaunchProfileRefreshResult(true, T("launch.profile.refresh.microsoft.valid", ("profile_name", selectedProfile.Username ?? T("launch.profile.entry.unnamed"))));
             }
             catch (LaunchProfileRequestException)
             {
@@ -629,11 +633,11 @@ internal sealed partial class FrontendShellViewModel
 
         if (string.IsNullOrWhiteSpace(selectedProfile.RefreshToken))
         {
-            throw new InvalidOperationException("当前微软档案缺少刷新令牌，请重新登录。");
+            throw new InvalidOperationException(T("launch.profile.refresh.microsoft.errors.missing_refresh_token"));
         }
 
         var clientId = ResolveMicrosoftClientId();
-        onStatusChanged?.Invoke("刷新微软账号状态");
+        onStatusChanged?.Invoke(T("launch.profile.refresh.microsoft.refresh_account"));
 
         string oauthRefreshJson;
         try
@@ -647,15 +651,15 @@ internal sealed partial class FrontendShellViewModel
             var resolution = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveOAuthRefreshFailure(GetLaunchProfileFriendlyError(ex));
             if (resolution.Kind == MinecraftLaunchMicrosoftFailureResolutionKind.RequireRelogin)
             {
-                throw new InvalidOperationException("当前微软档案登录已失效，请重新登录。");
+                throw new InvalidOperationException(T("launch.profile.refresh.microsoft.errors.relogin_required"));
             }
 
-            throw new InvalidOperationException($"刷新微软档案失败：{GetLaunchProfileFriendlyError(ex)}");
+            throw new InvalidOperationException(T("launch.profile.refresh.microsoft.errors.failed", ("message", GetLaunchProfileFriendlyError(ex))));
         }
 
         var oauthTokens = MinecraftLaunchMicrosoftProtocolService.ParseOAuthRefreshResponseJson(oauthRefreshJson);
 
-        onStatusChanged?.Invoke("获取 Xbox Live 令牌");
+        onStatusChanged?.Invoke(T("launch.profile.refresh.microsoft.get_xbox_live_token"));
         var xboxLiveResponseJson = await SendLaunchProfileRequestAsync(
             MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(oauthTokens.AccessToken),
             cancellationToken);
@@ -663,7 +667,7 @@ internal sealed partial class FrontendShellViewModel
         string xstsResponseJson;
         try
         {
-            onStatusChanged?.Invoke("获取 Xbox 安全令牌");
+            onStatusChanged?.Invoke(T("launch.profile.refresh.microsoft.get_xsts_token"));
             xstsResponseJson = await SendLaunchProfileRequestAsync(
                 MinecraftLaunchMicrosoftRequestWorkflowService.BuildXstsTokenRequest(
                     MinecraftLaunchMicrosoftProtocolService.ParseXboxLiveTokenResponseJson(xboxLiveResponseJson)),
@@ -677,12 +681,12 @@ internal sealed partial class FrontendShellViewModel
                 throw new InvalidOperationException(prompt.Message);
             }
 
-            throw new InvalidOperationException($"刷新微软档案失败：{GetLaunchProfileFriendlyError(ex)}");
+            throw new InvalidOperationException(T("launch.profile.refresh.microsoft.errors.failed", ("message", GetLaunchProfileFriendlyError(ex))));
         }
 
         var xstsResponse = MinecraftLaunchMicrosoftProtocolService.ParseXstsTokenResponseJson(xstsResponseJson);
 
-        onStatusChanged?.Invoke("获取 Minecraft 访问令牌");
+        onStatusChanged?.Invoke(T("launch.profile.refresh.microsoft.get_minecraft_access_token"));
         var minecraftAccessTokenJson = await SendLaunchProfileRequestAsync(
             MinecraftLaunchMicrosoftRequestWorkflowService.BuildMinecraftAccessTokenRequest(
                 xstsResponse.UserHash,
@@ -690,7 +694,7 @@ internal sealed partial class FrontendShellViewModel
             cancellationToken);
         var minecraftAccessToken = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftAccessTokenResponseJson(minecraftAccessTokenJson);
 
-        onStatusChanged?.Invoke("校验 Minecraft 购买状态");
+        onStatusChanged?.Invoke(T("launch.profile.refresh.microsoft.check_ownership"));
         var ownershipJson = await SendLaunchProfileRequestAsync(
             MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(minecraftAccessToken),
             cancellationToken);
@@ -702,7 +706,7 @@ internal sealed partial class FrontendShellViewModel
         string profileJson;
         try
         {
-            onStatusChanged?.Invoke("同步 Minecraft 玩家档案");
+            onStatusChanged?.Invoke(T("launch.profile.refresh.microsoft.sync_profile"));
             profileJson = await SendLaunchProfileRequestAsync(
                 MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(minecraftAccessToken),
                 cancellationToken);
@@ -728,7 +732,7 @@ internal sealed partial class FrontendShellViewModel
             _shellActionService.RuntimePaths,
             FrontendProfileStorageService.ApplyMutation(profileDocument, mutationPlan, out _));
 
-        return new LaunchProfileRefreshResult(true, $"已刷新微软档案 {profileResponse.UserName}。", ShouldInvalidateAvatarCache: true);
+        return new LaunchProfileRefreshResult(true, T("launch.profile.refresh.microsoft.completed", ("profile_name", profileResponse.UserName)), ShouldInvalidateAvatarCache: true);
     }
 
     private async Task<LaunchProfileRefreshResult> RefreshAuthlibLaunchProfileAsync(
@@ -742,7 +746,7 @@ internal sealed partial class FrontendShellViewModel
         var serverBaseUrl = NormalizeAuthlibServerBaseUrl(selectedProfile.Server ?? LaunchAuthlibServer);
         if (!Uri.TryCreate(serverBaseUrl, UriKind.Absolute, out _))
         {
-            throw new InvalidOperationException("当前外置档案缺少有效的验证服务器地址，请重新登录。");
+            throw new InvalidOperationException(T("launch.profile.refresh.authlib.errors.invalid_server"));
         }
 
         if (!forceRefresh &&
@@ -751,14 +755,14 @@ internal sealed partial class FrontendShellViewModel
         {
             try
             {
-                onStatusChanged?.Invoke("校验外置档案会话");
+                onStatusChanged?.Invoke(T("launch.profile.refresh.authlib.validate_session"));
                 await SendLaunchProfileRequestAsync(
                     MinecraftLaunchAuthlibRequestWorkflowService.BuildValidateRequest(
                         serverBaseUrl,
                         selectedProfile.AccessToken,
                         selectedProfile.ClientToken),
                     cancellationToken);
-                return new LaunchProfileRefreshResult(true, $"已确认外置档案 {selectedProfile.Username ?? "未命名档案"} 仍然有效。");
+                return new LaunchProfileRefreshResult(true, T("launch.profile.refresh.authlib.valid", ("profile_name", selectedProfile.Username ?? T("launch.profile.entry.unnamed"))));
             }
             catch (LaunchProfileRequestException)
             {
@@ -774,7 +778,7 @@ internal sealed partial class FrontendShellViewModel
             var clientToken = selectedProfile.ClientToken!;
             try
             {
-                onStatusChanged?.Invoke("刷新外置档案会话");
+                onStatusChanged?.Invoke(T("launch.profile.refresh.authlib.refresh_session"));
                 var refreshJson = await SendLaunchProfileRequestAsync(
                     MinecraftLaunchAuthlibRequestWorkflowService.BuildRefreshRequest(
                         serverBaseUrl,
@@ -794,31 +798,31 @@ internal sealed partial class FrontendShellViewModel
                 if (!string.IsNullOrWhiteSpace(selectedProfile.Uuid) &&
                     !string.Equals(refreshResult.Session.ProfileId, selectedProfile.Uuid, StringComparison.Ordinal))
                 {
-                    throw new InvalidOperationException("外置档案刷新后返回了不同的角色，请重新登录该档案。");
+                    throw new InvalidOperationException(T("launch.profile.refresh.authlib.errors.profile_changed"));
                 }
 
                 FrontendProfileStorageService.Save(
                     _shellActionService.RuntimePaths,
                     FrontendProfileStorageService.ApplyMutation(profileDocument, refreshResult.MutationPlan, out _));
-                return new LaunchProfileRefreshResult(true, $"已刷新外置档案 {refreshResult.Session.ProfileName}。", ShouldInvalidateAvatarCache: true);
+                return new LaunchProfileRefreshResult(true, T("launch.profile.refresh.authlib.completed", ("profile_name", refreshResult.Session.ProfileName)), ShouldInvalidateAvatarCache: true);
             }
             catch (LaunchProfileRequestException ex)
             {
                 if (IsAuthlibCredentialExpired(ex.ResponseBody))
                 {
-                    throw new InvalidOperationException("当前外置档案登录已失效，请重新登录。");
+                    throw new InvalidOperationException(T("launch.profile.refresh.authlib.errors.relogin_required"));
                 }
 
-                throw new InvalidOperationException($"刷新外置档案失败：{GetLaunchProfileFriendlyError(ex)}");
+                throw new InvalidOperationException(T("launch.profile.refresh.authlib.errors.failed", ("message", GetLaunchProfileFriendlyError(ex))));
             }
         }
 
         if (string.IsNullOrWhiteSpace(selectedProfile.LoginName) || string.IsNullOrWhiteSpace(selectedProfile.Password))
         {
-            throw new InvalidOperationException("当前外置档案缺少完整会话信息，请重新登录。");
+            throw new InvalidOperationException(T("launch.profile.refresh.authlib.errors.incomplete_session"));
         }
 
-        onStatusChanged?.Invoke("重新登录外置档案");
+        onStatusChanged?.Invoke(T("launch.profile.refresh.authlib.reauthenticate"));
         var authenticateJson = await SendLaunchProfileRequestAsync(
             MinecraftLaunchAuthlibRequestWorkflowService.BuildAuthenticateRequest(
                 serverBaseUrl,
@@ -832,20 +836,20 @@ internal sealed partial class FrontendShellViewModel
                 AuthenticateResponseJson: authenticateJson));
         if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.Fail)
         {
-            throw new InvalidOperationException((authenticatePlan.FailureMessage ?? "外置登录失败。").TrimStart('$'));
+            throw new InvalidOperationException((authenticatePlan.FailureMessage ?? T("launch.profile.authlib.errors.login_failed")).TrimStart('$'));
         }
 
         if (authenticatePlan.Kind == MinecraftLaunchAuthProfileSelectionKind.PromptForSelection &&
             string.IsNullOrWhiteSpace(authenticatePlan.SelectedProfileId))
         {
-            throw new InvalidOperationException("该外置账户包含多个角色，无法自动确认当前角色，请重新登录该档案。");
+            throw new InvalidOperationException(T("launch.profile.refresh.authlib.errors.multiple_roles"));
         }
 
         var selectedProfileId = authenticatePlan.SelectedProfileId
                                 ?? authenticatePlan.PromptOptions.FirstOrDefault()?.Id;
         if (string.IsNullOrWhiteSpace(selectedProfileId))
         {
-            throw new InvalidOperationException("该外置账户下没有可用角色。");
+            throw new InvalidOperationException(T("launch.profile.authlib.errors.no_roles"));
         }
 
         var metadataResponseJson = await TryReadAuthlibMetadataJsonAsync(serverBaseUrl, cancellationToken);
@@ -862,7 +866,7 @@ internal sealed partial class FrontendShellViewModel
         FrontendProfileStorageService.Save(
             _shellActionService.RuntimePaths,
             FrontendProfileStorageService.ApplyMutation(profileDocument, authenticateResult.MutationPlan, out _));
-        return new LaunchProfileRefreshResult(true, $"已重新登录外置档案 {authenticateResult.Session.ProfileName}。", ShouldInvalidateAvatarCache: true);
+        return new LaunchProfileRefreshResult(true, T("launch.profile.refresh.authlib.reauthenticated", ("profile_name", authenticateResult.Session.ProfileName)), ShouldInvalidateAvatarCache: true);
     }
 
     private void SetLaunchProfileSurface(LaunchProfileSurfaceKind surface)
@@ -883,7 +887,7 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(
             LaunchProfileEntries,
             profileDocument.Profiles.Select((profile, index) => new LaunchProfileEntryViewModel(
-                string.IsNullOrWhiteSpace(profile.Username) ? "未命名档案" : profile.Username!,
+                string.IsNullOrWhiteSpace(profile.Username) ? T("launch.profile.entry.unnamed") : profile.Username!,
                 BuildProfileChoiceSummary(profile),
                 index == selectedIndex,
                 new ActionCommand(() => _ = SelectLaunchProfileEntryAsync(index)),
@@ -891,12 +895,12 @@ internal sealed partial class FrontendShellViewModel
                     ? FrontendIconCatalog.Refresh.Data
                     : string.Empty,
                 index == selectedIndex && IsRefreshableLaunchProfile(profile) && IsLaunchProfileRefreshInProgress,
-                "刷新档案",
+                T("launch.profile.activities.refresh"),
                 index == selectedIndex && IsRefreshableLaunchProfile(profile)
                     ? _refreshLaunchProfileCommand
                     : null,
                 FrontendIconCatalog.DeleteOutline.Data,
-                "删除档案",
+                T("launch.profile.activities.delete"),
                 new ActionCommand(() => _ = DeleteLaunchProfileAsync(index)))));
         RaisePropertyChanged(nameof(HasLaunchProfileEntries));
     }
@@ -908,7 +912,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DeleteLaunchProfileAsync(int profileIndex)
     {
-        if (!TryBeginLaunchProfileAction("删除档案"))
+        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.delete")))
         {
             return;
         }
@@ -916,35 +920,35 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var confirmed = await _shellActionService.ConfirmAsync(
-                "删除档案确认",
-                $"你正在选择删除此档案，该操作无法撤销。{Environment.NewLine}确定继续？",
-                "继续",
+                T("launch.profile.delete.confirmation.title"),
+                T("launch.profile.delete.confirmation.message"),
+                T("launch.profile.delete.confirmation.confirm"),
                 isDanger: true);
             if (!confirmed)
             {
-                AddActivity("删除档案", "已取消删除。");
+                AddActivity(T("launch.profile.activities.delete"), T("launch.profile.delete.canceled"));
                 return;
             }
 
             var profileDocument = FrontendProfileStorageService.Load(_shellActionService.RuntimePaths).Document;
             if (profileIndex < 0 || profileIndex >= profileDocument.Profiles.Count)
             {
-                AddActivity("删除档案", "档案列表已更新，请重新查看。");
+                AddActivity(T("launch.profile.activities.delete"), T("launch.profile.delete.list_changed"));
                 return;
             }
 
             var profileName = string.IsNullOrWhiteSpace(profileDocument.Profiles[profileIndex].Username)
-                ? "未命名档案"
+                ? T("launch.profile.entry.unnamed")
                 : profileDocument.Profiles[profileIndex].Username!;
             FrontendProfileStorageService.Save(
                 _shellActionService.RuntimePaths,
                 FrontendProfileStorageService.DeleteProfile(profileDocument, profileIndex));
             await RefreshLaunchProfileCompositionAsync();
-            AddActivity("删除档案", $"已删除档案 {profileName}。");
+            AddActivity(T("launch.profile.activities.delete"), T("launch.profile.delete.completed", ("profile_name", profileName)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("删除档案失败", ex.Message);
+            AddFailureActivity(T("launch.profile.activities.delete_failed"), ex.Message);
         }
         finally
         {
@@ -954,7 +958,7 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task SelectLaunchProfileEntryAsync(int selectedIndex)
     {
-        if (!TryBeginLaunchProfileAction("切换档案"))
+        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.switch")))
         {
             return;
         }
@@ -972,11 +976,15 @@ internal sealed partial class FrontendShellViewModel
                 FrontendProfileStorageService.SelectProfile(profileDocument, selectedIndex));
             _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
             await RefreshLaunchProfileCompositionAsync();
-            AddActivity("切换档案", $"当前档案已切换为 {profileDocument.Profiles[selectedIndex].Username ?? "未命名档案"}。");
+            AddActivity(
+                T("launch.profile.activities.switch"),
+                T(
+                    "launch.profile.switch.completed",
+                    ("profile_name", profileDocument.Profiles[selectedIndex].Username ?? T("launch.profile.entry.unnamed"))));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("切换档案失败", ex.Message);
+            AddFailureActivity(T("launch.profile.activities.switch_failed"), ex.Message);
         }
         finally
         {
@@ -1028,6 +1036,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(HasLaunchProfileEntries));
         RaisePropertyChanged(nameof(HasNoLaunchProfileEntries));
         RaisePropertyChanged(nameof(LaunchProfileSelectionHint));
+        RaisePropertyChanged(nameof(LaunchOfflineUuidModeOptions));
         RaisePropertyChanged(nameof(IsLaunchOfflineCustomUuidVisible));
         RaisePropertyChanged(nameof(HasLaunchOfflineStatus));
         RaisePropertyChanged(nameof(LaunchMicrosoftPrimaryButtonText));
@@ -1061,7 +1070,7 @@ internal sealed partial class FrontendShellViewModel
         LaunchMicrosoftVerificationUrl = string.Empty;
         if (!keepStatus)
         {
-            LaunchMicrosoftStatusText = "点击下方按钮后，启动器会打开微软登录网页。";
+            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.initial");
         }
 
         RaiseLaunchProfileSurfaceProperties();
@@ -1082,7 +1091,7 @@ internal sealed partial class FrontendShellViewModel
         var uuid = LaunchOfflineCustomUuid.Trim().Replace("-", string.Empty, StringComparison.Ordinal);
         if (!OfflineUuidPattern.IsMatch(uuid))
         {
-            throw new InvalidOperationException("UUID 不符合要求，应为 32 位 16 进制字符串。");
+            throw new InvalidOperationException(T("launch.profile.offline.errors.invalid_uuid"));
         }
 
         return uuid;
@@ -1142,19 +1151,19 @@ internal sealed partial class FrontendShellViewModel
 
                 if (string.Equals(errorCode, "authorization_declined", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("微软账号授权已被取消。");
+                    throw new InvalidOperationException(T("launch.profile.microsoft.errors.authorization_declined"));
                 }
 
                 if (string.Equals(errorCode, "expired_token", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("微软登录授权码已过期，请重新发起登录。");
+                    throw new InvalidOperationException(T("launch.profile.microsoft.errors.device_code_expired"));
                 }
 
                 throw new InvalidOperationException(GetLaunchProfileFriendlyError(ex));
             }
         }
 
-        throw new TimeoutException("等待微软登录确认超时，请重新发起登录。");
+        throw new TimeoutException(T("launch.profile.microsoft.errors.authorization_timeout"));
     }
 
     private async Task<string> SendLaunchProfileRequestAsync(
@@ -1242,13 +1251,13 @@ internal sealed partial class FrontendShellViewModel
                 }.Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}")));
     }
 
-    private static string ResolveMicrosoftClientId()
+    private string ResolveMicrosoftClientId()
     {
         var clientId = FrontendEmbeddedSecrets.GetMicrosoftClientId();
 
         if (string.IsNullOrWhiteSpace(clientId))
         {
-            throw new ArgumentException("缺少微软 OAuth Client ID。请先配置 PCL_MS_CLIENT_ID。", "MS_CLIENT_ID");
+            throw new ArgumentException(T("launch.profile.microsoft.errors.missing_client_id"), "MS_CLIENT_ID");
         }
 
         return clientId;
@@ -1284,15 +1293,15 @@ internal sealed partial class FrontendShellViewModel
         return document.Profiles.Count == 0 ? null : GetSelectedProfileIndex(document);
     }
 
-    private static string BuildProfileChoiceSummary(MinecraftLaunchPersistedProfile profile)
+    private string BuildProfileChoiceSummary(MinecraftLaunchPersistedProfile profile)
     {
         var authLabel = profile.Kind switch
         {
-            MinecraftLaunchStoredProfileKind.Microsoft => "正版验证",
+            MinecraftLaunchStoredProfileKind.Microsoft => T("launch.profile.kinds.microsoft"),
             MinecraftLaunchStoredProfileKind.Authlib => string.IsNullOrWhiteSpace(profile.ServerName)
-                ? "外置验证"
-                : $"外置验证 / {profile.ServerName}",
-            _ => "离线验证"
+                ? T("launch.profile.kinds.authlib")
+                : T("launch.profile.kinds.authlib_with_server", ("server_name", profile.ServerName)),
+            _ => T("launch.profile.kinds.offline")
         };
 
         if (string.IsNullOrWhiteSpace(profile.Desc))
@@ -1394,7 +1403,7 @@ internal sealed partial class FrontendShellViewModel
                 message.Contains("Invalid token", StringComparison.OrdinalIgnoreCase));
     }
 
-    private static string GetLaunchProfileFriendlyError(Exception exception)
+    private string GetLaunchProfileFriendlyError(Exception exception)
     {
         if (exception is LaunchProfileRequestException requestException)
         {
@@ -1407,14 +1416,14 @@ internal sealed partial class FrontendShellViewModel
                 return directMessage.Trim().TrimStart('$');
             }
 
-            return $"请求失败（HTTP {requestException.StatusCode}）。";
+            return T("launch.profile.refresh.errors.request_failed_status", ("status_code", requestException.StatusCode));
         }
 
         return exception.Message.Trim().TrimStart('$');
     }
 
     private sealed class LaunchProfileRequestException(string url, int statusCode, string responseBody)
-        : Exception($"请求失败（HTTP {statusCode}）：{url}")
+        : Exception($"HTTP {statusCode}: {url}")
     {
         public int StatusCode { get; } = statusCode;
 

@@ -70,37 +70,37 @@
                 x:Name="SelectionSelectAllButton"
                 Command="{Binding SelectAllInstanceResourcesCommand}"
                 IsEnabled="{Binding CanSelectAllInstanceResources}"
-                Text="全选" />
+                Text="{Binding InstanceResourceSelectAllText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionEnableButton"
                 Command="{Binding EnableSelectedInstanceResourcesCommand}"
                 IsEnabled="{Binding CanEnableSelectedInstanceResources}"
                 IsVisible="{Binding ShowInstanceResourceToggleActions}"
-                Text="启用" />
+                Text="{Binding InstanceResourceEnableSelectedText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionDisableButton"
                 Command="{Binding DisableSelectedInstanceResourcesCommand}"
                 IsEnabled="{Binding CanDisableSelectedInstanceResources}"
                 IsVisible="{Binding ShowInstanceResourceToggleActions}"
-                Text="禁用" />
+                Text="{Binding InstanceResourceDisableSelectedText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionExportButton"
                 Command="{Binding ExportInstanceResourceInfoCommand}"
-                Text="导出信息" />
+                Text="{Binding InstanceResourceExportInfoText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionCheckButton"
                 Command="{Binding CheckInstanceModsCommand}"
                 IsVisible="{Binding ShowInstanceResourceCheckButton}"
-                Text="检查 Mod" />
+                Text="{Binding InstanceResourceCheckModsText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionDeleteButton"
                 Command="{Binding DeleteSelectedInstanceResourcesCommand}"
                 IsEnabled="{Binding CanDeleteSelectedInstanceResources}"
-                Text="删除" />
+                Text="{Binding InstanceResourceDeleteSelectedText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionCancelButton"
                 Command="{Binding ClearInstanceResourceSelectionCommand}"
-                Text="取消选择" />
+                Text="{Binding InstanceResourceClearSelectionText}" />
           </WrapPanel>
         </Grid>
       </controls:PclCard.CardContent>

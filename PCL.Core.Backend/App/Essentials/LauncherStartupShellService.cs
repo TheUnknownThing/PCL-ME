@@ -1,4 +1,5 @@
 using System;
+using PCL.Core.App.I18n;
 
 namespace PCL.Core.App.Essentials;
 
@@ -29,9 +30,15 @@ public static class LauncherStartupShellService
         }
 
         return new LauncherStartupPrompt(
-            warningMessage,
-            "环境警告",
-            [new LauncherStartupPromptButton("我知道了", [new LauncherStartupPromptAction(LauncherStartupPromptActionKind.Continue)])],
+            I18nText.WithArgs(
+                "startup.prompts.environment_warning.message",
+                I18nTextArgument.String("warnings", warningMessage)),
+            I18nText.Plain("startup.prompts.environment_warning.title"),
+            [
+                new LauncherStartupPromptButton(
+                    I18nText.Plain("startup.prompts.environment_warning.actions.acknowledge"),
+                    [new LauncherStartupPromptAction(LauncherStartupPromptActionKind.Continue)])
+            ],
             IsWarning: true);
     }
 }

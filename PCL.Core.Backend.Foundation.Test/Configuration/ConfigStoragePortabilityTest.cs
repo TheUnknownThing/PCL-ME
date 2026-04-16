@@ -124,11 +124,14 @@ public class ConfigStoragePortabilityTest
 
         var storage = new FileConfigStorage(new ThrowingFileProvider());
         storage.SetValue("alpha", 1);
-        Thread.Sleep(50);
+        SpinWait.SpinUntil(() => captured is not null, TimeSpan.FromSeconds(1));
         storage.Stop();
 
         Assert.IsNotNull(captured);
-        Assert.AreEqual("配置文件保存失败", captured.Message);
+        Assert.AreEqual("/virtual/config.yml", captured.FilePath);
+        Assert.AreEqual("Failed to save configuration file.", captured.Message);
+        Assert.IsInstanceOfType<IOException>(captured.Exception);
+        Assert.AreEqual("sync failure", captured.Exception.Message);
     }
 
     private static string CreateTempDirectory()

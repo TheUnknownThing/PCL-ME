@@ -18,8 +18,6 @@ internal sealed partial class FrontendShellViewModel
     private double _instanceTotalRamGb;
     private double _instanceAutomaticAllocatedRamGb;
     private double _instanceGlobalAllocatedRamGb;
-    private string _instanceUsedRamLabel = "0.0 GB";
-    private string _instanceTotalRamLabel = " / 0.0 GB";
     private bool _showInstanceRamAllocationWarning;
     private bool _showInstance32BitJavaWarning;
     private int _selectedInstanceServerLoginRequireIndex;
@@ -44,42 +42,42 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableInstanceRetroWrapper;
     private bool _useInstanceDebugLog4jConfig;
 
-    public IReadOnlyList<string> InstanceIsolationOptions { get; } =
+    public IReadOnlyList<string> InstanceIsolationOptions =>
     [
-        "默认（跟随全局）",
-        "开启",
-        "关闭"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.options.on"),
+        SD("instance.settings.options.off")
     ];
 
-    public IReadOnlyList<string> InstanceServerLoginRequireOptions { get; } =
+    public IReadOnlyList<string> InstanceServerLoginRequireOptions =>
     [
-        "无限制",
-        "仅正版验证",
-        "仅第三方验证（Authlib-Injector）",
-        "正版验证与第三方验证（Authlib-Injector）"
+        SD("instance.settings.server.require.none"),
+        SD("instance.settings.server.require.official"),
+        SD("instance.settings.server.require.third_party"),
+        SD("instance.settings.server.require.both")
     ];
 
-    public IReadOnlyList<string> InstanceMemoryOptimizeOptions { get; } =
+    public IReadOnlyList<string> InstanceMemoryOptimizeOptions =>
     [
-        "跟随全局设置",
-        "开启",
-        "关闭"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.options.on"),
+        SD("instance.settings.options.off")
     ];
 
-    public IReadOnlyList<string> InstanceRendererOptions { get; } =
+    public IReadOnlyList<string> InstanceRendererOptions =>
     [
-        "跟随全局设置",
-        "游戏默认",
-        "软渲染（llvmpipe）",
-        "DirectX12（d3d12）",
-        "Vulkan（zink）"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.renderer.game_default"),
+        SD("instance.settings.renderer.software"),
+        SD("instance.settings.renderer.directx12"),
+        SD("instance.settings.renderer.vulkan")
     ];
 
-    public IReadOnlyList<string> InstanceForceX11OnWaylandOptions { get; } =
+    public IReadOnlyList<string> InstanceForceX11OnWaylandOptions =>
     [
-        "跟随全局设置",
-        "强制 X11",
-        "系统默认"
+        SD("instance.settings.options.follow_global"),
+        SD("instance.settings.linux.force_x11"),
+        SD("instance.settings.linux.system_default")
     ];
 
     public IReadOnlyList<string> InstanceJavaOptions => _instanceJavaOptionEntries
@@ -89,7 +87,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceIsolationIndex
     {
         get => _selectedInstanceIsolationIndex;
-        set => SetProperty(ref _selectedInstanceIsolationIndex, Math.Clamp(value, 0, InstanceIsolationOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceIsolationOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceIsolationIndex, normalizedValue);
+            }
+        }
     }
 
     public string InstanceWindowTitleSetting
@@ -113,7 +117,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceJavaIndex
     {
         get => _selectedInstanceJavaIndex;
-        set => SetProperty(ref _selectedInstanceJavaIndex, Math.Clamp(value, 0, Math.Max(InstanceJavaOptions.Count - 1, 0)));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceJavaOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceJavaIndex, normalizedValue);
+            }
+        }
     }
 
     public bool UseGlobalInstanceRamAllocation
@@ -152,19 +162,25 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string InstanceCustomRamAllocationLabel => $"{Math.Round(InstanceCustomRamAllocation):0} GB";
+    public string InstanceCustomRamAllocationLabel => FormatMemorySummarySize(Math.Round(InstanceCustomRamAllocation));
 
     public int SelectedInstanceMemoryOptimizeIndex
     {
         get => _selectedInstanceMemoryOptimizeIndex;
-        set => SetProperty(ref _selectedInstanceMemoryOptimizeIndex, Math.Clamp(value, 0, InstanceMemoryOptimizeOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceMemoryOptimizeOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceMemoryOptimizeIndex, normalizedValue);
+            }
+        }
     }
 
-    public string InstanceUsedRamLabel => _instanceUsedRamLabel;
+    public string InstanceUsedRamLabel => FormatMemorySummarySize(_instanceUsedRamGb);
 
-    public string InstanceTotalRamLabel => _instanceTotalRamLabel;
+    public string InstanceTotalRamLabel => FormatMemorySummarySize(_instanceTotalRamGb);
 
-    public string InstanceAllocatedRamLabel => $"{ResolveInstanceAllocatedRamGb():0.0} GB";
+    public string InstanceAllocatedRamLabel => FormatMemorySummarySize(ResolveInstanceAllocatedRamGb());
 
     public GridLength InstanceUsedRamBarWidth => CreateMemoryBarWidth(_instanceUsedRamGb);
 
@@ -185,7 +201,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedInstanceServerLoginRequireIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, InstanceServerLoginRequireOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, InstanceServerLoginRequireOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedInstanceServerLoginRequireIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(ShowInstanceServerAuthFields));
@@ -257,7 +277,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceRendererIndex
     {
         get => _selectedInstanceRendererIndex;
-        set => SetProperty(ref _selectedInstanceRendererIndex, Math.Clamp(value, 0, InstanceRendererOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceRendererOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceRendererIndex, normalizedValue);
+            }
+        }
     }
 
     public string InstanceLaunchJvmArguments
@@ -299,7 +325,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceForceX11OnWaylandIndex
     {
         get => _selectedInstanceForceX11OnWaylandIndex;
-        set => SetProperty(ref _selectedInstanceForceX11OnWaylandIndex, Math.Clamp(value, 0, InstanceForceX11OnWaylandOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceForceX11OnWaylandOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceForceX11OnWaylandIndex, normalizedValue);
+            }
+        }
     }
 
     public bool IgnoreInstanceJavaCompatibilityWarning
@@ -354,8 +386,6 @@ internal sealed partial class FrontendShellViewModel
         _instanceTotalRamGb = setup.TotalMemoryGb;
         _instanceAutomaticAllocatedRamGb = setup.AutomaticAllocatedMemoryGb;
         _instanceGlobalAllocatedRamGb = setup.GlobalAllocatedMemoryGb;
-        _instanceUsedRamLabel = setup.UsedMemoryLabel;
-        _instanceTotalRamLabel = setup.TotalMemoryLabel;
         _showInstanceRamAllocationWarning = setup.ShowMemoryWarning;
         _showInstance32BitJavaWarning = setup.Show32BitJavaWarning;
         _selectedInstanceServerLoginRequireIndex = Math.Clamp(setup.ServerLoginRequirementIndex, 0, InstanceServerLoginRequireOptions.Count - 1);

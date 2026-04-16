@@ -21,7 +21,7 @@ internal sealed partial class FrontendShellViewModel
     private string _instanceSelectionSearchQuery = string.Empty;
     private string _instanceSelectionLauncherDirectory = string.Empty;
     private int _instanceSelectionTotalCount;
-    private string _taskManagerActiveTaskTitle = "当前没有活动任务";
+    private string _taskManagerActiveTaskTitle = string.Empty;
     private int _taskManagerWaitingCount;
     private int _taskManagerRunningCount;
     private int _taskManagerFinishedCount;
@@ -32,7 +32,7 @@ internal sealed partial class FrontendShellViewModel
     private DispatcherTimer? _taskManagerRefreshTimer;
     private DispatcherTimer? _taskManagerHeartbeatTimer;
     private int _gameLogRecentFileCount;
-    private string _gameLogLatestUpdateLabel = "尚未发现日志文件";
+    private string _gameLogLatestUpdateLabel = string.Empty;
 
     public ObservableCollection<InstanceSelectEntryViewModel> InstanceSelectionEntries { get; } = [];
 
@@ -95,13 +95,23 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowInstanceSelectionEmptyClearAction => _instanceSelectionTotalCount > 0 && !HasInstanceSelectionEntries;
 
+    public string InstanceSelectionSearchToolTip => LT("shell.instance_select.search.tooltip");
+
+    public string InstanceSelectionSearchWatermark => LT("shell.instance_select.search.watermark");
+
     public string InstanceSelectionEmptyTitle => _instanceSelectionTotalCount == 0
-        ? "无可用实例"
-        : "无匹配实例";
+        ? LT("shell.instance_select.empty.none_title")
+        : LT("shell.instance_select.empty.no_match_title");
 
     public string InstanceSelectionEmptyDescription => _instanceSelectionTotalCount == 0
-        ? "未找到任何游戏实例，请先下载一个游戏实例。\n若有已存在的实例，请在左边的列表中选择文件夹，或通过添加已有文件夹将其导入。"
-        : $"没有找到与“{InstanceSelectionSearchQuery.Trim()}”匹配的实例，请尝试更换关键词或清空搜索。";
+        ? LT("shell.instance_select.empty.none_description")
+        : LT("shell.instance_select.empty.no_match_description", ("query", InstanceSelectionSearchQuery.Trim()));
+
+    public string InstanceSelectionEmptyDownloadButtonText => LT("shell.instance_select.empty.download");
+
+    public string InstanceSelectionFoldersHeader => LT("shell.instance_select.left.folders");
+
+    public string InstanceSelectionShortcutsHeader => LT("shell.instance_select.left.shortcuts");
 
     public string InstanceSelectionLauncherDirectoryLabel => GetInstanceSelectionDirectoryLabel(_instanceSelectionLauncherDirectory);
 
@@ -110,16 +120,26 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceSelectionLauncherDirectory => _instanceSelectionLauncherDirectory;
 
     public string InstanceSelectionResultSummary => HasInstanceSelectionEntries
-        ? $"已显示 {InstanceSelectionEntries.Count} 个实例"
+        ? LT("shell.instance_select.results.count", ("count", InstanceSelectionEntries.Count))
         : _instanceSelectionTotalCount == 0
-            ? "当前启动目录下还没有可用实例"
-            : "当前筛选条件没有匹配到任何实例";
+            ? LT("shell.instance_select.results.none")
+            : LT("shell.instance_select.results.filtered_none");
 
     public bool ShowTaskManagerSurface => IsStandardShellRoute && _currentRoute.Page == LauncherFrontendPageKey.TaskManager;
 
     public bool HasTaskManagerEntries => TaskManagerEntries.Count > 0;
 
     public bool HasNoTaskManagerEntries => !HasTaskManagerEntries;
+
+    public string TaskManagerEmptyTitle => LT("shell.task_manager.empty.title");
+
+    public string TaskManagerEmptyDescription => LT("shell.task_manager.empty.description");
+
+    public string TaskManagerLeftOverallProgressLabel => LT("shell.task_manager.left.overall_progress");
+
+    public string TaskManagerLeftDownloadSpeedLabel => LT("shell.task_manager.left.download_speed");
+
+    public string TaskManagerLeftRemainingFilesLabel => LT("shell.task_manager.left.remaining_files");
 
     public int TaskManagerWaitingCount => _taskManagerWaitingCount;
 
@@ -130,8 +150,8 @@ internal sealed partial class FrontendShellViewModel
     public int TaskManagerFailedCount => _taskManagerFailedCount;
 
     public string TaskManagerSummary => HasTaskManagerEntries
-        ? $"运行中 {TaskManagerRunningCount} 项，等待中 {TaskManagerWaitingCount} 项"
-        : "当前没有后台任务";
+        ? LT("shell.task_manager.summary.active", ("running", TaskManagerRunningCount), ("waiting", TaskManagerWaitingCount))
+        : LT("shell.task_manager.summary.none");
 
     public string TaskManagerActiveTaskTitle => _taskManagerActiveTaskTitle;
 
@@ -144,6 +164,26 @@ internal sealed partial class FrontendShellViewModel
     public string TaskManagerDownloadSpeedText => _taskManagerDownloadSpeedText;
 
     public string TaskManagerRemainingFilesText => _taskManagerRemainingFilesText;
+
+    public string GameLogRefreshButtonText => LT("shell.game_log.actions.refresh");
+
+    public string GameLogExportButtonText => LT("shell.game_log.actions.export");
+
+    public string GameLogOpenDirectoryButtonText => LT("shell.game_log.actions.open_directory");
+
+    public string GameLogClearCacheButtonText => LT("shell.game_log.actions.clear_cache");
+
+    public string GameLogLiveLineCountLabel => LT("shell.game_log.labels.live_line_count");
+
+    public string GameLogRecentFilesLabel => LT("shell.game_log.labels.recent_files");
+
+    public string GameLogCurrentSessionOutputTitle => LT("shell.game_log.labels.current_session_output");
+
+    public string GameLogRecentGeneratedFilesTitle => LT("shell.game_log.labels.recent_generated_files");
+
+    public string GameLogEmptyTitle => LT("shell.game_log.empty.title");
+
+    public string GameLogEmptyDescription => LT("shell.game_log.empty.description");
 
     public bool ShowGameLogSurface => IsStandardShellRoute && _currentRoute.Page == LauncherFrontendPageKey.GameLog;
 
@@ -196,54 +236,64 @@ internal sealed partial class FrontendShellViewModel
         {
             case LauncherFrontendPageKey.InstanceSelect:
                 metadata = new DedicatedGenericRouteMetadata(
-                    "实例选择",
-                    "查看当前启动目录中的实例列表，并切换启动目标。",
+                    LT("shell.navigation.pages.instance_select.title"),
+                    LT("shell.instance_select.route.description"),
                     [
-                        new LauncherFrontendPageFact("启动目录", string.IsNullOrWhiteSpace(_instanceSelectionLauncherDirectory) ? "未解析" : _instanceSelectionLauncherDirectory),
-                        new LauncherFrontendPageFact("已选实例", _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : "未选择"),
-                        new LauncherFrontendPageFact("结果数量", $"{InstanceSelectionEntries.Count} / {_instanceSelectionTotalCount}")
+                        new LauncherFrontendPageFact(
+                            LT("shell.instance_select.route.facts.launch_directory"),
+                            string.IsNullOrWhiteSpace(_instanceSelectionLauncherDirectory)
+                                ? LT("shell.instance_select.route.values.unresolved")
+                                : _instanceSelectionLauncherDirectory),
+                        new LauncherFrontendPageFact(
+                            LT("shell.instance_select.route.facts.selected_instance"),
+                            _instanceComposition.Selection.HasSelection
+                                ? _instanceComposition.Selection.InstanceName
+                                : LT("shell.instance_select.route.values.none_selected")),
+                        new LauncherFrontendPageFact(
+                            LT("shell.instance_select.route.facts.result_count"),
+                            $"{InstanceSelectionEntries.Count} / {_instanceSelectionTotalCount}")
                     ]);
                 return true;
             case LauncherFrontendPageKey.TaskManager:
                 metadata = new DedicatedGenericRouteMetadata(
-                    "任务中心",
-                    "查看后台任务的等待、执行、完成和失败状态。",
+                    LT("shell.navigation.pages.task_manager.title"),
+                    LT("shell.task_manager.route.description"),
                     [
-                        new LauncherFrontendPageFact("等待中", TaskManagerWaitingCount.ToString()),
-                        new LauncherFrontendPageFact("运行中", TaskManagerRunningCount.ToString()),
-                        new LauncherFrontendPageFact("已结束", TaskManagerFinishedCount.ToString()),
-                        new LauncherFrontendPageFact("失败", TaskManagerFailedCount.ToString())
+                        new LauncherFrontendPageFact(LT("shell.task_manager.route.facts.waiting"), TaskManagerWaitingCount.ToString()),
+                        new LauncherFrontendPageFact(LT("shell.task_manager.route.facts.running"), TaskManagerRunningCount.ToString()),
+                        new LauncherFrontendPageFact(LT("shell.task_manager.route.facts.finished"), TaskManagerFinishedCount.ToString()),
+                        new LauncherFrontendPageFact(LT("shell.task_manager.route.facts.failed"), TaskManagerFailedCount.ToString())
                     ]);
                 return true;
             case LauncherFrontendPageKey.GameLog:
                 metadata = new DedicatedGenericRouteMetadata(
-                    "实时日志",
-                    "实时日志直接显示当前会话输出，并补充最近生成的启动脚本、原始输出和启动器日志文件。",
+                    LT("shell.navigation.pages.game_log.title"),
+                    LT("shell.game_log.route.description"),
                     [
-                        new LauncherFrontendPageFact("实时行数", GameLogLiveLineCount.ToString()),
-                        new LauncherFrontendPageFact("最近文件", GameLogRecentFileCount.ToString()),
-                        new LauncherFrontendPageFact("最新更新", GameLogLatestUpdateLabel)
+                        new LauncherFrontendPageFact(LT("shell.game_log.route.facts.live_lines"), GameLogLiveLineCount.ToString()),
+                        new LauncherFrontendPageFact(LT("shell.game_log.route.facts.recent_files"), GameLogRecentFileCount.ToString()),
+                        new LauncherFrontendPageFact(LT("shell.game_log.route.facts.latest_update"), GameLogLatestUpdateLabel)
                     ]);
                 return true;
             case LauncherFrontendPageKey.CompDetail:
                 metadata = new DedicatedGenericRouteMetadata(
-                    "工程详情",
-                    "查看资源工程的实时社区信息与最近版本。",
+                    LT("shell.comp_detail.route.eyebrow"),
+                    LT("shell.comp_detail.route.description"),
                     [
-                        new LauncherFrontendPageFact("来源", CommunityProjectSource),
-                        new LauncherFrontendPageFact("状态", CommunityProjectStatus),
-                        new LauncherFrontendPageFact("最近更新", CommunityProjectUpdatedLabel),
-                        new LauncherFrontendPageFact("下载量", CommunityProjectDownloadCountLabel)
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.source"), CommunityProjectSource),
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.status"), CommunityProjectStatus),
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.updated"), CommunityProjectUpdatedLabel),
+                        new LauncherFrontendPageFact(LT("shell.comp_detail.route.facts.downloads"), CommunityProjectDownloadCountLabel)
                     ]);
                 return true;
             case LauncherFrontendPageKey.HelpDetail:
                 metadata = new DedicatedGenericRouteMetadata(
                     HelpDetailTitle,
-                    "帮助详情会直接展示条目正文、内嵌动作和可追溯的来源信息，而不是只记录原始路径。",
+                    LT("shell.help_detail.route.description"),
                     [
-                        new LauncherFrontendPageFact("来源", HelpDetailSource),
-                        new LauncherFrontendPageFact("段落数", HelpDetailSections.Sum(section => section.Lines.Count).ToString()),
-                        new LauncherFrontendPageFact("动作数", HelpDetailSections.Sum(section => section.Actions.Count).ToString())
+                        new LauncherFrontendPageFact(LT("shell.help_detail.route.facts.source"), HelpDetailSource),
+                        new LauncherFrontendPageFact(LT("shell.help_detail.route.facts.lines"), HelpDetailSections.Sum(section => section.Lines.Count).ToString()),
+                        new LauncherFrontendPageFact(LT("shell.help_detail.route.facts.actions"), HelpDetailSections.Sum(section => section.Actions.Count).ToString())
                     ]);
                 return true;
             default:
@@ -273,18 +323,18 @@ internal sealed partial class FrontendShellViewModel
             InstanceSelectionShortcutEntries,
             [
                 CreateInstanceSelectionShortcutEntry(
-                    "添加已有文件夹",
-                    "选择一个包含 versions 目录的 .minecraft 或启动目录",
+                    LT("shell.instance_select.shortcuts.add_folder.title"),
+                    LT("shell.instance_select.shortcuts.add_folder.description"),
                     "F1 m 12 7 a 1 1 0 0 0 -1 1 v 8 a 1 1 0 0 0 1 1 a 1 1 0 0 0 1 -1 V 8 A 1 1 0 0 0 12 7 Z m -4 4 a 1 1 0 0 0 -1 1 a 1 1 0 0 0 1 1 h 8 a 1 1 0 0 0 1 -1 a 1 1 0 0 0 -1 -1 z M 12 1 C 5.93671 1 1 5.93671 1 12 C 1 18.0633 5.93671 23 12 23 C 18.0633 23 23 18.0633 23 12 C 23 5.93671 18.0633 1 12 1 Z m 0 2 c 4.98241 0 9 4.01759 9 9 c 0 4.98241 -4.01759 9 -9 9 C 7.01759 21 3 16.9824 3 12 C 3 7.01759 7.01759 3 12 3 Z",
                     _addInstanceSelectionFolderCommand),
                 CreateInstanceSelectionShortcutEntry(
-                    "导入整合包",
-                    "选择 CurseForge、Modrinth 或普通压缩整合包文件",
+                    LT("shell.instance_select.shortcuts.import_pack.title"),
+                    LT("shell.instance_select.shortcuts.import_pack.description"),
                     "F1 m 11.293 11.293 l -3 3 a 1 1 0 0 0 0 1.41406 a 1 1 0 0 0 1.41406 0 L 12 13.4141 l 2.29297 2.29297 a 1 1 0 0 0 1.41406 0 a 1 1 0 0 0 0 -1.41406 l -3 -3 a 1.0001 1.0001 0 0 0 -1.41406 0 z M 12 11 a 1 1 0 0 0 -1 1 v 6 a 1 1 0 0 0 1 1 a 1 1 0 0 0 1 -1 V 12 A 1 1 0 0 0 12 11 Z M 14 1 a 1 1 0 0 0 -1 1 v 5 c 0 1.09272 0.907275 2 2 2 h 5 A 1 1 0 0 0 21 8 A 1 1 0 0 0 20 7 H 15 V 2 A 1 1 0 0 0 14 1 Z M 6 1 C 4.35499 1 3 2.35499 3 4 v 16 c 0 1.64501 1.35499 3 3 3 h 12 c 1.64501 0 3 -1.35499 3 -3 V 8.00195 V 8 C 21.001 7.09394 20.6387 6.22279 19.9961 5.58398 L 16.4121 2 L 16.4101 1.99805 C 15.7718 1.35838 14.9038 0.999054 14 1 Z m 0 2 h 8 a 1.0001 1.0001 0 0 0 0.002 0 c 0.373356 -0.0006051 0.730614 0.147632 0.994141 0.412109 a 1.0001 1.0001 0 0 0 0 0.00195 l 3.58789 3.58789 a 1.0001 1.0001 0 0 0 0.0039 0.00195 C 18.8531 7.26753 19.0006 7.62412 19 7.99805 A 1.0001 1.0001 0 0 0 19 8 v 12 c 0 0.564129 -0.435871 1 -1 1 H 6 C 5.43587 21 5 20.5641 5 20 V 4 C 5 3.43587 5.43587 3 6 3 Z",
                     _importInstanceSelectionPackCommand),
                 CreateInstanceSelectionShortcutEntry(
-                    "实例回收区",
-                    "打开当前启动目录的实例回收区，继续手动清理或恢复实例",
+                    LT("shell.instance_select.shortcuts.trash.title"),
+                    LT("shell.instance_select.shortcuts.trash.description"),
                     FrontendIconCatalog.FolderOutline.Data,
                     new ActionCommand(OpenInstanceSelectionTrashDirectory))
             ]);
@@ -325,6 +375,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceSelectionLauncherDirectoryPath));
         RaisePropertyChanged(nameof(HasInstanceSelectionFolders));
         RaisePropertyChanged(nameof(HasInstanceSelectionSearchBox));
+        RaisePropertyChanged(nameof(InstanceSelectionSearchToolTip));
+        RaisePropertyChanged(nameof(InstanceSelectionSearchWatermark));
         RaisePropertyChanged(nameof(HasInstanceSelectionEntries));
         RaisePropertyChanged(nameof(HasNoInstanceSelectionEntries));
         RaisePropertyChanged(nameof(InstanceSelectionResultSummary));
@@ -332,6 +384,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceSelectionEmptyDescription));
         RaisePropertyChanged(nameof(ShowInstanceSelectionEmptyDownloadAction));
         RaisePropertyChanged(nameof(ShowInstanceSelectionEmptyClearAction));
+        RaisePropertyChanged(nameof(InstanceSelectionEmptyDownloadButtonText));
+        RaisePropertyChanged(nameof(InstanceSelectionFoldersHeader));
+        RaisePropertyChanged(nameof(InstanceSelectionShortcutsHeader));
     }
 
     private void RefreshTaskManagerSurface()
@@ -353,7 +408,7 @@ internal sealed partial class FrontendShellViewModel
         SyncTaskManagerEntries(orderedTasks, now);
 
         var primaryTask = orderedTasks.FirstOrDefault();
-        _taskManagerActiveTaskTitle = primaryTask?.Title ?? "当前没有活动任务";
+        _taskManagerActiveTaskTitle = primaryTask?.Title ?? LT("shell.task_manager.summary.none");
         _taskManagerOverallProgress = primaryTask?.SupportProgress == true
             ? Math.Clamp(primaryTask.Progress, 0d, 1d)
             : tasks.Length == 0
@@ -372,6 +427,11 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(TaskManagerRunningCount));
         RaisePropertyChanged(nameof(TaskManagerFinishedCount));
         RaisePropertyChanged(nameof(TaskManagerFailedCount));
+        RaisePropertyChanged(nameof(TaskManagerEmptyTitle));
+        RaisePropertyChanged(nameof(TaskManagerEmptyDescription));
+        RaisePropertyChanged(nameof(TaskManagerLeftOverallProgressLabel));
+        RaisePropertyChanged(nameof(TaskManagerLeftDownloadSpeedLabel));
+        RaisePropertyChanged(nameof(TaskManagerLeftRemainingFilesLabel));
         RaisePropertyChanged(nameof(TaskManagerOverallProgress));
         RaisePropertyChanged(nameof(TaskManagerOverallProgressValue));
         RaisePropertyChanged(nameof(TaskManagerOverallProgressText));
@@ -418,7 +478,7 @@ internal sealed partial class FrontendShellViewModel
         _gameLogRecentFileCount = recentFiles.Length;
         _gameLogLatestUpdateLabel = recentFiles.FirstOrDefault() is { } latest
             ? latest.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
-            : "尚未发现日志文件";
+            : LT("shell.game_log.latest_update.none");
 
         ReplaceItems(
             GameLogFileEntries,
@@ -426,7 +486,10 @@ internal sealed partial class FrontendShellViewModel
                 new SimpleListEntryViewModel(
                     file.Name,
                     $"{file.DirectoryName} • {file.LastWriteTime:yyyy-MM-dd HH:mm}",
-                    CreateOpenTargetCommand($"打开日志文件: {file.Name}", file.FullName, file.FullName))));
+                    CreateOpenTargetCommand(
+                        LT("shell.game_log.actions.open_file", ("name", file.Name)),
+                        file.FullName,
+                        file.FullName))));
 
         RaiseGameLogSurfaceProperties();
         RaisePropertyChanged(nameof(HasGameLogFiles));
@@ -449,17 +512,19 @@ internal sealed partial class FrontendShellViewModel
 
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-            $"已切换启动实例到 {entry.Name} 并返回启动页。");
+            LT("shell.instance_select.navigation.launch", ("name", entry.Name)));
     }
 
     private async Task AddInstanceSelectionFolderAsync()
     {
         try
         {
-            var pickedFolderPath = await _shellActionService.PickFolderAsync("选择已有 Minecraft 文件夹");
+            var pickedFolderPath = await _shellActionService.PickFolderAsync(LT("shell.instance_select.shortcuts.add_folder.pick_title"));
             if (string.IsNullOrWhiteSpace(pickedFolderPath))
             {
-                AddActivity("添加已有文件夹", "未选择任何文件夹。");
+                AddActivity(
+                    LT("shell.instance_select.shortcuts.add_folder.title"),
+                    LT("shell.instance_select.shortcuts.add_folder.cancelled"));
                 return;
             }
 
@@ -490,12 +555,12 @@ internal sealed partial class FrontendShellViewModel
                 StoreLauncherFolderPath(resolvedFolderPath, runtimePaths),
                 resolvedFolderPath,
                 addedToList
-                ? $"已将 {resolvedFolderPath} 添加到实例目录列表并切换过去。"
-                : $"已切换启动目录到 {resolvedFolderPath}。");
+                ? LT("shell.instance_select.shortcuts.add_folder.added_and_switched", ("path", resolvedFolderPath))
+                : LT("shell.instance_select.shortcuts.add_folder.switched", ("path", resolvedFolderPath)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("添加已有文件夹失败", ex.Message);
+            AddFailureActivity(LT("shell.instance_select.shortcuts.add_folder.failure"), ex.Message);
         }
     }
 
@@ -504,14 +569,16 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var sourcePath = await _shellActionService.PickOpenFileAsync(
-                "选择整合包文件",
-                "整合包文件",
+                LT("shell.instance_select.shortcuts.import_pack.pick_title"),
+                LT("shell.instance_select.shortcuts.import_pack.pick_filter"),
                 "*.zip",
                 "*.mrpack",
                 "*.rar");
             if (string.IsNullOrWhiteSpace(sourcePath))
             {
-                AddActivity("导入整合包", "未选择任何整合包文件。");
+                AddActivity(
+                    LT("shell.instance_select.shortcuts.import_pack.title"),
+                    LT("shell.instance_select.shortcuts.import_pack.cancelled"));
                 return;
             }
 
@@ -519,7 +586,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("导入整合包失败", ex.Message);
+            AddFailureActivity(LT("shell.instance_select.shortcuts.import_pack.failure"), ex.Message);
         }
     }
 
@@ -541,13 +608,15 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("输入实例名称失败", ex.Message);
+            AddFailureActivity(LT("shell.instance_select.shortcuts.import_pack.name_failure"), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(instanceName))
         {
-            AddActivity("导入整合包", "没有输入实例名称。");
+            AddActivity(
+                LT("shell.instance_select.shortcuts.import_pack.title"),
+                LT("shell.instance_select.shortcuts.import_pack.no_name"));
             return;
         }
 
@@ -559,8 +628,8 @@ internal sealed partial class FrontendShellViewModel
 
         var normalizedExtension = extension.ToLowerInvariant();
         var targetDirectory = Path.Combine(versionsDirectory, instanceName);
-        var archivePath = Path.Combine(targetDirectory, $"原始整合包{normalizedExtension}");
-        var taskTitle = $"整合包安装：{instanceName}";
+        var archivePath = Path.Combine(targetDirectory, $"original-modpack{normalizedExtension}");
+        var taskTitle = LT("shell.instance_select.tasks.install_modpack", ("name", instanceName));
 
         TaskCenter.Register(new FrontendManagedModpackInstallTask(
             taskTitle,
@@ -590,30 +659,34 @@ internal sealed partial class FrontendShellViewModel
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    AddFailureActivity("导入整合包失败", message);
+                    AddFailureActivity(LT("shell.instance_select.shortcuts.import_pack.failure"), message);
                 });
             }));
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
-            $"{taskTitle} 已加入任务中心。");
+            LT("shell.instance_select.shortcuts.import_pack.task_queued", ("task", taskTitle)));
     }
 
     private async Task DeleteInstanceSelectionFolderAsync(InstanceSelectionFolderSnapshot folder)
     {
         if (!folder.IsPersisted)
         {
-            AddActivity("移除文件夹记录", "当前文件夹未保存到列表中。");
+            AddActivity(
+                LT("shell.instance_select.folder_remove.activity"),
+                LT("shell.instance_select.folder_remove.not_saved"));
             return;
         }
 
         var confirmed = await _shellActionService.ConfirmAsync(
-            "移除文件夹确认",
-            $"确定要从文件夹列表中移除 {folder.Directory} 吗？{Environment.NewLine}该操作只会删除列表记录，不会删除磁盘上的文件。",
-            "从列表移除",
+            LT("shell.instance_select.folder_remove.confirm_title"),
+            LT("shell.instance_select.folder_remove.confirm_message", ("path", folder.Directory), ("newline", Environment.NewLine)),
+            LT("shell.instance_select.folder_remove.confirm_action"),
             isDanger: false);
         if (!confirmed)
         {
-            AddActivity("移除文件夹记录", "已取消移除。");
+            AddActivity(
+                LT("shell.instance_select.folder_remove.activity"),
+                LT("shell.instance_select.folder_remove.cancelled"));
             return;
         }
 
@@ -634,7 +707,9 @@ internal sealed partial class FrontendShellViewModel
             {
                 RefreshInstanceSelectionSurface();
                 RefreshInstanceSelectionRouteMetadata();
-                AddActivity("移除文件夹记录", $"已从文件夹列表中移除 {folder.Directory}。");
+                AddActivity(
+                    LT("shell.instance_select.folder_remove.activity"),
+                    LT("shell.instance_select.folder_remove.removed", ("path", folder.Directory)));
                 return;
             }
 
@@ -643,18 +718,20 @@ internal sealed partial class FrontendShellViewModel
             {
                 RefreshInstanceSelectionSurface();
                 RefreshInstanceSelectionRouteMetadata();
-                AddActivity("移除文件夹记录", $"已移除 {folder.Directory} 的保存记录。当前仍在使用该目录，因此它会继续显示。");
+                AddActivity(
+                    LT("shell.instance_select.folder_remove.activity"),
+                    LT("shell.instance_select.folder_remove.still_active", ("path", folder.Directory)));
                 return;
             }
 
             RefreshSelectedLauncherFolderSmoothly(
                 StoreLauncherFolderPath(fallbackDirectory, runtimePaths),
                 fallbackDirectory,
-                $"已从文件夹列表中移除 {folder.Directory}，并切换到 {fallbackDirectory}。");
+                LT("shell.instance_select.folder_remove.removed_and_switched", ("removed", folder.Directory), ("target", fallbackDirectory)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("移除文件夹记录失败", ex.Message);
+            AddFailureActivity(LT("shell.instance_select.folder_remove.failure"), ex.Message);
         }
     }
 
@@ -662,23 +739,27 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(folder.Directory))
         {
-            AddFailureActivity("打开文件夹失败", "缺少可打开的文件夹路径。");
+            AddFailureActivity(
+                LT("shell.instance_select.open_folder.failure"),
+                LT("shell.instance_select.open_folder.missing_path"));
             return;
         }
 
         if (!Directory.Exists(folder.Directory))
         {
-            AddFailureActivity("打开文件夹失败", $"文件夹不存在：{folder.Directory}");
+            AddFailureActivity(
+                LT("shell.instance_select.open_folder.failure"),
+                LT("shell.instance_select.open_folder.not_found", ("path", folder.Directory)));
             return;
         }
 
         if (_shellActionService.TryRevealExternalTarget(folder.Directory, out var error))
         {
-            AddActivity("打开文件夹", folder.Directory);
+            AddActivity(LT("shell.instance_select.open_folder.activity"), folder.Directory);
             return;
         }
 
-        AddFailureActivity("打开文件夹失败", error ?? folder.Directory);
+        AddFailureActivity(LT("shell.instance_select.open_folder.failure"), error ?? folder.Directory);
     }
 
     private void OpenInstanceSelectionEntry(InstanceSelectionSnapshot entry)
@@ -703,7 +784,7 @@ internal sealed partial class FrontendShellViewModel
 
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionOverall),
-            $"已打开实例 {entry.Name} 的概览页面。");
+            LT("shell.instance_select.navigation.overview", ("name", entry.Name)));
     }
 
     private void ToggleInstanceSelectionFavorite(InstanceSelectionSnapshot entry)
@@ -713,24 +794,28 @@ internal sealed partial class FrontendShellViewModel
             var nextIsFavorite = !entry.IsStarred;
             _shellActionService.PersistInstanceValue(entry.Directory, "IsStar", nextIsFavorite);
             RefreshInstanceSelectionSurface();
-            AddActivity(nextIsFavorite ? "加入收藏夹" : "移出收藏夹", entry.Name);
+            AddActivity(
+                nextIsFavorite
+                    ? LT("shell.instance_select.favorite.added_activity")
+                    : LT("shell.instance_select.favorite.removed_activity"),
+                entry.Name);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("切换实例收藏状态失败", ex.Message);
+            AddFailureActivity(LT("shell.instance_select.favorite.failure"), ex.Message);
         }
     }
 
     private async Task DeleteInstanceSelectionEntryAsync(InstanceSelectionSnapshot entry)
     {
         var confirmed = await _shellActionService.ConfirmAsync(
-            "实例删除确认",
-            $"确定要将实例 {entry.Name} 移入回收区吗？该操作会保留实例目录，便于后续恢复。",
-            "移入回收区",
+            LT("shell.instance_select.delete.confirm_title"),
+            LT("shell.instance_select.delete.confirm_message", ("name", entry.Name)),
+            LT("shell.instance_select.delete.confirm_action"),
             isDanger: true);
         if (!confirmed)
         {
-            AddActivity("删除实例", "已取消删除。");
+            AddActivity(LT("shell.instance_select.delete.activity"), LT("shell.instance_select.delete.cancelled"));
             return;
         }
 
@@ -760,15 +845,19 @@ internal sealed partial class FrontendShellViewModel
             RefreshInstanceSelectionSurface();
             if (outcome.IsPermanentDelete)
             {
-                AddActivity("删除实例", $"实例 {outcome.InstanceName} 已永久删除。");
+                AddActivity(
+                    LT("shell.instance_select.delete.activity"),
+                    LT("shell.instance_select.delete.permanently_deleted", ("name", outcome.InstanceName)));
                 return;
             }
 
-            AddActivity("删除实例", $"实例 {outcome.InstanceName} 已移入回收区：{outcome.TrashDirectory}");
+            AddActivity(
+                LT("shell.instance_select.delete.activity"),
+                LT("shell.instance_select.delete.moved_to_trash", ("name", outcome.InstanceName), ("path", outcome.TrashDirectory)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("删除实例失败", ex.Message);
+            AddFailureActivity(LT("shell.instance_select.delete.failure"), ex.Message);
         }
     }
 
@@ -776,13 +865,23 @@ internal sealed partial class FrontendShellViewModel
     {
         ClearLaunchLogBuffer();
         RaiseGameLogSurfaceProperties();
-        AddActivity("清空实时日志", "已清空当前会话输出缓存。");
+        AddActivity(LT("shell.game_log.actions.clear_cache"), LT("shell.game_log.clear_cache.completed"));
     }
 
     private void RaiseGameLogSurfaceProperties()
     {
         RaisePropertyChanged(nameof(ShowGameLogLiveOutput));
         RaisePropertyChanged(nameof(ShowGameLogEmptyState));
+        RaisePropertyChanged(nameof(GameLogRefreshButtonText));
+        RaisePropertyChanged(nameof(GameLogExportButtonText));
+        RaisePropertyChanged(nameof(GameLogOpenDirectoryButtonText));
+        RaisePropertyChanged(nameof(GameLogClearCacheButtonText));
+        RaisePropertyChanged(nameof(GameLogLiveLineCountLabel));
+        RaisePropertyChanged(nameof(GameLogRecentFilesLabel));
+        RaisePropertyChanged(nameof(GameLogCurrentSessionOutputTitle));
+        RaisePropertyChanged(nameof(GameLogRecentGeneratedFilesTitle));
+        RaisePropertyChanged(nameof(GameLogEmptyTitle));
+        RaisePropertyChanged(nameof(GameLogEmptyDescription));
         RaisePropertyChanged(nameof(GameLogLiveLineCount));
         RaisePropertyChanged(nameof(GameLogRecentFileCount));
         RaisePropertyChanged(nameof(GameLogLatestUpdateLabel));
@@ -809,7 +908,7 @@ internal sealed partial class FrontendShellViewModel
         return FrontendLauncherPathService.ResolveLauncherFolder(rawValue, runtimePaths);
     }
 
-    private static InstanceSelectionSnapshot? BuildInstanceSelectionSnapshot(string directory, string selectedInstance)
+    private InstanceSelectionSnapshot? BuildInstanceSelectionSnapshot(string directory, string selectedInstance)
     {
         var name = Path.GetFileName(directory);
         if (string.IsNullOrWhiteSpace(name))
@@ -823,7 +922,7 @@ internal sealed partial class FrontendShellViewModel
         var tags = new List<string>();
         if (ReadValue(instanceConfig, "IsStar", false))
         {
-            tags.Add("收藏");
+            tags.Add(LT("shell.instance_select.tags.favorite"));
         }
 
         var category = MapInstanceCategory(ReadValue(instanceConfig, "DisplayType", 0));
@@ -839,13 +938,13 @@ internal sealed partial class FrontendShellViewModel
 
         if (manifest.IsBroken)
         {
-            tags.Add("配置缺失");
+            tags.Add(LT("shell.instance_select.tags.broken"));
         }
 
         var subtitleParts = new List<string>();
         if (!string.IsNullOrWhiteSpace(manifest.VersionLabel))
         {
-            subtitleParts.Add($"Minecraft {manifest.VersionLabel}");
+            subtitleParts.Add(manifest.VersionLabel);
         }
 
         if (!string.IsNullOrWhiteSpace(manifest.LoaderLabel))
@@ -863,9 +962,12 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var subtitle = subtitleParts.Count == 0
-            ? "尚未识别实例版本信息"
+            ? LT("shell.instance_select.subtitle.unknown_version")
             : string.Join(" • ", subtitleParts);
-        var detail = $"{directory} • 最近修改 {Directory.GetLastWriteTime(directory):yyyy-MM-dd HH:mm}";
+        var detail = LT(
+            "shell.instance_select.detail.last_modified",
+            ("path", directory),
+            ("time", Directory.GetLastWriteTime(directory).ToString("yyyy-MM-dd HH:mm")));
 
         return new InstanceSelectionSnapshot(
             name,
@@ -911,6 +1013,13 @@ internal sealed partial class FrontendShellViewModel
             entry.IsSelected,
             entry.IsStarred,
             icon,
+            entry.IsSelected
+                ? LT("shell.instance_select.entry.current")
+                : LT("shell.instance_select.entry.set_as_launch"),
+            LT("shell.instance_select.entry.favorite_tooltip"),
+            LT("shell.instance_select.entry.open_folder_tooltip"),
+            LT("shell.instance_select.entry.delete_tooltip"),
+            LT("shell.instance_select.entry.open_settings_tooltip"),
             new ActionCommand(() => SelectInstanceAndCloseSelection(entry)),
             new ActionCommand(() => OpenInstanceSelectionEntry(entry)),
             new ActionCommand(() => ToggleInstanceSelectionFavorite(entry)),
@@ -918,11 +1027,11 @@ internal sealed partial class FrontendShellViewModel
             {
                 if (_shellActionService.TryOpenExternalTarget(entry.Directory, out var error))
                 {
-                    AddActivity("打开实例目录", entry.Directory);
+                    AddActivity(LT("shell.instance_select.entry.open_instance_directory"), entry.Directory);
                 }
                 else
                 {
-                    AddFailureActivity("打开实例目录失败", error ?? entry.Directory);
+                    AddFailureActivity(LT("shell.instance_select.entry.open_instance_directory_failure"), error ?? entry.Directory);
                 }
             }),
             new ActionCommand(() => _ = DeleteInstanceSelectionEntryAsync(entry)));
@@ -941,7 +1050,12 @@ internal sealed partial class FrontendShellViewModel
         var favorites = entries.Where(entry => entry.IsStarred).ToArray();
         if (favorites.Length > 0)
         {
-            groups.Add(CreateInstanceSelectionGroup("收藏夹", favorites, groupExpansionStates, isExpandedByDefault: true));
+            groups.Add(CreateInstanceSelectionGroup(
+                LT("shell.instance_select.groups.favorites"),
+                favorites,
+                groupExpansionStates,
+                isExpandedByDefault: true,
+                isCountSuppressed: true));
         }
 
         foreach (var bucket in entries.GroupBy(GetInstanceSelectionBaseGroupKey))
@@ -969,17 +1083,19 @@ internal sealed partial class FrontendShellViewModel
         string title,
         IReadOnlyList<InstanceSelectionSnapshot> entries,
         IReadOnlyDictionary<string, bool> groupExpansionStates,
-        bool isExpandedByDefault)
+        bool isExpandedByDefault,
+        bool isCountSuppressed = false)
     {
         return new InstanceSelectionGroupViewModel(
             title,
+            isCountSuppressed ? title : LT("shell.instance_select.groups.header", ("title", title), ("count", entries.Count)),
             entries.Select(CreateInstanceSelectionEntry).ToArray(),
             groupExpansionStates.TryGetValue(title, out var isExpanded)
                 ? isExpanded
                 : isExpandedByDefault);
     }
 
-    private static IReadOnlyList<string> BuildInstanceSelectionDisplayTags(InstanceSelectionSnapshot entry)
+    private IReadOnlyList<string> BuildInstanceSelectionDisplayTags(InstanceSelectionSnapshot entry)
     {
         var tags = new List<string>();
         if (!string.IsNullOrWhiteSpace(entry.VersionLabel))
@@ -994,11 +1110,11 @@ internal sealed partial class FrontendShellViewModel
 
         if (entry.IsBroken)
         {
-            tags.Add("配置缺失");
+            tags.Add(LT("shell.instance_select.tags.broken"));
         }
         else if (entry.DisplayType == 4)
         {
-            tags.Add("较少使用");
+            tags.Add(LT("shell.instance_select.tags.rarely_used"));
         }
 
         return tags;
@@ -1101,7 +1217,7 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static string ResolveInstanceSelectionGroupTitle(string key, IReadOnlyList<InstanceSelectionSnapshot> entries)
+    private string ResolveInstanceSelectionGroupTitle(string key, IReadOnlyList<InstanceSelectionSnapshot> entries)
     {
         if (key.StartsWith("loader:", StringComparison.Ordinal))
         {
@@ -1111,25 +1227,25 @@ internal sealed partial class FrontendShellViewModel
         return key switch
         {
             "api" => ResolveApiInstanceGroupTitle(entries),
-            "error" => "错误的实例",
-            "hidden" => "隐藏的实例",
-            "rarely-used" => "不常用实例",
-            _ => "常规实例"
+            "error" => LT("shell.instance_select.groups.error"),
+            "hidden" => LT("shell.instance_select.groups.hidden"),
+            "rarely-used" => LT("shell.instance_select.groups.rarely_used"),
+            _ => LT("shell.instance_select.groups.regular")
         };
     }
 
-    private static string ResolveSingleLoaderInstanceGroupTitle(string loaderKey)
+    private string ResolveSingleLoaderInstanceGroupTitle(string loaderKey)
     {
         return loaderKey switch
         {
-            "forge" => "Forge 实例",
-            "neoforge" => "NeoForge 实例",
-            "cleanroom" => "Cleanroom 实例",
-            "labymod" => "LabyMod 实例",
-            "liteloader" => "LiteLoader 实例",
-            "quilt" => "Quilt 实例",
-            "legacy-fabric" => "Legacy Fabric 实例",
-            _ => "Fabric 实例"
+            "forge" => LT("shell.instance_select.groups.loaders.forge"),
+            "neoforge" => LT("shell.instance_select.groups.loaders.neoforge"),
+            "cleanroom" => LT("shell.instance_select.groups.loaders.cleanroom"),
+            "labymod" => LT("shell.instance_select.groups.loaders.labymod"),
+            "liteloader" => LT("shell.instance_select.groups.loaders.liteloader"),
+            "quilt" => LT("shell.instance_select.groups.loaders.quilt"),
+            "legacy-fabric" => LT("shell.instance_select.groups.loaders.legacy_fabric"),
+            _ => LT("shell.instance_select.groups.loaders.fabric")
         };
     }
 
@@ -1148,7 +1264,7 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static string ResolveApiInstanceGroupTitle(IReadOnlyList<InstanceSelectionSnapshot> entries)
+    private string ResolveApiInstanceGroupTitle(IReadOnlyList<InstanceSelectionSnapshot> entries)
     {
         var loaderLabels = entries
             .Select(entry => entry.LoaderLabel)
@@ -1159,43 +1275,43 @@ internal sealed partial class FrontendShellViewModel
 
         if (loaderLabels.Length > 1)
         {
-            return "可安装 Mod";
+            return LT("shell.instance_select.groups.api_installable");
         }
 
         if (loaderLabels.Length == 1)
         {
             return loaderLabels[0] switch
             {
-                "Forge" => "Forge 实例",
-                "NeoForge" => "NeoForge 实例",
-                "Cleanroom" => "Cleanroom 实例",
-                "LabyMod" => "LabyMod 实例",
-                "LiteLoader" => "LiteLoader 实例",
-                "Quilt" => "Quilt 实例",
-                _ => "Fabric 实例"
+                "Forge" => LT("shell.instance_select.groups.loaders.forge"),
+                "NeoForge" => LT("shell.instance_select.groups.loaders.neoforge"),
+                "Cleanroom" => LT("shell.instance_select.groups.loaders.cleanroom"),
+                "LabyMod" => LT("shell.instance_select.groups.loaders.labymod"),
+                "LiteLoader" => LT("shell.instance_select.groups.loaders.liteloader"),
+                "Quilt" => LT("shell.instance_select.groups.loaders.quilt"),
+                _ => LT("shell.instance_select.groups.loaders.fabric")
             };
         }
 
-        return "可安装 Mod";
+        return LT("shell.instance_select.groups.api_installable");
     }
 
-    private static int GetInstanceSelectionGroupPriority(string title)
+    private int GetInstanceSelectionGroupPriority(string title)
     {
         return title switch
         {
-            "收藏夹" => 0,
-            "常规实例" => 1,
-            "Fabric 实例" => 2,
-            "Forge 实例" => 3,
-            "NeoForge 实例" => 4,
-            "Quilt 实例" => 5,
-            "LiteLoader 实例" => 6,
-            "Cleanroom 实例" => 7,
-            "LabyMod 实例" => 8,
-            "可安装 Mod" => 9,
-            "不常用实例" => 10,
-            "错误的实例" => 11,
-            "隐藏的实例" => 12,
+            var value when value == LT("shell.instance_select.groups.favorites") => 0,
+            var value when value == LT("shell.instance_select.groups.regular") => 1,
+            var value when value == LT("shell.instance_select.groups.loaders.fabric") => 2,
+            var value when value == LT("shell.instance_select.groups.loaders.forge") => 3,
+            var value when value == LT("shell.instance_select.groups.loaders.neoforge") => 4,
+            var value when value == LT("shell.instance_select.groups.loaders.quilt") => 5,
+            var value when value == LT("shell.instance_select.groups.loaders.liteloader") => 6,
+            var value when value == LT("shell.instance_select.groups.loaders.cleanroom") => 7,
+            var value when value == LT("shell.instance_select.groups.loaders.labymod") => 8,
+            var value when value == LT("shell.instance_select.groups.api_installable") => 9,
+            var value when value == LT("shell.instance_select.groups.rarely_used") => 10,
+            var value when value == LT("shell.instance_select.groups.error") => 11,
+            var value when value == LT("shell.instance_select.groups.hidden") => 12,
             _ => 99
         };
     }
@@ -1207,18 +1323,20 @@ internal sealed partial class FrontendShellViewModel
             folder.Directory,
             string.Equals(folder.Directory, _instanceSelectionLauncherDirectory, GetPathComparison()),
             FrontendIconCatalog.Folder.Data,
+            LT("shell.instance_select.folder.open_tooltip"),
+            LT("shell.instance_select.folder.remove_tooltip"),
             new ActionCommand(() =>
             {
                 if (string.Equals(folder.Directory, _instanceSelectionLauncherDirectory, GetPathComparison()))
                 {
-                    AddActivity("当前文件夹", folder.Directory);
+                    AddActivity(LT("shell.instance_select.folder.current_activity"), folder.Directory);
                     return;
                 }
 
                 RefreshSelectedLauncherFolderSmoothly(
                     folder.StoredPath,
                     folder.Directory,
-                    $"已切换实例目录到 {folder.Directory}。");
+                    LT("shell.instance_select.folder.switched", ("directory", folder.Directory)));
             }),
             new ActionCommand(() => OpenInstanceSelectionFolder(folder)),
             folder.IsPersisted ? new ActionCommand(() => _ = DeleteInstanceSelectionFolderAsync(folder)) : null);
@@ -1242,6 +1360,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var entry = new TaskManagerEntryViewModel(
+            this,
             new ActionCommand(() =>
             {
                 if ((task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null))
@@ -1263,7 +1382,7 @@ internal sealed partial class FrontendShellViewModel
         return entry;
     }
 
-    private static void UpdateTaskManagerEntry(TaskManagerEntryViewModel entry, TaskModel task, DateTimeOffset now)
+    private void UpdateTaskManagerEntry(TaskManagerEntryViewModel entry, TaskModel task, DateTimeOffset now)
     {
         var canCancel = (task.State is TaskState.Waiting or TaskState.Running) && task.Cancel.CanExecute(null);
         var canDismiss = task.State is TaskState.Success or TaskState.Canceled or TaskState.Failed;
@@ -1272,19 +1391,22 @@ internal sealed partial class FrontendShellViewModel
             task.Title,
             task.State,
             MapTaskStateLabel(task.State),
-            string.IsNullOrWhiteSpace(task.StateMessage) ? "等待状态消息" : task.StateMessage,
+            string.IsNullOrWhiteSpace(task.StateMessage) ? LT("shell.task_manager.placeholders.waiting_state_message") : task.StateMessage,
             BuildTaskActivityText(task, now),
             task.SupportProgress
                 ? (string.IsNullOrWhiteSpace(task.ProgressText)
                     ? $"{Math.Round(task.Progress * 100, 1, MidpointRounding.AwayFromZero)}%"
                     : task.ProgressText)
-                : "无进度信息",
+                : LT("shell.task_manager.placeholders.no_progress"),
             task.Progress,
             task.SupportProgress,
             string.IsNullOrWhiteSpace(task.SpeedText) ? "0 B/s" : task.SpeedText,
             task.RemainingFileCount?.ToString() ?? "0",
             task.Children.Count,
             task.Children.Select(child => CreateTaskManagerStageEntry(child, now)).ToArray(),
+            LT("shell.task_manager.labels.install_progress"),
+            LT("shell.task_manager.labels.current_speed", ("speed", string.IsNullOrWhiteSpace(task.SpeedText) ? "0 B/s" : task.SpeedText)),
+            LT("shell.task_manager.labels.remaining_files", ("count", task.RemainingFileCount?.ToString() ?? "0")),
             canCancel || canDismiss,
             task.Pause.CanExecute(null));
     }
@@ -1334,7 +1456,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private static TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task, DateTimeOffset now)
+    private TaskManagerStageEntryViewModel CreateTaskManagerStageEntry(TaskModel task, DateTimeOffset now)
     {
         var indicator = task.State switch
         {
@@ -1356,36 +1478,39 @@ internal sealed partial class FrontendShellViewModel
         return new TaskManagerStageEntryViewModel(indicator, task.Title, message);
     }
 
-    private static string BuildTaskActivityText(TaskModel task, DateTimeOffset now)
+    private string BuildTaskActivityText(TaskModel task, DateTimeOffset now)
     {
         var activeDuration = now - task.StateSince;
         var recentDuration = now - task.LastUpdatedAt;
 
         return task.State switch
         {
-            TaskState.Running => $"已运行 {FormatTaskDuration(now - (task.StartedAt ?? task.StateSince))}，最近更新 {FormatRecentActivity(recentDuration)}",
-            TaskState.Waiting => $"已等待 {FormatTaskDuration(activeDuration)}",
-            TaskState.Success => $"总耗时 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))}",
-            TaskState.Canceled => $"运行 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))} 后已取消",
-            TaskState.Failed => $"运行 {FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt))} 后失败",
+            TaskState.Running => LT(
+                "shell.task_manager.activity.running",
+                ("duration", FormatTaskDuration(now - (task.StartedAt ?? task.StateSince))),
+                ("recent", FormatRecentActivity(recentDuration))),
+            TaskState.Waiting => LT("shell.task_manager.activity.waiting", ("duration", FormatTaskDuration(activeDuration))),
+            TaskState.Success => LT("shell.task_manager.activity.success", ("duration", FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt)))),
+            TaskState.Canceled => LT("shell.task_manager.activity.canceled", ("duration", FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt)))),
+            TaskState.Failed => LT("shell.task_manager.activity.failed", ("duration", FormatTaskDuration((task.FinishedAt ?? now) - (task.StartedAt ?? task.CreatedAt)))),
             _ => string.Empty
         };
     }
 
-    private static string BuildStageActivityText(TaskModel task, DateTimeOffset now)
+    private string BuildStageActivityText(TaskModel task, DateTimeOffset now)
     {
         return task.State switch
         {
-            TaskState.Running => $"已持续 {FormatTaskDuration(now - task.StateSince)}",
-            TaskState.Waiting => "等待开始",
-            TaskState.Success => $"耗时 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
-            TaskState.Canceled => $"已取消，持续 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
-            TaskState.Failed => $"已失败，持续 {FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince)}",
+            TaskState.Running => LT("shell.task_manager.stage.running", ("duration", FormatTaskDuration(now - task.StateSince))),
+            TaskState.Waiting => LT("shell.task_manager.stage.waiting"),
+            TaskState.Success => LT("shell.task_manager.stage.success", ("duration", FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince))),
+            TaskState.Canceled => LT("shell.task_manager.stage.canceled", ("duration", FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince))),
+            TaskState.Failed => LT("shell.task_manager.stage.failed", ("duration", FormatTaskDuration((task.FinishedAt ?? now) - task.StateSince))),
             _ => string.Empty
         };
     }
 
-    private static string FormatTaskDuration(TimeSpan duration)
+    private string FormatTaskDuration(TimeSpan duration)
     {
         if (duration < TimeSpan.Zero)
         {
@@ -1394,41 +1519,41 @@ internal sealed partial class FrontendShellViewModel
 
         if (duration.TotalHours >= 1d)
         {
-            return $"{(int)duration.TotalHours} 小时 {duration.Minutes} 分";
+            return LT("shell.task_manager.duration.hours_minutes", ("hours", (int)duration.TotalHours), ("minutes", duration.Minutes));
         }
 
         if (duration.TotalMinutes >= 1d)
         {
-            return $"{(int)duration.TotalMinutes} 分 {duration.Seconds} 秒";
+            return LT("shell.task_manager.duration.minutes_seconds", ("minutes", (int)duration.TotalMinutes), ("seconds", duration.Seconds));
         }
 
-        return $"{Math.Max(1, duration.Seconds)} 秒";
+        return LT("shell.task_manager.duration.seconds", ("seconds", Math.Max(1, duration.Seconds)));
     }
 
-    private static string FormatRecentActivity(TimeSpan duration)
+    private string FormatRecentActivity(TimeSpan duration)
     {
         if (duration < TimeSpan.FromSeconds(2))
         {
-            return "刚刚";
+            return LT("shell.task_manager.recent.just_now");
         }
 
         if (duration.TotalMinutes >= 1d)
         {
-            return $"{(int)duration.TotalMinutes} 分钟前";
+            return LT("shell.task_manager.recent.minutes_ago", ("minutes", (int)duration.TotalMinutes));
         }
 
-        return $"{Math.Max(1, duration.Seconds)} 秒前";
+        return LT("shell.task_manager.recent.seconds_ago", ("seconds", Math.Max(1, duration.Seconds)));
     }
 
-    private static string MapTaskStateLabel(TaskState state)
+    private string MapTaskStateLabel(TaskState state)
     {
         return state switch
         {
-            TaskState.Waiting => "等待中",
-            TaskState.Running => "运行中",
-            TaskState.Success => "已完成",
-            TaskState.Failed => "失败",
-            TaskState.Canceled => "已取消",
+            TaskState.Waiting => LT("shell.task_manager.states.waiting"),
+            TaskState.Running => LT("shell.task_manager.states.running"),
+            TaskState.Success => LT("shell.task_manager.states.success"),
+            TaskState.Failed => LT("shell.task_manager.states.failed"),
+            TaskState.Canceled => LT("shell.task_manager.states.canceled"),
             _ => state.ToString()
         };
     }
@@ -1539,7 +1664,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!File.Exists(manifestPath))
         {
-            return new InstanceManifestSnapshot("Unknown", null, true);
+            return new InstanceManifestSnapshot(string.Empty, null, true);
         }
 
         var profile = FrontendVersionManifestInspector.ReadProfileFromManifestPath(manifestPath);
@@ -1549,14 +1674,14 @@ internal sealed partial class FrontendShellViewModel
             !profile.IsManifestValid);
     }
 
-    private static string MapInstanceCategory(int displayType)
+    private string MapInstanceCategory(int displayType)
     {
         return displayType switch
         {
-            1 => "收藏夹",
-            2 => "API",
-            3 => "隐藏",
-            4 => "较少使用",
+            1 => LT("shell.instance_select.tags.favorite"),
+            2 => LT("shell.instance_select.tags.api"),
+            3 => LT("shell.instance_select.tags.hidden"),
+            4 => LT("shell.instance_select.tags.rarely_used"),
             _ => string.Empty
         };
     }
@@ -1763,7 +1888,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(directory))
         {
-            return "未选择文件夹";
+            return string.Empty;
         }
 
         var trimmed = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -1796,13 +1921,18 @@ internal sealed class InstanceSelectEntryViewModel(
     bool isSelected,
     bool isFavorite,
     Bitmap? icon,
+    string selectText,
+    string favoriteToolTip,
+    string openFolderToolTip,
+    string deleteToolTip,
+    string settingsToolTip,
     ActionCommand selectCommand,
     ActionCommand openSettingsCommand,
     ActionCommand toggleFavoriteCommand,
     ActionCommand openFolderCommand,
     ActionCommand deleteCommand)
 {
-    private static readonly FrontendIcon NavigationSettingsIcon = FrontendIconCatalog.GetNavigationIcon("设置");
+    private static readonly FrontendIcon NavigationSettingsIcon = FrontendIconCatalog.GetNavigationIcon("settings");
 
     public string Title { get; } = title;
 
@@ -1826,7 +1956,9 @@ internal sealed class InstanceSelectEntryViewModel(
 
     public Bitmap? Icon { get; } = icon;
 
-    public string SelectText => IsSelected ? "当前实例" : "设为启动实例";
+    public string SelectText { get; } = selectText;
+
+    public string FavoriteToolTip { get; } = favoriteToolTip;
 
     public string FavoriteIconData => IsFavorite
         ? FrontendIconCatalog.FavoriteFilled.Data
@@ -1836,11 +1968,17 @@ internal sealed class InstanceSelectEntryViewModel(
 
     public string OpenFolderIconData => FrontendIconCatalog.FolderOutline.Data;
 
+    public string OpenFolderToolTip { get; } = openFolderToolTip;
+
     public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
+
+    public string DeleteToolTip { get; } = deleteToolTip;
 
     public string SettingsIconData => NavigationSettingsIcon.Data;
 
     public double SettingsIconScale => NavigationSettingsIcon.Scale;
+
+    public string SettingsToolTip { get; } = settingsToolTip;
 
     public ActionCommand SelectCommand { get; } = selectCommand;
 
@@ -1857,9 +1995,10 @@ internal sealed class InstanceSelectionGroupViewModel : ViewModelBase
 {
     private bool _isExpanded;
 
-    public InstanceSelectionGroupViewModel(string title, IReadOnlyList<InstanceSelectEntryViewModel> entries, bool isExpanded)
+    public InstanceSelectionGroupViewModel(string title, string headerText, IReadOnlyList<InstanceSelectEntryViewModel> entries, bool isExpanded)
     {
         Title = title;
+        HeaderText = headerText;
         Entries = entries;
         _isExpanded = isExpanded;
         ToggleExpandCommand = new ActionCommand(() => IsExpanded = !IsExpanded);
@@ -1867,11 +2006,11 @@ internal sealed class InstanceSelectionGroupViewModel : ViewModelBase
 
     public string Title { get; }
 
+    public string HeaderText { get; }
+
     public IReadOnlyList<InstanceSelectEntryViewModel> Entries { get; }
 
     public int EntryCount => Entries.Count;
-
-    public string HeaderText => Title == "收藏夹" ? Title : $"{Title} ({EntryCount})";
 
     public bool IsExpanded
     {
@@ -1897,6 +2036,8 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
     string path,
     bool isSelected,
     string iconPath,
+    string openFolderToolTip,
+    string deleteToolTip,
     ActionCommand command,
     ActionCommand openFolderCommand,
     ActionCommand? deleteCommand)
@@ -1913,13 +2054,13 @@ internal sealed class InstanceSelectionFolderEntryViewModel(
 
     public string OpenFolderIconData => FrontendIconCatalog.OpenFolder.Data;
 
-    public string OpenFolderToolTip => "打开对应文件夹";
+    public string OpenFolderToolTip { get; } = openFolderToolTip;
 
     public ActionCommand OpenFolderCommand { get; } = openFolderCommand;
 
     public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
 
-    public string DeleteToolTip => "从列表中移除";
+    public string DeleteToolTip { get; } = deleteToolTip;
 
     public ActionCommand? DeleteCommand { get; } = deleteCommand;
 }
@@ -1940,9 +2081,11 @@ internal sealed class InstanceSelectionShortcutEntryViewModel(
 }
 
 internal sealed class TaskManagerEntryViewModel(
+    FrontendShellViewModel owner,
     ActionCommand primaryActionCommand,
     ActionCommand pauseCommand) : ViewModelBase
 {
+    private readonly FrontendShellViewModel _owner = owner;
     private string _title = string.Empty;
     private TaskState _taskState;
     private string _state = string.Empty;
@@ -1953,6 +2096,9 @@ internal sealed class TaskManagerEntryViewModel(
     private bool _hasProgress;
     private string _speedText = string.Empty;
     private string _remainingFilesText = string.Empty;
+    private string _progressLabel = string.Empty;
+    private string _speedSummaryText = string.Empty;
+    private string _remainingFilesSummaryText = string.Empty;
     private int _childCount;
     private IReadOnlyList<TaskManagerStageEntryViewModel> _stageEntries = [];
     private bool _hasPrimaryAction;
@@ -1984,11 +2130,17 @@ internal sealed class TaskManagerEntryViewModel(
 
     public string RemainingFilesText => _remainingFilesText;
 
+    public string ProgressLabel => _progressLabel;
+
+    public string SpeedSummaryText => _speedSummaryText;
+
+    public string RemainingFilesSummaryText => _remainingFilesSummaryText;
+
     public int ChildCount => _childCount;
 
     public bool HasChildren => ChildCount > 0;
 
-    public string ChildrenText => $"子任务 {ChildCount} 项";
+    public string ChildrenText => _owner.LT("shell.task_manager.entries.children", ("count", ChildCount));
 
     public IReadOnlyList<TaskManagerStageEntryViewModel> StageEntries => _stageEntries;
 
@@ -2042,6 +2194,9 @@ internal sealed class TaskManagerEntryViewModel(
         string remainingFilesText,
         int childCount,
         IReadOnlyList<TaskManagerStageEntryViewModel> stageEntries,
+        string progressLabel,
+        string speedSummaryText,
+        string remainingFilesSummaryText,
         bool hasPrimaryAction,
         bool canPause)
     {
@@ -2072,6 +2227,9 @@ internal sealed class TaskManagerEntryViewModel(
         SetProperty(ref _hasProgress, hasProgress, nameof(HasProgress));
         SetProperty(ref _speedText, speedText, nameof(SpeedText));
         SetProperty(ref _remainingFilesText, remainingFilesText, nameof(RemainingFilesText));
+        SetProperty(ref _progressLabel, progressLabel, nameof(ProgressLabel));
+        SetProperty(ref _speedSummaryText, speedSummaryText, nameof(SpeedSummaryText));
+        SetProperty(ref _remainingFilesSummaryText, remainingFilesSummaryText, nameof(RemainingFilesSummaryText));
 
         if (SetProperty(ref _childCount, childCount, nameof(ChildCount)))
         {

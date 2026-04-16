@@ -7,8 +7,6 @@ internal sealed partial class FrontendShellViewModel
 {
     private const int LaunchLogVisibleTailLineCount = 240;
     private const int LaunchLogOlderLoadBatchLineCount = 200;
-    private const string EmptyLaunchLogText = "正在等待启动日志输出。";
-
     internal bool HasLaunchLogLines => _launchLogLines.Count > 0;
 
     internal bool TryLoadOlderLaunchLogLines()
@@ -90,7 +88,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_launchLogLines.Count == 0)
         {
-            return EmptyLaunchLogText;
+            return LT("shell.game_log.live_output.waiting");
         }
 
         var startIndex = Math.Clamp(_launchLogVisibleStartIndex, 0, _launchLogLines.Count - 1);

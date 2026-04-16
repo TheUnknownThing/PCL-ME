@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -222,11 +224,13 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool HasNoHelpSearchResults => !HasHelpSearchResults;
 
-    public string HelpSearchResultsHeader => HasHelpSearchResults ? "搜索结果" : "无搜索结果";
+    public string HelpSearchResultsHeader => HasHelpSearchResults
+        ? LT("shell.tools.help.search.results_header")
+        : LT("shell.tools.help.search.empty_header");
 
-    public string TitleBarLabel => _currentNavigation?.CurrentPage.SidebarItemTitle
-        ?? _currentNavigation?.CurrentPage.Title
-        ?? Title;
+    public string TitleBarLabel => _currentNavigation is null
+        ? Title
+        : FrontendShellLocalizationService.ResolveTitleBarLabel(_currentNavigation, _i18n);
 
     public double StandardShellLeftPaneWidth => CurrentStandardLeftPaneDescriptor?.Kind switch
     {
@@ -254,6 +258,27 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
         _standardSidebarAutoWidth = clamped;
         RaisePropertyChanged(nameof(StandardShellLeftPaneWidth));
         RaisePropertyChanged(nameof(CurrentShellLeftPaneWidth));
+    }
+
+    internal string LT(string key)
+    {
+        return _i18n.T(key);
+    }
+
+    internal string LT(string key, params (string Name, object? Value)[] args)
+    {
+        if (args.Length == 0)
+        {
+            return _i18n.T(key);
+        }
+
+        var values = new Dictionary<string, object?>(args.Length, StringComparer.Ordinal);
+        foreach (var (name, value) in args)
+        {
+            values[name] = value;
+        }
+
+        return _i18n.T(key, values);
     }
 
     public bool CanGoBack

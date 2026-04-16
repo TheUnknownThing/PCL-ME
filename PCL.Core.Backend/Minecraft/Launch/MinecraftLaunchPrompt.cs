@@ -1,3 +1,4 @@
+using PCL.Core.App.I18n;
 using System.Collections.Generic;
 
 namespace PCL.Core.Minecraft.Launch;
@@ -6,8 +7,8 @@ namespace PCL.Core.Minecraft.Launch;
 /// 启动前需要由前端展示的提示。
 /// </summary>
 public sealed record MinecraftLaunchPrompt(
-    string Message,
-    string Title,
+    I18nText Message,
+    I18nText Title,
     IReadOnlyList<MinecraftLaunchPromptButton> Buttons,
     bool IsWarning = false);
 
@@ -15,7 +16,7 @@ public sealed record MinecraftLaunchPrompt(
 /// 提示中的单个按钮。
 /// </summary>
 public sealed record MinecraftLaunchPromptButton(
-    string Label,
+    I18nText Label,
     IReadOnlyList<MinecraftLaunchPromptAction> Actions,
     bool ClosesPrompt = true);
 

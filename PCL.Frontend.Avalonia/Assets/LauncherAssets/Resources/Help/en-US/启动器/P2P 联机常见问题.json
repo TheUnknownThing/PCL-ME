@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "P2P Multiplayer FAQ",
+  "Description": "Common networking questions for launcher-assisted P2P multiplayer",
+  "Keywords": "p2p nat tcp udp ipv6",
+  "Types": ["Launcher"]
+}

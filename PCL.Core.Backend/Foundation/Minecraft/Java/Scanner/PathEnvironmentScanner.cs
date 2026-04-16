@@ -29,7 +29,7 @@ public class PathEnvironmentScanner(IJavaRuntimeEnvironment? runtime = null) : I
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, "Java", "PATH环境变量扫描失败");
+            LogWrapper.Error(ex, "Java", "PATH environment scan failed.");
         }
     }
 }

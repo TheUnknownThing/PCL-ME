@@ -13,7 +13,7 @@
           <Grid ColumnDefinitions="*,Auto">
             <controls:PclSearchBox
                 Text="{Binding DownloadFavoriteSearchQuery, Mode=TwoWay}"
-                Watermark="搜索收藏夹内容" />
+                Watermark="{Binding DownloadFavoriteSearchWatermark}" />
 
             <controls:PclCard
                 Grid.Column="1"
@@ -36,7 +36,7 @@
                       x:Name="ManageTargetButton"
                       Margin="4,0,0,0"
                       Command="{Binding ManageDownloadFavoriteTargetCommand}"
-                      ToolTip.Tip="管理"
+                      ToolTip.Tip="{Binding DownloadFavoriteManageTargetsTooltip}"
                       VerticalAlignment="Center" />
                 </StackPanel>
               </controls:PclCard.CardContent>
@@ -76,13 +76,13 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <controls:PclCard Header="还没有收藏内容" IsVisible="{Binding HasNoDownloadFavoriteSections}" ContentMargin="20,34,20,20">
+        <controls:PclCard Header="{Binding DownloadFavoriteEmptyHeader}" IsVisible="{Binding HasNoDownloadFavoriteSections}" ContentMargin="20,34,20,20">
           <controls:PclCard.CardContent>
             <StackPanel Spacing="9">
               <TextBlock
                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="13"
-                  Text="在资源详细信息界面中可以点击收藏按钮进行收藏。"
+                  Text="{Binding DownloadFavoriteEmptyBody}"
                   TextWrapping="Wrap" />
             </StackPanel>
           </controls:PclCard.CardContent>
@@ -138,31 +138,31 @@
                 x:Name="SelectionInstallButton"
                 Command="{Binding BatchInstallSelectedDownloadFavoritesCommand}"
                 IsEnabled="{Binding CanBatchInstallSelectedDownloadFavorites}"
-                Text="批量安装" />
+                Text="{Binding DownloadFavoriteBatchInstallText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionShareButton"
                 Command="{Binding ShareSelectedDownloadFavoritesCommand}"
                 IsEnabled="{Binding CanShareSelectedDownloadFavorites}"
-                Text="分享所选" />
+                Text="{Binding DownloadFavoriteShareSelectedText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionFavoriteButton"
                 Command="{Binding FavoriteSelectedDownloadFavoritesToTargetCommand}"
                 IsEnabled="{Binding CanFavoriteSelectedDownloadFavoritesToTarget}"
-                Text="收藏到" />
+                Text="{Binding DownloadFavoriteFavoriteToText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionRemoveButton"
                 Command="{Binding RemoveSelectedDownloadFavoritesCommand}"
                 IsEnabled="{Binding CanRemoveSelectedDownloadFavorites}"
-                Text="移出收藏夹" />
+                Text="{Binding DownloadFavoriteRemoveText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionSelectAllButton"
                 Command="{Binding SelectAllDownloadFavoritesCommand}"
                 IsEnabled="{Binding CanSelectAllDownloadFavorites}"
-                Text="全选" />
+                Text="{Binding DownloadFavoriteSelectAllText}" />
             <controls:PclIconTextButton
                 x:Name="SelectionCancelButton"
                 Command="{Binding ClearDownloadFavoriteSelectionCommand}"
-                Text="取消选择" />
+                Text="{Binding DownloadFavoriteCancelSelectionText}" />
           </WrapPanel>
         </Grid>
       </controls:PclCard.CardContent>

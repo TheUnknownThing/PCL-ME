@@ -242,6 +242,13 @@
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <controls:PclButton
+                        Width="88"
+                        HorizontalAlignment="Right"
+                        IsVisible="{Binding CanClear}"
+                        Command="{Binding ClearCommand}"
+                        Text="{Binding $parent[UserControl].DataContext.DownloadInstallClearSelectionText}" />
                   </StackPanel>
                 </controls:PclCard.CardContent>
               </controls:PclCard>
@@ -256,7 +263,7 @@
               Margin="16,0,0,0"
               Command="{Binding StartDownloadInstallCommand}"
               IsEnabled="{Binding CanStartDownloadInstall}"
-              Text="开始安装" />
+              Text="{Binding DownloadInstallStartText}" />
         </Grid>
       </StackPanel>
     </StackPanel>

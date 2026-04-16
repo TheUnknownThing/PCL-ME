@@ -17,9 +17,9 @@ internal sealed partial class FrontendShellViewModel
     private readonly Dictionary<string, IReadOnlyList<FrontendInstallChoice>> _instanceInstallOptionChoices = new(StringComparer.Ordinal);
     private readonly HashSet<string> _instanceInstallOptionLoadsInProgress = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _instanceInstallOptionLoadErrors = new(StringComparer.Ordinal);
-    private string _instanceInstallSelectionTitle = "Modern Fabric Demo";
-    private string _instanceInstallSelectionSummary = "Minecraft 1.21.1 / Fabric 0.16.9 / 独立实例";
-    private string _instanceInstallMinecraftVersion = "Minecraft 1.21.1";
+    private string _instanceInstallSelectionTitle = string.Empty;
+    private string _instanceInstallSelectionSummary = string.Empty;
+    private string _instanceInstallMinecraftVersion = string.Empty;
     private Bitmap? _instanceInstallSelectionIcon;
     private Bitmap? _instanceInstallMinecraftIcon;
     private string? _instanceInstallExpandedOptionTitle;
@@ -62,12 +62,12 @@ internal sealed partial class FrontendShellViewModel
 
     public bool CanApplyInstanceInstall => _instanceComposition.Selection.HasSelection;
 
-    public string InstanceInstallApplyButtonIconData => FrontendIconCatalog.GetNavigationIcon("下载").Data;
+    public string InstanceInstallApplyButtonIconData => FrontendIconCatalog.GetNavigationIcon("download").Data;
 
     public double InstanceInstallApplyButtonIconScale => 0.95;
 
     public ActionCommand EditInstanceInstallSelectionCommand => new(() =>
-        AddActivity("修改实例安装目标", $"{InstanceInstallSelectionTitle} • {InstanceInstallSelectionSummary}"));
+        AddActivity("Change instance install target", $"{InstanceInstallSelectionTitle} • {InstanceInstallSelectionSummary}"));
 
     public ActionCommand EditInstanceInstallMinecraftCommand => new(() =>
         _ = EditInstallMinecraftAsync(isExistingInstance: true));
@@ -137,7 +137,9 @@ internal sealed partial class FrontendShellViewModel
         }
 
         parts.Add(GetEffectiveMinecraftVersion(isExistingInstance: true));
-        parts.Add(_instanceComposition.Selection.IsIndie ? "独立实例" : "共用实例");
+        parts.Add(_instanceComposition.Selection.IsIndie
+            ? SD("instance.common.independent")
+            : SD("instance.common.shared"));
         return string.Join(" / ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
     }
 
@@ -229,7 +231,7 @@ internal sealed partial class FrontendShellViewModel
         var hasSelection = HasInstallSelection(isExistingInstance: true, optionTitle);
         var selectionText = hasSelection
             ? GetEffectiveSelectionText(isExistingInstance: true, optionTitle)
-            : unavailableReason ?? "可以添加";
+            : unavailableReason ?? SD("instance.install.option.can_add");
         var canExpand = unavailableReason is null;
         var isExpanded = canExpand && string.Equals(_instanceInstallExpandedOptionTitle, optionTitle, StringComparison.Ordinal);
         var choiceItems = cachedChoices.Select(choice => new DownloadInstallChoiceItemViewModel(
@@ -248,7 +250,7 @@ internal sealed partial class FrontendShellViewModel
             canExpand,
             isExpanded,
             _instanceInstallOptionLoadsInProgress.Contains(optionTitle),
-            _instanceInstallOptionLoadsInProgress.Contains(optionTitle) ? "正在获取版本列表" : string.Empty,
+            _instanceInstallOptionLoadsInProgress.Contains(optionTitle) ? SD("instance.install.option.loading_versions") : string.Empty,
             canExpand && !_instanceInstallOptionLoadsInProgress.Contains(optionTitle) && choiceItems.Length == 0 && isExpanded,
             canExpand ? string.Empty : selectionText,
             choiceItems,
@@ -387,7 +389,7 @@ internal sealed partial class FrontendShellViewModel
 
                     if (task.IsFaulted)
                     {
-                        _instanceInstallOptionLoadErrors[optionTitle] = task.Exception?.GetBaseException().Message ?? "获取版本列表失败";
+                        _instanceInstallOptionLoadErrors[optionTitle] = task.Exception?.GetBaseException().Message ?? SD("instance.install.option.loading_versions_failed");
                     }
                     else
                     {
@@ -428,7 +430,7 @@ internal sealed partial class FrontendShellViewModel
             var shouldAutoSelect = HasInstallSelection(isExistingInstance: true, "Fabric")
                                    || (HasInstallSelection(isExistingInstance: true, "Quilt")
                                        && hasLoadedQslChoices
-                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == "无可用版本");
+                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == SD("instance.install.unavailable.no_versions"));
             if (_instanceInstallAutoSelectedFabricApi || !shouldAutoSelect)
             {
                 return;
@@ -445,7 +447,7 @@ internal sealed partial class FrontendShellViewModel
             var shouldAutoSelect = HasInstallSelection(isExistingInstance: true, "Legacy Fabric")
                                    || (HasInstallSelection(isExistingInstance: true, "Quilt")
                                        && hasLoadedQslChoices
-                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == "无可用版本");
+                                       && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == SD("instance.install.unavailable.no_versions"));
             if (_instanceInstallAutoSelectedLegacyFabricApi || !shouldAutoSelect)
             {
                 return;

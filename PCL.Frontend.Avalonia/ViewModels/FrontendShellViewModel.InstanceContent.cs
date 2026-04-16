@@ -109,7 +109,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowInstanceWorldEmptyState => !ShowInstanceWorldContent;
 
-    public string InstanceWorldSortText => $"排序：{GetInstanceWorldSortName(_instanceWorldSortMethod)}";
+    public string InstanceWorldSortText => SD("instance.content.sort.label", ("mode", GetInstanceWorldSortName(_instanceWorldSortMethod)));
 
     public bool HasInstanceScreenshotEntries => InstanceScreenshotEntries.Count > 0;
 
@@ -147,13 +147,15 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowInstanceResourceFilterBar => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
         && _instanceComposition.Selection.IsModable;
 
-    public string InstanceResourceFilterAllText => $"{(_instanceResourceIsSearching ? "搜索结果" : "全部")} ({_instanceResourceTotalCount})";
+    public string InstanceResourceFilterAllText => SD(
+        _instanceResourceIsSearching ? "instance.content.resource.filters.search_results" : "instance.content.resource.filters.all",
+        ("count", _instanceResourceTotalCount));
 
-    public string InstanceResourceSortText => $"排序：{GetInstanceResourceSortName(_instanceResourceSortMethod)}";
+    public string InstanceResourceSortText => SD("instance.content.sort.label", ("mode", GetInstanceResourceSortName(_instanceResourceSortMethod)));
 
     public bool IsInstanceResourceFilterAllSelected => _instanceResourceFilter == InstanceResourceFilter.All;
 
-    public string InstanceResourceFilterEnabledText => $"启用 ({_instanceResourceEnabledCount})";
+    public string InstanceResourceFilterEnabledText => SD("instance.content.resource.filters.enabled", ("count", _instanceResourceEnabledCount));
 
     public bool ShowInstanceResourceEnabledFilter => ShowInstanceResourceFilterBar
         && (_instanceResourceFilter == InstanceResourceFilter.Enabled
@@ -161,14 +163,14 @@ internal sealed partial class FrontendShellViewModel
 
     public bool IsInstanceResourceFilterEnabledSelected => _instanceResourceFilter == InstanceResourceFilter.Enabled;
 
-    public string InstanceResourceFilterDisabledText => $"禁用 ({_instanceResourceDisabledCount})";
+    public string InstanceResourceFilterDisabledText => SD("instance.content.resource.filters.disabled", ("count", _instanceResourceDisabledCount));
 
     public bool ShowInstanceResourceDisabledFilter => ShowInstanceResourceFilterBar
         && (_instanceResourceFilter == InstanceResourceFilter.Disabled || _instanceResourceDisabledCount > 0);
 
     public bool IsInstanceResourceFilterDisabledSelected => _instanceResourceFilter == InstanceResourceFilter.Disabled;
 
-    public string InstanceResourceFilterDuplicateText => $"重复 ({_instanceResourceDuplicateCount})";
+    public string InstanceResourceFilterDuplicateText => SD("instance.content.resource.filters.duplicate", ("count", _instanceResourceDuplicateCount));
 
     public bool ShowInstanceResourceDuplicateFilter => ShowInstanceResourceFilterBar
         && (_instanceResourceFilter == InstanceResourceFilter.Duplicate || _instanceResourceDuplicateCount > 0);
@@ -181,42 +183,42 @@ internal sealed partial class FrontendShellViewModel
 
     public string InstanceResourceSearchWatermark => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionResourcePack => "搜索资源 名称 / 描述 / 标签",
-        LauncherFrontendSubpageKey.VersionShader => "搜索光影 名称 / 描述 / 标签",
-        LauncherFrontendSubpageKey.VersionSchematic => "搜索投影 名称 / 描述 / 标签",
-        _ => "搜索资源 名称 / 描述 / 标签"
+        LauncherFrontendSubpageKey.VersionResourcePack => SD("instance.content.resource.search.resource_pack"),
+        LauncherFrontendSubpageKey.VersionShader => SD("instance.content.resource.search.shader"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.search.schematic"),
+        _ => SD("instance.content.resource.search.default")
     };
 
     public string InstanceResourceDownloadButtonText => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionResourcePack => "下载新资源",
-        LauncherFrontendSubpageKey.VersionShader => "下载新资源",
-        LauncherFrontendSubpageKey.VersionSchematic => "下载投影 Mod",
-        _ => "下载新资源"
+        LauncherFrontendSubpageKey.VersionResourcePack => SD("instance.content.resource.actions.download_new"),
+        LauncherFrontendSubpageKey.VersionShader => SD("instance.content.resource.actions.download_new"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.actions.download_schematic_mod"),
+        _ => SD("instance.content.resource.actions.download_new")
     };
 
     public string InstanceResourceEmptyTitle => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => "该实例不可使用 Mod",
-        LauncherFrontendSubpageKey.VersionMod => "尚未安装资源",
-        LauncherFrontendSubpageKey.VersionResourcePack => "尚未安装资源",
-        LauncherFrontendSubpageKey.VersionShader => "尚未安装资源",
-        LauncherFrontendSubpageKey.VersionSchematic => "该实例不可用投影原理图",
-        _ => "尚未安装资源"
+        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => SD("instance.content.resource.empty.mod_unavailable_title"),
+        LauncherFrontendSubpageKey.VersionMod => SD("instance.content.resource.empty.default_title"),
+        LauncherFrontendSubpageKey.VersionResourcePack => SD("instance.content.resource.empty.default_title"),
+        LauncherFrontendSubpageKey.VersionShader => SD("instance.content.resource.empty.default_title"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.empty.schematic_unavailable_title"),
+        _ => SD("instance.content.resource.empty.default_title")
     };
 
     public string InstanceResourceEmptyDescription => _currentRoute.Subpage switch
     {
         LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable =>
-            "你需要先安装 Forge、Fabric 等 Mod 加载器才能使用 Mod，请在下载页面安装这些实例。如果你已经安装过了 Mod 加载器，那么你很可能选择了错误的实例，请点击实例选择按钮切换实例。",
-        LauncherFrontendSubpageKey.VersionSchematic => "你可能需要先安装投影 Mod，如果已经安装过了投影 Mod 请先启动一次游戏。也可能是你选择错了实例，请点击实例选择按钮切换实例。",
-        _ => "你可以下载新的资源，也可以从已经下载好的文件安装资源。如果你已经安装了资源，可能是版本隔离设置有误，请在设置中调整版本隔离选项。"
+            SD("instance.content.resource.empty.mod_unavailable_description"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.empty.schematic_unavailable_description"),
+        _ => SD("instance.content.resource.empty.default_description")
     };
 
     public string InstanceResourceEmptyDownloadButtonText => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => "转到下载页面",
-        LauncherFrontendSubpageKey.VersionSchematic => "下载投影 Mod",
+        LauncherFrontendSubpageKey.VersionMod when !_instanceComposition.Selection.IsModable => SD("instance.content.resource.actions.go_to_download"),
+        LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.actions.download_schematic_mod"),
         _ => InstanceResourceDownloadButtonText
     };
 
@@ -228,7 +230,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasSelectedInstanceResources => InstanceResourceSelectedCount > 0;
 
-    public string InstanceResourceSelectionText => $"已选择 {InstanceResourceSelectedCount} 项";
+    public string InstanceResourceSelectionText => SD("instance.content.resource.selection", ("count", InstanceResourceSelectedCount));
 
     public bool ShowInstanceResourceDefaultActions => !HasSelectedInstanceResources;
 
@@ -249,24 +251,27 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand OpenInstanceWorldFolderCommand => new(() =>
         OpenInstanceDirectoryTarget(
-            "打开存档文件夹",
+            SD("instance.content.world.actions.open_folder"),
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
-            "当前实例没有存档目录。"));
+            SD("instance.content.world.errors.no_directory")));
 
     public ActionCommand PasteInstanceWorldClipboardCommand => new(() => _ = PasteInstanceWorldClipboardAsync());
 
     public ActionCommand OpenInstanceScreenshotFolderCommand => new(() =>
         OpenInstanceDirectoryTarget(
-            "打开截图文件夹",
+            SD("instance.content.screenshot.actions.open_folder"),
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "screenshots") : string.Empty,
-            "当前实例没有截图目录。"));
+            SD("instance.content.screenshot.errors.no_directory")));
 
     public ActionCommand RefreshInstanceServerCommand => new(() => _ = RefreshAllInstanceServersAsync());
 
     public ActionCommand AddInstanceServerCommand => new(() => _ = AddInstanceServerAsync());
 
     public ActionCommand OpenInstanceResourceFolderCommand => new(() =>
-        OpenInstanceDirectoryTarget("打开资源文件夹", GetCurrentInstanceResourceDirectory(), "当前实例没有对应的资源目录。"));
+        OpenInstanceDirectoryTarget(
+            SD("instance.content.resource.actions.open_folder"),
+            GetCurrentInstanceResourceDirectory(),
+            SD("instance.content.resource.errors.directory_missing", ("surface", InstanceResourceSurfaceTitle))));
 
     public ActionCommand InstallInstanceResourceFromFileCommand => new(() => _ = InstallInstanceResourceFromFileAsync());
 
@@ -380,7 +385,10 @@ internal sealed partial class FrontendShellViewModel
             image,
             title,
             info,
-            new ActionCommand(() => OpenInstanceTarget("打开截图", path, "当前截图文件不存在。")));
+            new ActionCommand(() => OpenInstanceTarget(
+                SD("instance.content.screenshot.actions.open_file"),
+                path,
+                SD("instance.content.screenshot.messages.missing_file"))));
     }
 
     private void RefreshInstanceResourceEntries()
@@ -608,9 +616,10 @@ internal sealed partial class FrontendShellViewModel
 
     private void SelectAllInstanceResources()
     {
+        var activityTitle = SD("instance.content.resource.actions.select_all");
         if (InstanceResourceEntries.Count == 0)
         {
-            AddActivity("全选资源", $"{InstanceResourceSurfaceTitle} 列表为空。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.list_empty", ("surface_title", InstanceResourceSurfaceTitle)));
             return;
         }
 
@@ -639,7 +648,12 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RaiseInstanceResourceSelectionProperties();
-        AddActivity("全选资源", $"{InstanceResourceSurfaceTitle} • 已选中 {InstanceResourceEntries.Count} 项。");
+        AddActivity(
+            activityTitle,
+            SD(
+                "instance.content.resource.messages.selected_all",
+                ("surface_title", InstanceResourceSurfaceTitle),
+                ("count", InstanceResourceEntries.Count)));
     }
 
     private void ClearInstanceResourceSelection()
@@ -675,29 +689,35 @@ internal sealed partial class FrontendShellViewModel
         var websiteCommand = string.IsNullOrWhiteSpace(entry.Website)
             ? null
             : CreateOpenTargetCommand(
-                $"打开{InstanceResourceSurfaceTitle}主页: {entry.Title}",
+                SD(
+                    "instance.content.resource.activities.open_homepage",
+                    ("surface_title", InstanceResourceSurfaceTitle),
+                    ("entry_title", entry.Title)),
                 entry.Website,
                 entry.Website);
         var openCommand = new ActionCommand(() =>
-            OpenInstanceTarget("打开资源文件位置", entry.Path, $"{InstanceResourceSurfaceTitle} 项目不存在。"));
+            OpenInstanceTarget(
+                SD("instance.content.resource.tooltips.open_file_location"),
+                entry.Path,
+                SD("instance.content.resource.messages.entry_missing", ("surface_title", InstanceResourceSurfaceTitle))));
         var toggleCommand = IsInstanceResourceToggleSupported()
             ? new ActionCommand(() => _ = SetInstanceResourceEntriesEnabledAsync(
                 new[] { (Title: entry.Title, Path: entry.Path, IsEnabledState: entry.IsEnabled) },
                 !entry.IsEnabled,
-                "当前没有可切换状态的资源。"))
+                SD("instance.content.resource.messages.no_toggleable_entries")))
             : null;
         var deleteCommand = new ActionCommand(() => _ = DeleteInstanceResourcesAsync(
             new[] { (Title: entry.Title, Path: entry.Path) },
-            "当前没有可删除的资源。"));
+            SD("instance.content.resource.messages.no_deletable_entries")));
 
         return new InstanceResourceEntryViewModel(
             LoadInstanceResourceBitmap(entry),
             display.Title,
-            display.Summary,
-            entry.Meta,
+            LocalizeResourceSummary(display.Summary),
+            LocalizeResourceMeta(entry.Meta),
             entry.Path,
             openCommand,
-            actionToolTip: "打开文件位置",
+            actionToolTip: SD("instance.content.resource.tooltips.open_file_location"),
             isEnabled: entry.IsEnabled,
             description: entry.Description,
             website: entry.Website,
@@ -708,83 +728,90 @@ internal sealed partial class FrontendShellViewModel
             websiteCommand: websiteCommand,
             openCommand: openCommand,
             toggleCommand: toggleCommand,
-            deleteCommand: deleteCommand);
+            deleteCommand: deleteCommand,
+            infoToolTip: SD("instance.content.resource.tooltips.details"),
+            websiteToolTip: SD("instance.content.resource.tooltips.website"),
+            openToolTip: SD("instance.content.resource.tooltips.open_file_location"),
+            enableToolTip: SD("instance.content.resource.tooltips.enable"),
+            disableToolTip: SD("instance.content.resource.tooltips.disable"),
+            deleteToolTip: SD("instance.content.resource.tooltips.delete"),
+            disabledTagText: SD("instance.content.resource.tags.disabled"));
     }
 
     private async Task ShowInstanceResourceDetailsAsync(FrontendInstanceResourceEntry entry)
     {
         var lines = new List<string>
         {
-            $"名称: {entry.Title}",
-            $"状态: {(entry.IsEnabled ? "启用" : "禁用")}"
+            $"{SD("instance.content.resource.details.fields.name")}: {entry.Title}",
+            $"{SD("instance.content.resource.details.fields.status")}: {(entry.IsEnabled ? SD("instance.content.resource.tooltips.enable") : SD("instance.content.resource.tooltips.disable"))}"
         };
 
         if (!string.IsNullOrWhiteSpace(entry.Meta))
         {
-            lines.Add($"类型: {entry.Meta}");
+            lines.Add($"{SD("instance.content.resource.details.fields.type")}: {entry.Meta}");
         }
 
         if (!string.IsNullOrWhiteSpace(entry.Loader))
         {
-            lines.Add($"加载器: {entry.Loader}");
+            lines.Add($"{SD("instance.content.resource.details.fields.loader")}: {entry.Loader}");
         }
 
         if (!string.IsNullOrWhiteSpace(entry.Version))
         {
-            lines.Add($"版本: {entry.Version}");
+            lines.Add($"{SD("instance.content.resource.details.fields.version")}: {entry.Version}");
         }
 
         if (!string.IsNullOrWhiteSpace(entry.Authors))
         {
-            lines.Add($"作者: {entry.Authors}");
+            lines.Add($"{SD("instance.content.resource.details.fields.authors")}: {entry.Authors}");
         }
 
         if (!string.IsNullOrWhiteSpace(entry.Description))
         {
-            lines.Add($"描述: {entry.Description}");
+            lines.Add($"{SD("instance.content.resource.details.fields.description")}: {entry.Description}");
         }
 
         if (!string.IsNullOrWhiteSpace(entry.Website))
         {
-            lines.Add($"相关网站: {entry.Website}");
+            lines.Add($"{SD("instance.content.resource.details.fields.website")}: {entry.Website}");
         }
 
         if (!string.IsNullOrWhiteSpace(entry.Summary))
         {
-            lines.Add($"附加信息: {entry.Summary}");
+            lines.Add($"{SD("instance.content.resource.details.fields.summary")}: {entry.Summary}");
         }
 
-        lines.Add($"路径: {entry.Path}");
+        lines.Add($"{SD("instance.content.resource.details.fields.path")}: {entry.Path}");
 
         try
         {
             if (Directory.Exists(entry.Path))
             {
                 var directoryInfo = new DirectoryInfo(entry.Path);
-                lines.Add("项目类型: 文件夹");
-                lines.Add($"创建时间: {directoryInfo.CreationTime:yyyy/MM/dd HH:mm:ss}");
-                lines.Add($"修改时间: {directoryInfo.LastWriteTime:yyyy/MM/dd HH:mm:ss}");
+                lines.Add($"{SD("instance.content.resource.details.fields.item_kind")}: {SD("instance.content.resource.meta.folder")}");
+                lines.Add($"{SD("instance.content.resource.details.fields.create_time")}: {directoryInfo.CreationTime:yyyy/MM/dd HH:mm:ss}");
+                lines.Add($"{SD("instance.content.resource.details.fields.modify_time")}: {directoryInfo.LastWriteTime:yyyy/MM/dd HH:mm:ss}");
             }
             else if (File.Exists(entry.Path))
             {
                 var fileInfo = new FileInfo(entry.Path);
-                lines.Add($"文件大小: {FormatInstanceResourceFileSize(fileInfo.Length)}");
-                lines.Add($"创建时间: {fileInfo.CreationTime:yyyy/MM/dd HH:mm:ss}");
-                lines.Add($"修改时间: {fileInfo.LastWriteTime:yyyy/MM/dd HH:mm:ss}");
+                lines.Add($"{SD("instance.content.resource.details.fields.file_size")}: {FormatInstanceResourceFileSize(fileInfo.Length)}");
+                lines.Add($"{SD("instance.content.resource.details.fields.create_time")}: {fileInfo.CreationTime:yyyy/MM/dd HH:mm:ss}");
+                lines.Add($"{SD("instance.content.resource.details.fields.modify_time")}: {fileInfo.LastWriteTime:yyyy/MM/dd HH:mm:ss}");
             }
         }
         catch (Exception ex)
         {
-            lines.Add($"附加信息读取失败: {ex.Message}");
+            lines.Add(SD("instance.content.resource.messages.details_read_failed", ("error", ex.Message)));
         }
 
         var result = await ShowToolboxConfirmationAsync(
-            $"查看{InstanceResourceSurfaceTitle}详情",
+            SD("instance.content.resource.activities.view_details", ("surface_title", InstanceResourceSurfaceTitle)),
             string.Join(Environment.NewLine, lines),
-            "关闭");
+            T("common.actions.close"));
         if (result is not null)
         {
-            AddActivity($"查看{InstanceResourceSurfaceTitle}详情", entry.Title);
+            AddActivity(SD("instance.content.resource.activities.view_details", ("surface_title", InstanceResourceSurfaceTitle)), entry.Title);
         }
     }
 
@@ -866,24 +893,24 @@ internal sealed partial class FrontendShellViewModel
 
     internal void SetInstanceWorldModifyTimeSort() => SetInstanceWorldSortMethod(InstanceWorldSortMethod.ModifyTime);
 
-    private static string GetInstanceWorldSortName(InstanceWorldSortMethod method)
+    private string GetInstanceWorldSortName(InstanceWorldSortMethod method)
     {
         return method switch
         {
-            InstanceWorldSortMethod.CreateTime => "创建时间",
-            InstanceWorldSortMethod.ModifyTime => "修改时间",
-            _ => "文件名"
+            InstanceWorldSortMethod.CreateTime => SD("instance.content.sort.create_time"),
+            InstanceWorldSortMethod.ModifyTime => SD("instance.content.sort.modify_time"),
+            _ => SD("instance.content.sort.file_name")
         };
     }
 
-    private static string GetInstanceResourceSortName(InstanceResourceSortMethod method)
+    private string GetInstanceResourceSortName(InstanceResourceSortMethod method)
     {
         return method switch
         {
-            InstanceResourceSortMethod.FileName => "文件名",
-            InstanceResourceSortMethod.CreateTime => "加入时间",
-            InstanceResourceSortMethod.FileSize => "文件大小",
-            _ => "资源名称"
+            InstanceResourceSortMethod.FileName => SD("instance.content.sort.file_name"),
+            InstanceResourceSortMethod.CreateTime => SD("instance.content.sort.added_time"),
+            InstanceResourceSortMethod.FileSize => SD("instance.content.sort.file_size"),
+            _ => SD("instance.content.sort.resource_name")
         };
     }
 
@@ -953,7 +980,7 @@ internal sealed partial class FrontendShellViewModel
             InstanceScreenshotEntries,
             _instanceComposition.Screenshot.Entries.Select(entry => CreateInstanceScreenshotEntry(
                 entry.Title,
-                entry.Summary,
+                LocalizeResourceSummary(entry.Summary),
                 entry.Path,
                 LoadInstanceBitmap(entry.Path, "Images", "Backgrounds", "server_bg.png"))));
     }
@@ -1003,9 +1030,10 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task RefreshAllInstanceServersAsync()
     {
+        var activityTitle = SD("instance.content.server.actions.refresh_all");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("刷新服务器信息", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.server.messages.no_instance_selected"));
             return;
         }
 
@@ -1013,23 +1041,24 @@ internal sealed partial class FrontendShellViewModel
         var entries = InstanceServerEntries.ToArray();
         if (entries.Length == 0)
         {
-            AddActivity("刷新服务器信息", "已重新扫描当前实例中的服务器列表，但当前实例没有已保存的服务器。");
+            AddActivity(activityTitle, SD("instance.content.server.messages.no_saved_servers"));
             return;
         }
 
         await Task.WhenAll(entries.Select(entry => RefreshInstanceServerAsync(entry, addActivity: false)));
-        AddActivity("刷新服务器信息", $"已刷新 {entries.Length} 个服务器。");
+        AddActivity(activityTitle, SD("instance.content.server.messages.refreshed_count", ("count", entries.Length)));
     }
 
     private async Task RefreshInstanceServerAsync(InstanceServerEntryViewModel entry, bool addActivity = true)
     {
+        var activityTitle = SD("instance.content.server.actions.refresh");
         var address = (entry.Address ?? string.Empty).Trim().Replace("：", ":");
         if (string.IsNullOrWhiteSpace(address))
         {
-            ApplyInstanceServerErrorState(entry, "服务器地址为空。");
+            ApplyInstanceServerErrorState(entry, SD("instance.content.server.messages.address_empty"));
             if (addActivity)
             {
-                AddFailureActivity("刷新服务器信息失败", $"{entry.Title} • 服务器地址为空。");
+                AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), BuildActivityDetail(entry.Title, SD("instance.content.server.messages.address_empty")));
             }
 
             return;
@@ -1044,13 +1073,13 @@ internal sealed partial class FrontendShellViewModel
             var result = await queryService.PingAsync(CancellationToken.None);
             if (result is null)
             {
-                throw new InvalidOperationException("未返回服务器信息");
+                throw new InvalidOperationException(SD("instance.content.server.messages.no_server_info"));
             }
 
             ApplyInstanceServerSuccessState(entry, result);
             if (addActivity)
             {
-                AddActivity("刷新服务器信息", $"{entry.Title} • {result.Players.Online}/{result.Players.Max} • {result.Latency}ms");
+                AddActivity(activityTitle, BuildActivityDetail(entry.Title, $"{result.Players.Online}/{result.Players.Max}", $"{result.Latency}ms"));
             }
         }
         catch (Exception ex)
@@ -1058,37 +1087,37 @@ internal sealed partial class FrontendShellViewModel
             ApplyInstanceServerErrorState(entry, ex.Message);
             if (addActivity)
             {
-                AddFailureActivity("刷新服务器信息失败", $"{entry.Title} • {ex.Message}");
+                AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), BuildActivityDetail(entry.Title, ex.Message));
             }
         }
     }
 
-    private static void ApplyInstanceServerIdleState(InstanceServerEntryViewModel entry, string status)
+    private void ApplyInstanceServerIdleState(InstanceServerEntryViewModel entry, string status)
     {
-        entry.StatusText = string.IsNullOrWhiteSpace(status) ? "已保存服务器" : status;
+        entry.StatusText = string.IsNullOrWhiteSpace(status) ? SD("instance.content.server.status.saved") : LocalizeServerStatusText(status);
         entry.StatusBrush = global::Avalonia.Media.Brushes.White;
         entry.PlayerCount = "-/-";
         entry.Latency = string.Empty;
         entry.LatencyBrush = global::Avalonia.Media.Brushes.White;
         entry.PlayerTooltip = null;
-        entry.MotdLines = BuildMinecraftServerQueryMotdLines("点击刷新查看服务器状态");
+        entry.MotdLines = BuildMinecraftServerQueryMotdLines(SD("instance.content.server.motd.click_to_refresh"));
     }
 
-    private static void ApplyInstanceServerLoadingState(InstanceServerEntryViewModel entry)
+    private void ApplyInstanceServerLoadingState(InstanceServerEntryViewModel entry)
     {
-        entry.StatusText = "正在连接...";
+        entry.StatusText = SD("instance.content.server.status.connecting");
         entry.StatusBrush = global::Avalonia.Media.Brushes.White;
-        entry.PlayerCount = "正在连接";
+        entry.PlayerCount = SD("instance.content.server.status.connecting_short");
         entry.Latency = string.Empty;
         entry.LatencyBrush = global::Avalonia.Media.Brushes.White;
         entry.PlayerTooltip = null;
-        entry.MotdLines = BuildMinecraftServerQueryMotdLines("正在连接...");
+        entry.MotdLines = BuildMinecraftServerQueryMotdLines(SD("instance.content.server.motd.connecting"));
         entry.Logo = LoadLauncherBitmap("Images", "Icons", "DefaultServer.png");
     }
 
-    private static void ApplyInstanceServerSuccessState(InstanceServerEntryViewModel entry, global::PCL.Core.Link.McPing.Model.McPingResult result)
+    private void ApplyInstanceServerSuccessState(InstanceServerEntryViewModel entry, global::PCL.Core.Link.McPing.Model.McPingResult result)
     {
-        entry.StatusText = "服务器在线";
+        entry.StatusText = SD("instance.content.server.status.online");
         entry.StatusBrush = global::Avalonia.Media.Brushes.White;
         entry.PlayerCount = $"{result.Players.Online}/{result.Players.Max}";
         entry.Latency = $"{result.Latency}ms";
@@ -1101,50 +1130,52 @@ internal sealed partial class FrontendShellViewModel
             ?? LoadLauncherBitmap("Images", "Icons", "DefaultServer.png");
     }
 
-    private static void ApplyInstanceServerErrorState(InstanceServerEntryViewModel entry, string message)
+    private void ApplyInstanceServerErrorState(InstanceServerEntryViewModel entry, string message)
     {
-        entry.StatusText = $"无法连接: {message}";
+        entry.StatusText = SD("instance.content.server.status.connection_failed", ("message", message));
         entry.StatusBrush = global::Avalonia.Media.Brushes.Red;
-        entry.PlayerCount = "离线";
+        entry.PlayerCount = SD("instance.content.server.status.offline_short");
         entry.Latency = string.Empty;
         entry.LatencyBrush = global::Avalonia.Media.Brushes.White;
         entry.PlayerTooltip = null;
-        entry.MotdLines = BuildMinecraftServerQueryMotdLines("服务器离线");
+        entry.MotdLines = BuildMinecraftServerQueryMotdLines(SD("instance.content.server.motd.offline"));
         entry.Logo = LoadLauncherBitmap("Images", "Icons", "DefaultServer.png");
     }
 
     private async Task CopyInstanceServerAddressAsync(InstanceServerEntryViewModel entry)
     {
+        var activityTitle = SD("instance.content.server.actions.copy_address");
         var address = (entry.Address ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(address))
         {
-            AddActivity("复制服务器地址", $"{entry.Title} 没有可复制的地址。");
+            AddActivity(activityTitle, SD("instance.content.server.messages.no_copyable_address", ("entry_title", entry.Title)));
             return;
         }
 
         try
         {
             await _shellActionService.SetClipboardTextAsync(address);
-            AddActivity("复制服务器地址", $"{entry.Title} • {address}");
+            AddActivity(activityTitle, SD("instance.content.server.messages.copied_address", ("entry_title", entry.Title), ("address", address)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("复制服务器地址失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
     private async Task ConnectInstanceServerAsync(InstanceServerEntryViewModel entry)
     {
+        var activityTitle = SD("instance.content.server.actions.connect");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("连接服务器", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.server.messages.no_instance_selected"));
             return;
         }
 
         var address = (entry.Address ?? string.Empty).Trim().Replace("：", ":");
         if (string.IsNullOrWhiteSpace(address))
         {
-            AddActivity("连接服务器", $"{entry.Title} 没有可用的服务器地址。");
+            AddActivity(activityTitle, SD("instance.content.server.messages.no_connectable_address", ("entry_title", entry.Title)));
             return;
         }
 
@@ -1154,21 +1185,22 @@ internal sealed partial class FrontendShellViewModel
             RefreshLaunchState();
             NavigateTo(
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-                $"已切换到启动页并准备连接服务器 {entry.Title}。");
+                SD("instance.content.server.messages.launch_route_prepared", ("entry_title", entry.Title)));
             await HandleLaunchRequestedAsync();
-            AddActivity("连接服务器", $"{entry.Title} • {address}");
+            AddActivity(activityTitle, BuildActivityDetail(entry.Title, address));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("连接服务器失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
     private async Task PasteInstanceWorldClipboardAsync()
     {
+        var activityTitle = SD("instance.content.world.actions.paste_clipboard");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("粘贴剪贴板文件", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.world.messages.no_instance_selected"));
             return;
         }
 
@@ -1179,7 +1211,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("粘贴剪贴板文件失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
             return;
         }
 
@@ -1189,7 +1221,7 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (sourcePaths.Length == 0)
         {
-            AddActivity("粘贴剪贴板文件", "剪贴板中没有可导入的文件或文件夹路径。");
+            AddActivity(activityTitle, SD("instance.content.world.messages.no_importable_paths"));
             return;
         }
 
@@ -1214,14 +1246,15 @@ internal sealed partial class FrontendShellViewModel
         }
 
         ReloadInstanceComposition();
-        AddActivity("粘贴剪贴板文件", string.Join(Environment.NewLine, importedTargets));
+        AddActivity(activityTitle, string.Join(Environment.NewLine, importedTargets));
     }
 
     private async Task AddInstanceServerAsync()
     {
+        var activityTitle = SD("instance.content.server.actions.add");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("添加新服务器", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.server.messages.no_instance_selected"));
             return;
         }
 
@@ -1232,7 +1265,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("添加新服务器失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
             return;
         }
 
@@ -1240,7 +1273,7 @@ internal sealed partial class FrontendShellViewModel
         {
             if (!string.IsNullOrWhiteSpace(serverInfo.Activity))
             {
-                AddActivity("添加新服务器", serverInfo.Activity);
+                AddActivity(activityTitle, serverInfo.Activity);
             }
             return;
         }
@@ -1258,7 +1291,9 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("添加新服务器失败", $"无法读取当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            AddFailureActivity(
+                T("common.activities.failed", ("title", activityTitle)),
+                SD("instance.content.server.messages.read_list_failed", ("error", ex.Message)));
             return;
         }
 
@@ -1278,7 +1313,9 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("添加新服务器失败", $"无法更新当前实例的服务器列表。{Environment.NewLine}{ex.Message}");
+            AddFailureActivity(
+                T("common.activities.failed", ("title", activityTitle)),
+                SD("instance.content.server.messages.update_list_failed", ("error", ex.Message)));
             return;
         }
 
@@ -1287,44 +1324,44 @@ internal sealed partial class FrontendShellViewModel
             var clonedServerList = (NbtList)serverList.Clone();
             if (!TryWriteInstanceServerList(serversPath, clonedServerList))
             {
-                AddFailureActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+                AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), SD("instance.content.server.messages.write_list_failed"));
                 return;
             }
         }
         catch
         {
-            AddFailureActivity("添加新服务器失败", "无法写入当前实例的服务器列表。");
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), SD("instance.content.server.messages.write_list_failed"));
             return;
         }
 
         ReloadInstanceComposition();
-        AddActivity("添加新服务器", $"{name} • {address}");
+        AddActivity(activityTitle, SD("instance.content.server.messages.added", ("name", name), ("address", address)));
     }
 
     private async Task<(bool Success, string Name, string Address, string? Activity)> PromptForNewInstanceServerAsync()
     {
         var resolvedName = await _shellActionService.PromptForTextAsync(
-            "编辑服务器信息",
-            "请输入新的服务器名称：",
-            "Minecraft服务器");
+            SD("instance.content.server.dialogs.edit.title"),
+            SD("instance.content.server.dialogs.edit.name_prompt"),
+            SD("instance.content.server.dialogs.edit.name_default"));
         if (resolvedName is null)
         {
             return (false, string.Empty, string.Empty, null);
         }
 
         var resolvedAddress = await _shellActionService.PromptForTextAsync(
-            "编辑服务器信息",
-            "请输入新的服务器地址：");
+            SD("instance.content.server.dialogs.edit.title"),
+            SD("instance.content.server.dialogs.edit.address_prompt"));
         if (string.IsNullOrWhiteSpace(resolvedAddress))
         {
             return resolvedAddress is null
                 ? (false, string.Empty, string.Empty, null)
-                : (false, string.Empty, string.Empty, "服务器地址不能为空。");
+                : (false, string.Empty, string.Empty, SD("instance.content.server.messages.address_required"));
         }
 
         return (
             true,
-            string.IsNullOrWhiteSpace(resolvedName) ? "Minecraft服务器" : resolvedName.Trim(),
+            string.IsNullOrWhiteSpace(resolvedName) ? SD("instance.content.server.dialogs.edit.name_default") : resolvedName.Trim(),
             resolvedAddress.Trim(),
             null);
     }
@@ -1358,9 +1395,10 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task InstallInstanceResourceFromFileAsync()
     {
+        var activityTitle = SD("instance.content.resource.actions.install_from_file");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("从文件安装资源", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_instance_selected"));
             return;
         }
 
@@ -1369,17 +1407,20 @@ internal sealed partial class FrontendShellViewModel
         string? sourcePath;
         try
         {
-            sourcePath = await _shellActionService.PickOpenFileAsync($"选择{InstanceResourceSurfaceTitle}文件", typeName, patterns);
+            sourcePath = await _shellActionService.PickOpenFileAsync(
+                SD("instance.content.resource.dialogs.install_from_file.title", ("surface_title", InstanceResourceSurfaceTitle)),
+                typeName,
+                patterns);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("从文件安装资源失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            AddActivity("从文件安装资源", "已取消选择资源文件。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.install_from_file_canceled"));
             return;
         }
 
@@ -1389,27 +1430,28 @@ internal sealed partial class FrontendShellViewModel
         File.Copy(sourcePath, targetPath, overwrite: false);
 
         ReloadInstanceComposition();
-        AddActivity("从文件安装资源", $"{sourcePath} -> {targetPath}");
+        AddActivity(activityTitle, $"{sourcePath} -> {targetPath}");
     }
 
     private void DownloadInstanceResource()
     {
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Download, ResolveInstanceDownloadSubpage()),
-            $"{InstanceResourceSurfaceTitle} 页面已跳转到下载页。");
+            SD("instance.content.resource.messages.open_download_route", ("surface_title", InstanceResourceSurfaceTitle)));
     }
 
     private async Task SetSelectedInstanceResourcesEnabledAsync(bool isEnabled)
     {
+        var activityTitle = SD(isEnabled ? "instance.content.resource.actions.enable" : "instance.content.resource.actions.disable");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity(isEnabled ? "启用资源" : "禁用资源", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_instance_selected"));
             return;
         }
 
         if (!IsInstanceResourceToggleSupported())
         {
-            AddActivity(isEnabled ? "启用资源" : "禁用资源", $"{InstanceResourceSurfaceTitle} 当前不支持启用或禁用操作。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.toggle_not_supported", ("surface_title", InstanceResourceSurfaceTitle)));
             return;
         }
 
@@ -1418,11 +1460,11 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (selectedEntries.Length == 0)
         {
-            AddActivity(isEnabled ? "启用资源" : "禁用资源", "当前没有选中的资源。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_selected"));
             return;
         }
 
-        await SetInstanceResourceEntriesEnabledAsync(selectedEntries, isEnabled, "当前没有选中的资源。");
+        await SetInstanceResourceEntriesEnabledAsync(selectedEntries, isEnabled, SD("instance.content.resource.messages.no_selected"));
     }
 
     private Task SetInstanceResourceEntriesEnabledAsync(
@@ -1430,9 +1472,10 @@ internal sealed partial class FrontendShellViewModel
         bool isEnabled,
         string emptyMessage)
     {
+        var activityTitle = SD(isEnabled ? "instance.content.resource.actions.enable" : "instance.content.resource.actions.disable");
         if (entries.Count == 0)
         {
-            AddActivity(isEnabled ? "启用资源" : "禁用资源", emptyMessage);
+            AddActivity(activityTitle, emptyMessage);
             return Task.CompletedTask;
         }
 
@@ -1441,7 +1484,7 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (candidates.Length == 0)
         {
-            AddActivity(isEnabled ? "启用资源" : "禁用资源", isEnabled ? "选中的资源已经全部启用。" : "选中的资源已经全部禁用。");
+            AddActivity(activityTitle, SD(isEnabled ? "instance.content.resource.messages.already_enabled" : "instance.content.resource.messages.already_disabled"));
             return Task.CompletedTask;
         }
 
@@ -1465,15 +1508,21 @@ internal sealed partial class FrontendShellViewModel
         if (succeededEntries.Count > 0)
         {
             AddActivity(
-                isEnabled ? "启用资源" : "禁用资源",
+                activityTitle,
                 failedEntries.Count == 0
-                    ? $"{(isEnabled ? "已启用" : "已禁用")} {succeededEntries.Count} 项：{string.Join("、", succeededEntries)}"
-                    : $"{(isEnabled ? "已启用" : "已禁用")} {succeededEntries.Count} 项，{failedEntries.Count} 项失败。");
+                    ? SD(
+                        isEnabled ? "instance.content.resource.messages.enabled_completed" : "instance.content.resource.messages.disabled_completed",
+                        ("count", succeededEntries.Count),
+                        ("titles", string.Join(SD("common.punctuation.comma"), succeededEntries)))
+                    : SD(
+                        isEnabled ? "instance.content.resource.messages.enabled_partial" : "instance.content.resource.messages.disabled_partial",
+                        ("count", succeededEntries.Count),
+                        ("failed_count", failedEntries.Count)));
         }
 
         if (failedEntries.Count > 0)
         {
-            AddFailureActivity(isEnabled ? "启用资源失败" : "禁用资源失败", string.Join(Environment.NewLine, failedEntries));
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), string.Join(Environment.NewLine, failedEntries));
         }
 
         return Task.CompletedTask;
@@ -1481,9 +1530,10 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DeleteSelectedInstanceResourcesAsync()
     {
+        var activityTitle = SD("instance.content.resource.actions.delete");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("删除资源", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_instance_selected"));
             return;
         }
 
@@ -1492,39 +1542,40 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (selectedEntries.Length == 0)
         {
-            AddActivity("删除资源", "当前没有选中的资源。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_selected"));
             return;
         }
 
-        await DeleteInstanceResourcesAsync(selectedEntries, "当前没有选中的资源。");
+        await DeleteInstanceResourcesAsync(selectedEntries, SD("instance.content.resource.messages.no_selected"));
     }
 
     private async Task DeleteInstanceResourcesAsync(
         IReadOnlyList<(string Title, string Path)> entries,
         string emptyMessage)
     {
+        var activityTitle = SD("instance.content.resource.actions.delete");
         if (entries.Count == 0)
         {
-            AddActivity("删除资源", emptyMessage);
+            AddActivity(activityTitle, emptyMessage);
             return;
         }
 
         var itemDescription = string.Join(Environment.NewLine, entries.Take(8).Select(entry => $"- {entry.Title}"));
         if (entries.Count > 8)
         {
-            itemDescription = $"{itemDescription}{Environment.NewLine}- 以及另外 {entries.Count - 8} 项";
+            itemDescription = $"{itemDescription}{Environment.NewLine}{SD("instance.content.resource.dialogs.delete.extra_items", ("count", entries.Count - 8))}";
         }
 
         var confirmed = await ShowToolboxConfirmationAsync(
-            "资源删除确认",
-            $"确定要将这 {entries.Count} 个{InstanceResourceSurfaceTitle}项目移入回收区吗？{Environment.NewLine}{Environment.NewLine}{itemDescription}",
-            "移入回收区",
+            SD("instance.content.resource.dialogs.delete.title"),
+            $"{SD("instance.content.resource.dialogs.delete.message", ("count", entries.Count), ("surface_title", InstanceResourceSurfaceTitle))}{Environment.NewLine}{Environment.NewLine}{itemDescription}",
+            SD("instance.content.resource.dialogs.delete.confirm"),
             isDanger: true);
         if (confirmed != true)
         {
             if (confirmed == false)
             {
-                AddActivity("删除资源", "已取消删除。");
+                AddActivity(activityTitle, SD("instance.content.resource.messages.delete_canceled"));
             }
 
             return;
@@ -1551,20 +1602,21 @@ internal sealed partial class FrontendShellViewModel
         ReloadInstanceComposition();
         if (succeededEntries.Count > 0)
         {
-            AddActivity("删除资源", $"已移入回收区 {succeededEntries.Count} 项。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.deleted_completed", ("count", succeededEntries.Count)));
         }
 
         if (failedEntries.Count > 0)
         {
-            AddFailureActivity("删除资源失败", string.Join(Environment.NewLine, failedEntries));
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), string.Join(Environment.NewLine, failedEntries));
         }
     }
 
     private void ExportInstanceResourceInfo()
     {
+        var activityTitle = SD("instance.content.resource.actions.export_info");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("导出资源信息", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_instance_selected"));
             return;
         }
 
@@ -1575,22 +1627,22 @@ internal sealed partial class FrontendShellViewModel
             exportDirectory,
             $"{_instanceComposition.Selection.InstanceName}-{ResolveInstanceResourceExportSlug()}-info.txt");
         var lines = entries.Count == 0
-            ? [$"{InstanceResourceSurfaceTitle} 列表为空。"]
+            ? [SD("instance.content.resource.messages.list_empty", ("surface_title", InstanceResourceSurfaceTitle))]
             : entries.Select(entry => $"{entry.Title} | {entry.Meta} | {entry.Summary} | {entry.Path}").ToArray();
         File.WriteAllText(outputPath, string.Join(Environment.NewLine, lines), new UTF8Encoding(false));
-        OpenInstanceTarget("导出资源信息", outputPath, "导出文件不存在。");
+        OpenInstanceTarget(activityTitle, outputPath, SD("instance.content.resource.messages.export_missing"));
     }
 
     private void SetInstanceResourceEnabled(string path, bool isEnabled)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            throw new InvalidOperationException("资源路径为空。");
+            throw new InvalidOperationException("The resource path is empty.");
         }
 
         if (!File.Exists(path))
         {
-            throw new FileNotFoundException("资源文件不存在。", path);
+            throw new FileNotFoundException("The resource file does not exist.", path);
         }
 
         if (isEnabled)
@@ -1619,9 +1671,10 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task CheckInstanceModsAsync()
     {
+        var activityTitle = SD("instance.content.resource.actions.check_mods");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("检查 Mod", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_instance_selected"));
             return;
         }
 
@@ -1636,20 +1689,20 @@ internal sealed partial class FrontendShellViewModel
 
         var lines = new List<string>
         {
-            $"实例: {_instanceComposition.Selection.InstanceName}",
-            $"启用 Mod: {enabledMods.Count}",
-            $"已禁用 Mod: {disabledMods.Count}",
-            $"重复名称: {duplicateGroups.Length}",
+            $"{SD("instance.content.resource.check_mods.instance")}: {_instanceComposition.Selection.InstanceName}",
+            $"{SD("instance.content.resource.check_mods.enabled_mods")}: {enabledMods.Count}",
+            $"{SD("instance.content.resource.check_mods.disabled_mods")}: {disabledMods.Count}",
+            $"{SD("instance.content.resource.check_mods.duplicate_names")}: {duplicateGroups.Length}",
             string.Empty
         };
 
         if (duplicateGroups.Length == 0)
         {
-            lines.Add("未检测到重复名称的 Mod 文件。");
+            lines.Add(SD("instance.content.resource.check_mods.no_duplicates"));
         }
         else
         {
-            lines.Add("重复名称的 Mod:");
+            lines.Add(SD("instance.content.resource.check_mods.duplicate_group_title"));
             foreach (var group in duplicateGroups)
             {
                 lines.Add($"- {group.Key}");
@@ -1660,15 +1713,20 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        var result = await ShowToolboxConfirmationAsync("检查 Mod", string.Join(Environment.NewLine, lines));
+        var result = await ShowToolboxConfirmationAsync(activityTitle, string.Join(Environment.NewLine, lines));
         if (result is null)
         {
             return;
         }
 
         AddActivity(
-            "检查 Mod",
-            $"已检查 {_instanceComposition.Selection.InstanceName}：启用 {enabledMods.Count} 个，禁用 {disabledMods.Count} 个，重复 {duplicateGroups.Length} 组。");
+            activityTitle,
+            SD(
+                "instance.content.resource.messages.checked_mods_summary",
+                ("instance_name", _instanceComposition.Selection.InstanceName),
+                ("enabled_count", enabledMods.Count),
+                ("disabled_count", disabledMods.Count),
+                ("duplicate_count", duplicateGroups.Length)));
     }
 
     private void ViewInstanceServer(FrontendInstanceServerEntry entry)
@@ -1687,10 +1745,10 @@ internal sealed partial class FrontendShellViewModel
         {
             LauncherFrontendSubpageKey.VersionMod => "Mod",
             LauncherFrontendSubpageKey.VersionModDisabled => "Mod",
-            LauncherFrontendSubpageKey.VersionResourcePack => "资源包",
-            LauncherFrontendSubpageKey.VersionShader => "光影包",
-            LauncherFrontendSubpageKey.VersionSchematic => "投影原理图",
-            _ => "资源"
+            LauncherFrontendSubpageKey.VersionResourcePack => SD("instance.content.resource.kind.resource_pack"),
+            LauncherFrontendSubpageKey.VersionShader => SD("instance.content.resource.kind.shader"),
+            LauncherFrontendSubpageKey.VersionSchematic => SD("instance.content.resource.kind.schematic_file"),
+            _ => SD("instance.content.resource.kind.resource")
         };
     }
 
@@ -1711,10 +1769,10 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.VersionResourcePack => ("资源包文件", ["*.zip", "*.rar"]),
-            LauncherFrontendSubpageKey.VersionShader => ("光影文件", ["*.zip", "*.rar"]),
-            LauncherFrontendSubpageKey.VersionSchematic => ("投影原理图文件", ["*.litematic", "*.schem", "*.schematic", "*.nbt"]),
-            _ => ("Mod 文件", ["*.jar", "*.disabled", "*.old"])
+            LauncherFrontendSubpageKey.VersionResourcePack => (SD("instance.content.resource.dialogs.install_from_file.file_types.resource_pack"), ["*.zip", "*.rar"]),
+            LauncherFrontendSubpageKey.VersionShader => (SD("instance.content.resource.dialogs.install_from_file.file_types.shader"), ["*.zip", "*.rar"]),
+            LauncherFrontendSubpageKey.VersionSchematic => (SD("instance.content.resource.dialogs.install_from_file.file_types.schematic"), ["*.litematic", "*.schem", "*.schematic", "*.nbt"]),
+            _ => (SD("instance.content.resource.dialogs.install_from_file.file_types.mod"), ["*.jar", "*.disabled", "*.old"])
         };
     }
 
@@ -1755,12 +1813,12 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
-            throw new InvalidOperationException("资源路径为空。");
+            throw new InvalidOperationException("The resource path is empty.");
         }
 
         if (!File.Exists(sourcePath) && !Directory.Exists(sourcePath))
         {
-            throw new FileNotFoundException("资源项目不存在。", sourcePath);
+            throw new FileNotFoundException("The resource entry does not exist.", sourcePath);
         }
 
         Directory.CreateDirectory(trashDirectory);

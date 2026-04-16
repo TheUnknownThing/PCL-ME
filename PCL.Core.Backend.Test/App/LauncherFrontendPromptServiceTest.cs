@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
@@ -21,9 +22,9 @@ public sealed class LauncherFrontendPromptServiceTest
                 SplashScreen: null,
                 TooltipDefaults: new LauncherTooltipPresentationDefaults(300, 400, 9_999_999, LauncherTooltipPlacement.Bottom, 8.0, 4.0)),
             new LauncherStartupPrompt(
-                "Legacy environment",
-                "环境警告",
-                [new LauncherStartupPromptButton("继续", [new LauncherStartupPromptAction(LauncherStartupPromptActionKind.Continue)])],
+                I18nText.Plain("startup.prompts.environment_warning.message"),
+                I18nText.Plain("startup.prompts.environment_warning.title"),
+                [new LauncherStartupPromptButton(I18nText.Plain("startup.prompts.environment_warning.actions.acknowledge"), [new LauncherStartupPromptAction(LauncherStartupPromptActionKind.Continue)])],
                 IsWarning: true));
         var consent = LauncherStartupConsentService.Evaluate(new LauncherStartupConsentRequest(
             LauncherStartupSpecialBuildKind.Debug,
@@ -44,36 +45,36 @@ public sealed class LauncherFrontendPromptServiceTest
     public void BuildLaunchPromptQueueMapsLaunchAndJavaPromptCommands()
     {
         var precheck = new MinecraftLaunchPrecheckResult(
-            FailureMessage: null,
+            Failure: null,
             [
                 new MinecraftLaunchPrompt(
-                    "Need to continue",
-                    "Precheck",
-                    [new MinecraftLaunchPromptButton("继续", [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])])
+                    I18nText.Plain("test.launch.precheck.message"),
+                    I18nText.Plain("test.launch.precheck.title"),
+                    [new MinecraftLaunchPromptButton(I18nText.Plain("test.actions.continue"), [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])])
             ]);
         var javaCompatibilityPrompt = new MinecraftLaunchPrompt(
-            "Selected Java is incompatible.",
-            "Java Compatibility",
+            I18nText.Plain("launch.prompts.java_compatibility.message"),
+            I18nText.Plain("launch.prompts.java_compatibility.title"),
             [
                 new MinecraftLaunchPromptButton(
-                    "强制启动",
+                    I18nText.Plain("launch.prompts.java_compatibility.actions.force_current"),
                     [
                         new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.IgnoreJavaCompatibilityOnce),
                         new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)
                     ]),
-                new MinecraftLaunchPromptButton("改用兼容 Java", [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])
+                new MinecraftLaunchPromptButton(I18nText.Plain("launch.prompts.java_compatibility.actions.use_compatible"), [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.Continue)])
             ],
             IsWarning: true);
         var supportPrompt = new MinecraftLaunchPrompt(
-            "Support us",
-            "Support",
-            [new MinecraftLaunchPromptButton("打开", [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.OpenUrl, "https://example.invalid")])]);
+            I18nText.Plain("launch.prompts.support.message"),
+            I18nText.Plain("launch.prompts.support.title"),
+            [new MinecraftLaunchPromptButton(I18nText.Plain("launch.prompts.support.actions.sponsor"), [new MinecraftLaunchPromptAction(MinecraftLaunchPromptActionKind.OpenUrl, "https://example.invalid")])]);
         var javaPrompt = new MinecraftLaunchJavaPrompt(
-            "需要 Java",
-            "Java",
+            I18nText.Plain("launch.prompts.java_missing.auto_download.message"),
+            I18nText.Plain("launch.prompts.java_missing.auto_download.title"),
             [
-                new MinecraftLaunchJavaPromptOption("自动下载", MinecraftLaunchJavaPromptDecision.Download),
-                new MinecraftLaunchJavaPromptOption("取消", MinecraftLaunchJavaPromptDecision.Abort)
+                new MinecraftLaunchJavaPromptOption(I18nText.Plain("launch.prompts.java_missing.auto_download.actions.download"), MinecraftLaunchJavaPromptDecision.Download),
+                new MinecraftLaunchJavaPromptOption(I18nText.Plain("launch.prompts.java_missing.auto_download.actions.cancel"), MinecraftLaunchJavaPromptDecision.Abort)
             ],
             DownloadTarget: "java-21");
 
@@ -100,10 +101,10 @@ public sealed class LauncherFrontendPromptServiceTest
     {
         var prompts = LauncherFrontendPromptService.BuildCrashPromptQueue(new MinecraftCrashOutputPrompt(
             "Crash details",
-            "Crash",
+            I18nText.Plain("crash.prompts.output.launch_failure.title"),
             [
-                new MinecraftCrashOutputPromptButton("日志", MinecraftCrashOutputPromptActionKind.ViewLog, ClosesPrompt: false),
-                new MinecraftCrashOutputPromptButton("导出", MinecraftCrashOutputPromptActionKind.ExportReport)
+                new MinecraftCrashOutputPromptButton(I18nText.Plain("crash.prompts.output.actions.view_log"), MinecraftCrashOutputPromptActionKind.ViewLog, ClosesPrompt: false),
+                new MinecraftCrashOutputPromptButton(I18nText.Plain("crash.prompts.output.actions.export_report"), MinecraftCrashOutputPromptActionKind.ExportReport)
             ]));
 
         Assert.AreEqual(1, prompts.Count);

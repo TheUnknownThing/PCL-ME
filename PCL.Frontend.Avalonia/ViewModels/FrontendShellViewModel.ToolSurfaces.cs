@@ -96,7 +96,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedHeadSizeIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, HeadSizeOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, HeadSizeOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedHeadSizeIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(HeadPreviewSize));
@@ -136,7 +140,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public bool HasSelectedHeadSkin => !string.Equals(SelectedHeadSkinPath, "尚未选择皮肤", StringComparison.Ordinal);
+    public bool HasSelectedHeadSkin => !string.IsNullOrWhiteSpace(SelectedHeadSkinPath);
 
     public bool HasHeadPreviewImage => HeadPreviewImage is not null;
 

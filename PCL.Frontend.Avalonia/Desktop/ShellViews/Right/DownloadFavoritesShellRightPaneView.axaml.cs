@@ -33,11 +33,11 @@ internal sealed partial class DownloadFavoritesShellRightPaneView : UserControl
         ManageTargetButton.IconData = FrontendIconCatalog.SettingsFilledData;
         ManageTargetButton.IconScale = FrontendIconCatalog.SettingsFilledScale;
 
-        var installIcon = FrontendIconCatalog.GetNavigationIcon("下载");
+        var installIcon = FrontendIconCatalog.GetNavigationIcon("download");
         SelectionInstallButton.IconData = installIcon.Data;
         SelectionInstallButton.IconScale = installIcon.Scale;
 
-        var shareIcon = FrontendIconCatalog.GetSidebarIcon("游戏联机");
+        var shareIcon = FrontendIconCatalog.GetSidebarIcon("online");
         SelectionShareButton.IconData = shareIcon.Data;
         SelectionShareButton.IconScale = shareIcon.Scale;
 
@@ -45,7 +45,7 @@ internal sealed partial class DownloadFavoritesShellRightPaneView : UserControl
         SelectionFavoriteButton.IconScale = FrontendIconCatalog.FavoriteOutline.Scale;
         SelectionRemoveButton.IconData = FrontendIconCatalog.FavoriteFilled.Data;
         SelectionRemoveButton.IconScale = FrontendIconCatalog.FavoriteFilled.Scale;
-        var selectAllIcon = FrontendIconCatalog.GetSidebarIcon("游戏管理");
+        var selectAllIcon = FrontendIconCatalog.GetSidebarIcon("game_manage");
         SelectionSelectAllButton.IconData = selectAllIcon.Data;
         SelectionSelectAllButton.IconScale = selectAllIcon.Scale;
         SelectionCancelButton.IconData = FrontendIconCatalog.Close.Data;

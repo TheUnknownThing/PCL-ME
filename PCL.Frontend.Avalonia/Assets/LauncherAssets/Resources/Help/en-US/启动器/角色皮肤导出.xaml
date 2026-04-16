@@ -1,0 +1,13 @@
+<local:MyCard Title="Export the active skin" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open the account or profile area, preview the current skin, and use the export action if it is available. Save the file as a standard PNG so it can be reused by other launchers, skin editors, or archives." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Check ownership and privacy" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Exporting your own skin for backup or reuse is straightforward. If the skin belongs to another user or comes from a shared service, make sure your use still respects that service's rules and community expectations." />
+  </StackPanel>
+</local:MyCard>

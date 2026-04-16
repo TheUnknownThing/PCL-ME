@@ -64,6 +64,7 @@ internal sealed partial class FrontendShellViewModel
 
     private static readonly string[] LauncherMiscSharedResetKeys =
     [
+        "SystemLocale",
         "UiAniFPS",
         "SystemMaxLog",
         FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
@@ -151,7 +152,10 @@ internal sealed partial class FrontendShellViewModel
         "UiDarkColorCustom"
     ];
 
-    private void ApplySetupComposition(FrontendSetupComposition composition, bool initializeAllSurfaces = true)
+    private void ApplySetupComposition(
+        FrontendSetupComposition composition,
+        bool initializeAllSurfaces = true,
+        bool applyAppearance = true)
     {
         _setupComposition = composition;
         _suppressSetupPersistence = true;
@@ -180,16 +184,40 @@ internal sealed partial class FrontendShellViewModel
             _suppressSetupPersistence = false;
         }
 
-        ApplyCurrentAppearanceSettings();
+        if (applyAppearance)
+        {
+            ApplyCurrentAppearanceSettings();
+        }
     }
 
-    private void ReloadSetupComposition(bool initializeAllSurfaces = true)
+    private void ReloadSetupComposition(bool initializeAllSurfaces = true, bool applyAppearance = true)
     {
         FrontendHttpProxyService.ApplyStoredProxySettings(_shellActionService.RuntimePaths);
         FrontendHttpProxyService.ApplyStoredDnsSettings(_shellActionService.RuntimePaths);
         ApplySetupComposition(
-            FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths),
-            initializeAllSurfaces);
+            FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths, _i18n),
+            initializeAllSurfaces,
+            applyAppearance);
+    }
+
+    private void RefreshSetupLocalizationState()
+    {
+        RefreshSetupLocalizationCatalog();
+        _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
+        _setupComposition = FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths, _i18n);
+        _suppressSetupPersistence = true;
+        try
+        {
+            InitializeAboutEntries();
+            InitializeLogEntries();
+            InitializeJavaSurface();
+            RefreshUiFeatureToggleGroups();
+            RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
+        }
+        finally
+        {
+            _suppressSetupPersistence = false;
+        }
     }
 
     private void InitializeActiveSetupSurface()
@@ -294,6 +322,8 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsAutoJavaSelected));
                 break;
             case LauncherFrontendSubpageKey.SetupUI:
+                RaisePropertyChanged(nameof(LauncherLocaleOptions));
+                RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
                 RaisePropertyChanged(nameof(SelectedDarkModeIndex));
                 RaisePropertyChanged(nameof(SelectedLightColorIndex));
                 RaisePropertyChanged(nameof(SelectedDarkColorIndex));
@@ -654,7 +684,7 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private void PersistUiToggle(string key, bool value)
+    private void PersistUiToggle(string key, string title, bool value)
     {
         if (_suppressSetupPersistence)
         {
@@ -663,7 +693,14 @@ internal sealed partial class FrontendShellViewModel
 
         _shellActionService.PersistLocalValue(key, value);
         ReloadSetupComposition(initializeAllSurfaces: false);
-        RefreshShell(value ? $"已隐藏 {key}。" : $"已恢复 {key}。");
+        RefreshShell(_i18n.T(
+            value
+                ? "setup.ui.hidden_features.reactions.hidden"
+                : "setup.ui.hidden_features.reactions.restored",
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["title"] = title
+            }));
         RaiseUiVisibilityProperties();
     }
 
@@ -765,6 +802,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(NotifySnapshotUpdates));
         RaisePropertyChanged(nameof(AutoSwitchGameLanguageToChinese));
         RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
+        RaisePropertyChanged(nameof(LauncherLocaleOptions));
+        RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
         RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
         RaisePropertyChanged(nameof(AnimationFpsLimit));
         RaisePropertyChanged(nameof(AnimationFpsLabel));

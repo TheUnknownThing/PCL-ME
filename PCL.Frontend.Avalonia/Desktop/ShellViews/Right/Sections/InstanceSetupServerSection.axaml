@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
-  <controls:PclCard Header="服务器" ContentMargin="20,40,20,18">
+  <controls:PclCard Header="{Binding InstanceSetupServerHeaderText}" ContentMargin="20,40,20,18">
     <controls:PclCard.CardContent>
       <StackPanel Spacing="12">
         <Border
@@ -16,7 +16,7 @@
           <TextBlock
               Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
               FontSize="12.5"
-              Text="当前实例的验证方式已锁定，无法再次更改。请使用要求的验证方式启动游戏。"
+              Text="{Binding InstanceSetupServerLockedWarningText}"
               TextWrapping="Wrap" />
         </Border>
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,Auto,9,28">
@@ -26,7 +26,7 @@
               VerticalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
-              Text="限制验证方式" />
+              Text="{Binding InstanceSetupServerLoginRequirementLabelText}" />
           <ComboBox
               Grid.Row="0"
               Grid.Column="1"
@@ -46,7 +46,7 @@
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
-                Text="目标验证服务器" />
+                Text="{Binding InstanceSetupServerAuthServerLabelText}" />
             <TextBox
                 Grid.Column="1"
                 IsEnabled="{Binding IsInstanceServerAuthEditable}"
@@ -58,7 +58,7 @@
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
-                Text="注册链接" />
+                Text="{Binding InstanceSetupServerAuthRegisterLabelText}" />
             <TextBox
                 Grid.Row="2"
                 Grid.Column="1"
@@ -71,7 +71,7 @@
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
-                Text="服务器名称" />
+                Text="{Binding InstanceSetupServerAuthNameLabelText}" />
             <TextBox
                 Grid.Row="4"
                 Grid.Column="1"
@@ -85,7 +85,7 @@
               VerticalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
-              Text="自动进入服务器" />
+              Text="{Binding InstanceSetupServerAutoJoinLabelText}" />
           <TextBox
               Grid.Row="3"
               Grid.Column="1"
@@ -100,7 +100,7 @@
               ColorType="Highlight"
               Command="{Binding SetLittleSkinCommand}"
               IsEnabled="{Binding IsInstanceServerAuthEditable}"
-              Text="设置为 LittleSkin" />
+              Text="{Binding InstanceSetupServerSetLittleSkinText}" />
           <controls:PclButton
               Grid.Column="1"
               MinWidth="150"
@@ -108,13 +108,13 @@
               Command="{Binding LockInstanceLoginCommand}"
               IsEnabled="{Binding CanLockInstanceLogin}"
               IsVisible="{Binding ShowInstanceServerLockAction}"
-              Text="锁定验证方式" />
+              Text="{Binding InstanceSetupServerLockLoginText}" />
           <controls:PclButton
               Grid.Column="2"
               MinWidth="150"
               Command="{Binding CreateInstanceProfileCommand}"
               IsEnabled="{Binding CanCreateInstanceProfile}"
-              Text="新建档案" />
+              Text="{Binding InstanceSetupServerCreateProfileText}" />
         </Grid>
       </StackPanel>
     </controls:PclCard.CardContent>

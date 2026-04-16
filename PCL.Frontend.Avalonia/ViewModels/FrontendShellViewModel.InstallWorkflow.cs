@@ -47,9 +47,25 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand ApplyInstanceInstallCommand => new(() => _ = ApplyInstanceInstallAsync());
 
-    public string InstanceInstallApplyButtonText => HasInstanceInstallChanges ? "开始修改" : "开始重置";
+    public string InstanceInstallApplyButtonText => HasInstanceInstallChanges
+        ? SD("instance.install.actions.apply_changes")
+        : SD("instance.install.actions.reset_to_scanned");
 
     public bool HasInstanceInstallChanges => ComputeHasInstanceInstallChanges();
+
+    private string InstallNoneSelectionText => T("download.install.workflow.selection.none");
+
+    private string InstallAvailableSelectionText => T("download.install.options.available");
+
+    private string BuildInstallOptionActivityTitle(string optionTitle)
+    {
+        return T("download.install.workflow.activities.select_option", ("option_title", optionTitle));
+    }
+
+    private string BuildInstallChoiceDialogTitle(string optionTitle)
+    {
+        return T("download.install.workflow.dialogs.select_option.title", ("option_title", optionTitle));
+    }
 
     private void EnsureDownloadInstallEditableState()
     {
@@ -118,14 +134,14 @@ internal sealed partial class FrontendShellViewModel
         {
             var currentVersion = GetEffectiveMinecraftVersion(isExistingInstance);
             var currentVersionId = currentVersion.Replace("Minecraft ", string.Empty, StringComparison.Ordinal);
-            var choices = FrontendInstallWorkflowService.GetMinecraftChoices(currentVersionId, SelectedDownloadSourceIndex);
+            var choices = FrontendInstallWorkflowService.GetMinecraftChoices(currentVersionId, SelectedDownloadSourceIndex, _i18n);
             var selectedId = isExistingInstance ? _instanceInstallMinecraftChoice?.Id : _downloadInstallMinecraftChoice?.Id;
             var result = await _shellActionService.PromptForChoiceAsync(
-                "选择 Minecraft 版本",
-                "从可用版本中选择要使用的 Minecraft 版本。",
+                T("download.install.workflow.dialogs.select_minecraft.title"),
+                T("download.install.workflow.dialogs.select_minecraft.message"),
                 choices.Select(choice => new PclChoiceDialogOption(choice.Id, choice.Title, choice.Summary)).ToArray(),
                 selectedId,
-                "使用该版本");
+                T("download.install.workflow.dialogs.select_minecraft.confirm"));
             if (string.IsNullOrWhiteSpace(result))
             {
                 return;
@@ -162,7 +178,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("加载 Minecraft 版本失败", ex.Message);
+            AddFailureActivity(T("download.install.workflow.activities.load_minecraft_failed"), ex.Message);
         }
     }
 
@@ -170,7 +186,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
         {
-            AddActivity($"选择安装项: {optionTitle}", "暂不支持自动安装这一项。");
+            AddActivity(BuildInstallOptionActivityTitle(optionTitle), T("download.install.workflow.messages.option_not_supported"));
             return;
         }
 
@@ -180,7 +196,7 @@ internal sealed partial class FrontendShellViewModel
             var staticUnavailableReason = GetInstallOptionStaticUnavailableReason(isExistingInstance, optionTitle, minecraftVersion);
             if (staticUnavailableReason is not null)
             {
-                AddActivity($"选择安装项: {optionTitle}", staticUnavailableReason);
+                AddActivity(BuildInstallOptionActivityTitle(optionTitle), staticUnavailableReason);
                 return;
             }
 
@@ -188,18 +204,18 @@ internal sealed partial class FrontendShellViewModel
             var unavailableReason = GetInstallOptionUnavailableReason(isExistingInstance, optionTitle, minecraftVersion, choices);
             if (unavailableReason is not null)
             {
-                AddActivity($"选择安装项: {optionTitle}", unavailableReason);
+                AddActivity(BuildInstallOptionActivityTitle(optionTitle), unavailableReason);
                 return;
             }
 
             var state = GetEditableSelectionState(isExistingInstance, optionTitle);
             var selectedId = state.SelectedChoice?.Id;
             var result = await _shellActionService.PromptForChoiceAsync(
-                $"选择 {optionTitle}",
-                "从当前可用候选中选择一个版本。",
+                BuildInstallChoiceDialogTitle(optionTitle),
+                T("download.install.workflow.dialogs.select_option.message"),
                 choices.Select(choice => new PclChoiceDialogOption(choice.Id, choice.Title, choice.Summary)).ToArray(),
                 selectedId,
-                "使用该版本");
+                T("download.install.workflow.dialogs.select_option.confirm"));
             if (string.IsNullOrWhiteSpace(result))
             {
                 return;
@@ -262,7 +278,7 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"选择安装项失败: {optionTitle}", ex.Message);
+            AddFailureActivity(T("download.install.workflow.activities.select_option_failed", ("option_title", optionTitle)), ex.Message);
         }
     }
 
@@ -305,14 +321,14 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_downloadInstallIsInSelectionStage || _downloadInstallMinecraftChoice is null)
         {
-            AddActivity("开始安装", "请先从下载页选择一个 Minecraft 版本。");
+            AddActivity(T("download.install.actions.start"), T("download.install.workflow.messages.select_minecraft_first"));
             return;
         }
 
         ValidateDownloadInstallName();
         if (!string.IsNullOrWhiteSpace(DownloadInstallNameValidationMessage))
         {
-            AddActivity("开始安装", DownloadInstallNameValidationMessage);
+            AddActivity(T("download.install.actions.start"), DownloadInstallNameValidationMessage);
             return;
         }
 
@@ -321,7 +337,7 @@ internal sealed partial class FrontendShellViewModel
             : DownloadInstallName.Trim();
         if (string.IsNullOrWhiteSpace(targetName))
         {
-            AddActivity("开始安装", "请输入新的实例名称。");
+            AddActivity(T("download.install.actions.start"), T("download.install.validation.empty_name"));
             return;
         }
 
@@ -332,17 +348,19 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_instanceComposition.Selection.HasSelection || string.IsNullOrWhiteSpace(_instanceComposition.Selection.InstanceName))
         {
-            AddActivity("开始修改", "当前未选择实例。");
+            AddActivity(T("download.install.workflow.activities.apply_changes"), T("download.install.workflow.messages.instance_missing"));
             return;
         }
 
-        var actionTitle = HasInstanceInstallChanges ? "开始修改" : "开始重置";
+        var actionTitle = HasInstanceInstallChanges
+            ? T("download.install.workflow.activities.apply_changes")
+            : T("download.install.workflow.activities.reset_instance");
         if (!HasInstanceInstallChanges)
         {
             var confirmed = await _shellActionService.ConfirmAsync(
-                "重置此实例",
-                "将基于当前安装清单重新补全核心文件与支持库，并保留实例目录中的存档、资源包和大多数用户数据。",
-                "继续",
+                T("download.install.workflow.dialogs.reset_instance.title"),
+                T("download.install.workflow.dialogs.reset_instance.message"),
+                T("download.install.workflow.dialogs.reset_instance.confirm"),
                 isDanger: false);
             if (!confirmed)
             {
@@ -361,8 +379,8 @@ internal sealed partial class FrontendShellViewModel
             if (unresolvedSelections.Count > 0)
             {
                 AddActivity(
-                    activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"),
-                    $"以下安装项当前无法映射到受支持的安装矩阵：{string.Join("、", unresolvedSelections)}。请重新选择或清除后再继续。");
+                    activityTitleOverride ?? (isExistingInstance ? T("download.install.workflow.activities.apply_changes_failed") : T("download.install.workflow.activities.start_failed")),
+                    T("download.install.workflow.messages.unresolved_selections", ("options", string.Join(T("common.punctuation.comma"), unresolvedSelections))));
                 return;
             }
 
@@ -386,7 +404,7 @@ internal sealed partial class FrontendShellViewModel
                 SelectedLaunchIsolationIndex,
                 hasModableComponents,
                 FrontendIsolationPolicyService.IsNonReleaseMinecraftChoice(minecraftChoice));
-            var activityTitle = activityTitleOverride ?? (isExistingInstance ? InstanceInstallApplyButtonText : "开始安装");
+            var activityTitle = activityTitleOverride ?? (isExistingInstance ? InstanceInstallApplyButtonText : T("download.install.actions.start"));
             var request = new FrontendInstallApplyRequest(
                 _instanceComposition.Selection.LauncherDirectory,
                 targetInstanceName,
@@ -410,11 +428,12 @@ internal sealed partial class FrontendShellViewModel
             TaskCenter.Register(
                 new FrontendInstallTask(
                     taskTitle,
+                    _i18n,
                     async (installTask, cancelToken) =>
                     {
                         installTask.AdvancePhase(
                             FrontendInstallApplyPhase.PrepareManifest,
-                            "正在写入安装清单并准备安装环境…");
+                            T("download.install.workflow.tasks.prepare_environment"));
                         var result = await Task.Run(
                             () => FrontendInstallWorkflowService.Apply(
                                 request,
@@ -424,6 +443,7 @@ internal sealed partial class FrontendShellViewModel
                                     installTask.ApplyRepairProgress(snapshot);
                                 },
                                 _shellActionService.GetDownloadTransferOptions(),
+                                _i18n,
                                 cancelToken),
                             cancelToken);
 
@@ -456,17 +476,25 @@ internal sealed partial class FrontendShellViewModel
 
                             AddActivity(
                                 activityTitle,
-                                $"{targetInstanceName} • 已写入安装清单 {result.ManifestPath}，下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+                                T(
+                                    "download.install.workflow.messages.apply_completed_with_target",
+                                    ("target_name", targetInstanceName),
+                                    ("manifest_path", result.ManifestPath),
+                                    ("downloaded_count", result.DownloadedFiles.Count),
+                                    ("reused_count", result.ReusedFiles.Count)));
                         });
 
                         installTask.CompleteSuccessfully(
-                            $"已写入安装清单，下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+                            T(
+                                "download.install.workflow.messages.apply_completed",
+                                ("downloaded_count", result.DownloadedFiles.Count),
+                                ("reused_count", result.ReusedFiles.Count)));
                     },
                     async ex =>
                     {
                         await Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            AddFailureActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
+                            AddFailureActivity(activityTitleOverride ?? (isExistingInstance ? T("download.install.workflow.activities.apply_changes_failed") : T("download.install.workflow.activities.start_failed")), ex.Message);
                         });
                     }));
 
@@ -480,11 +508,11 @@ internal sealed partial class FrontendShellViewModel
 
             NavigateTo(
                 new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
-                $"{taskTitle} 已加入任务中心。");
+                T("download.install.workflow.messages.queued_in_task_center", ("task_title", taskTitle)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity(activityTitleOverride ?? (isExistingInstance ? "开始修改失败" : "开始安装失败"), ex.Message);
+            AddFailureActivity(activityTitleOverride ?? (isExistingInstance ? T("download.install.workflow.activities.apply_changes_failed") : T("download.install.workflow.activities.start_failed")), ex.Message);
         }
     }
 
@@ -497,7 +525,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var version = GetEffectiveMinecraftVersion(isExistingInstance).Replace("Minecraft ", "", StringComparison.Ordinal);
-        return FrontendInstallWorkflowService.GetMinecraftChoices(version, SelectedDownloadSourceIndex)
+        return FrontendInstallWorkflowService.GetMinecraftChoices(version, SelectedDownloadSourceIndex, _i18n)
             .First(choice => string.Equals(choice.Version, version, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -539,7 +567,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
-        if (string.IsNullOrWhiteSpace(baselineText) || baselineText is "未安装" or "可以添加")
+        if (string.IsNullOrWhiteSpace(baselineText) || baselineText == InstallNoneSelectionText || baselineText == InstallAvailableSelectionText)
         {
             return null;
         }
@@ -550,7 +578,7 @@ internal sealed partial class FrontendShellViewModel
             return cachedChoice;
         }
 
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, SelectedDownloadSourceIndex);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, SelectedDownloadSourceIndex, _i18n);
         return MatchInstallChoice(choices, baselineText);
     }
 
@@ -568,7 +596,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
-        if (string.IsNullOrWhiteSpace(baselineText) || baselineText is "未安装" or "可以添加")
+        if (string.IsNullOrWhiteSpace(baselineText) || baselineText == InstallNoneSelectionText || baselineText == InstallAvailableSelectionText)
         {
             return null;
         }
@@ -623,7 +651,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (state.IsExplicitlyCleared)
         {
-            return "未安装";
+            return InstallNoneSelectionText;
         }
 
         return GetBaselineSelection(isExistingInstance, optionTitle);
@@ -632,7 +660,7 @@ internal sealed partial class FrontendShellViewModel
     private string GetBaselineSelection(bool isExistingInstance, string optionTitle)
     {
         var selections = isExistingInstance ? _instanceInstallBaselineSelections : _downloadInstallBaselineSelections;
-        return selections.TryGetValue(optionTitle, out var value) ? value : "未安装";
+        return selections.TryGetValue(optionTitle, out var value) ? value : InstallNoneSelectionText;
     }
 
     private string GetBaselineMinecraftVersion(bool isExistingInstance)
@@ -680,8 +708,8 @@ internal sealed partial class FrontendShellViewModel
     {
         var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
         return !string.IsNullOrWhiteSpace(baselineText)
-               && !string.Equals(baselineText, "未安装", StringComparison.Ordinal)
-               && !string.Equals(baselineText, "可以添加", StringComparison.Ordinal);
+               && !string.Equals(baselineText, InstallNoneSelectionText, StringComparison.Ordinal)
+               && !string.Equals(baselineText, InstallAvailableSelectionText, StringComparison.Ordinal);
     }
 
     private bool ComputeHasInstanceInstallChanges()
@@ -731,16 +759,17 @@ internal sealed record FrontendEditableInstallSelection(
 
 internal sealed class FrontendInstallTask(
     string title,
+    II18nService i18n,
     Func<FrontendInstallTask, CancellationToken, Task> executeAsync,
     Func<Exception, Task>? onErrorAsync = null)
     : ITask, ITaskProgressive, ITaskGroup, ITaskProgressStatus, ITaskCancelable
 {
     private readonly Dictionary<FrontendInstallTaskStage, FrontendInstallStageTask> _stages = new()
     {
-        [FrontendInstallTaskStage.Prepare] = new("写入安装清单"),
-        [FrontendInstallTaskStage.SupportFiles] = new("下载游戏支持文件"),
-        [FrontendInstallTaskStage.AssetFiles] = new("下载游戏资源文件"),
-        [FrontendInstallTaskStage.Finalize] = new("完成安装")
+        [FrontendInstallTaskStage.Prepare] = new(i18n.T("download.install.workflow.stages.prepare")),
+        [FrontendInstallTaskStage.SupportFiles] = new(i18n.T("download.install.workflow.stages.support_files")),
+        [FrontendInstallTaskStage.AssetFiles] = new(i18n.T("download.install.workflow.stages.asset_files")),
+        [FrontendInstallTaskStage.Finalize] = new(i18n.T("download.install.workflow.stages.finalize"))
     };
 
     private readonly Dictionary<FrontendInstallTaskStage, double> _stageWeights = new()
@@ -777,7 +806,7 @@ internal sealed class FrontendInstallTask(
         }
 
         _cancellation.Cancel();
-        ReportState(TaskState.Running, "正在取消任务…");
+        ReportState(TaskState.Running, i18n.T("download.install.workflow.tasks.canceling"));
     }
 
     public void AdvancePhase(FrontendInstallApplyPhase phase, string message)
@@ -786,13 +815,13 @@ internal sealed class FrontendInstallTask(
         {
             case FrontendInstallApplyPhase.PrepareManifest:
                 UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Running, message, 0.55);
-                UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Waiting, "等待开始下载支持文件…", 0d);
-                UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Waiting, "等待解析资源文件清单…", 0d);
-                UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Waiting, "等待安装收尾…", 0d);
+                UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Waiting, i18n.T("download.install.workflow.tasks.waiting_support_files"), 0d);
+                UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Waiting, i18n.T("download.install.workflow.tasks.waiting_asset_files"), 0d);
+                UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Waiting, i18n.T("download.install.workflow.tasks.waiting_finalize"), 0d);
                 ReportState(TaskState.Running, message);
                 break;
             case FrontendInstallApplyPhase.DownloadSupportFiles:
-                UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Success, "安装清单已写入", 1d);
+                UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Success, i18n.T("download.install.workflow.tasks.manifest_written"), 1d);
                 if (_stages[FrontendInstallTaskStage.SupportFiles].State == TaskState.Waiting)
                 {
                     UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Running, message, 0.02);
@@ -803,12 +832,12 @@ internal sealed class FrontendInstallTask(
             case FrontendInstallApplyPhase.Finalize:
                 if (_stages[FrontendInstallTaskStage.SupportFiles].State is TaskState.Waiting or TaskState.Running)
                 {
-                    UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, "游戏支持文件已就绪", 1d);
+                    UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, i18n.T("download.install.workflow.tasks.support_files_ready"), 1d);
                 }
 
                 if (_stages[FrontendInstallTaskStage.AssetFiles].State is TaskState.Waiting or TaskState.Running)
                 {
-                    UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "资源文件已就绪", 1d);
+                    UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, i18n.T("download.install.workflow.tasks.asset_files_ready"), 1d);
                 }
 
                 UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Running, message, 0.45);
@@ -829,18 +858,18 @@ internal sealed class FrontendInstallTask(
         UpdateStageFromGroup(
             FrontendInstallTaskStage.SupportFiles,
             supportSnapshot,
-            "正在补全游戏主文件与支持库…",
-            "无需下载游戏支持文件");
+            i18n.T("download.install.workflow.tasks.repairing_support_files"),
+            i18n.T("download.install.workflow.tasks.no_support_files_needed"));
         UpdateStageFromGroup(
             FrontendInstallTaskStage.AssetFiles,
             assetSnapshot,
-            "正在下载游戏资源文件…",
-            "无需下载游戏资源文件");
+            i18n.T("download.install.workflow.tasks.downloading_asset_files"),
+            i18n.T("download.install.workflow.tasks.no_asset_files_needed"));
 
         if (supportSnapshot.TotalFiles == 0 && assetSnapshot.TotalFiles == 0)
         {
-            UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, "无需补全游戏支持文件", 1d);
-            UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "无需下载游戏资源文件", 1d);
+            UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, i18n.T("download.install.workflow.tasks.no_support_files_to_repair"), 1d);
+            UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, i18n.T("download.install.workflow.tasks.no_asset_files_to_download"), 1d);
         }
 
         PublishProgressStatus(
@@ -848,27 +877,27 @@ internal sealed class FrontendInstallTask(
                 $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
                 snapshot.SpeedBytesPerSecond > 0d
                     ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s"
-                    : "0 B/s",
+                    : i18n.T("launch.dialog.download_speed.zero"),
                 snapshot.RemainingFileCount,
                 null));
 
         ReportState(
             TaskState.Running,
             string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
-                ? "正在下载依赖文件…"
-                : $"正在处理 {snapshot.CurrentFileName}");
+                ? i18n.T("download.install.workflow.tasks.downloading_dependencies")
+                : i18n.T("download.install.workflow.tasks.processing_file", new Dictionary<string, object?> { ["file_name"] = snapshot.CurrentFileName }));
     }
 
     public void CompleteSuccessfully(string message)
     {
-        UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Success, "安装清单已写入", 1d);
-        UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, "游戏支持文件已准备完成", 1d);
-        UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, "资源文件已准备完成", 1d);
-        UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Success, "安装完成", 1d);
+        UpdateStage(FrontendInstallTaskStage.Prepare, TaskState.Success, i18n.T("download.install.workflow.tasks.manifest_written"), 1d);
+        UpdateStage(FrontendInstallTaskStage.SupportFiles, TaskState.Success, i18n.T("download.install.workflow.tasks.support_files_completed"), 1d);
+        UpdateStage(FrontendInstallTaskStage.AssetFiles, TaskState.Success, i18n.T("download.install.workflow.tasks.asset_files_completed"), 1d);
+        UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Success, i18n.T("download.install.workflow.tasks.completed"), 1d);
         PublishProgressStatus(
             new TaskProgressStatusSnapshot(
                 "100%",
-                "0 B/s",
+                i18n.T("launch.dialog.download_speed.zero"),
                 0,
                 null));
         ReportState(TaskState.Success, message);
@@ -884,11 +913,11 @@ internal sealed class FrontendInstallTask(
             AddTask(stage);
         }
 
-        ReportState(TaskState.Waiting, "已加入任务中心");
+        ReportState(TaskState.Waiting, i18n.T("download.install.workflow.tasks.queued"));
 
         foreach (var stage in _stages.Values)
         {
-            stage.Report(TaskState.Waiting, "等待执行", 0d);
+            stage.Report(TaskState.Waiting, i18n.T("download.install.workflow.tasks.waiting_execution"), 0d);
         }
 
         try
@@ -897,14 +926,14 @@ internal sealed class FrontendInstallTask(
         }
         catch (OperationCanceledException)
         {
-            UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Canceled, "任务已取消", _progress);
+            UpdateStage(FrontendInstallTaskStage.Finalize, TaskState.Canceled, i18n.T("download.install.workflow.tasks.canceled"), _progress);
             PublishProgressStatus(
                 new TaskProgressStatusSnapshot(
                     $"{Math.Round(_progress * 100, 1):0.#}%",
-                    "0 B/s",
+                    i18n.T("launch.dialog.download_speed.zero"),
                     null,
                     null));
-            ReportState(TaskState.Canceled, "任务已取消");
+            ReportState(TaskState.Canceled, i18n.T("download.install.workflow.tasks.canceled"));
             throw;
         }
         catch (Exception ex)
@@ -956,10 +985,10 @@ internal sealed class FrontendInstallTask(
         }
 
         var message = snapshot.Progress >= 0.999
-            ? $"{snapshot.CompletedFiles}/{snapshot.TotalFiles} 个文件已就绪"
+            ? i18n.T("download.install.workflow.tasks.files_ready", new Dictionary<string, object?> { ["completed_count"] = snapshot.CompletedFiles, ["total_count"] = snapshot.TotalFiles })
             : string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
-                ? $"{activePrefix} {snapshot.CompletedFiles}/{snapshot.TotalFiles}"
-                : $"{activePrefix} {snapshot.CompletedFiles}/{snapshot.TotalFiles} • {snapshot.CurrentFileName}";
+                ? i18n.T("download.install.workflow.tasks.progress_without_file", new Dictionary<string, object?> { ["prefix"] = activePrefix, ["completed_count"] = snapshot.CompletedFiles, ["total_count"] = snapshot.TotalFiles })
+                : i18n.T("download.install.workflow.tasks.progress_with_file", new Dictionary<string, object?> { ["prefix"] = activePrefix, ["completed_count"] = snapshot.CompletedFiles, ["total_count"] = snapshot.TotalFiles, ["file_name"] = snapshot.CurrentFileName });
         var state = snapshot.Progress >= 0.999 ? TaskState.Success : TaskState.Running;
         UpdateStage(stage, state, message, snapshot.Progress);
     }

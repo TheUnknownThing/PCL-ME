@@ -26,7 +26,7 @@ public sealed class LauncherStartupWorkflowServiceTest
         Assert.AreEqual(UpdateChannel.Beta, result.Bootstrap.DefaultUpdateChannel);
         Assert.IsTrue(result.Visual.ShouldShowSplashScreen);
         Assert.IsNotNull(result.EnvironmentWarningPrompt);
-        Assert.AreEqual("环境警告", result.EnvironmentWarningPrompt.Title);
+        Assert.AreEqual("startup.prompts.environment_warning.title", result.EnvironmentWarningPrompt.Title.Key);
     }
 
     [TestMethod]

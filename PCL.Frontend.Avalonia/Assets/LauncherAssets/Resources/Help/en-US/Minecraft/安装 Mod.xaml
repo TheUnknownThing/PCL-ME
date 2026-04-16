@@ -1,0 +1,39 @@
+<local:MyCard Title="How do I choose a mod loader?" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="A mod loader is required before Minecraft can load most mods. Common choices are Forge, NeoForge, Fabric, and Quilt, and they cannot all be installed into the same game instance at the same time." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Forge has the broadest historical mod support. Fabric and Quilt are common for modern lightweight modpacks, while NeoForge is mainly used for Minecraft 1.20.1 and newer. Pick the loader required by the mod or modpack you want to use." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install a mod loader first" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open Download, enter the automatic install page, choose the Minecraft version you want, then select Forge, NeoForge, Fabric, Quilt, or another supported loader." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="After the version list finishes loading, choose the recommended or latest compatible loader build unless a specific mod or server requires a different version." />
+    <local:MyHint Margin="0,10,0,0" IsWarn="False"
+                  Text="If compatibility problems appear later, check the mod or server documentation first and then switch to the exact loader version it asks for." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Download mods from launcher resources" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Use the resource download page to search for a mod, then narrow the results with Minecraft version, loader, source, and tag filters. This is the safest way to avoid downloading a file for the wrong loader or game version." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Before installing, open the detail page and confirm the supported versions, required dependencies, and whether the project is marked as a mod instead of a resource pack or shader pack." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Import local mod files" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If you already downloaded a mod file manually, open the instance resources page for Mods and copy the file into the instance mod folder. Keep the file only if it matches the game version and loader installed in that instance." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="When a mod refuses to load, check whether it requires another dependency mod, a newer Java runtime, or a different loader version. Those are the most common causes of mod installation failures." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyHint Margin="0,0,0,15" IsWarn="False" Text="English article seed: Install Mods" />

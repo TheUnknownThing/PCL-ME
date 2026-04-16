@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Cli;
@@ -21,15 +23,19 @@ internal sealed partial class FrontendShellViewModel
     private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private readonly AvaloniaCommandOptions _options;
+    private readonly II18nService _i18n;
+    private readonly IReadOnlyList<string> _launcherLocaleKeys;
+    private readonly IReadOnlyList<string> _launcherLocaleOptions;
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
+    private SetupLocalizationCatalog _setupText;
     private FrontendInstanceComposition _instanceComposition;
     private FrontendInstanceCompositionService.LoadMode _instanceCompositionLoadMode = FrontendInstanceCompositionService.LoadMode.Full;
     private FrontendToolsComposition _toolsComposition = new(
         new FrontendToolsHelpState([]),
-        new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, "尚未选择皮肤"));
-    private FrontendSetupUpdateStatus _updateStatus = FrontendSetupUpdateStatusService.CreateDefault();
+        new FrontendToolsTestState([], string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false, 0, string.Empty));
+    private FrontendSetupUpdateStatus _updateStatus = null!;
     private FrontendSetupFeedbackSnapshot? _feedbackSnapshot;
     private StartupAvaloniaPlan _startupPlan;
     private FrontendLaunchComposition _launchComposition;
@@ -149,7 +155,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _pendingLaunchAfterPrompt;
     private bool _showLaunchLog;
     private readonly List<string> _launchLogLines = [];
-    private string _launchLogVisibleText = EmptyLaunchLogText;
+    private string _launchLogVisibleText = string.Empty;
     private int _launchLogVisibleStartIndex;
     private bool _isLaunchLogViewportPinned = true;
     private string? _latestLaunchScriptPath;
@@ -173,7 +179,7 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedLaunchOfflineUuidModeIndex;
     private string _launchOfflineCustomUuid = string.Empty;
     private string _launchOfflineStatusText = string.Empty;
-    private string _launchMicrosoftStatusText = "点击下方按钮后，启动器会打开微软登录网页。";
+    private string _launchMicrosoftStatusText = string.Empty;
     private string _launchMicrosoftDeviceCode = string.Empty;
     private string _launchMicrosoftVerificationUrl = string.Empty;
     private string _launchAuthlibServer = "https://littleskin.cn/api/yggdrasil";
@@ -186,11 +192,11 @@ internal sealed partial class FrontendShellViewModel
     private string _achievementSecondLine = "PCL Frontend Avalonia";
     private bool _showAchievementPreview;
     private int _selectedHeadSizeIndex;
-    private string _selectedHeadSkinPath = "尚未选择皮肤";
-    private string _downloadInstallName = "新的安装方案";
+    private string _selectedHeadSkinPath = string.Empty;
+    private string _downloadInstallName = string.Empty;
     private string _downloadCatalogIntroTitle = string.Empty;
     private string _downloadCatalogIntroBody = string.Empty;
-    private string _downloadCatalogLoadingText = "正在获取版本列表";
+    private string _downloadCatalogLoadingText = string.Empty;
     private string _downloadFavoriteSearchQuery = string.Empty;
     private int _selectedDownloadFavoriteTargetIndex;
     private string _downloadFavoriteWarningText = string.Empty;
@@ -208,10 +214,10 @@ internal sealed partial class FrontendShellViewModel
     private readonly Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> _downloadResourceRuntimeStates = new();
     private int _communityProjectRefreshVersion;
     private bool _isCommunityProjectLoading;
-    private string _communityProjectLoadingText = "正在获取版本列表";
+    private string _communityProjectLoadingText = string.Empty;
     private string _selectedCommunityProjectTitleHint = string.Empty;
     private int _selectedLaunchIsolationIndex = 1;
-    private string _launchWindowTitle = "{}{name} | 玩家 : {user} | 使用 {login} 登录";
+    private string _launchWindowTitle = "{}{name} | Player: {user} | Signed in via {login}";
     private string _launchCustomInfo = "PCL";
     private int _selectedLaunchVisibilityIndex = 4;
     private int _selectedLaunchPriorityIndex = 1;
@@ -251,6 +257,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _notifySnapshotUpdates;
     private bool _autoSwitchGameLanguageToChinese = true;
     private bool _detectClipboardResourceLinks = true;
+    private int _selectedLauncherLocaleIndex;
     private int _selectedSystemActivityIndex;
     private double _animationFpsLimit = 59;
     private double _maxRealTimeLogValue = 13;
@@ -264,6 +271,8 @@ internal sealed partial class FrontendShellViewModel
     private string _httpProxyPassword = string.Empty;
     private double _debugAnimationSpeed = 30;
     private bool _debugModeEnabled;
+    private bool _debugDelayEnabled;
+    private int _selectedLaunchMicrosoftAuthIndex;
     private int _selectedDarkModeIndex = 2;
     private int _selectedLightColorIndex;
     private int _selectedDarkColorIndex;
@@ -306,29 +315,37 @@ internal sealed partial class FrontendShellViewModel
 
     public static FrontendShellViewModel CreateBootstrap(
         AvaloniaCommandOptions options,
-        FrontendShellActionService shellActionService)
+        FrontendShellActionService shellActionService,
+        II18nService i18nService)
     {
-        return new FrontendShellViewModel(options, shellActionService);
+        return new FrontendShellViewModel(options, shellActionService, i18nService);
     }
 
     private FrontendShellViewModel(
         AvaloniaCommandOptions options,
-        FrontendShellActionService shellActionService)
+        FrontendShellActionService shellActionService,
+        II18nService i18nService)
     {
         _options = options;
+        _i18n = i18nService;
+        _setupText = CreateSetupLocalizationCatalog();
+        _launcherLocaleKeys = _i18n.AvailableLocales;
+        _launcherLocaleOptions = _launcherLocaleKeys.Select(FormatLauncherLocaleOption).ToArray();
         _shellActionService = shellActionService;
+        _updateStatus = FrontendSetupUpdateStatusService.CreateDefault(_i18n);
+        _selectedHeadSkinPath = _i18n.T("shell.tools.test.head.no_skin_selected");
         _shellActionService.ConfirmPresenter = ShowInAppConfirmationAsync;
         _shellActionService.TextInputPresenter = ShowInAppTextInputAsync;
         _shellActionService.ChoicePresenter = ShowInAppChoiceAsync;
         _shellComposition = FrontendShellCompositionService.Compose(options);
-        _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths);
+        _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths, i18nService);
         _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
         var initialInstanceLoadMode = _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
             ? ResolveInstanceCompositionLoadMode(_currentRoute)
             : FrontendInstanceCompositionService.LoadMode.Lightweight;
-        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths, initialInstanceLoadMode);
+        _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths, initialInstanceLoadMode, _i18n);
         _instanceCompositionLoadMode = initialInstanceLoadMode;
-        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths);
+        _toolsComposition = FrontendToolsCompositionService.Compose(shellActionService.RuntimePaths, _i18n.Locale);
         ReloadVersionSavesComposition();
         ReloadDownloadComposition();
         _startupPlan = new StartupAvaloniaPlan(
@@ -336,7 +353,7 @@ internal sealed partial class FrontendShellViewModel
             _shellComposition.StartupConsentResult);
         _launchComposition = FrontendLaunchCompositionService.Compose(options, shellActionService.RuntimePaths);
         _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
-        _crashPlan = FrontendCrashCompositionService.Compose(shellActionService.RuntimePaths);
+        _crashPlan = FrontendCrashCompositionService.Compose(shellActionService.RuntimePaths, _i18n);
         _activeCrashPlan = _crashPlan;
         _selectedPromptLane = AvaloniaPromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
@@ -345,12 +362,14 @@ internal sealed partial class FrontendShellViewModel
         _dismissPromptOverlayCommand = new ActionCommand(() => SetPromptOverlayOpen(false));
         _openTaskManagerShortcutCommand = new ActionCommand(() => NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
-            "已从右下角快捷入口打开任务中心。",
+            "Opened Task Manager from the bottom-right shortcut.",
             RouteNavigationBehavior.Child));
         _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
         _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
-        _versionSetupCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), "Opened instance settings from the launch pane."));
+        _versionSetupCommand = new ActionCommand(() => NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup),
+            "Opened instance settings from the launch pane."));
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
         _toggleLaunchNewsCommand = new ActionCommand(ToggleLaunchNewsCard);
         _dismissLaunchCommunityHintCommand = new ActionCommand(DismissCurrentLaunchAnnouncement);
@@ -366,7 +385,7 @@ internal sealed partial class FrontendShellViewModel
         _openMicrosoftDeviceLinkCommand = new ActionCommand(OpenMicrosoftDeviceLink, () => !_isLaunchProfileActionInProgress);
         _submitAuthlibLaunchProfileCommand = new ActionCommand(() => _ = SubmitAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _useLittleSkinLaunchProfileCommand = new ActionCommand(ApplyLittleSkinLaunchProfilePreset, () => !_isLaunchProfileActionInProgress);
-        _openFeedbackCommand = CreateLinkCommand("打开反馈入口", "https://github.com/TheUnknownThing/PCL-ME/issues");
+        _openFeedbackCommand = CreateLinkCommand("Open feedback", "https://github.com/TheUnknownThing/PCL-ME/issues");
         _exportLogCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: false));
         _exportAllLogsCommand = new ActionCommand(() => ExportLauncherLogs(includeAllLogs: true));
         _openLogDirectoryCommand = new ActionCommand(OpenLauncherLogDirectory);
@@ -374,7 +393,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
         _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
-        _openFullChangelogCommand = CreateLinkCommand("查看更新日志", "https://github.com/TheUnknownThing/PCL-ME/releases");
+        _openFullChangelogCommand = CreateLinkCommand("View changelog", "https://github.com/TheUnknownThing/PCL-ME/releases");
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
         _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
@@ -384,7 +403,7 @@ internal sealed partial class FrontendShellViewModel
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
-        _openSnapshotBuildCommand = CreateLinkCommand("获取官方快照版", "https://github.com/TheUnknownThing/PCL-ME");
+        _openSnapshotBuildCommand = CreateLinkCommand("Get official snapshot build", "https://github.com/TheUnknownThing/PCL-ME");
         _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
         _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
         _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);
@@ -426,7 +445,7 @@ internal sealed partial class FrontendShellViewModel
             InstanceServerAuthServer = "https://littleskin.cn/api/yggdrasil";
             InstanceServerAuthRegister = "https://littleskin.cn/auth/register";
             InstanceServerAuthName = "LittleSkin";
-            AddActivity("设置为 LittleSkin", InstanceServerAuthServer);
+            AddActivity(T("launch.profile.authlib.activities.use_littleskin"), InstanceServerAuthServer);
         });
         _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
         _createInstanceProfileCommand = new ActionCommand(() => _ = CreateInstanceProfileAsync());
@@ -437,13 +456,13 @@ internal sealed partial class FrontendShellViewModel
         _importInstanceSelectionPackCommand = new ActionCommand(() => _ = ImportInstanceSelectionPackAsync());
         _openInstanceSelectionDownloadCommand = new ActionCommand(() => NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-            "已从实例选择页打开下载页面。"));
+            LT("shell.instance_select.empty.open_download_activity")));
         _refreshTaskManagerCommand = new ActionCommand(RefreshTaskManagerSurface);
         _clearFinishedTasksCommand = new ActionCommand(() =>
         {
             TaskCenter.RemoveFinished();
             RefreshTaskManagerSurface();
-            RefreshShell("已清理所有已结束任务。");
+            RefreshShell(LT("shell.task_manager.actions.clear_finished"));
         });
         _refreshGameLogCommand = new ActionCommand(RefreshGameLogSurface);
         _clearGameLogCommand = new ActionCommand(ClearGameLogSurface);
@@ -453,6 +472,7 @@ internal sealed partial class FrontendShellViewModel
         InputLabel = _shellComposition.InputLabel;
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
+        _i18n.Changed += HandleI18nChanged;
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);

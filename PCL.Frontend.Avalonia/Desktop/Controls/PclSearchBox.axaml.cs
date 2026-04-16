@@ -21,7 +21,7 @@ internal sealed partial class PclSearchBox : UserControl
         AvaloniaProperty.Register<PclSearchBox, bool>(nameof(ShowSearchButton));
 
     public static readonly StyledProperty<string> SearchButtonTextProperty =
-        AvaloniaProperty.Register<PclSearchBox, string>(nameof(SearchButtonText), "搜索");
+        AvaloniaProperty.Register<PclSearchBox, string>(nameof(SearchButtonText), string.Empty);
 
     public static readonly StyledProperty<ICommand?> SearchCommandProperty =
         AvaloniaProperty.Register<PclSearchBox, ICommand?>(nameof(SearchCommand));

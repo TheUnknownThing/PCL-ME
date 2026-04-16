@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -30,7 +32,7 @@ internal sealed partial class FrontendShellViewModel
     private string _downloadResourceSearchQuery = string.Empty;
     private string _downloadResourceSurfaceTitle = string.Empty;
     private string _downloadResourceLoadingText = string.Empty;
-    private string _downloadResourceEmptyStateText = "没有找到符合条件的资源条目。";
+    private string _downloadResourceEmptyStateText = string.Empty;
     private string _downloadResourceEmptyStateHintText = string.Empty;
     private string _downloadResourceHintText = string.Empty;
     private bool _showDownloadResourceHint;
@@ -52,34 +54,9 @@ internal sealed partial class FrontendShellViewModel
     private bool _downloadResourceSupportsModrinth = true;
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceSourceOptions = [];
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceTagOptions = [];
-    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceSortOptions =
-    [
-        new DownloadResourceFilterOptionViewModel("默认", string.Empty),
-        new DownloadResourceFilterOptionViewModel("相关性", "relevance"),
-        new DownloadResourceFilterOptionViewModel("下载量", "downloads"),
-        new DownloadResourceFilterOptionViewModel("关注量", "follows"),
-        new DownloadResourceFilterOptionViewModel("最新发布", "release"),
-        new DownloadResourceFilterOptionViewModel("最近更新", "update")
-    ];
-    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceVersionOptions =
-    [
-        new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-        new DownloadResourceFilterOptionViewModel("26.1.1", "26.1.1"),
-        new DownloadResourceFilterOptionViewModel("26.1", "26.1"),
-        new DownloadResourceFilterOptionViewModel("1.21.11", "1.21.11"),
-        new DownloadResourceFilterOptionViewModel("1.21.1", "1.21.1"),
-        new DownloadResourceFilterOptionViewModel("1.20.6", "1.20.6"),
-        new DownloadResourceFilterOptionViewModel("1.20.1", "1.20.1"),
-        new DownloadResourceFilterOptionViewModel("1.19.4", "1.19.4"),
-        new DownloadResourceFilterOptionViewModel("1.19.2", "1.19.2"),
-        new DownloadResourceFilterOptionViewModel("1.18.2", "1.18.2"),
-        new DownloadResourceFilterOptionViewModel("1.16.5", "1.16.5"),
-        new DownloadResourceFilterOptionViewModel("1.12.2", "1.12.2"),
-        new DownloadResourceFilterOptionViewModel("1.10.2", "1.10.2"),
-        new DownloadResourceFilterOptionViewModel("1.8.9", "1.8.9"),
-        new DownloadResourceFilterOptionViewModel("1.7.10", "1.7.10")
-    ];
-    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceLoaderOptions = BuildDefaultResourceLoaderOptions();
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceSortOptions = [];
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceVersionOptions = [];
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceLoaderOptions = [];
     private IReadOnlyList<DownloadResourceEntryViewModel> _allDownloadResourceEntries = [];
 
     public ObservableCollection<DownloadResourceEntryViewModel> DownloadResourceEntries { get; } = [];
@@ -102,13 +79,13 @@ internal sealed partial class FrontendShellViewModel
 
     public string DownloadResourceSearchWatermark => _currentRoute.Subpage switch
     {
-        LauncherFrontendSubpageKey.DownloadMod => "搜索 Mod",
-        LauncherFrontendSubpageKey.DownloadPack => "搜索整合包",
-        LauncherFrontendSubpageKey.DownloadDataPack => "搜索数据包",
-        LauncherFrontendSubpageKey.DownloadResourcePack => "搜索资源包",
-        LauncherFrontendSubpageKey.DownloadShader => "搜索光影包",
-        LauncherFrontendSubpageKey.DownloadWorld => "搜索存档",
-        _ => "搜索资源"
+        LauncherFrontendSubpageKey.DownloadMod => T("download.resource.search.mod"),
+        LauncherFrontendSubpageKey.DownloadPack => T("download.resource.search.pack"),
+        LauncherFrontendSubpageKey.DownloadDataPack => T("download.resource.search.data_pack"),
+        LauncherFrontendSubpageKey.DownloadResourcePack => T("download.resource.search.resource_pack"),
+        LauncherFrontendSubpageKey.DownloadShader => T("download.resource.search.shader"),
+        LauncherFrontendSubpageKey.DownloadWorld => T("download.resource.search.world"),
+        _ => T("download.resource.search.default")
     };
 
     public string DownloadResourceCurrentInstanceTitle
@@ -119,12 +96,12 @@ internal sealed partial class FrontendShellViewModel
             {
                 return _versionSavesComposition.Selection.HasSelection
                     ? _versionSavesComposition.Selection.SaveName
-                    : "未选择存档";
+                    : T("download.resource.current_instance.none_selected");
             }
 
             return _instanceComposition.Selection.HasSelection
                 ? _instanceComposition.Selection.InstanceName
-                : "未选择实例";
+                : T("download.resource.current_instance.none_selected");
         }
     }
 
@@ -155,7 +132,7 @@ internal sealed partial class FrontendShellViewModel
 
             if (!_instanceComposition.Selection.HasSelection)
             {
-                return "当前下载页还没有选中实例，无法直接按实例兼容性筛选资源。";
+                return T("download.resource.current_instance.summary_none_selected");
             }
 
             var parts = new List<string>();
@@ -170,9 +147,23 @@ internal sealed partial class FrontendShellViewModel
                 parts.Add(loader);
             }
 
-            parts.Add("切换实例后，下载页会重新匹配兼容版本。");
+            parts.Add(T("download.resource.current_instance.summary_suffix"));
             return string.Join(" • ", parts);
         }
+    }
+
+    private string GetLocalizedDownloadResourceSurfaceName(LauncherFrontendSubpageKey route)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => T("download.resource.search.mod"),
+            LauncherFrontendSubpageKey.DownloadPack => T("download.resource.search.pack"),
+            LauncherFrontendSubpageKey.DownloadDataPack => T("download.resource.search.data_pack"),
+            LauncherFrontendSubpageKey.DownloadResourcePack => T("download.resource.search.resource_pack"),
+            LauncherFrontendSubpageKey.DownloadShader => T("download.resource.search.shader"),
+            LauncherFrontendSubpageKey.DownloadWorld => T("download.resource.search.world"),
+            _ => T("download.resource.search.default")
+        };
     }
 
     public bool ShowDownloadResourceCurrentInstanceCard => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack;
@@ -396,7 +387,7 @@ internal sealed partial class FrontendShellViewModel
             var totalCount = _downloadResourceTotalEntryCount > 0 ? _downloadResourceTotalEntryCount : loadedCount;
             var shownCount = Math.Min((_downloadResourcePageIndex + 1) * DownloadResourcePageSize, totalCount);
             var totalText = totalCount.ToString();
-            return $"Showing {shownCount} of {totalText} results";
+            return T("download.resource.results.summary", ("shown_count", shownCount), ("total_count", totalText));
         }
     }
 
@@ -404,7 +395,7 @@ internal sealed partial class FrontendShellViewModel
     {
         DownloadResourceSurfaceTitle = string.Empty;
         DownloadResourceLoadingText = string.Empty;
-        DownloadResourceEmptyStateText = "没有找到符合条件的资源条目。";
+        DownloadResourceEmptyStateText = T("download.resource.empty.default");
         DownloadResourceEmptyStateHintText = string.Empty;
         DownloadResourceHintText = string.Empty;
         ShowDownloadResourceHint = false;
@@ -414,6 +405,8 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceSupportsModrinth = true;
         _downloadResourceSourceOptions = [];
         _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
+        _downloadResourceSortOptions = BuildDownloadResourceSortOptions();
+        _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions();
         _downloadResourceLoaderOptions = BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
         _allDownloadResourceEntries = [];
         ReplaceItems(DownloadResourceEntries, []);
@@ -437,10 +430,11 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var (surfaceTitle, showInstallModPackAction, useShaderLoaderOptions) = GetDownloadResourceSurfaceDescriptor(_currentRoute.Subpage);
-        DownloadResourceSurfaceTitle = $"{surfaceTitle} 列表";
-        DownloadResourceLoadingText = $"正在获取{surfaceTitle}列表";
-        DownloadResourceEmptyStateText = $"没有找到符合条件的{surfaceTitle}条目。";
+        var (showInstallModPackAction, useShaderLoaderOptions) = GetDownloadResourceSurfaceDescriptor(_currentRoute.Subpage);
+        var surfaceTitle = GetLocalizedDownloadResourceSurfaceName(_currentRoute.Subpage);
+        DownloadResourceSurfaceTitle = T("download.resource.surface.title", ("surface_name", surfaceTitle));
+        DownloadResourceLoadingText = T("download.resource.surface.loading", ("surface_name", surfaceTitle));
+        DownloadResourceEmptyStateText = T("download.resource.surface.empty", ("surface_name", surfaceTitle));
         DownloadResourceEmptyStateHintText = string.Empty;
         DownloadResourceHintText = string.Empty;
         ShowDownloadResourceHint = false;
@@ -448,11 +442,12 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceSupportsModrinth = true;
         _downloadResourceSourceOptions =
         [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge"),
-            new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
+            CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+            CreateDownloadResourceFilterOption("CurseForge", "CurseForge"),
+            CreateDownloadResourceFilterOption("Modrinth", "Modrinth")
         ];
         _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
+        _downloadResourceSortOptions = BuildDownloadResourceSortOptions();
         _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions(
             ShouldAutoSyncDownloadResourceFiltersWithInstance()
                 ? ResolveSelectedDownloadResourceVersionFilter()
@@ -477,31 +472,32 @@ internal sealed partial class FrontendShellViewModel
         IReadOnlyList<DownloadResourceFilterOptionViewModel> tagOptions,
         IReadOnlyList<DownloadResourceEntryViewModel> entries)
     {
-        DownloadResourceSurfaceTitle = $"{surfaceTitle} 列表";
-        DownloadResourceLoadingText = $"正在获取{surfaceTitle}列表";
-        DownloadResourceEmptyStateText = $"没有找到符合条件的{surfaceTitle}条目。";
+        DownloadResourceSurfaceTitle = T("download.resource.surface.title", ("surface_name", surfaceTitle));
+        DownloadResourceLoadingText = T("download.resource.surface.loading", ("surface_name", surfaceTitle));
+        DownloadResourceEmptyStateText = T("download.resource.surface.empty", ("surface_name", surfaceTitle));
         DownloadResourceEmptyStateHintText = string.Empty;
-        DownloadResourceHintText = "无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。请稍后重试，或使用 VPN 以改善网络环境。";
+        DownloadResourceHintText = T("download.resource.hints.modrinth_unavailable");
         ShowDownloadResourceInstallModPackAction = showInstallModPackAction;
         _downloadResourceSupportsModrinth = supportsModrinth;
         _downloadResourceHasMoreEntries = false;
         _downloadResourceSourceOptions = supportsModrinth
             ? [
-                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge"),
-                new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
+                CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+                CreateDownloadResourceFilterOption("CurseForge", "CurseForge"),
+                CreateDownloadResourceFilterOption("Modrinth", "Modrinth")
             ]
             : [
-                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge")
+                CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+                CreateDownloadResourceFilterOption("CurseForge", "CurseForge")
             ];
         _downloadResourceTagOptions = tagOptions;
+        _downloadResourceSortOptions = BuildDownloadResourceSortOptions();
         _downloadResourceLoaderOptions = useShaderLoader
             ? [
-                new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-                new DownloadResourceFilterOptionViewModel("原版可用", "原版可用"),
-                new DownloadResourceFilterOptionViewModel("Iris", "Iris"),
-                new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine")
+                CreateDownloadResourceFilterOption(T("common.filters.any"), string.Empty),
+                CreateDownloadResourceFilterOption("vanilla_compatible", "vanilla_compatible"),
+                CreateDownloadResourceFilterOption("Iris", "Iris"),
+                CreateDownloadResourceFilterOption("OptiFine", "OptiFine")
             ]
             : BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
         _allDownloadResourceEntries = entries;
@@ -537,7 +533,9 @@ internal sealed partial class FrontendShellViewModel
         ResetDownloadResourceFilterState();
         RaiseDownloadResourceFilterState();
         ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
-        AddActivity("重置资源筛选", $"{DownloadResourceSurfaceTitle} 已恢复到默认筛选条件。");
+        AddActivity(
+            T("download.resource.activities.reset_filters"),
+            T("download.resource.activities.reset_filters_message", ("surface_title", DownloadResourceSurfaceTitle)));
     }
 
     private void SearchDownloadResource()
@@ -554,20 +552,20 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource) || _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack)
         {
-            AddActivity("安装整合包", "当前页面没有可安装的整合包。");
+            AddActivity(T("download.resource.activities.install_pack"), T("download.resource.install_pack.no_surface"));
             return;
         }
 
         var visibleEntry = DownloadResourceEntries.FirstOrDefault();
         if (visibleEntry is null)
         {
-            AddActivity("安装整合包", "当前筛选结果中没有可安装的整合包。");
+            AddActivity(T("download.resource.activities.install_pack"), T("download.resource.install_pack.no_filtered_result"));
             return;
         }
 
         if (!_downloadResourceRuntimeStates.TryGetValue(_currentRoute.Subpage, out var resourceState))
         {
-            AddActivity("安装整合包", "当前整合包列表尚未完成运行时组合。");
+            AddActivity(T("download.resource.activities.install_pack"), T("download.resource.install_pack.runtime_state_missing"));
             return;
         }
 
@@ -576,7 +574,7 @@ internal sealed partial class FrontendShellViewModel
             && string.Equals(entry.Source, visibleEntry.Source, StringComparison.Ordinal));
         if (sourceEntry is null || string.IsNullOrWhiteSpace(sourceEntry.TargetPath) || !Directory.Exists(sourceEntry.TargetPath))
         {
-            AddActivity("安装整合包", "当前置顶整合包缺少可复制的本地实例目录。");
+            AddActivity(T("download.resource.activities.install_pack"), T("download.resource.install_pack.target_missing"));
             return;
         }
 
@@ -602,11 +600,11 @@ internal sealed partial class FrontendShellViewModel
                 summaryPath,
                 string.Join(Environment.NewLine,
                 [
-                    $"时间: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
-                    $"来源整合包: {visibleEntry.Title}",
-                    $"源目录: {sourceEntry.TargetPath}",
-                    $"目标目录: {targetDirectory}",
-                    $"当前下载安装名: {DownloadInstallName}"
+                    $"Time: {DateTime.Now:yyyy/MM/dd HH:mm:ss}",
+                    $"Source modpack: {visibleEntry.Title}",
+                    $"Source directory: {sourceEntry.TargetPath}",
+                    $"Target directory: {targetDirectory}",
+                    $"Current install name: {DownloadInstallName}"
                 ]),
                 new UTF8Encoding(false));
 
@@ -614,11 +612,11 @@ internal sealed partial class FrontendShellViewModel
             InitializeDownloadInstallSurface();
             RefreshDownloadResourceSurface();
             RaisePropertyChanged(nameof(DownloadInstallName));
-            OpenInstanceTarget("安装整合包", targetDirectory, "新安装的整合包目录不存在。");
+            OpenInstanceTarget(T("download.resource.activities.install_pack"), targetDirectory, T("download.resource.install_pack.open_target_missing"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("安装整合包失败", ex.Message);
+            AddFailureActivity(T("download.resource.activities.install_pack_failed"), ex.Message);
         }
     }
 
@@ -876,7 +874,9 @@ internal sealed partial class FrontendShellViewModel
         var instanceComposition = _instanceComposition;
         var hasVisibleEntries = DownloadResourceEntries.Count > 0 || _allDownloadResourceEntries.Count > 0;
 
-        DownloadResourceLoadingText = $"正在获取{DownloadResourceSurfaceTitle.Replace(" 列表", string.Empty)}列表";
+        DownloadResourceLoadingText = T(
+            "download.resource.surface.loading",
+            ("surface_name", GetLocalizedDownloadResourceSurfaceName(route)));
         SetDownloadResourceLoading(!hasVisibleEntries);
         if (resetPage)
         {
@@ -949,9 +949,9 @@ internal sealed partial class FrontendShellViewModel
                 }
 
                 _downloadResourceRuntimeStates.Remove(route);
-                DownloadResourceHintText = $"实时社区搜索失败：{ex.Message}";
+                DownloadResourceHintText = T("download.resource.hints.search_failed", ("message", ex.Message));
                 ShowDownloadResourceHint = true;
-                DownloadResourceEmptyStateHintText = "请稍后重试，或调整来源筛选。";
+                DownloadResourceEmptyStateHintText = T("download.resource.hints.retry_later");
                 SetDownloadResourceLoading(false);
             });
         }
@@ -1000,20 +1000,20 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
         _downloadResourceHasMoreEntries = result.State.HasMoreEntries;
         _downloadResourceTotalEntryCount = result.State.TotalEntryCount;
-        DownloadResourceHintText = result.State.HintText;
+        DownloadResourceHintText = LocalizeDownloadResourceHintText(result.State.HintText);
         // Keep the loading card copy stable until it has fully transitioned out.
         DownloadResourceEmptyStateHintText = string.Empty;
-        ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(result.State.HintText);
+        ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(DownloadResourceHintText);
 
         _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(result.State, selectedSource);
         _downloadResourceTagOptions = MergeFilterOptions(
             BuildFallbackDownloadResourceTagOptions(),
-            result.State.TagOptions.Select(option => new DownloadResourceFilterOptionViewModel(option.Label, option.FilterValue)),
+            result.State.TagOptions.Select(option => CreateDownloadResourceFilterOption(option.Label, option.FilterValue)),
             selectedTag);
         _downloadResourceVersionOptions =
             MergeFilterOptions(
-                [new DownloadResourceFilterOptionViewModel("任意", string.Empty)],
-                result.VersionOptions.Select(version => new DownloadResourceFilterOptionViewModel(version, version)),
+                [CreateDownloadResourceFilterOption(T("common.filters.any"), string.Empty)],
+                result.VersionOptions.Select(version => CreateDownloadResourceFilterOption(version, version)),
                 selectedVersion);
 
         _selectedDownloadResourceSourceIndex = FindFilterOptionIndex(DownloadResourceSourceOptions, selectedSource);
@@ -1054,26 +1054,39 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowDownloadResourceContent));
     }
 
-    private static (string SurfaceTitle, bool ShowInstallModPackAction, bool UseShaderLoaderOptions) GetDownloadResourceSurfaceDescriptor(
+    private static (bool ShowInstallModPackAction, bool UseShaderLoaderOptions) GetDownloadResourceSurfaceDescriptor(
         LauncherFrontendSubpageKey route)
     {
         return route switch
         {
-            LauncherFrontendSubpageKey.DownloadMod => ("Mod", false, false),
-            LauncherFrontendSubpageKey.DownloadPack => ("整合包", true, false),
-            LauncherFrontendSubpageKey.DownloadDataPack => ("数据包", false, false),
-            LauncherFrontendSubpageKey.DownloadResourcePack => ("资源包", false, false),
-            LauncherFrontendSubpageKey.DownloadShader => ("光影包", false, true),
-            LauncherFrontendSubpageKey.DownloadWorld => ("世界", false, false),
-            _ => ("资源", false, false)
+            LauncherFrontendSubpageKey.DownloadMod => (false, false),
+            LauncherFrontendSubpageKey.DownloadPack => (true, false),
+            LauncherFrontendSubpageKey.DownloadDataPack => (false, false),
+            LauncherFrontendSubpageKey.DownloadResourcePack => (false, false),
+            LauncherFrontendSubpageKey.DownloadShader => (false, true),
+            LauncherFrontendSubpageKey.DownloadWorld => (false, false),
+            _ => (false, false)
         };
     }
 
-    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultDownloadResourceVersionOptions(string? preferredVersion = null)
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDownloadResourceSortOptions()
+    {
+        return
+        [
+            new DownloadResourceFilterOptionViewModel(T("download.resource.sort.default"), string.Empty),
+            new DownloadResourceFilterOptionViewModel(T("download.resource.sort.relevance"), "relevance"),
+            new DownloadResourceFilterOptionViewModel(T("download.resource.sort.downloads"), "downloads"),
+            new DownloadResourceFilterOptionViewModel(T("download.resource.sort.follows"), "follows"),
+            new DownloadResourceFilterOptionViewModel(T("download.resource.sort.release"), "release"),
+            new DownloadResourceFilterOptionViewModel(T("download.resource.sort.update"), "update")
+        ];
+    }
+
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultDownloadResourceVersionOptions(string? preferredVersion = null)
     {
         return MergeFilterOptions(
             [
-            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
+            new DownloadResourceFilterOptionViewModel(T("common.filters.any"), string.Empty),
             new DownloadResourceFilterOptionViewModel("26.1.1", "26.1.1"),
             new DownloadResourceFilterOptionViewModel("26.1", "26.1"),
             new DownloadResourceFilterOptionViewModel("1.21.11", "1.21.11"),
@@ -1093,30 +1106,30 @@ internal sealed partial class FrontendShellViewModel
             preferredVersion);
     }
 
-    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions()
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions()
     {
         return BuildDefaultResourceLoaderOptions(hideQuiltLoader: false);
     }
 
-    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions(bool hideQuiltLoader)
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultResourceLoaderOptions(bool hideQuiltLoader)
     {
         var visibleLoaders = FrontendLoaderVisibilityService.FilterVisibleLoaders(
             ["Forge", "NeoForge", "Fabric", "Quilt"],
             hideQuiltLoader);
         return
         [
-            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-            .. visibleLoaders.Select(loader => new DownloadResourceFilterOptionViewModel(loader, loader))
+            CreateDownloadResourceFilterOption(T("common.filters.any"), string.Empty),
+            .. visibleLoaders.Select(loader => CreateDownloadResourceFilterOption(loader, loader))
         ];
     }
 
-    private static IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultShaderLoaderOptions()
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildDefaultShaderLoaderOptions()
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("任意", string.Empty),
-            new DownloadResourceFilterOptionViewModel("OptiFine", "OptiFine"),
-            new DownloadResourceFilterOptionViewModel("Iris", "Iris")
+            CreateDownloadResourceFilterOption(T("common.filters.any"), string.Empty),
+            CreateDownloadResourceFilterOption("OptiFine", "OptiFine"),
+            CreateDownloadResourceFilterOption("Iris", "Iris")
         ];
     }
 
@@ -1397,13 +1410,13 @@ internal sealed partial class FrontendShellViewModel
             ?? "CurseForge";
         IReadOnlyList<DownloadResourceFilterOptionViewModel> baseOptions = runtimeState.SupportsSecondarySource
             ? [
-                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                new DownloadResourceFilterOptionViewModel("CurseForge", "CurseForge"),
-                new DownloadResourceFilterOptionViewModel("Modrinth", "Modrinth")
+                CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+                CreateDownloadResourceFilterOption("CurseForge", "CurseForge"),
+                CreateDownloadResourceFilterOption("Modrinth", "Modrinth")
             ]
             : [
-                new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-                new DownloadResourceFilterOptionViewModel(primarySource, primarySource)
+                CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+                CreateDownloadResourceFilterOption(primarySource, primarySource)
             ];
 
         return MergeFilterOptions(baseOptions, [], selectedSource);
@@ -1428,18 +1441,27 @@ internal sealed partial class FrontendShellViewModel
                     entry.Version,
                     entry.Loader,
                     entry.Tags,
+                    entry.Tags.Select(LocalizeDownloadResourceTag).ToArray(),
                     entry.SupportedVersions,
                     entry.SupportedLoaders,
                     entry.DownloadCount,
                     entry.FollowCount,
                     entry.ReleaseRank,
                     entry.UpdateRank,
-                    entry.ActionText,
+                    FormatDownloadResourceVersionLabel(entry.Version),
+                    FormatDownloadResourceDownloadCountLabel(entry.DownloadCount),
+                    FormatDownloadResourceUpdatedLabel(entry.UpdateRank, entry.ReleaseRank),
+                    LocalizeDownloadResourceActionText(entry.ActionText),
                     string.IsNullOrWhiteSpace(entry.TargetPath)
-                        ? new ActionCommand(() => AddActivity($"下载资源操作: {entry.Title}", $"{entry.Info} • {entry.Source}"))
+                        ? new ActionCommand(() => AddActivity(
+                            T("download.resource.activities.entry_action", ("entry_title", entry.Title)),
+                            BuildActivityDetail(entry.Info, entry.Source)))
                         : FrontendCommunityProjectService.TryParseCompDetailTarget(entry.TargetPath, out var projectId)
                             ? new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title, entry.Version, entry.Loader, _currentRoute.Subpage))
-                            : CreateOpenTargetCommand($"打开资源页面: {entry.Title}", entry.TargetPath, entry.TargetPath),
+                            : CreateOpenTargetCommand(
+                                T("download.resource.activities.open_page", ("entry_title", entry.Title)),
+                                entry.TargetPath,
+                                entry.TargetPath),
                     entry.IconUrl);
             })
             .ToArray();
@@ -1485,6 +1507,254 @@ internal sealed partial class FrontendShellViewModel
         return index >= 0 && index < options.Count ? options[index].FilterValue : string.Empty;
     }
 
+    private DownloadResourceFilterOptionViewModel CreateDownloadResourceFilterOption(string label, string filterValue, bool isHeader = false)
+    {
+        return new DownloadResourceFilterOptionViewModel(
+            isHeader ? LocalizeDownloadResourceTagGroup(label) : LocalizeDownloadResourceTag(label),
+            filterValue,
+            isHeader);
+    }
+
+    private string LocalizeDownloadResourceActionText(string actionText)
+    {
+        return actionText switch
+        {
+            "view_details" => T("resource_detail.actions.view_details"),
+            _ => actionText
+        };
+    }
+
+    private string LocalizeDownloadResourceHintText(string hintText)
+    {
+        if (string.IsNullOrWhiteSpace(hintText))
+        {
+            return string.Empty;
+        }
+
+        var lines = hintText
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(line =>
+            {
+                if (line.StartsWith("version_fallback|", StringComparison.Ordinal))
+                {
+                    var parts = line.Split('|', 3);
+                    if (parts.Length == 3)
+                    {
+                        return T(
+                            "download.resource.hints.version_fallback",
+                            ("version", parts[1]),
+                            ("surface_name", LocalizeDownloadResourceSurfaceName(parts[2])));
+                    }
+                }
+
+                if (line.StartsWith("partial_results|", StringComparison.Ordinal))
+                {
+                    return T(
+                        "download.resource.hints.partial_results",
+                        ("message", line["partial_results|".Length..].Trim()));
+                }
+
+                if (line.StartsWith("unavailable|", StringComparison.Ordinal))
+                {
+                    return T(
+                        "download.resource.hints.unavailable",
+                        ("message", line["unavailable|".Length..].Trim()));
+                }
+
+                return line;
+            })
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToArray();
+
+        return string.Join(" ", lines);
+    }
+
+    private string LocalizeDownloadResourceSurfaceName(string surfaceId)
+    {
+        return surfaceId switch
+        {
+            "mod" => T("download.resource.search.mod"),
+            "pack" => T("download.resource.search.pack"),
+            "resource_pack" => T("download.resource.search.resource_pack"),
+            "shader" => T("download.resource.search.shader"),
+            "world" => T("download.resource.search.world"),
+            _ => surfaceId
+        };
+    }
+
+    private string FormatDownloadResourceVersionLabel(string version)
+    {
+        return string.IsNullOrWhiteSpace(version)
+            ? T("download.resource.entry.version_unknown")
+            : version;
+    }
+
+    private string FormatDownloadResourceDownloadCountLabel(int downloadCount)
+    {
+        if (downloadCount <= 0)
+        {
+            return T("download.resource.entry.downloads_none");
+        }
+
+        return T(
+            "download.resource.entry.downloads_with_count",
+            ("count", FormatDownloadResourceCompactCount(downloadCount)));
+    }
+
+    private string FormatDownloadResourceUpdatedLabel(int updateRank, int releaseRank)
+    {
+        var rank = updateRank > 0 ? updateRank : releaseRank;
+        if (rank <= 0)
+        {
+            return T("download.resource.entry.updated_unknown");
+        }
+
+        try
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(rank).LocalDateTime.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture);
+        }
+        catch
+        {
+            return T("download.resource.entry.updated_unknown");
+        }
+    }
+
+    private string FormatDownloadResourceCompactCount(int value)
+    {
+        if (string.Equals(T("download.resource.entry.count_style"), "east_asian", StringComparison.OrdinalIgnoreCase))
+        {
+        return value switch
+        {
+            >= 100_000_000 => $"{value / 100_000_000d:0.#}\u4EBF",
+            >= 10_000 => $"{value / 10_000d:0.#}\u4E07",
+            _ => value.ToString("N0", CultureInfo.InvariantCulture)
+        };
+        }
+
+        return value switch
+        {
+            >= 1_000_000_000 => $"{value / 1_000_000_000d:0.#}B",
+            >= 1_000_000 => $"{value / 1_000_000d:0.#}M",
+            >= 1_000 => $"{value / 1_000d:0.#}K",
+            _ => value.ToString("N0", CultureInfo.InvariantCulture)
+        };
+    }
+
+    private string LocalizeDownloadResourceTagGroup(string label)
+    {
+        return label switch
+        {
+            "style" => T("download.resource.tag_groups.style"),
+            "features" => T("download.resource.tag_groups.features"),
+            "resolution" => T("download.resource.tag_groups.resolution"),
+            "performance" => T("download.resource.tag_groups.performance"),
+            _ => label
+        };
+    }
+
+    private string LocalizeDownloadResourceTag(string tag)
+    {
+        return tag switch
+        {
+            "all" => T("common.filters.all"),
+            "CurseForge" => "CurseForge",
+            "Modrinth" => "Modrinth",
+            "Iris" => "Iris",
+            "OptiFine" => "OptiFine",
+            "FTB" => "FTB",
+            "PBR" => "PBR",
+            "mod" => T("download.resource.search.mod"),
+            "pack" => T("download.resource.search.pack"),
+            "resource_pack" => T("download.resource.search.resource_pack"),
+            "shader" => T("download.resource.search.shader"),
+            "world" => T("download.resource.search.world"),
+            "worldgen" => T("download.resource.tags.worldgen"),
+            "biomes" => T("download.resource.tags.biomes"),
+            "dimensions" => T("download.resource.tags.dimensions"),
+            "ores_resources" => T("download.resource.tags.ores_resources"),
+            "structures" => T("download.resource.tags.structures"),
+            "technology" => T("download.resource.tags.technology"),
+            "logistics" => T("download.resource.tags.logistics"),
+            "automation" => T("download.resource.tags.automation"),
+            "energy" => T("download.resource.tags.energy"),
+            "redstone" => T("download.resource.tags.redstone"),
+            "food_cooking" => T("download.resource.tags.food_cooking"),
+            "farming" => T("download.resource.tags.farming"),
+            "game_mechanics" => T("download.resource.tags.game_mechanics"),
+            "transportation" => T("download.resource.tags.transportation"),
+            "storage" => T("download.resource.tags.storage"),
+            "magic" => T("download.resource.tags.magic"),
+            "adventure" => T("download.resource.tags.adventure"),
+            "decoration" => T("download.resource.tags.decoration"),
+            "mobs" => T("download.resource.tags.mobs"),
+            "utility" => T("download.resource.tags.utility"),
+            "equipment_tools" => T("download.resource.tags.equipment_tools"),
+            "creative_mode" => T("download.resource.tags.creative_mode"),
+            "performance" => T("download.resource.tags.performance"),
+            "information" => T("download.resource.tags.information"),
+            "multiplayer" => T("download.resource.tags.multiplayer"),
+            "library" => T("download.resource.tags.library"),
+            "hardcore" => T("download.resource.tags.hardcore"),
+            "combat" => T("download.resource.tags.combat"),
+            "quests" => T("download.resource.tags.quests"),
+            "kitchen_sink" => T("download.resource.tags.kitchen_sink"),
+            "exploration" => T("download.resource.tags.exploration"),
+            "minigames" => T("download.resource.tags.minigames"),
+            "scifi" => T("download.resource.tags.scifi"),
+            "skyblock" => T("download.resource.tags.skyblock"),
+            "vanilla_plus" => T("download.resource.tags.vanilla_plus"),
+            "map_based" => T("download.resource.tags.map_based"),
+            "lightweight" => T("download.resource.tags.lightweight"),
+            "large" => T("download.resource.tags.large"),
+            "fantasy" => T("download.resource.tags.fantasy"),
+            "modded" => T("download.resource.tags.modded"),
+            "vanilla_style" => T("download.resource.tags.vanilla_style"),
+            "realistic" => T("download.resource.tags.realistic"),
+            "modern" => T("download.resource.tags.modern"),
+            "medieval" => T("download.resource.tags.medieval"),
+            "steampunk" => T("download.resource.tags.steampunk"),
+            "themed" => T("download.resource.tags.themed"),
+            "simple" => T("download.resource.tags.simple"),
+            "tweaks" => T("download.resource.tags.tweaks"),
+            "chaotic" => T("download.resource.tags.chaotic"),
+            "entities" => T("download.resource.tags.entities"),
+            "audio" => T("download.resource.tags.audio"),
+            "fonts" => T("download.resource.tags.fonts"),
+            "models" => T("download.resource.tags.models"),
+            "locale" => T("download.resource.tags.locale"),
+            "gui" => T("download.resource.tags.gui"),
+            "core_shaders" => T("download.resource.tags.core_shaders"),
+            "dynamic_effects" => T("download.resource.tags.dynamic_effects"),
+            "mod_compatible" => T("download.resource.tags.mod_compatible"),
+            "resolution_8x" => T("download.resource.tags.resolution_8x"),
+            "16x" => T("download.resource.tags.resolution_16x"),
+            "32x" => T("download.resource.tags.resolution_32x"),
+            "48x" => T("download.resource.tags.resolution_48x"),
+            "64x" => T("download.resource.tags.resolution_64x"),
+            "128x" => T("download.resource.tags.resolution_128x"),
+            "256x" => T("download.resource.tags.resolution_256x"),
+            "resolution_512x" => T("download.resource.tags.resolution_512x"),
+            "fantasy_style" => T("download.resource.tags.fantasy_style"),
+            "semi_realistic" => T("download.resource.tags.semi_realistic"),
+            "cartoon" => T("download.resource.tags.cartoon"),
+            "colored_lighting" => T("download.resource.tags.colored_lighting"),
+            "path_tracing" => T("download.resource.tags.path_tracing"),
+            "reflections" => T("download.resource.tags.reflections"),
+            "performance_very_low" => T("download.resource.tags.performance_very_low"),
+            "performance_low" => T("download.resource.tags.performance_low"),
+            "performance_medium" => T("download.resource.tags.performance_medium"),
+            "performance_high" => T("download.resource.tags.performance_high"),
+            "creative" => T("download.resource.tags.creative"),
+            "parkour" => T("download.resource.tags.parkour"),
+            "puzzle" => T("download.resource.tags.puzzle"),
+            "survival" => T("download.resource.tags.survival"),
+            "mod_world" => T("download.resource.tags.mod_world"),
+            "vanilla_compatible" => T("download.resource.tags.vanilla_compatible"),
+            "data_pack" => T("download.resource.tags.data_pack"),
+            _ => tag
+        };
+    }
+
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> BuildFallbackDownloadResourceTagOptions()
     {
         return _currentRoute.Subpage switch
@@ -1495,7 +1765,7 @@ internal sealed partial class FrontendShellViewModel
             LauncherFrontendSubpageKey.DownloadResourcePack => BuildResourcePackTagOptions(),
             LauncherFrontendSubpageKey.DownloadShader => BuildShaderTagOptions(),
             LauncherFrontendSubpageKey.DownloadWorld => BuildWorldTagOptions(),
-            _ => [new DownloadResourceFilterOptionViewModel("全部", string.Empty)]
+            _ => [CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty)]
         };
     }
 
@@ -1503,33 +1773,33 @@ internal sealed partial class FrontendShellViewModel
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel("世界元素", "世界元素"),
-            new DownloadResourceFilterOptionViewModel("生物群系", "生物群系"),
-            new DownloadResourceFilterOptionViewModel("维度", "维度"),
-            new DownloadResourceFilterOptionViewModel("矿物与资源", "矿物与资源"),
-            new DownloadResourceFilterOptionViewModel("天然结构", "天然结构"),
-            new DownloadResourceFilterOptionViewModel("科技", "科技"),
-            new DownloadResourceFilterOptionViewModel("管道与物流", "管道与物流"),
-            new DownloadResourceFilterOptionViewModel("自动化", "自动化"),
-            new DownloadResourceFilterOptionViewModel("能源", "能源"),
-            new DownloadResourceFilterOptionViewModel("红石", "红石"),
-            new DownloadResourceFilterOptionViewModel("食物与烹饪", "食物与烹饪"),
-            new DownloadResourceFilterOptionViewModel("农业", "农业"),
-            new DownloadResourceFilterOptionViewModel("游戏机制", "游戏机制"),
-            new DownloadResourceFilterOptionViewModel("运输", "运输"),
-            new DownloadResourceFilterOptionViewModel("仓储", "仓储"),
-            new DownloadResourceFilterOptionViewModel("魔法", "魔法"),
-            new DownloadResourceFilterOptionViewModel("冒险", "冒险"),
-            new DownloadResourceFilterOptionViewModel("装饰", "装饰"),
-            new DownloadResourceFilterOptionViewModel("生物", "生物"),
-            new DownloadResourceFilterOptionViewModel("实用", "实用"),
-            new DownloadResourceFilterOptionViewModel("装备与工具", "装备与工具"),
-            new DownloadResourceFilterOptionViewModel("创造模式", "创造模式"),
-            new DownloadResourceFilterOptionViewModel("性能优化", "性能优化"),
-            new DownloadResourceFilterOptionViewModel("信息显示", "信息显示"),
-            new DownloadResourceFilterOptionViewModel("服务器", "服务器"),
-            new DownloadResourceFilterOptionViewModel("支持库", "支持库")
+            CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+            CreateDownloadResourceFilterOption("worldgen", "worldgen"),
+            CreateDownloadResourceFilterOption("biomes", "biomes"),
+            CreateDownloadResourceFilterOption("dimensions", "dimensions"),
+            CreateDownloadResourceFilterOption("ores_resources", "ores_resources"),
+            CreateDownloadResourceFilterOption("structures", "structures"),
+            CreateDownloadResourceFilterOption("technology", "technology"),
+            CreateDownloadResourceFilterOption("logistics", "logistics"),
+            CreateDownloadResourceFilterOption("automation", "automation"),
+            CreateDownloadResourceFilterOption("energy", "energy"),
+            CreateDownloadResourceFilterOption("redstone", "redstone"),
+            CreateDownloadResourceFilterOption("food_cooking", "food_cooking"),
+            CreateDownloadResourceFilterOption("farming", "farming"),
+            CreateDownloadResourceFilterOption("game_mechanics", "game_mechanics"),
+            CreateDownloadResourceFilterOption("transportation", "transportation"),
+            CreateDownloadResourceFilterOption("storage", "storage"),
+            CreateDownloadResourceFilterOption("magic", "magic"),
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("decoration", "decoration"),
+            CreateDownloadResourceFilterOption("mobs", "mobs"),
+            CreateDownloadResourceFilterOption("utility", "utility"),
+            CreateDownloadResourceFilterOption("equipment_tools", "equipment_tools"),
+            CreateDownloadResourceFilterOption("creative_mode", "creative_mode"),
+            CreateDownloadResourceFilterOption("performance", "performance"),
+            CreateDownloadResourceFilterOption("information", "information"),
+            CreateDownloadResourceFilterOption("multiplayer", "multiplayer"),
+            CreateDownloadResourceFilterOption("library", "library")
         ];
     }
 
@@ -1537,25 +1807,25 @@ internal sealed partial class FrontendShellViewModel
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel("多人", "多人"),
-            new DownloadResourceFilterOptionViewModel("性能优化", "性能优化"),
-            new DownloadResourceFilterOptionViewModel("硬核", "硬核"),
-            new DownloadResourceFilterOptionViewModel("战斗", "战斗"),
-            new DownloadResourceFilterOptionViewModel("任务", "任务"),
-            new DownloadResourceFilterOptionViewModel("科技", "科技"),
-            new DownloadResourceFilterOptionViewModel("魔法", "魔法"),
-            new DownloadResourceFilterOptionViewModel("冒险", "冒险"),
-            new DownloadResourceFilterOptionViewModel("水槽包", "水槽包"),
-            new DownloadResourceFilterOptionViewModel("探索", "探索"),
-            new DownloadResourceFilterOptionViewModel("小游戏", "小游戏"),
-            new DownloadResourceFilterOptionViewModel("科幻", "科幻"),
-            new DownloadResourceFilterOptionViewModel("空岛", "空岛"),
-            new DownloadResourceFilterOptionViewModel("原版改良", "原版改良"),
-            new DownloadResourceFilterOptionViewModel("FTB", "FTB"),
-            new DownloadResourceFilterOptionViewModel("基于地图", "基于地图"),
-            new DownloadResourceFilterOptionViewModel("轻量整合", "轻量整合"),
-            new DownloadResourceFilterOptionViewModel("大型整合", "大型整合")
+            CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+            CreateDownloadResourceFilterOption("multiplayer", "multiplayer"),
+            CreateDownloadResourceFilterOption("performance", "performance"),
+            CreateDownloadResourceFilterOption("hardcore", "hardcore"),
+            CreateDownloadResourceFilterOption("combat", "combat"),
+            CreateDownloadResourceFilterOption("quests", "quests"),
+            CreateDownloadResourceFilterOption("technology", "technology"),
+            CreateDownloadResourceFilterOption("magic", "magic"),
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("kitchen_sink", "kitchen_sink"),
+            CreateDownloadResourceFilterOption("exploration", "exploration"),
+            CreateDownloadResourceFilterOption("minigames", "minigames"),
+            CreateDownloadResourceFilterOption("scifi", "scifi"),
+            CreateDownloadResourceFilterOption("skyblock", "skyblock"),
+            CreateDownloadResourceFilterOption("vanilla_plus", "vanilla_plus"),
+            CreateDownloadResourceFilterOption("FTB", "FTB"),
+            CreateDownloadResourceFilterOption("map_based", "map_based"),
+            CreateDownloadResourceFilterOption("lightweight", "lightweight"),
+            CreateDownloadResourceFilterOption("large", "large")
         ];
     }
 
@@ -1563,23 +1833,23 @@ internal sealed partial class FrontendShellViewModel
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel("世界元素", "世界元素"),
-            new DownloadResourceFilterOptionViewModel("科技", "科技"),
-            new DownloadResourceFilterOptionViewModel("游戏机制", "游戏机制"),
-            new DownloadResourceFilterOptionViewModel("运输", "运输"),
-            new DownloadResourceFilterOptionViewModel("仓储", "仓储"),
-            new DownloadResourceFilterOptionViewModel("魔法", "魔法"),
-            new DownloadResourceFilterOptionViewModel("冒险", "冒险"),
-            new DownloadResourceFilterOptionViewModel("幻想", "幻想"),
-            new DownloadResourceFilterOptionViewModel("装饰", "装饰"),
-            new DownloadResourceFilterOptionViewModel("生物", "生物"),
-            new DownloadResourceFilterOptionViewModel("实用", "实用"),
-            new DownloadResourceFilterOptionViewModel("装备与工具", "装备与工具"),
-            new DownloadResourceFilterOptionViewModel("性能优化", "性能优化"),
-            new DownloadResourceFilterOptionViewModel("服务器", "服务器"),
-            new DownloadResourceFilterOptionViewModel("支持库", "支持库"),
-            new DownloadResourceFilterOptionViewModel("Mod 相关", "Mod 相关")
+            CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+            CreateDownloadResourceFilterOption("worldgen", "worldgen"),
+            CreateDownloadResourceFilterOption("technology", "technology"),
+            CreateDownloadResourceFilterOption("game_mechanics", "game_mechanics"),
+            CreateDownloadResourceFilterOption("transportation", "transportation"),
+            CreateDownloadResourceFilterOption("storage", "storage"),
+            CreateDownloadResourceFilterOption("magic", "magic"),
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("fantasy", "fantasy"),
+            CreateDownloadResourceFilterOption("decoration", "decoration"),
+            CreateDownloadResourceFilterOption("mobs", "mobs"),
+            CreateDownloadResourceFilterOption("utility", "utility"),
+            CreateDownloadResourceFilterOption("equipment_tools", "equipment_tools"),
+            CreateDownloadResourceFilterOption("performance", "performance"),
+            CreateDownloadResourceFilterOption("multiplayer", "multiplayer"),
+            CreateDownloadResourceFilterOption("library", "library"),
+            CreateDownloadResourceFilterOption("modded", "modded")
         ];
     }
 
@@ -1587,39 +1857,39 @@ internal sealed partial class FrontendShellViewModel
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel("风格", string.Empty, isHeader: true),
-            new DownloadResourceFilterOptionViewModel("原版风", "原版风"),
-            new DownloadResourceFilterOptionViewModel("写实风", "写实风"),
-            new DownloadResourceFilterOptionViewModel("现代风", "现代风"),
-            new DownloadResourceFilterOptionViewModel("中世纪", "中世纪"),
-            new DownloadResourceFilterOptionViewModel("蒸汽朋克", "蒸汽朋克"),
-            new DownloadResourceFilterOptionViewModel("主题化", "主题化"),
-            new DownloadResourceFilterOptionViewModel("简洁", "简洁"),
-            new DownloadResourceFilterOptionViewModel("装饰", "装饰"),
-            new DownloadResourceFilterOptionViewModel("战斗", "战斗"),
-            new DownloadResourceFilterOptionViewModel("实用", "实用"),
-            new DownloadResourceFilterOptionViewModel("改良", "改良"),
-            new DownloadResourceFilterOptionViewModel("鬼畜", "鬼畜"),
-            new DownloadResourceFilterOptionViewModel("特性", string.Empty, isHeader: true),
-            new DownloadResourceFilterOptionViewModel("含实体", "含实体"),
-            new DownloadResourceFilterOptionViewModel("含声音", "含声音"),
-            new DownloadResourceFilterOptionViewModel("含字体", "含字体"),
-            new DownloadResourceFilterOptionViewModel("含模型", "含模型"),
-            new DownloadResourceFilterOptionViewModel("含语言", "含语言"),
-            new DownloadResourceFilterOptionViewModel("含 UI", "含 UI"),
-            new DownloadResourceFilterOptionViewModel("核心着色器", "核心着色器"),
-            new DownloadResourceFilterOptionViewModel("动态效果", "动态效果"),
-            new DownloadResourceFilterOptionViewModel("兼容 Mod", "兼容 Mod"),
-            new DownloadResourceFilterOptionViewModel("分辨率", string.Empty, isHeader: true),
-            new DownloadResourceFilterOptionViewModel("8x 或更低", "8x 或更低"),
-            new DownloadResourceFilterOptionViewModel("16x", "16x"),
-            new DownloadResourceFilterOptionViewModel("32x", "32x"),
-            new DownloadResourceFilterOptionViewModel("48x", "48x"),
-            new DownloadResourceFilterOptionViewModel("64x", "64x"),
-            new DownloadResourceFilterOptionViewModel("128x", "128x"),
-            new DownloadResourceFilterOptionViewModel("256x", "256x"),
-            new DownloadResourceFilterOptionViewModel("512x 或更高", "512x 或更高")
+            CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+            CreateDownloadResourceFilterOption("style", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("vanilla_style", "vanilla_style"),
+            CreateDownloadResourceFilterOption("realistic", "realistic"),
+            CreateDownloadResourceFilterOption("modern", "modern"),
+            CreateDownloadResourceFilterOption("medieval", "medieval"),
+            CreateDownloadResourceFilterOption("steampunk", "steampunk"),
+            CreateDownloadResourceFilterOption("themed", "themed"),
+            CreateDownloadResourceFilterOption("simple", "simple"),
+            CreateDownloadResourceFilterOption("decoration", "decoration"),
+            CreateDownloadResourceFilterOption("combat", "combat"),
+            CreateDownloadResourceFilterOption("utility", "utility"),
+            CreateDownloadResourceFilterOption("tweaks", "tweaks"),
+            CreateDownloadResourceFilterOption("chaotic", "chaotic"),
+            CreateDownloadResourceFilterOption("features", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("entities", "entities"),
+            CreateDownloadResourceFilterOption("audio", "audio"),
+            CreateDownloadResourceFilterOption("fonts", "fonts"),
+            CreateDownloadResourceFilterOption("models", "models"),
+            CreateDownloadResourceFilterOption("locale", "locale"),
+            CreateDownloadResourceFilterOption("gui", "gui"),
+            CreateDownloadResourceFilterOption("core_shaders", "core_shaders"),
+            CreateDownloadResourceFilterOption("dynamic_effects", "dynamic_effects"),
+            CreateDownloadResourceFilterOption("mod_compatible", "mod_compatible"),
+            CreateDownloadResourceFilterOption("resolution", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("resolution_8x", "resolution_8x"),
+            CreateDownloadResourceFilterOption("16x", "16x"),
+            CreateDownloadResourceFilterOption("32x", "32x"),
+            CreateDownloadResourceFilterOption("48x", "48x"),
+            CreateDownloadResourceFilterOption("64x", "64x"),
+            CreateDownloadResourceFilterOption("128x", "128x"),
+            CreateDownloadResourceFilterOption("256x", "256x"),
+            CreateDownloadResourceFilterOption("resolution_512x", "resolution_512x")
         ];
     }
 
@@ -1627,23 +1897,23 @@ internal sealed partial class FrontendShellViewModel
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel("风格", string.Empty, isHeader: true),
-            new DownloadResourceFilterOptionViewModel("原版风", "原版风"),
-            new DownloadResourceFilterOptionViewModel("幻想风", "幻想风"),
-            new DownloadResourceFilterOptionViewModel("写实风", "写实风"),
-            new DownloadResourceFilterOptionViewModel("半写实风", "半写实风"),
-            new DownloadResourceFilterOptionViewModel("卡通风", "卡通风"),
-            new DownloadResourceFilterOptionViewModel("特性", string.Empty, isHeader: true),
-            new DownloadResourceFilterOptionViewModel("彩色光照", "彩色光照"),
-            new DownloadResourceFilterOptionViewModel("路径追踪", "路径追踪"),
-            new DownloadResourceFilterOptionViewModel("PBR", "PBR"),
-            new DownloadResourceFilterOptionViewModel("反射", "反射"),
-            new DownloadResourceFilterOptionViewModel("性能负荷", string.Empty, isHeader: true),
-            new DownloadResourceFilterOptionViewModel("极低", "极低"),
-            new DownloadResourceFilterOptionViewModel("低", "低"),
-            new DownloadResourceFilterOptionViewModel("中", "中"),
-            new DownloadResourceFilterOptionViewModel("高", "高")
+            CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+            CreateDownloadResourceFilterOption("style", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("vanilla_style", "vanilla_style"),
+            CreateDownloadResourceFilterOption("fantasy_style", "fantasy_style"),
+            CreateDownloadResourceFilterOption("realistic", "realistic"),
+            CreateDownloadResourceFilterOption("semi_realistic", "semi_realistic"),
+            CreateDownloadResourceFilterOption("cartoon", "cartoon"),
+            CreateDownloadResourceFilterOption("features", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("colored_lighting", "colored_lighting"),
+            CreateDownloadResourceFilterOption("path_tracing", "path_tracing"),
+            CreateDownloadResourceFilterOption("PBR", "PBR"),
+            CreateDownloadResourceFilterOption("reflections", "reflections"),
+            CreateDownloadResourceFilterOption("performance", string.Empty, isHeader: true),
+            CreateDownloadResourceFilterOption("performance_very_low", "performance_very_low"),
+            CreateDownloadResourceFilterOption("performance_low", "performance_low"),
+            CreateDownloadResourceFilterOption("performance_medium", "performance_medium"),
+            CreateDownloadResourceFilterOption("performance_high", "performance_high")
         ];
     }
 
@@ -1651,14 +1921,14 @@ internal sealed partial class FrontendShellViewModel
     {
         return
         [
-            new DownloadResourceFilterOptionViewModel("全部", string.Empty),
-            new DownloadResourceFilterOptionViewModel("冒险", "冒险"),
-            new DownloadResourceFilterOptionViewModel("创造", "创造"),
-            new DownloadResourceFilterOptionViewModel("小游戏", "小游戏"),
-            new DownloadResourceFilterOptionViewModel("跑酷", "跑酷"),
-            new DownloadResourceFilterOptionViewModel("解谜", "解谜"),
-            new DownloadResourceFilterOptionViewModel("生存", "生存"),
-            new DownloadResourceFilterOptionViewModel("Mod 世界", "Mod 世界")
+            CreateDownloadResourceFilterOption(T("common.filters.all"), string.Empty),
+            CreateDownloadResourceFilterOption("adventure", "adventure"),
+            CreateDownloadResourceFilterOption("creative", "creative"),
+            CreateDownloadResourceFilterOption("minigames", "minigames"),
+            CreateDownloadResourceFilterOption("parkour", "parkour"),
+            CreateDownloadResourceFilterOption("puzzle", "puzzle"),
+            CreateDownloadResourceFilterOption("survival", "survival"),
+            CreateDownloadResourceFilterOption("mod_world", "mod_world")
         ];
     }
 
@@ -1690,14 +1960,20 @@ internal sealed partial class FrontendShellViewModel
             version,
             loader,
             tags,
+            tags.Select(LocalizeDownloadResourceTag).ToArray(),
             [],
             [],
             downloadCount,
             followCount,
             releaseRank,
             updateRank,
-            actionText,
-            new ActionCommand(() => AddActivity($"下载资源操作: {title}", $"{source} • {version} • {string.Join(" / ", tags)}")),
+            FormatDownloadResourceVersionLabel(version),
+            FormatDownloadResourceDownloadCountLabel(downloadCount),
+            FormatDownloadResourceUpdatedLabel(updateRank, releaseRank),
+            LocalizeDownloadResourceActionText(actionText),
+            new ActionCommand(() => AddActivity(
+                T("download.resource.activities.entry_action", ("entry_title", title)),
+                BuildActivityDetail(source, version, string.Join(" / ", tags)))),
             null);
     }
 

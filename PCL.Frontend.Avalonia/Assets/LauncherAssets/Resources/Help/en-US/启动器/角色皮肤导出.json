@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Export Character Skin",
+  "Description": "Save the current player skin to a file",
+  "Keywords": "skin export character profile",
+  "Types": ["Launcher"]
+}

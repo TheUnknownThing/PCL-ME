@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="15">
-      <controls:PclCard Header="百宝箱" ContentMargin="25,40,21,5">
+      <controls:PclCard Header="{Binding ToolsTestToolboxCardHeader}" ContentMargin="25,40,21,5">
         <controls:PclCard.CardContent>
           <ItemsControl ItemsSource="{Binding ToolboxActions}">
             <ItemsControl.ItemsPanel>
@@ -30,22 +30,22 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="下载自定义文件" ContentMargin="25,40,25,20">
+      <controls:PclCard Header="{Binding ToolsTestCustomDownloadCardHeader}" ContentMargin="25,40,25,20">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <TextBlock
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13"
-                Text="使用 PCL 的高速多线程下载引擎下载任意文件。请注意，部分网站（例如百度网盘）可能会报错 (403) 已禁止，无法正常下载。"
+                Text="{Binding ToolsTestCustomDownloadDescription}"
                 TextWrapping="Wrap" />
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28,10,28,10,28">
-              <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="下载地址" />
+              <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestCustomDownloadAddressLabel}" />
               <TextBox Grid.Column="1" Height="28" Padding="8,4" Text="{Binding ToolDownloadUrl}" />
 
-              <TextBlock Grid.Row="2" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="User-Agent" />
+              <TextBlock Grid.Row="2" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestCustomDownloadUserAgentLabel}" />
               <TextBox Grid.Row="2" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding ToolDownloadUserAgent}" />
 
-              <TextBlock Grid.Row="4" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="保存到" />
+              <TextBlock Grid.Row="4" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestCustomDownloadSaveToLabel}" />
               <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto">
                 <TextBox Height="28" Padding="8,4" Text="{Binding ToolDownloadFolder}" />
                 <controls:PclButton
@@ -54,10 +54,10 @@
                     Width="70"
                     Margin="10,0,0,0"
                     Command="{Binding SelectDownloadFolderCommand}"
-                    Text="选择" />
+                    Text="{Binding ToolsTestCustomDownloadSelectButtonText}" />
               </Grid>
 
-              <TextBlock Grid.Row="6" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="文件名" />
+              <TextBlock Grid.Row="6" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestCustomDownloadFileNameLabel}" />
               <TextBox Grid.Row="6" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding ToolDownloadName}" />
             </Grid>
 
@@ -70,52 +70,52 @@
                   Margin="0,0,15,0"
                   Command="{Binding StartCustomDownloadCommand}"
                   ColorType="Highlight"
-                  Text="开始下载" />
+                  Text="{Binding ToolsTestCustomDownloadStartButtonText}" />
               <controls:PclButton
                   Grid.Column="1"
                   Height="35"
                   Width="140"
                   HorizontalAlignment="Left"
                   Command="{Binding OpenCustomDownloadFolderCommand}"
-                  Text="打开文件夹" />
+                  Text="{Binding ToolsTestCustomDownloadOpenFolderButtonText}" />
             </Grid>
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="下载正版玩家的皮肤" ContentMargin="25,40,25,15">
+      <controls:PclCard Header="{Binding ToolsTestOfficialSkinCardHeader}" ContentMargin="25,40,25,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,14,35">
-            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="正版玩家名" />
+            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestOfficialSkinPlayerNameLabel}" />
             <TextBox Grid.Column="1" Height="28" Padding="8,4" Text="{Binding OfficialSkinPlayerName}" />
             <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*">
               <controls:PclButton
                   Height="35"
                   Width="140"
                   Command="{Binding SaveOfficialSkinCommand}"
-                  Text="保存皮肤" />
+                  Text="{Binding ToolsTestOfficialSkinSaveButtonText}" />
             </Grid>
           </Grid>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="瞅眼服务器" ContentMargin="15,40,15,15">
+      <controls:PclCard Header="{Binding ToolsTestServerQueryCardHeader}" ContentMargin="15,40,15,15">
         <controls:PclCard.CardContent>
           <controls:MinecraftServerQuery />
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="自定义成就图片生成器（仅支持英文）" ShowChevron="True" IsChevronExpanded="False" ContentMargin="25,30,25,15">
+      <controls:PclCard Header="{Binding ToolsTestAchievementCardHeader}" ShowChevron="True" IsChevronExpanded="False" ContentMargin="25,30,25,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,10,28,10,28,10,28">
-              <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="物品名（ID）" />
+              <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestAchievementBlockIdLabel}" />
               <TextBox Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementBlockId}" />
-              <TextBlock Grid.Row="2" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="成就名" />
+              <TextBlock Grid.Row="2" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestAchievementTitleLabel}" />
               <TextBox Grid.Row="2" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementTitle}" />
-              <TextBlock Grid.Row="4" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="第一行" />
+              <TextBlock Grid.Row="4" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestAchievementFirstLineLabel}" />
               <TextBox Grid.Row="4" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementFirstLine}" />
-              <TextBlock Grid.Row="6" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="第二行" />
+              <TextBlock Grid.Row="6" VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,25,0" Text="{Binding ToolsTestAchievementSecondLineLabel}" />
               <TextBox Grid.Row="6" Grid.Column="1" Height="28" Padding="8,4" Text="{Binding AchievementSecondLine}" />
             </Grid>
 
@@ -128,14 +128,14 @@
                   Margin="0,0,15,0"
                   Command="{Binding PreviewAchievementCommand}"
                   ColorType="Highlight"
-                  Text="预览成就图像" />
+                  Text="{Binding ToolsTestAchievementPreviewButtonText}" />
               <controls:PclButton
                   Grid.Column="1"
                   Height="35"
                   Width="140"
                   HorizontalAlignment="Left"
                   Command="{Binding SaveAchievementCommand}"
-                  Text="保存图片" />
+                  Text="{Binding ToolsTestAchievementSaveButtonText}" />
             </Grid>
 
             <Border
@@ -157,11 +157,11 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="皮肤头像生成器" ShowChevron="True" IsChevronExpanded="False" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding ToolsTestHeadCardHeader}" ShowChevron="True" IsChevronExpanded="False" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <Grid ColumnDefinitions="Auto,*">
-              <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,20,0" Text="头像大小" />
+              <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource ColorBrush1}" FontSize="13.5" Margin="0,0,20,0" Text="{Binding ToolsTestHeadSizeLabel}" />
               <ComboBox
                   Grid.Column="1"
                   Width="120"
@@ -176,13 +176,13 @@
                   Width="140"
                   Margin="0,0,10,0"
                   Command="{Binding SelectHeadSkinCommand}"
-                  Text="选择皮肤" />
+                  Text="{Binding ToolsTestHeadSelectButtonText}" />
               <controls:PclButton
                   Grid.Column="2"
                   Height="35"
                   Width="140"
                   Command="{Binding SaveHeadCommand}"
-                  Text="保存头像" />
+                  Text="{Binding ToolsTestHeadSaveButtonText}" />
             </Grid>
 
             <Border

@@ -13,7 +13,8 @@ public sealed class MinecraftLaunchShellServiceTest
         var result = MinecraftLaunchShellService.GetCompletionNotification(
             new MinecraftLaunchCompletionRequest("Test Instance", MinecraftLaunchOutcome.Succeeded, false, null));
 
-        Assert.AreEqual("Test Instance 启动成功！", result.Message);
+        Assert.AreEqual("launch.notifications.success", result.Message.Key);
+        Assert.AreEqual("Test Instance", result.Message.Arguments?.Single().StringValue);
         Assert.AreEqual(MinecraftLaunchNotificationKind.Finish, result.Kind);
     }
 
@@ -23,7 +24,8 @@ public sealed class MinecraftLaunchShellServiceTest
         var result = MinecraftLaunchShellService.GetCompletionNotification(
             new MinecraftLaunchCompletionRequest("Test Instance", MinecraftLaunchOutcome.Aborted, true, "导出启动脚本成功！"));
 
-        Assert.AreEqual("导出启动脚本成功！", result.Message);
+        Assert.AreEqual("launch.notifications.abort_with_hint", result.Message.Key);
+        Assert.AreEqual("导出启动脚本成功！", result.Message.Arguments?.Single().StringValue);
         Assert.AreEqual(MinecraftLaunchNotificationKind.Finish, result.Kind);
     }
 
@@ -33,7 +35,7 @@ public sealed class MinecraftLaunchShellServiceTest
         var result = MinecraftLaunchShellService.GetCompletionNotification(
             new MinecraftLaunchCompletionRequest("Test Instance", MinecraftLaunchOutcome.Aborted, false, null));
 
-        Assert.AreEqual("已取消启动！", result.Message);
+        Assert.AreEqual("launch.notifications.launch_canceled", result.Message.Key);
         Assert.AreEqual(MinecraftLaunchNotificationKind.Info, result.Kind);
     }
 
@@ -64,8 +66,8 @@ public sealed class MinecraftLaunchShellServiceTest
         var result = MinecraftLaunchShellService.GetSupportPrompt(200);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual("200 次启动！", result.Title);
-        Assert.AreEqual("支持一下！", result.Buttons[0].Label);
+        Assert.AreEqual("launch.prompts.support.title", result.Title.Key);
+        Assert.AreEqual("launch.prompts.support.actions.sponsor", result.Buttons[0].Label.Key);
         Assert.AreEqual(MinecraftLaunchPromptActionKind.OpenUrl, result.Buttons[0].Actions[0].Kind);
     }
 

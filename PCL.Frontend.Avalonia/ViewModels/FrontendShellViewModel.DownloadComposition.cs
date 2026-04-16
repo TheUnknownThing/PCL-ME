@@ -12,12 +12,12 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private FrontendDownloadComposition _downloadComposition = new(
-        new FrontendDownloadInstallState("新的安装方案", "Minecraft", "Grass.png", [], []),
+        new FrontendDownloadInstallState(string.Empty, "Minecraft", "Grass.png", [], []),
         new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>(),
-        new FrontendDownloadFavoritesState([new FrontendDownloadFavoriteTargetState("默认收藏夹", "default", [])], string.Empty, false),
+        new FrontendDownloadFavoritesState([new FrontendDownloadFavoriteTargetState(string.Empty, "default", [])], string.Empty, false),
         new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());
     private bool _downloadCompositionHasRemoteState;
-    private IReadOnlyList<string> _downloadFavoriteTargetOptions = ["默认收藏夹"];
+    private IReadOnlyList<string> _downloadFavoriteTargetOptions = [];
 
     private void ReloadDownloadComposition(bool includeRemoteState = false)
     {
@@ -29,10 +29,12 @@ internal sealed partial class FrontendShellViewModel
             ? FrontendDownloadCompositionService.Compose(
                 _shellActionService.RuntimePaths,
                 _instanceComposition,
-                _versionSavesComposition)
+                _versionSavesComposition,
+                _i18n)
             : FrontendDownloadCompositionService.ComposeBootstrap(
                 _shellActionService.RuntimePaths,
-                _instanceComposition);
+                _instanceComposition,
+                _i18n);
         _downloadCompositionHasRemoteState = includeRemoteState;
         SyncDownloadFavoriteTargets();
     }
@@ -97,7 +99,7 @@ internal sealed partial class FrontendShellViewModel
                 {
                     Favorites = _downloadComposition.Favorites with
                     {
-                        WarningText = $"收藏夹在线元数据加载失败：{ex.Message}",
+                        WarningText = $"Failed to load online metadata for favorites: {ex.Message}",
                         ShowWarning = _downloadComposition.Favorites.Targets.Any(target => target.Sections.Any(section => section.Entries.Count > 0))
                     }
                 };
@@ -114,7 +116,7 @@ internal sealed partial class FrontendShellViewModel
     private void SyncDownloadFavoriteTargets()
     {
         _downloadFavoriteTargetOptions = _downloadComposition.Favorites.Targets.Count == 0
-            ? ["默认收藏夹"]
+            ? [T("download.favorites.targets.default_name")]
             : _downloadComposition.Favorites.Targets.Select(target => target.Name).ToArray();
         _selectedDownloadFavoriteTargetIndex = Math.Clamp(_selectedDownloadFavoriteTargetIndex, 0, _downloadFavoriteTargetOptions.Count - 1);
         RaisePropertyChanged(nameof(DownloadFavoriteTargetOptions));

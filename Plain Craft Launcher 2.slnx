@@ -16,4 +16,5 @@
     <Build Solution="*|*" Project="false" />
   </Project>
   <Project Path="PCL.Frontend.Avalonia\PCL.Frontend.Avalonia.csproj" Type="C#" />
+  <Project Path="PCL.Tools.I18n\PCL.Tools.I18n.csproj" Type="C#" />
 </Solution>

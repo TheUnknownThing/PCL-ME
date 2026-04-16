@@ -1,0 +1,35 @@
+<local:MyCard Title="Install Mods" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="Minecraft/安装 Mod.json" Title="Install Mods" Info="Loader selection, downloading, and manual import." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install Shaders" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="Minecraft/安装光影.json" Title="Install Shaders" Info="Shader loader choice and shader pack import." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install Worlds" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="Minecraft/安装世界.json" Title="Install a World Save" Info="Import a save or map into an instance." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install Datapacks" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="Minecraft/数据包安装.json" Title="Install Datapacks" Info="Place datapacks in the correct world folder." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install Modpacks" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="Minecraft/整合包安装.json" Title="Install a Modpack" Info="Use local archives or supported remote sources." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install Resource Packs" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,11">
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="Minecraft/资源包安装.json" Title="Install Resource Packs" Info="Import and enable packs inside Minecraft." />
+  </StackPanel>
+</local:MyCard>

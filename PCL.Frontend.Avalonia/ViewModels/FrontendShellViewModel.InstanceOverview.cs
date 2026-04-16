@@ -16,38 +16,38 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private string _instanceOverviewName = "Modern Fabric Demo";
-    private string _instanceOverviewSubtitle = "Fabric 0.16.9 / Minecraft 1.21.1 / 独立实例";
+    private string _instanceOverviewName = string.Empty;
+    private string _instanceOverviewSubtitle = string.Empty;
     private Bitmap? _instanceOverviewSelectedIcon;
     private int _selectedInstanceOverviewIconIndex;
     private int _selectedInstanceOverviewCategoryIndex;
     private bool _isInstanceOverviewStarred = true;
     private readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> _instanceOverviewIconOptions =
     [
-        new DownloadResourceFilterOptionViewModel("自动", "Fabric.png"),
-        new DownloadResourceFilterOptionViewModel("圆石", "CobbleStone.png"),
-        new DownloadResourceFilterOptionViewModel("命令方块", "CommandBlock.png"),
-        new DownloadResourceFilterOptionViewModel("金块", "GoldBlock.png"),
-        new DownloadResourceFilterOptionViewModel("草方块", "Grass.png"),
-        new DownloadResourceFilterOptionViewModel("土径", "GrassPath.png"),
-        new DownloadResourceFilterOptionViewModel("铁砧", "Anvil.png"),
-        new DownloadResourceFilterOptionViewModel("红石块", "RedstoneBlock.png"),
-        new DownloadResourceFilterOptionViewModel("红石灯（开）", "RedstoneLampOn.png"),
-        new DownloadResourceFilterOptionViewModel("红石灯（关）", "RedstoneLampOff.png"),
-        new DownloadResourceFilterOptionViewModel("鸡蛋", "Egg.png"),
-        new DownloadResourceFilterOptionViewModel("布料（Fabric）", "Fabric.png"),
-        new DownloadResourceFilterOptionViewModel("方格（Quilt）", "Quilt.png"),
-        new DownloadResourceFilterOptionViewModel("狐狸（NeoForge）", "NeoForge.png"),
-        new DownloadResourceFilterOptionViewModel("Cleanroom", "Cleanroom.png")
+        new DownloadResourceFilterOptionViewModel("auto", "Fabric.png"),
+        new DownloadResourceFilterOptionViewModel("cobblestone", "CobbleStone.png"),
+        new DownloadResourceFilterOptionViewModel("command_block", "CommandBlock.png"),
+        new DownloadResourceFilterOptionViewModel("gold_block", "GoldBlock.png"),
+        new DownloadResourceFilterOptionViewModel("grass_block", "Grass.png"),
+        new DownloadResourceFilterOptionViewModel("grass_path", "GrassPath.png"),
+        new DownloadResourceFilterOptionViewModel("anvil", "Anvil.png"),
+        new DownloadResourceFilterOptionViewModel("redstone_block", "RedstoneBlock.png"),
+        new DownloadResourceFilterOptionViewModel("redstone_lamp_on", "RedstoneLampOn.png"),
+        new DownloadResourceFilterOptionViewModel("redstone_lamp_off", "RedstoneLampOff.png"),
+        new DownloadResourceFilterOptionViewModel("egg", "Egg.png"),
+        new DownloadResourceFilterOptionViewModel("fabric", "Fabric.png"),
+        new DownloadResourceFilterOptionViewModel("quilt", "Quilt.png"),
+        new DownloadResourceFilterOptionViewModel("neoforge", "NeoForge.png"),
+        new DownloadResourceFilterOptionViewModel("cleanroom", "Cleanroom.png")
     ];
     private readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> _instanceOverviewCategoryOptions =
     [
-        new DownloadResourceFilterOptionViewModel("自动", "自动"),
-        new DownloadResourceFilterOptionViewModel("从实例列表中隐藏", "从实例列表中隐藏"),
-        new DownloadResourceFilterOptionViewModel("可安装 Mod 的实例", "可安装 Mod 的实例"),
-        new DownloadResourceFilterOptionViewModel("常规实例", "常规实例"),
-        new DownloadResourceFilterOptionViewModel("不常用实例", "不常用实例"),
-        new DownloadResourceFilterOptionViewModel("愚人节版本", "愚人节版本")
+        new DownloadResourceFilterOptionViewModel("auto", "auto"),
+        new DownloadResourceFilterOptionViewModel("hidden", "hidden"),
+        new DownloadResourceFilterOptionViewModel("modable_long", "modable_long"),
+        new DownloadResourceFilterOptionViewModel("regular", "regular"),
+        new DownloadResourceFilterOptionViewModel("rare", "rare"),
+        new DownloadResourceFilterOptionViewModel("april_fools", "april_fools")
     ];
 
     public ObservableCollection<string> InstanceOverviewDisplayTags { get; } = [];
@@ -72,16 +72,28 @@ internal sealed partial class FrontendShellViewModel
         private set => SetProperty(ref _instanceOverviewSelectedIcon, value);
     }
 
-    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewIconOptions => _instanceOverviewIconOptions;
+    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewIconOptions => _instanceOverviewIconOptions
+        .Select(option => new DownloadResourceFilterOptionViewModel(
+            TranslateOverviewIconOption(option.Label),
+            option.FilterValue))
+        .ToArray();
 
-    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewCategoryOptions => _instanceOverviewCategoryOptions;
+    public IReadOnlyList<DownloadResourceFilterOptionViewModel> InstanceOverviewCategoryOptions => _instanceOverviewCategoryOptions
+        .Select(option => new DownloadResourceFilterOptionViewModel(
+            TranslateOverviewCategoryOption(option.Label),
+            option.FilterValue))
+        .ToArray();
 
     public int SelectedInstanceOverviewIconIndex
     {
         get => _selectedInstanceOverviewIconIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, InstanceOverviewIconOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, InstanceOverviewIconOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedInstanceOverviewIconIndex, nextValue))
             {
                 RefreshInstanceOverviewSelectionState();
@@ -94,7 +106,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedInstanceOverviewCategoryIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, InstanceOverviewCategoryOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, InstanceOverviewCategoryOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedInstanceOverviewCategoryIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(InstanceOverviewCategoryLabel));
@@ -104,7 +120,9 @@ internal sealed partial class FrontendShellViewModel
 
     public string InstanceOverviewCategoryLabel => InstanceOverviewCategoryOptions[SelectedInstanceOverviewCategoryIndex].Label;
 
-    public string InstanceOverviewFavoriteButtonText => _isInstanceOverviewStarred ? "移出收藏夹" : "加入收藏夹";
+    public string InstanceOverviewFavoriteButtonText => _isInstanceOverviewStarred
+        ? SD("instance.overview.actions.remove_favorite")
+        : SD("instance.overview.actions.add_favorite");
 
     public bool HasInstanceOverviewInfoEntries => InstanceOverviewInfoEntries.Count > 0;
 
@@ -115,19 +133,22 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand ToggleInstanceFavoriteCommand => new(ToggleInstanceFavorite);
 
     public ActionCommand OpenInstanceFolderCommand => new(() =>
-        OpenInstanceTarget("实例文件夹", _instanceComposition.Selection.InstanceDirectory, "当前未选择实例。"));
+        OpenInstanceTarget(
+            SD("instance.overview.shortcuts.instance_folder"),
+            _instanceComposition.Selection.InstanceDirectory,
+            SD("instance.overview.messages.no_instance_selected")));
 
     public ActionCommand OpenInstanceSavesFolderCommand => new(() =>
         OpenInstanceDirectoryTarget(
-            "存档文件夹",
+            SD("instance.overview.shortcuts.saves_folder"),
             _instanceComposition.Selection.HasSelection ? Path.Combine(_instanceComposition.Selection.IndieDirectory, "saves") : string.Empty,
-            "当前实例没有存档目录。"));
+            SD("instance.overview.messages.no_saves_directory")));
 
     public ActionCommand OpenInstanceModsFolderCommand => new(() =>
         OpenInstanceDirectoryTarget(
-            "Mod 文件夹",
+            SD("instance.overview.shortcuts.mods_folder"),
             ResolveCurrentInstanceResourceDirectory("mods"),
-            "当前实例没有 Mod 目录。"));
+            SD("instance.overview.messages.no_mods_directory")));
 
     public ActionCommand ExportInstanceScriptCommand => new(ExportInstanceScript);
 
@@ -145,15 +166,17 @@ internal sealed partial class FrontendShellViewModel
     {
         var overview = _instanceComposition.Overview;
         InstanceOverviewName = overview.Name;
-        InstanceOverviewSubtitle = overview.Subtitle;
+        InstanceOverviewSubtitle = LocalizeRawInstanceSubtitle(overview.Subtitle);
         _selectedInstanceOverviewIconIndex = Math.Clamp(overview.IconIndex, 0, InstanceOverviewIconOptions.Count - 1);
         _selectedInstanceOverviewCategoryIndex = Math.Clamp(overview.CategoryIndex, 0, InstanceOverviewCategoryOptions.Count - 1);
         _isInstanceOverviewStarred = overview.IsStarred;
 
-        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags);
+        ReplaceItems(InstanceOverviewDisplayTags, overview.DisplayTags.Select(LocalizeOverviewTag).ToArray());
         ReplaceItems(
             InstanceOverviewInfoEntries,
-            overview.InfoEntries.Select(entry => new KeyValueEntryViewModel(entry.Label, entry.Value)));
+            overview.InfoEntries.Select(entry => new KeyValueEntryViewModel(
+                LocalizeOverviewInfoLabel(entry.Label),
+                LocalizeOverviewInfoValue(entry.Label, entry.Value))));
 
         InstanceOverviewSelectedIcon = LoadInstanceBitmap(
             overview.IconPath,
@@ -209,11 +232,52 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceOverviewCategoryLabel));
     }
 
+    private string TranslateOverviewIconOption(string label)
+    {
+        return label switch
+        {
+            "auto" => SD("instance.overview.icons.auto"),
+            "cobblestone" => SD("instance.overview.icons.cobblestone"),
+            "command_block" => SD("instance.overview.icons.command_block"),
+            "gold_block" => SD("instance.overview.icons.gold_block"),
+            "grass_block" => SD("instance.overview.icons.grass_block"),
+            "grass_path" => SD("instance.overview.icons.grass_path"),
+            "anvil" => SD("instance.overview.icons.anvil"),
+            "redstone_block" => SD("instance.overview.icons.redstone_block"),
+            "redstone_lamp_on" => SD("instance.overview.icons.redstone_lamp_on"),
+            "redstone_lamp_off" => SD("instance.overview.icons.redstone_lamp_off"),
+            "egg" => SD("instance.overview.icons.egg"),
+            "fabric" => SD("instance.overview.icons.fabric"),
+            "quilt" => SD("instance.overview.icons.quilt"),
+            "neoforge" => SD("instance.overview.icons.neoforge"),
+            "cleanroom" => SD("instance.overview.icons.cleanroom"),
+            _ => label
+        };
+    }
+
+    private string TranslateOverviewCategoryOption(string label)
+    {
+        return label switch
+        {
+            "auto" => SD("instance.overview.categories.auto"),
+            "hidden" => SD("instance.overview.categories.hidden"),
+            "modable_long" => SD("instance.overview.categories.modable_long"),
+            "regular" => SD("instance.overview.categories.regular"),
+            "rare" => SD("instance.overview.categories.rare"),
+            "april_fools" => SD("instance.overview.categories.april_fools"),
+            _ => label
+        };
+    }
+
     private void ToggleInstanceFavorite()
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("收藏实例", "当前未选择实例。");
+            AddActivity(
+                _isInstanceOverviewStarred
+                    ? SD("instance.overview.actions.remove_favorite")
+                    : SD("instance.overview.actions.add_favorite"),
+                SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
@@ -221,40 +285,45 @@ internal sealed partial class FrontendShellViewModel
         _shellActionService.PersistInstanceValue(_instanceComposition.Selection.InstanceDirectory, "IsStar", _isInstanceOverviewStarred);
         ReloadInstanceComposition();
         RaisePropertyChanged(nameof(InstanceOverviewFavoriteButtonText));
-        AddActivity(_isInstanceOverviewStarred ? "加入收藏夹" : "移出收藏夹", _instanceComposition.Selection.InstanceName);
+        AddActivity(
+            _isInstanceOverviewStarred
+                ? SD("instance.overview.actions.add_favorite")
+                : SD("instance.overview.actions.remove_favorite"),
+            _instanceComposition.Selection.InstanceName);
     }
 
     private async Task RenameInstanceAsync()
     {
+        var activityTitle = SD("instance.overview.actions.rename");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("修改实例名", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
         var oldName = _instanceComposition.Selection.InstanceName;
         var newName = await _shellActionService.PromptForTextAsync(
-            "重命名实例",
-            "请输入新的实例名称。名称会同时用于实例文件夹、核心文件和当前选中的实例配置。",
+            SD("instance.overview.dialogs.rename.title"),
+            SD("instance.overview.dialogs.rename.message"),
             oldName,
-            "重命名",
-            "实例名称");
+            SD("instance.overview.dialogs.rename.confirm"),
+            SD("instance.overview.dialogs.rename.input_label"));
         if (newName is null)
         {
-            AddActivity("修改实例名", "已取消重命名。");
+            AddActivity(activityTitle, SD("instance.overview.messages.rename_canceled"));
             return;
         }
 
         newName = newName.Trim();
         if (string.IsNullOrWhiteSpace(newName))
         {
-            AddActivity("修改实例名", "实例名称不能为空。");
+            AddActivity(activityTitle, SD("instance.overview.messages.rename_empty"));
             return;
         }
 
         if (string.Equals(oldName, newName, StringComparison.Ordinal))
         {
-            AddActivity("修改实例名", "实例名称未发生变化。");
+            AddActivity(activityTitle, SD("instance.overview.messages.rename_unchanged"));
             return;
         }
 
@@ -262,7 +331,7 @@ internal sealed partial class FrontendShellViewModel
             || newName.Contains(Path.DirectorySeparatorChar)
             || newName.Contains(Path.AltDirectorySeparatorChar))
         {
-            AddActivity("修改实例名", "实例名称包含无效字符。");
+            AddActivity(activityTitle, SD("instance.overview.messages.rename_invalid"));
             return;
         }
 
@@ -271,7 +340,7 @@ internal sealed partial class FrontendShellViewModel
         var newDirectory = Path.Combine(launcherDirectory, "versions", newName);
         if (Directory.Exists(newDirectory) && !string.Equals(oldDirectory, newDirectory, StringComparison.OrdinalIgnoreCase))
         {
-            AddActivity("修改实例名", $"已存在同名实例：{newName}");
+            AddActivity(activityTitle, SD("instance.overview.messages.rename_exists", ("name", newName)));
             return;
         }
 
@@ -292,32 +361,35 @@ internal sealed partial class FrontendShellViewModel
             RewriteInstanceManifestId(Path.Combine(newDirectory, $"{newName}.json"), newName);
             _shellActionService.PersistLocalValue("LaunchInstanceSelect", newName);
             ReloadInstanceComposition();
-            AddActivity("修改实例名", $"{oldName} -> {newName}");
+            AddActivity(
+                activityTitle,
+                SD("instance.overview.messages.rename_completed", ("old_name", oldName), ("new_name", newName)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("修改实例名失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
     private async Task EditInstanceDescriptionAsync()
     {
+        var activityTitle = SD("instance.overview.actions.edit_description");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("修改实例描述", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
         var currentValue = _instanceComposition.Setup.CustomInfo;
         var nextValue = await _shellActionService.PromptForTextAsync(
-            "更改描述",
-            "修改实例的描述文本，留空则恢复为默认描述。",
+            SD("instance.overview.dialogs.edit_description.title"),
+            SD("instance.overview.dialogs.edit_description.message"),
             currentValue,
-            "保存",
-            "实例描述");
+            SD("instance.overview.dialogs.edit_description.confirm"),
+            SD("instance.overview.dialogs.edit_description.input_label"));
         if (nextValue is null)
         {
-            AddActivity("修改实例描述", "已取消修改。");
+            AddActivity(activityTitle, SD("instance.overview.messages.description_canceled"));
             return;
         }
 
@@ -336,19 +408,24 @@ internal sealed partial class FrontendShellViewModel
             }
 
             ReloadInstanceComposition();
-            AddActivity("修改实例描述", string.IsNullOrWhiteSpace(trimmedValue) ? "已恢复为默认描述。" : trimmedValue);
+            AddActivity(
+                activityTitle,
+                string.IsNullOrWhiteSpace(trimmedValue)
+                    ? SD("instance.overview.messages.description_restored")
+                    : trimmedValue);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("修改实例描述失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
     private void ExportInstanceScript()
     {
+        var activityTitle = SD("instance.overview.advanced.export_script");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("导出启动脚本", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
@@ -359,7 +436,9 @@ internal sealed partial class FrontendShellViewModel
             Directory.CreateDirectory(scriptDirectory);
             var scriptPath = Path.Combine(
                 scriptDirectory,
-                $"启动 {SanitizeArtifactFileName(_instanceComposition.Selection.InstanceName)}{extension}");
+                SD(
+                    "instance.overview.artifacts.launch_script_name",
+                    ("instance_name", SanitizeArtifactFileName(_instanceComposition.Selection.InstanceName))) + extension);
             var encoding = _launchComposition.SessionStartPlan.CustomCommandPlan.UseUtf8Encoding
                 ? new UTF8Encoding(false)
                 : Encoding.Default;
@@ -368,11 +447,11 @@ internal sealed partial class FrontendShellViewModel
                 _launchComposition.SessionStartPlan.CustomCommandPlan.BatchScriptContent,
                 encoding);
             _shellActionService.EnsureFileExecutable(scriptPath);
-            OpenInstanceTarget("导出启动脚本", scriptPath, "启动脚本不存在。");
+            OpenInstanceTarget(activityTitle, scriptPath, SD("instance.overview.messages.launch_script_missing"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("导出启动脚本失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
@@ -380,84 +459,91 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("测试游戏", "当前未选择实例。");
+            AddActivity(SD("instance.overview.advanced.test_game"), SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-            $"已切换到启动页并准备测试实例 {_instanceComposition.Selection.InstanceName}。");
+            SD("instance.overview.messages.test_instance_navigated", ("instance_name", _instanceComposition.Selection.InstanceName)));
         await HandleLaunchRequestedAsync();
     }
 
     private async Task CheckInstanceFilesAsync()
     {
+        var activityTitle = SD("instance.overview.advanced.repair_files");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("补全文件", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
         if (DisableInstanceFileValidation)
         {
-            AddActivity("补全文件", "请先关闭 [实例设置 -> 设置 -> 高级启动选项 -> 关闭文件校验]，然后再尝试补全文件！");
+            AddActivity(activityTitle, SD("instance.overview.messages.repair_disable_validation_hint"));
             return;
         }
 
         try
         {
-            var result = await RunInstanceRepairAsync("补全文件", forceCoreRefresh: false);
-            AddActivity("补全文件", $"已补全 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+            var result = await RunInstanceRepairAsync(activityTitle, forceCoreRefresh: false);
+            AddActivity(
+                activityTitle,
+                SD("instance.overview.messages.repair_completed", ("downloaded_count", result.DownloadedFiles.Count), ("reused_count", result.ReusedFiles.Count)));
         }
         catch (OperationCanceledException)
         {
-            AddActivity("补全文件已取消", "实例文件补全过程已取消。");
+            AddActivity(SD("instance.overview.messages.repair_canceled_title"), SD("instance.overview.messages.repair_canceled"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("补全文件失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
     private async Task ResetInstanceAsync()
     {
+        var activityTitle = SD("instance.overview.advanced.reset");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("重置实例", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
         var confirmed = await _shellActionService.ConfirmAsync(
-            "实例重置确认",
-            $"确定要重置实例 {_instanceComposition.Selection.InstanceName} 吗？操作前会先保存核心备份，然后重新下载当前实例的核心文件、依赖库与资源索引，并尽量复用已通过校验的资源文件。",
-            "开始重置");
+            SD("instance.overview.dialogs.reset.title"),
+            SD("instance.overview.dialogs.reset.message", ("instance_name", _instanceComposition.Selection.InstanceName)),
+            SD("instance.overview.dialogs.reset.confirm"));
         if (!confirmed)
         {
-            AddActivity("重置实例", "已取消重置。");
+            AddActivity(activityTitle, SD("instance.overview.messages.reset_canceled"));
             return;
         }
 
         try
         {
             var backupDirectory = BackupInstanceCoreFiles("reset-backups");
-            var result = await RunInstanceRepairAsync("重置实例", forceCoreRefresh: true, backupDirectory);
-            AddActivity("重置实例", $"已重置核心文件并下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+            var result = await RunInstanceRepairAsync(activityTitle, forceCoreRefresh: true, backupDirectory);
+            AddActivity(
+                activityTitle,
+                SD("instance.overview.messages.reset_completed", ("downloaded_count", result.DownloadedFiles.Count), ("reused_count", result.ReusedFiles.Count)));
         }
         catch (OperationCanceledException)
         {
-            AddActivity("重置实例已取消", "实例重置过程已取消。");
+            AddActivity(SD("instance.overview.messages.reset_canceled_title"), SD("instance.overview.messages.reset_canceled"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("重置实例失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
     private async Task DeleteInstanceAsync()
     {
+        var activityTitle = SD("instance.overview.advanced.delete");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("删除实例", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
@@ -478,50 +564,57 @@ internal sealed partial class FrontendShellViewModel
 
             if (outcome.IsPermanentDelete)
             {
-                AddActivity("删除实例", $"实例 {outcome.InstanceName} 已永久删除。");
+                AddActivity(activityTitle, SD("instance.overview.messages.delete_permanent", ("instance_name", outcome.InstanceName)));
                 return;
             }
 
-            AddActivity("删除实例", $"实例 {outcome.InstanceName} 已移入回收区：{outcome.TrashDirectory}");
+            AddActivity(
+                activityTitle,
+                SD("instance.overview.messages.delete_recycled", ("instance_name", outcome.InstanceName), ("trash_directory", outcome.TrashDirectory)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("删除实例失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
     private async Task PatchInstanceCoreAsync()
     {
+        var activityTitle = SD("instance.overview.advanced.patch_core");
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("修补核心", "当前未选择实例。");
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
             return;
         }
 
         var confirmed = await _shellActionService.ConfirmAsync(
-            "修补提示",
-            $"确定要对 {_instanceComposition.Selection.InstanceName} 的核心文件进行修补吗？修补完成后会自动关闭文件校验，并先保存一份核心备份。",
-            "选择修补文件");
+            SD("instance.overview.dialogs.patch_core.title"),
+            SD("instance.overview.dialogs.patch_core.message", ("instance_name", _instanceComposition.Selection.InstanceName)),
+            SD("instance.overview.dialogs.patch_core.confirm"));
         if (!confirmed)
         {
-            AddActivity("修补核心", "已取消修补。");
+            AddActivity(activityTitle, SD("instance.overview.messages.patch_canceled"));
             return;
         }
 
         string? patchPath;
         try
         {
-            patchPath = await _shellActionService.PickOpenFileAsync("选择用于修补核心的文件", "压缩文件", "*.jar", "*.zip");
+            patchPath = await _shellActionService.PickOpenFileAsync(
+                SD("instance.overview.dialogs.patch_core.file_title"),
+                SD("instance.overview.dialogs.patch_core.file_filter"),
+                "*.jar",
+                "*.zip");
         }
         catch (Exception ex)
         {
-            AddFailureActivity("修补核心失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(patchPath))
         {
-            AddActivity("修补核心", "已取消选择修补文件。");
+            AddActivity(activityTitle, SD("instance.overview.messages.patch_file_canceled"));
             return;
         }
 
@@ -534,11 +627,11 @@ internal sealed partial class FrontendShellViewModel
             PatchCoreArchive(corePath, patchPath);
             _shellActionService.PersistInstanceValue(_instanceComposition.Selection.InstanceDirectory, "VersionAdvanceAssetsV2", true);
             ReloadInstanceComposition();
-            OpenInstanceTarget("修补核心", corePath, "修补后的核心文件不存在。");
+            OpenInstanceTarget(activityTitle, corePath, SD("instance.overview.messages.patched_core_missing"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("修补核心失败", ex.Message);
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
     }
 
@@ -580,7 +673,7 @@ internal sealed partial class FrontendShellViewModel
         var jarPath = Path.Combine(instanceDirectory, $"{_instanceComposition.Selection.InstanceName}.jar");
 
         var result = await ExecuteManagedInstanceRepairAsync(
-            $"{actionTitle}：{_instanceComposition.Selection.InstanceName}",
+            SD("instance.overview.messages.repair_task_title", ("action_title", actionTitle), ("instance_name", _instanceComposition.Selection.InstanceName)),
             new FrontendInstanceRepairRequest(
                 _instanceComposition.Selection.LauncherDirectory,
                 _instanceComposition.Selection.InstanceDirectory,
@@ -589,18 +682,18 @@ internal sealed partial class FrontendShellViewModel
 
         var summaryLines = new List<string?>
         {
-            $"实例: {_instanceComposition.Selection.InstanceName}",
-            $"实例目录: {instanceDirectory}",
-            $"核心 Json: {(File.Exists(manifestPath) ? "已检测到" : "缺失")} • {manifestPath}",
-            $"核心 Jar: {(File.Exists(jarPath) ? "已检测到" : "缺失")} • {jarPath}",
-            backupDirectory is null ? null : $"备份目录: {backupDirectory}",
-            $"下载文件数: {result.DownloadedFiles.Count}",
-            $"复用文件数: {result.ReusedFiles.Count}",
+            SD("instance.overview.messages.repair_summary.instance", ("instance_name", _instanceComposition.Selection.InstanceName)),
+            SD("instance.overview.messages.repair_summary.instance_directory", ("path", instanceDirectory)),
+            SD("instance.overview.messages.repair_summary.core_json", ("status", File.Exists(manifestPath) ? SD("instance.overview.messages.repair_summary.present") : SD("instance.overview.messages.repair_summary.missing")), ("path", manifestPath)),
+            SD("instance.overview.messages.repair_summary.core_jar", ("status", File.Exists(jarPath) ? SD("instance.overview.messages.repair_summary.present") : SD("instance.overview.messages.repair_summary.missing")), ("path", jarPath)),
+            backupDirectory is null ? null : SD("instance.overview.messages.repair_summary.backup_directory", ("path", backupDirectory)),
+            SD("instance.overview.messages.repair_summary.downloaded_count", ("count", result.DownloadedFiles.Count)),
+            SD("instance.overview.messages.repair_summary.reused_count", ("count", result.ReusedFiles.Count)),
             string.Empty,
-            "实例修复结果如下。"
+            SD("instance.overview.messages.repair_summary.intro")
         };
-        summaryLines.AddRange(result.DownloadedFiles.Take(20).Select(path => $"downloaded: {path}"));
-        summaryLines.AddRange(result.ReusedFiles.Take(20).Select(path => $"reused: {path}"));
+        summaryLines.AddRange(result.DownloadedFiles.Take(20).Select(path => SD("instance.overview.messages.repair_summary.downloaded_item", ("path", path))));
+        summaryLines.AddRange(result.ReusedFiles.Take(20).Select(path => SD("instance.overview.messages.repair_summary.reused_item", ("path", path))));
 
         await ShowToolboxConfirmationAsync(
             actionTitle,

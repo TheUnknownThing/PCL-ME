@@ -116,7 +116,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _instanceCompositionLoadMode = loadMode;
         ApplyInstanceComposition(
-            FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, loadMode),
+            FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, loadMode, _i18n),
             initializeAllSurfaces);
 
         if (!reloadDependentCompositions)
@@ -335,7 +335,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenInstanceTarget(string activity, string? target, string emptyState)
     {
-        var failureTitle = $"{activity}失败";
+        var failureTitle = $"{activity} failed";
         if (string.IsNullOrWhiteSpace(target))
         {
             AddFailureActivity(failureTitle, emptyState);
@@ -357,7 +357,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void OpenInstanceDirectoryTarget(string activity, string? target, string emptyState)
     {
-        var failureTitle = $"{activity}失败";
+        var failureTitle = $"{activity} failed";
         if (string.IsNullOrWhiteSpace(target))
         {
             AddFailureActivity(failureTitle, emptyState);
@@ -393,18 +393,18 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity("锁定验证方式", "当前未选择实例。");
+            AddActivity("Lock authentication mode", "No instance is currently selected.");
             return;
         }
 
         if (IsInstanceServerLoginLocked)
         {
-            AddActivity("锁定验证方式", "当前实例的验证方式已经锁定。");
+            AddActivity("Lock authentication mode", "The current instance authentication mode is already locked.");
             return;
         }
 
         IsInstanceServerLoginLocked = true;
-        AddActivity("锁定验证方式", _instanceComposition.Selection.InstanceName);
+        AddActivity("Lock authentication mode", _instanceComposition.Selection.InstanceName);
         ReloadInstanceComposition();
     }
 
@@ -428,7 +428,7 @@ internal sealed partial class FrontendShellViewModel
         var selectedKey = GetSelectedInstanceJavaKey();
         return selectedKey switch
         {
-            "global" => "使用全局设置",
+            "global" => "Use global settings",
             "auto" => JsonSerializer.Serialize(new { kind = "auto" }),
             var key when key.StartsWith("existing:", StringComparison.Ordinal) => JsonSerializer.Serialize(new
             {
@@ -440,7 +440,7 @@ internal sealed partial class FrontendShellViewModel
                 kind = "relative",
                 RelativePath = key["relative:".Length..]
             }),
-            _ => "使用全局设置"
+            _ => "Use global settings"
         };
     }
 

@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
@@ -12,13 +13,83 @@ internal static class FrontendModpackInstallWorkflowService
 {
     private static readonly UTF8Encoding Utf8NoBom = new(false);
     private static readonly string CurseForgeApiKey = FrontendEmbeddedSecrets.GetCurseForgeApiKey();
+    private static readonly IReadOnlyDictionary<string, object?> EmptyI18nArgs =
+        new Dictionary<string, object?>(0, StringComparer.Ordinal);
+
+    internal static string ModpackText(
+        II18nService? i18n,
+        string key,
+        params (string Name, object? Value)[] args)
+    {
+        var dictionary = args.Length == 0
+            ? EmptyI18nArgs
+            : args.ToDictionary(arg => arg.Name, arg => arg.Value, StringComparer.Ordinal);
+        var template = i18n?.T(key, dictionary) ?? GetModpackFallbackTemplate(key);
+        return FormatTemplate(template, dictionary);
+    }
+
+    private static string GetModpackFallbackTemplate(string key)
+    {
+        return key switch
+        {
+            "resource_detail.modpack.workflow.status.inspecting_manifest" => "Inspecting modpack manifest...",
+            "resource_detail.modpack.workflow.status.preparing_install_plan" => "Preparing instance install plan...",
+            "resource_detail.modpack.workflow.status.extracting_overrides" => "Extracting modpack overrides...",
+            "resource_detail.modpack.workflow.status.downloading_bundled_files" => "Downloading bundled modpack files...",
+            "resource_detail.modpack.workflow.status.processing_file" => "Processing {file_name}...",
+            "resource_detail.modpack.workflow.status.bundled_files_ready" => "Bundled modpack files are ready.",
+            "resource_detail.modpack.workflow.status.file_ready" => "{file_name} is ready",
+            "resource_detail.modpack.workflow.status.installing_game" => "Installing game and loaders...",
+            "resource_detail.modpack.workflow.status.repairing_game_files" => "Completing game files...",
+            "resource_detail.modpack.workflow.status.finalizing_instance" => "Finalizing instance directory...",
+            "resource_detail.modpack.workflow.status.completed" => "Modpack installation completed.",
+            "resource_detail.modpack.workflow.errors.unsupported_package_kind" => "Only PCL Standard, Modrinth, and CurseForge modpacks are supported for automatic installation.",
+            "resource_detail.modpack.workflow.errors.modrinth_missing_minecraft_version" => "The Modrinth modpack is missing Minecraft version information.",
+            "resource_detail.modpack.workflow.errors.curseforge_missing_minecraft_version" => "The CurseForge modpack is missing Minecraft version information.",
+            "resource_detail.modpack.workflow.errors.curseforge_recommended_forge_unsupported" => "This CurseForge modpack uses recommended Forge, which is not supported for automatic installation yet.",
+            "resource_detail.modpack.workflow.errors.curseforge_missing_files" => "Some CurseForge files referenced by the modpack no longer exist, so automatic installation cannot continue.",
+            "resource_detail.modpack.workflow.errors.pcl_missing_addons" => "This PCL Standard modpack does not include the required game version addon metadata.",
+            "resource_detail.modpack.workflow.errors.pcl_missing_game_version" => "This PCL Standard modpack does not include Minecraft version information.",
+            "resource_detail.modpack.workflow.errors.missing_critical_file" => "The modpack is missing a required file: {path}",
+            "resource_detail.modpack.workflow.errors.minecraft_choice_missing" => "No available installation plan was found for Minecraft {version}.",
+            "resource_detail.modpack.workflow.errors.loader_choice_missing" => "No installation plan was found for {option_title} {requested_version}.",
+            "resource_detail.modpack.workflow.errors.file_download_failed" => "Failed to download modpack file: {file_name}",
+            "resource_detail.modpack.workflow.errors.curseforge_metadata_empty" => "CurseForge file metadata response was empty.",
+            "resource_detail.modpack.workflow.errors.curseforge_metadata_missing_data" => "CurseForge file metadata did not include a data array.",
+            "resource_detail.modpack.workflow.errors.file_path_outside_instance" => "The modpack file path escapes the instance directory: {relative_path}",
+            "resource_detail.modpack.workflow.errors.archive_illegal_path" => "The modpack archive contains an invalid path: {entry_path}",
+            "resource_detail.modpack.workflow.errors.rar_unsupported" => "RAR archives are not supported. Extract and recompress the modpack as a ZIP archive, then try again.",
+            "resource_detail.modpack.workflow.errors.archive_open_failed" => "Failed to open the modpack archive. The file may be corrupted or use an unsupported archive format.",
+            "resource_detail.modpack.workflow.errors.json_parse_failed" => "Failed to parse the JSON file inside the modpack: {entry_path}",
+            "resource_detail.modpack.task.canceling" => "Canceling modpack installation...",
+            "resource_detail.modpack.task.queued" => "Added to the task center",
+            "resource_detail.modpack.task.completed" => "Modpack installation completed",
+            "resource_detail.modpack.task.canceled" => "Modpack installation was canceled",
+            "resource_detail.modpack.task.copying_archive" => "Copying modpack archive...",
+            "resource_detail.modpack.task.downloading_archive" => "Downloading modpack archive...",
+            "resource_detail.modpack.task.source_missing" => "The modpack source is missing.",
+            _ => key
+        };
+    }
+
+    private static string FormatTemplate(string template, IReadOnlyDictionary<string, object?> args)
+    {
+        foreach (var pair in args)
+        {
+            var replacement = Convert.ToString(pair.Value, CultureInfo.InvariantCulture) ?? string.Empty;
+            template = template.Replace("{" + pair.Key + "}", replacement, StringComparison.Ordinal);
+        }
+
+        return template;
+    }
 
     public static async Task<FrontendModpackInstallResult> InstallDownloadedArchiveAsync(
         FrontendModpackInstallRequest request,
         Action<FrontendModpackInstallStatus>? onStatusChanged = null,
         TimeSpan? requestTimeout = null,
         FrontendDownloadTransferOptions? downloadOptions = null,
-        CancellationToken cancelToken = default)
+        CancellationToken cancelToken = default,
+        II18nService? i18n = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         cancelToken.ThrowIfCancellationRequested();
@@ -29,13 +100,13 @@ internal static class FrontendModpackInstallWorkflowService
             : null;
 
         Directory.CreateDirectory(request.TargetDirectory);
-        ReportStatus(onStatusChanged, 0.02, "正在解析整合包清单…");
+        ReportStatus(onStatusChanged, 0.02, ModpackText(i18n, "resource_detail.modpack.workflow.status.inspecting_manifest"));
 
-        var package = InspectPackage(request.ArchivePath, request.CommunitySourcePreference, httpClient, cancelToken);
+        var package = InspectPackage(request.ArchivePath, request.CommunitySourcePreference, httpClient, cancelToken, i18n);
         cancelToken.ThrowIfCancellationRequested();
 
-        ReportStatus(onStatusChanged, 0.08, "正在准备实例安装方案…");
-        var installRequest = BuildInstallRequest(package, request);
+        ReportStatus(onStatusChanged, 0.08, ModpackText(i18n, "resource_detail.modpack.workflow.status.preparing_install_plan"));
+        var installRequest = BuildInstallRequest(package, request, i18n);
 
         var extractRoot = CreateTempDirectory("pcl-modpack-");
         var downloadedFiles = new List<string>();
@@ -45,11 +116,11 @@ internal static class FrontendModpackInstallWorkflowService
             .ToArray();
         try
         {
-            ReportStatus(onStatusChanged, 0.16, "正在解压整合包覆写文件…");
+            ReportStatus(onStatusChanged, 0.16, ModpackText(i18n, "resource_detail.modpack.workflow.status.extracting_overrides"));
             ExtractArchiveToDirectory(
                 request.ArchivePath,
                 extractRoot,
-                progress => ReportStatus(onStatusChanged, 0.16 + progress * 0.16, "正在解压整合包覆写文件…"),
+                progress => ReportStatus(onStatusChanged, 0.16 + progress * 0.16, ModpackText(i18n, "resource_detail.modpack.workflow.status.extracting_overrides")),
                 cancelToken);
 
             ApplyOverrides(package, extractRoot, request.TargetDirectory);
@@ -67,10 +138,12 @@ internal static class FrontendModpackInstallWorkflowService
                     ReportStatus(
                         onStatusChanged,
                         progressBase,
-                        string.IsNullOrWhiteSpace(fileName) ? "正在下载整合包附带文件…" : $"正在处理 {fileName}…",
+                        string.IsNullOrWhiteSpace(fileName)
+                            ? ModpackText(i18n, "resource_detail.modpack.workflow.status.downloading_bundled_files")
+                            : ModpackText(i18n, "resource_detail.modpack.workflow.status.processing_file", ("file_name", fileName)),
                         RemainingFileCount: resolvedFiles.Length - completedCount);
 
-                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, httpClient, speedLimiter, cancelToken).ConfigureAwait(false))
+                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, httpClient, speedLimiter, cancelToken, i18n).ConfigureAwait(false))
                     {
                         downloadedFiles.Add(file.TargetPath);
                     }
@@ -83,13 +156,15 @@ internal static class FrontendModpackInstallWorkflowService
                     ReportStatus(
                         onStatusChanged,
                         0.34 + completedCount / (double)resolvedFiles.Length * 0.26,
-                        string.IsNullOrWhiteSpace(fileName) ? "整合包附带文件已处理。" : $"{fileName} 已就绪",
+                        string.IsNullOrWhiteSpace(fileName)
+                            ? ModpackText(i18n, "resource_detail.modpack.workflow.status.bundled_files_ready")
+                            : ModpackText(i18n, "resource_detail.modpack.workflow.status.file_ready", ("file_name", fileName)),
                         RemainingFileCount: resolvedFiles.Length - completedCount);
                 }
             }
 
             cancelToken.ThrowIfCancellationRequested();
-            ReportStatus(onStatusChanged, 0.62, "正在安装游戏与加载器…");
+            ReportStatus(onStatusChanged, 0.62, ModpackText(i18n, "resource_detail.modpack.workflow.status.installing_game"));
 
             var applyResult = await Task.Run(
                 () => FrontendInstallWorkflowService.Apply(
@@ -111,24 +186,25 @@ internal static class FrontendModpackInstallWorkflowService
                             onStatusChanged,
                             0.74 + snapshot.Progress * 0.21,
                             string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
-                                ? "正在补全游戏文件…"
-                                : $"正在处理 {snapshot.CurrentFileName}",
+                                ? ModpackText(i18n, "resource_detail.modpack.workflow.status.repairing_game_files")
+                                : ModpackText(i18n, "resource_detail.modpack.workflow.status.processing_file", ("file_name", snapshot.CurrentFileName)),
                             snapshot.SpeedBytesPerSecond,
                             snapshot.RemainingFileCount,
                             snapshot.CurrentFileName);
                     },
                     downloadOptions,
+                    i18n,
                     cancelToken),
                 cancelToken).ConfigureAwait(false);
 
             downloadedFiles.AddRange(applyResult.DownloadedFiles);
             reusedFiles.AddRange(applyResult.ReusedFiles);
 
-            ReportStatus(onStatusChanged, 0.97, "正在整理实例目录…");
+            ReportStatus(onStatusChanged, 0.97, ModpackText(i18n, "resource_detail.modpack.workflow.status.finalizing_instance"));
             FinalizeInstalledInstance(package, request);
             TryDeleteFile(request.ArchivePath);
 
-            ReportStatus(onStatusChanged, 1d, "整合包安装完成。");
+            ReportStatus(onStatusChanged, 1d, ModpackText(i18n, "resource_detail.modpack.workflow.status.completed"));
             return new FrontendModpackInstallResult(
                 request.InstanceName,
                 request.TargetDirectory,
@@ -157,7 +233,7 @@ internal static class FrontendModpackInstallWorkflowService
             {
                 FrontendModpackPackageKind.Modrinth => baseFolder + "modrinth.index.json",
                 FrontendModpackPackageKind.CurseForge => baseFolder + "manifest.json",
-                FrontendModpackPackageKind.Mcbbs => ResolveMcbbsMetadataEntryPath(archive, baseFolder),
+                FrontendModpackPackageKind.Mcbbs => ResolveMcbbsMetadataEntryPath(archive, baseFolder, i18n: null),
                 _ => null
             };
             if (string.IsNullOrWhiteSpace(entryPath))
@@ -179,16 +255,17 @@ internal static class FrontendModpackInstallWorkflowService
         string archivePath,
         int communitySourcePreference,
         HttpClient httpClient,
-        CancellationToken cancelToken)
+        CancellationToken cancelToken,
+        II18nService? i18n)
     {
         using var archive = OpenArchiveRead(archivePath);
         var (kind, baseFolder) = DetectPackageKind(archive);
         return kind switch
         {
-            FrontendModpackPackageKind.Modrinth => BuildModrinthPackage(archive, baseFolder),
-            FrontendModpackPackageKind.CurseForge => BuildCurseForgePackage(archive, baseFolder, communitySourcePreference, httpClient, cancelToken),
-            FrontendModpackPackageKind.Mcbbs => BuildMcbbsPackage(archive, baseFolder),
-            _ => throw new InvalidOperationException("仅支持自动安装 PCL 标准、Modrinth 和 CurseForge 整合包。")
+            FrontendModpackPackageKind.Modrinth => BuildModrinthPackage(archive, baseFolder, i18n),
+            FrontendModpackPackageKind.CurseForge => BuildCurseForgePackage(archive, baseFolder, communitySourcePreference, httpClient, cancelToken, i18n),
+            FrontendModpackPackageKind.Mcbbs => BuildMcbbsPackage(archive, baseFolder, i18n),
+            _ => throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.unsupported_package_kind"))
         };
     }
 
@@ -245,13 +322,13 @@ internal static class FrontendModpackInstallWorkflowService
         return (FrontendModpackPackageKind.Unknown, string.Empty);
     }
 
-    private static FrontendModpackPackage BuildModrinthPackage(ZipArchive archive, string baseFolder)
+    private static FrontendModpackPackage BuildModrinthPackage(ZipArchive archive, string baseFolder, II18nService? i18n)
     {
-        var root = ReadJsonObjectFromEntry(archive, baseFolder + "modrinth.index.json");
+        var root = ReadJsonObjectFromEntry(archive, baseFolder + "modrinth.index.json", i18n);
         if (root["dependencies"] is not JsonObject dependencies
             || string.IsNullOrWhiteSpace(dependencies["minecraft"]?.GetValue<string>()))
         {
-            throw new InvalidOperationException("Modrinth 整合包缺少 Minecraft 版本信息。");
+            throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.modrinth_missing_minecraft_version"));
         }
 
         var files = new List<FrontendModpackFilePlan>();
@@ -318,13 +395,14 @@ internal static class FrontendModpackInstallWorkflowService
         string baseFolder,
         int communitySourcePreference,
         HttpClient httpClient,
-        CancellationToken cancelToken)
+        CancellationToken cancelToken,
+        II18nService? i18n)
     {
-        var root = ReadJsonObjectFromEntry(archive, baseFolder + "manifest.json");
+        var root = ReadJsonObjectFromEntry(archive, baseFolder + "manifest.json", i18n);
         if (root["minecraft"] is not JsonObject minecraft
             || string.IsNullOrWhiteSpace(minecraft["version"]?.GetValue<string>()))
         {
-            throw new InvalidOperationException("CurseForge 整合包缺少 Minecraft 版本信息。");
+            throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.curseforge_missing_minecraft_version"));
         }
 
         string? forgeVersion = null;
@@ -343,7 +421,7 @@ internal static class FrontendModpackInstallWorkflowService
             {
                 if (loaderId.Contains("recommended", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("该 CurseForge 整合包使用了 recommended Forge，暂不支持自动安装。");
+                    throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.curseforge_recommended_forge_unsupported"));
                 }
 
                 forgeVersion = loaderId["forge-".Length..];
@@ -386,7 +464,7 @@ internal static class FrontendModpackInstallWorkflowService
             cancelToken);
         if (fileMetadata.Count < manifestFiles.Length)
         {
-            throw new InvalidOperationException("整合包中的部分 CurseForge 文件已不存在，无法继续自动安装。");
+            throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.curseforge_missing_files"));
         }
 
         var files = new List<FrontendModpackFilePlan>();
@@ -439,12 +517,12 @@ internal static class FrontendModpackInstallWorkflowService
             files);
     }
 
-    private static FrontendModpackPackage BuildMcbbsPackage(ZipArchive archive, string baseFolder)
+    private static FrontendModpackPackage BuildMcbbsPackage(ZipArchive archive, string baseFolder, II18nService? i18n)
     {
-        var root = ReadJsonObjectFromEntry(archive, ResolveMcbbsMetadataEntryPath(archive, baseFolder));
+        var root = ReadJsonObjectFromEntry(archive, ResolveMcbbsMetadataEntryPath(archive, baseFolder, i18n), i18n);
         if (root["addons"] is not JsonArray addons)
         {
-            throw new InvalidOperationException("该 PCL 标准整合包未提供游戏版本附加信息，无法安装。");
+            throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.pcl_missing_addons"));
         }
 
         var addonVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -467,7 +545,7 @@ internal static class FrontendModpackInstallWorkflowService
 
         if (!addonVersions.TryGetValue("game", out var minecraftVersion) || string.IsNullOrWhiteSpace(minecraftVersion))
         {
-            throw new InvalidOperationException("该 PCL 标准整合包未提供游戏版本信息，无法安装。");
+            throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.pcl_missing_game_version"));
         }
 
         var launchInfo = root["launchInfo"] as JsonObject;
@@ -486,7 +564,7 @@ internal static class FrontendModpackInstallWorkflowService
             []);
     }
 
-    private static string ResolveMcbbsMetadataEntryPath(ZipArchive archive, string baseFolder)
+    private static string ResolveMcbbsMetadataEntryPath(ZipArchive archive, string baseFolder, II18nService? i18n)
     {
         var packMetaPath = baseFolder + "mcbbs.packmeta";
         if (archive.GetEntry(packMetaPath) is not null)
@@ -500,20 +578,21 @@ internal static class FrontendModpackInstallWorkflowService
             return manifestPath;
         }
 
-        throw new InvalidOperationException($"整合包缺少关键文件：{packMetaPath}");
+        throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.missing_critical_file", ("path", packMetaPath)));
     }
 
     private static FrontendInstallApplyRequest BuildInstallRequest(
         FrontendModpackPackage package,
-        FrontendModpackInstallRequest request)
+        FrontendModpackInstallRequest request,
+        II18nService? i18n)
     {
-        var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion, request.DownloadSourceIndex);
+        var minecraftChoice = ResolveMinecraftChoice(package.MinecraftVersion, request.DownloadSourceIndex, i18n);
         var primaryChoice =
-            ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion, request.DownloadSourceIndex) ??
-            ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion, request.DownloadSourceIndex) ??
-            ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion, request.DownloadSourceIndex) ??
-            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion, request.DownloadSourceIndex);
-        var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion, request.DownloadSourceIndex);
+            ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion, request.DownloadSourceIndex, i18n);
+        var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion, request.DownloadSourceIndex, i18n);
 
         return new FrontendInstallApplyRequest(
             request.LauncherDirectory,
@@ -533,31 +612,37 @@ internal static class FrontendModpackInstallWorkflowService
             PreserveExistingManagedModFiles: true);
     }
 
-    private static FrontendInstallChoice ResolveMinecraftChoice(string version, int downloadSourceIndex)
+    private static FrontendInstallChoice ResolveMinecraftChoice(string version, int downloadSourceIndex, II18nService? i18n = null)
     {
-        var choices = FrontendInstallWorkflowService.GetMinecraftCatalogChoices(version, downloadSourceIndex);
+        var choices = FrontendInstallWorkflowService.GetMinecraftCatalogChoices(version, downloadSourceIndex, i18n);
         var choice = choices.FirstOrDefault(candidate =>
             string.Equals(candidate.Version, version, StringComparison.OrdinalIgnoreCase)
             || string.Equals(candidate.Metadata?["rawVersion"]?.GetValue<string>(), version, StringComparison.OrdinalIgnoreCase));
-        return choice ?? throw new InvalidOperationException($"未找到可用的 Minecraft {version} 安装方案。");
+        return choice ?? throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.minecraft_choice_missing", ("version", version)));
     }
 
     private static FrontendInstallChoice? ResolveLoaderChoice(
         string optionTitle,
         string minecraftVersion,
         string? requestedVersion,
-        int downloadSourceIndex)
+        int downloadSourceIndex,
+        II18nService? i18n = null)
     {
         if (string.IsNullOrWhiteSpace(requestedVersion))
         {
             return null;
         }
 
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, downloadSourceIndex);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, downloadSourceIndex, i18n);
         var choice = choices.FirstOrDefault(candidate =>
             string.Equals(candidate.Version, requestedVersion, StringComparison.OrdinalIgnoreCase)
             || string.Equals(candidate.Title, requestedVersion, StringComparison.OrdinalIgnoreCase));
-        return choice ?? throw new InvalidOperationException($"未找到 {optionTitle} {requestedVersion} 的安装方案。");
+        return choice ?? throw new InvalidOperationException(
+            ModpackText(
+                i18n,
+                "resource_detail.modpack.workflow.errors.loader_choice_missing",
+                ("option_title", optionTitle),
+                ("requested_version", requestedVersion)));
     }
 
     private static void ApplyOverrides(
@@ -598,7 +683,8 @@ internal static class FrontendModpackInstallWorkflowService
         int communitySourcePreference,
         HttpClient httpClient,
         FrontendDownloadSpeedLimiter? speedLimiter,
-        CancellationToken cancelToken)
+        CancellationToken cancelToken,
+        II18nService? i18n)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(file.TargetPath)!);
         if (File.Exists(file.TargetPath) && ValidateExistingFile(file))
@@ -646,7 +732,7 @@ internal static class FrontendModpackInstallWorkflowService
             }
         }
 
-        throw new InvalidOperationException($"无法下载整合包文件：{file.DisplayName}");
+        throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.file_download_failed", ("file_name", file.DisplayName)));
     }
 
     private static bool ValidateExistingFile(FrontendModpackFileDownloadPlan file)
@@ -751,8 +837,8 @@ internal static class FrontendModpackInstallWorkflowService
 
                 var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 var root = JsonNode.Parse(content)?.AsObject()
-                           ?? throw new InvalidOperationException("CurseForge 文件元数据返回为空。");
-                var data = root["data"] as JsonArray ?? throw new InvalidOperationException("CurseForge 文件元数据缺少 data 数组。");
+                           ?? throw new InvalidOperationException(ModpackText(null, "resource_detail.modpack.workflow.errors.curseforge_metadata_empty"));
+                var data = root["data"] as JsonArray ?? throw new InvalidOperationException(ModpackText(null, "resource_detail.modpack.workflow.errors.curseforge_metadata_missing_data"));
                 return data
                     .Select(node => node as JsonObject)
                     .Where(node => node is not null)
@@ -888,13 +974,13 @@ internal static class FrontendModpackInstallWorkflowService
         var expectedRoot = NormalizeDirectoryRoot(Path.Combine(Path.GetTempPath(), "placeholder"));
         if (Path.IsPathRooted(normalized))
         {
-            throw new InvalidOperationException($"整合包文件路径超出了实例目录：{relativePath}");
+            throw new InvalidOperationException(ModpackText(null, "resource_detail.modpack.workflow.errors.file_path_outside_instance", ("relative_path", relativePath)));
         }
 
         var combined = Path.GetFullPath(Path.Combine(expectedRoot, normalized));
         if (!IsPathWithinDirectory(combined, expectedRoot))
         {
-            throw new InvalidOperationException($"整合包文件路径超出了实例目录：{relativePath}");
+            throw new InvalidOperationException(ModpackText(null, "resource_detail.modpack.workflow.errors.file_path_outside_instance", ("relative_path", relativePath)));
         }
 
         return Path.GetRelativePath(expectedRoot, combined);
@@ -935,7 +1021,7 @@ internal static class FrontendModpackInstallWorkflowService
             var destinationPath = Path.GetFullPath(Path.Combine(destinationRoot, normalizedEntryPath.Replace('/', Path.DirectorySeparatorChar)));
             if (!IsPathWithinDirectory(destinationPath, destinationRoot))
             {
-                throw new InvalidOperationException($"整合包包含非法路径：{entry.FullName}");
+                throw new InvalidOperationException(ModpackText(null, "resource_detail.modpack.workflow.errors.archive_illegal_path", ("entry_path", entry.FullName)));
             }
 
             if (entry.FullName.EndsWith("/", StringComparison.Ordinal) || string.IsNullOrEmpty(entry.Name))
@@ -961,22 +1047,22 @@ internal static class FrontendModpackInstallWorkflowService
         }
         catch (InvalidDataException ex) when (archivePath.EndsWith(".rar", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试。", ex);
+            throw new InvalidOperationException(ModpackText(null, "resource_detail.modpack.workflow.errors.rar_unsupported"), ex);
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {
-            throw new InvalidOperationException("打开整合包文件失败，文件可能损坏或为不支持的压缩包格式。", ex);
+            throw new InvalidOperationException(ModpackText(null, "resource_detail.modpack.workflow.errors.archive_open_failed"), ex);
         }
     }
 
-    private static JsonObject ReadJsonObjectFromEntry(ZipArchive archive, string entryPath)
+    private static JsonObject ReadJsonObjectFromEntry(ZipArchive archive, string entryPath, II18nService? i18n = null)
     {
         using var stream = archive.GetEntry(entryPath)?.Open()
-                           ?? throw new InvalidOperationException($"整合包缺少关键文件：{entryPath}");
+                           ?? throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.missing_critical_file", ("path", entryPath)));
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: false);
         var content = reader.ReadToEnd();
         return JsonNode.Parse(content)?.AsObject()
-               ?? throw new InvalidOperationException($"无法解析整合包内的 JSON 文件：{entryPath}");
+               ?? throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.json_parse_failed", ("entry_path", entryPath)));
     }
 
     private static string? ReadJoinedText(JsonNode? node)
@@ -1129,7 +1215,8 @@ internal sealed class FrontendManagedModpackInstallTask(
     FrontendDownloadTransferOptions? downloadOptions = null,
     Action<string>? onStarted = null,
     Action<FrontendModpackInstallResult>? onCompleted = null,
-    Action<string>? onFailed = null) : PCL.Core.App.Tasks.ITask, PCL.Core.App.Tasks.ITaskProgressive, PCL.Core.App.Tasks.ITaskProgressStatus, PCL.Core.App.Tasks.ITaskCancelable
+    Action<string>? onFailed = null,
+    II18nService? i18n = null) : PCL.Core.App.Tasks.ITask, PCL.Core.App.Tasks.ITaskProgressive, PCL.Core.App.Tasks.ITaskProgressStatus, PCL.Core.App.Tasks.ITaskCancelable
 {
     private readonly CancellationTokenSource _cancellation = new();
     private double _progress;
@@ -1153,14 +1240,14 @@ internal sealed class FrontendManagedModpackInstallTask(
         }
 
         _cancellation.Cancel();
-        PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在取消整合包安装…");
+        PublishState(PCL.Core.App.Tasks.TaskState.Running, FrontendModpackInstallWorkflowService.ModpackText(i18n, "resource_detail.modpack.task.canceling"));
     }
 
     public async Task ExecuteAsync(CancellationToken cancelToken = default)
     {
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancelToken, _cancellation.Token);
         var token = linkedCts.Token;
-        PublishState(PCL.Core.App.Tasks.TaskState.Waiting, "已加入任务中心");
+        PublishState(PCL.Core.App.Tasks.TaskState.Waiting, FrontendModpackInstallWorkflowService.ModpackText(i18n, "resource_detail.modpack.task.queued"));
 
         try
         {
@@ -1173,11 +1260,12 @@ internal sealed class FrontendManagedModpackInstallTask(
                 status => UpdateFromInstallStatus(status),
                 requestTimeout,
                 downloadOptions,
-                token).ConfigureAwait(false);
+                token,
+                i18n).ConfigureAwait(false);
 
             PublishProgress(1d);
             PublishProgressStatus(new PCL.Core.App.Tasks.TaskProgressStatusSnapshot("100%", "0 B/s", 0, null));
-            PublishState(PCL.Core.App.Tasks.TaskState.Success, "整合包安装完成");
+            PublishState(PCL.Core.App.Tasks.TaskState.Success, FrontendModpackInstallWorkflowService.ModpackText(i18n, "resource_detail.modpack.task.completed"));
             onCompleted?.Invoke(result);
         }
         catch (OperationCanceledException)
@@ -1189,7 +1277,7 @@ internal sealed class FrontendManagedModpackInstallTask(
                     "0 B/s",
                     _progressStatus.RemainingFileCount,
                     null));
-            PublishState(PCL.Core.App.Tasks.TaskState.Canceled, "整合包安装已取消");
+            PublishState(PCL.Core.App.Tasks.TaskState.Canceled, FrontendModpackInstallWorkflowService.ModpackText(i18n, "resource_detail.modpack.task.canceled"));
         }
         catch (Exception ex)
         {
@@ -1209,19 +1297,19 @@ internal sealed class FrontendManagedModpackInstallTask(
     {
         if (!string.IsNullOrWhiteSpace(request.SourceArchivePath))
         {
-            PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在复制整合包文件…");
+            PublishState(PCL.Core.App.Tasks.TaskState.Running, FrontendModpackInstallWorkflowService.ModpackText(i18n, "resource_detail.modpack.task.copying_archive"));
             await CopyArchiveAsync(request.SourceArchivePath!, token).ConfigureAwait(false);
             return;
         }
 
         if (!string.IsNullOrWhiteSpace(request.SourceUrl))
         {
-            PublishState(PCL.Core.App.Tasks.TaskState.Running, "正在下载整合包文件…");
+            PublishState(PCL.Core.App.Tasks.TaskState.Running, FrontendModpackInstallWorkflowService.ModpackText(i18n, "resource_detail.modpack.task.downloading_archive"));
             await DownloadArchiveAsync(request.SourceUrl!, token, timeout).ConfigureAwait(false);
             return;
         }
 
-        throw new InvalidOperationException("缺少整合包来源。");
+        throw new InvalidOperationException(FrontendModpackInstallWorkflowService.ModpackText(i18n, "resource_detail.modpack.task.source_missing"));
     }
 
     private async Task DownloadArchiveAsync(string sourceUrl, CancellationToken token, TimeSpan timeout)

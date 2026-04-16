@@ -1,0 +1,21 @@
+<local:MyCard Title="Overview" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="The launcher can load custom help entries from the help directory, which means you can add pack-specific instructions, server onboarding notes, or organization-specific troubleshooting pages." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Add custom help entries" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Create a matching JSON metadata file and XAML body for each new help article. Use clear titles and group names so the article appears in a sensible place in the library." />
+    <local:MyListItem Margin="-5,0,-5,8" EventType="打开帮助" EventData="帮助/自定义帮助 - JSON 格式.json" Title="Help JSON format" Info="Open the metadata format article." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Hide built-in help entries" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If you need a curated help experience, use the supported ignore mechanism to hide built-in articles that are irrelevant or confusing for your distribution instead of editing the bundled archive directly." />
+  </StackPanel>
+</local:MyCard>

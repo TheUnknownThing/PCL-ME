@@ -65,7 +65,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedDownloadFavoriteTargetIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, DownloadFavoriteTargetOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, DownloadFavoriteTargetOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (!SetProperty(ref _selectedDownloadFavoriteTargetIndex, nextValue))
             {
                 return;

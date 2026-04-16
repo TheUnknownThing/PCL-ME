@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="15">
-      <controls:PclCard Header="游戏资源获取行为" ContentMargin="25,37,25,15">
+      <controls:PclCard Header="{Binding SetupText.GameManage.GameResourcesCardHeader}" ContentMargin="25,37,25,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,Auto,Auto,Auto,Auto,27">
             <TextBlock
@@ -14,7 +14,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="文件下载源" />
+                Text="{Binding SetupText.GameManage.FileDownloadSourceLabel}" />
             <ComboBox
                 Grid.Column="1"
                 Height="28"
@@ -27,7 +27,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="版本列表源" />
+                Text="{Binding SetupText.GameManage.VersionListSourceLabel}" />
             <ComboBox
                 Grid.Row="2"
                 Grid.Column="1"
@@ -41,7 +41,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="最大线程数" />
+                Text="{Binding SetupText.GameManage.MaxThreadCountLabel}" />
             <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,48">
               <Slider
                   VerticalAlignment="Center"
@@ -63,7 +63,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="速度限制" />
+                Text="{Binding SetupText.GameManage.SpeedLimitLabel}" />
             <Grid Grid.Row="5" Grid.Column="1" ColumnDefinitions="*,48">
               <Slider
                   VerticalAlignment="Center"
@@ -85,7 +85,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="下载超时" />
+                Text="{Binding SetupText.GameManage.DownloadTimeoutLabel}" />
             <Grid Grid.Row="6" Grid.Column="1" ColumnDefinitions="*,48">
               <Slider
                   VerticalAlignment="Center"
@@ -107,14 +107,14 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,5,25,5"
-                Text="目标文件夹" />
+                Text="{Binding SetupText.GameManage.TargetFolderLabel}" />
             <TextBlock
                 Grid.Row="7"
                 Grid.Column="1"
                 Margin="0,5"
                 Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="12"
-                Text="请在 启动 → 实例选择 → 文件夹列表 中更改下载目标文件夹。在某个文件夹或游戏实例上右键，即可选择打开对应文件夹。"
+                Text="{Binding SetupText.GameManage.TargetFolderHint}"
                 TextWrapping="Wrap" />
 
             <TextBlock
@@ -123,18 +123,23 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="安装行为" />
-                        <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*">
+                Text="{Binding SetupText.GameManage.InstallBehaviorLabel}" />
+            <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,*">
               <CheckBox
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="安装新实例后自动选定该实例"
+                  Content="{Binding SetupText.GameManage.AutoSelectNewInstanceLabel}"
                   IsChecked="{Binding AutoSelectNewInstance}" />
+              <CheckBox
+                  Grid.Column="1"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  Content="{Binding SetupText.GameManage.UpgradePartialAuthlibLabel}"
+                  IsChecked="{Binding UpgradePartialAuthlib}" />
             </Grid>
           </Grid>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="社区资源获取行为" ContentMargin="25,37,25,12">
+      <controls:PclCard Header="{Binding SetupText.GameManage.CommunityResourcesCardHeader}" ContentMargin="25,37,25,12">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,28">
@@ -143,7 +148,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="下载源" />
+                  Text="{Binding SetupText.GameManage.CommunityDownloadSourceLabel}" />
               <ComboBox
                   Grid.Column="1"
                   Height="28"
@@ -156,7 +161,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="文件名格式" />
+                  Text="{Binding SetupText.GameManage.FileNameFormatLabel}" />
               <ComboBox
                   Grid.Row="2"
                   Grid.Column="1"
@@ -170,7 +175,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="Mod 管理样式" />
+                  Text="{Binding SetupText.GameManage.ModLocalNameStyleLabel}" />
               <ComboBox
                   Grid.Row="4"
                   Grid.Column="1"
@@ -181,13 +186,13 @@
 
             <CheckBox
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="不显示 Quilt 加载器"
+                Content="{Binding SetupText.GameManage.HideQuiltLoaderLabel}"
                 IsChecked="{Binding IgnoreQuiltLoader}" />
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="辅助功能" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.GameManage.AccessibilityCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,160,Auto" RowDefinitions="22,8,22,8,22">
             <TextBlock
@@ -195,16 +200,16 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="游戏更新提示" />
+                Text="{Binding SetupText.GameManage.GameUpdateNotificationsLabel}" />
             <CheckBox
                 Grid.Column="1"
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="正式版更新提示"
+                Content="{Binding SetupText.GameManage.ReleaseUpdateNotificationsLabel}"
                 IsChecked="{Binding NotifyReleaseUpdates}" />
             <CheckBox
                 Grid.Column="2"
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="测试版更新提示"
+                Content="{Binding SetupText.GameManage.SnapshotUpdateNotificationsLabel}"
                 IsChecked="{Binding NotifySnapshotUpdates}" />
 
             <TextBlock
@@ -213,20 +218,20 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="游戏语言" />
+                Text="{Binding SetupText.GameManage.GameLanguageLabel}" />
             <CheckBox
                 Grid.Row="2"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="自动设置为中文"
+                Content="{Binding SetupText.GameManage.AutoSwitchGameLanguageLabel}"
                 IsChecked="{Binding AutoSwitchGameLanguageToChinese}" />
 
             <CheckBox
                 Grid.Row="4"
                 Grid.ColumnSpan="3"
                 Foreground="{DynamicResource ColorBrush1}"
-                Content="识别跳转剪贴板中的社区资源链接"
+                Content="{Binding SetupText.GameManage.DetectClipboardLinksLabel}"
                 IsChecked="{Binding DetectClipboardResourceLinks}" />
           </Grid>
         </controls:PclCard.CardContent>

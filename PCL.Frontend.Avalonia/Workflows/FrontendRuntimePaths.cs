@@ -258,7 +258,7 @@ internal sealed record FrontendRuntimePaths(
             ? "an old config file"
             : string.Join(", ", sourcePaths);
 
-        return $"启动器配置迁移失败：{migrationLabel} 在 {sourceSummary} 向 {targetConfigPath}.{Environment.NewLine}迁移产生错误: {exception.Message}";
+        return $"Launcher config migration failed: {migrationLabel} from {sourceSummary} to {targetConfigPath}.{Environment.NewLine}Migration error: {exception.Message}";
     }
 
     private T OpenProvider<T>(string configPath, string configLabel, Func<string, T> factory)

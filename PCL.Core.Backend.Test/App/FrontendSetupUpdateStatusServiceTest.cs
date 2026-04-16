@@ -1,5 +1,6 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.Testing;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Core.Backend.Test.App;
@@ -43,7 +44,8 @@ public sealed class FrontendSetupUpdateStatusServiceTest
         var result = FrontendSetupUpdateStatusService.SelectLatestGithubRelease(
             releases,
             FrontendSetupUpdateStatusService.UpdateChannel.Stable,
-            "win-x64");
+            "win-x64",
+            new DictionaryI18nService());
 
         Assert.AreEqual("2.14.4", result.VersionName);
         Assert.AreEqual("https://example.invalid/downloads/stable-win-x64.zip", result.DownloadUrl);
@@ -90,7 +92,8 @@ public sealed class FrontendSetupUpdateStatusServiceTest
         var result = FrontendSetupUpdateStatusService.SelectLatestGithubRelease(
             releases,
             FrontendSetupUpdateStatusService.UpdateChannel.Beta,
-            "win-x64");
+            "win-x64",
+            new DictionaryI18nService());
 
         Assert.AreEqual("2.14.5-beta.1", result.VersionName);
         Assert.AreEqual("https://example.invalid/downloads/beta-win-x64.zip", result.DownloadUrl);

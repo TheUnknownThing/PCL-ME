@@ -5,23 +5,24 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    public IReadOnlyList<string> DarkModeOptions { get; } =
-    [
-        "浅色",
-        "深色",
-        "跟随系统"
-    ];
+    public IReadOnlyList<string> DarkModeOptions => SetupText.Ui.DarkModeOptions;
 
-    public IReadOnlyList<string> ThemeColorOptions => FrontendAppearanceService.ThemeColorOptions;
+    public IReadOnlyList<string> ThemeColorOptions => SetupText.Ui.ThemeColorOptions;
 
-    public IReadOnlyList<string> FontOptions { get; } = FrontendAppearanceService.GetFontOptions();
+    public IReadOnlyList<string> FontOptions => SetupText.Ui.FontOptions;
 
-    public IReadOnlyList<string> HomepagePresetOptions { get; } = HomepagePresetCatalog.Select(item => item.Title).ToArray();
+    public IReadOnlyList<string> HomepagePresetOptions => HomepagePresetCatalog.Select(item => item.Title).ToArray();
 
     public int SelectedDarkModeIndex
     {
         get => _selectedDarkModeIndex;
-        set => SetProperty(ref _selectedDarkModeIndex, Math.Clamp(value, 0, DarkModeOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, DarkModeOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedDarkModeIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedLightColorIndex
@@ -29,7 +30,12 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedLightColorIndex;
         set
         {
-            var normalized = FrontendAppearanceService.NormalizeThemeColorIndex(value, ThemeColorOptions.Count);
+            if (!TryNormalizeSelectionIndex(value, ThemeColorOptions.Count, out var normalizedValue))
+            {
+                return;
+            }
+
+            var normalized = FrontendAppearanceService.NormalizeThemeColorIndex(normalizedValue, ThemeColorOptions.Count);
             if (_selectedLightColorIndex == normalized)
             {
                 return;
@@ -50,7 +56,12 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedDarkColorIndex;
         set
         {
-            var normalized = FrontendAppearanceService.NormalizeThemeColorIndex(value, ThemeColorOptions.Count);
+            if (!TryNormalizeSelectionIndex(value, ThemeColorOptions.Count, out var normalizedValue))
+            {
+                return;
+            }
+
+            var normalized = FrontendAppearanceService.NormalizeThemeColorIndex(normalizedValue, ThemeColorOptions.Count);
             if (_selectedDarkColorIndex == normalized)
             {
                 return;
@@ -81,7 +92,7 @@ internal sealed partial class FrontendShellViewModel
     public bool IsAnyCustomThemeColorEditorVisible =>
         IsLightCustomThemeColorEditorVisible || IsDarkCustomThemeColorEditorVisible;
 
-    public string CustomThemeColorInputHint => "支持 #RRGGBB，例如 #159E95";
+    public string CustomThemeColorInputHint => SetupText.Ui.CustomThemeHint;
 
     public string CustomLightThemeColorHex
     {
@@ -192,13 +203,25 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedGlobalFontIndex
     {
         get => _selectedGlobalFontIndex;
-        set => SetProperty(ref _selectedGlobalFontIndex, Math.Clamp(value, 0, FontOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, FontOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedGlobalFontIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedMotdFontIndex
     {
         get => _selectedMotdFontIndex;
-        set => SetProperty(ref _selectedMotdFontIndex, Math.Clamp(value, 0, FontOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, FontOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedMotdFontIndex, normalizedValue);
+            }
+        }
     }
 
     public bool BackgroundColorful
@@ -256,7 +279,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedLogoTypeIndex;
         set
         {
-            var clamped = Math.Clamp(value, 0, 3);
+            if (!TryNormalizeSelectionIndex(value, 4, out var clamped))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedLogoTypeIndex, clamped))
             {
                 RaisePropertyChanged(nameof(IsLogoTypeNoneSelected));
@@ -330,7 +357,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedHomepageTypeIndex;
         set
         {
-            var clamped = Math.Clamp(value, 0, 3);
+            if (!TryNormalizeSelectionIndex(value, 4, out var clamped))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedHomepageTypeIndex, clamped))
             {
                 RaisePropertyChanged(nameof(IsHomepageBlankSelected));
@@ -384,7 +415,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedHomepagePresetIndex
     {
         get => _selectedHomepagePresetIndex;
-        set => SetProperty(ref _selectedHomepagePresetIndex, Math.Clamp(value, 0, HomepagePresetOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, HomepagePresetOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedHomepagePresetIndex, normalizedValue);
+            }
+        }
     }
 
     public bool HasJavaRuntimeEntries => JavaRuntimeEntries.Count > 0;

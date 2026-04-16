@@ -31,7 +31,7 @@
               Margin="13,5,5,3"
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12"
-              Text="文件夹列表" />
+              Text="{Binding InstanceSelectionFoldersHeader}" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionFolderEntries}" IsVisible="{Binding HasInstanceSelectionFolders}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
@@ -58,7 +58,7 @@
               Margin="13,5,5,3"
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               FontSize="12"
-              Text="快捷操作" />
+              Text="{Binding InstanceSelectionShortcutsHeader}" />
           <ItemsControl ItemsSource="{Binding InstanceSelectionShortcutEntries}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>

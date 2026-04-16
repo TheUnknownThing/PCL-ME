@@ -14,7 +14,9 @@ internal sealed partial class FrontendShellViewModel
         switch (propertyName)
         {
             case nameof(IgnoreQuiltLoader):
-                RefreshShell(IgnoreQuiltLoader ? "已隐藏 Quilt 相关入口。" : "已恢复 Quilt 相关入口。");
+                RefreshShell(_i18n.T(IgnoreQuiltLoader
+                    ? "setup.game_manage.reactions.quilt_hidden"
+                    : "setup.game_manage.reactions.quilt_restored"));
                 if (IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
                 {
                     RefreshDownloadResourceSurface();

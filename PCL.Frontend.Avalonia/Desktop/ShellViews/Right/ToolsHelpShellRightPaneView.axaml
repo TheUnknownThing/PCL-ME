@@ -8,7 +8,7 @@
     <StackPanel Margin="25,25,25,10" Spacing="15">
       <controls:PclSearchBox
           Text="{Binding HelpSearchQuery, Mode=TwoWay}"
-          Watermark="搜索帮助" />
+          Watermark="{Binding ToolsHelpSearchWatermark}" />
 
       <ItemsControl ItemsSource="{Binding HelpTopicGroups}" IsVisible="{Binding ShowHelpTopicLibrary}">
         <ItemsControl.ItemTemplate>
@@ -59,7 +59,7 @@
                 Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 FontSize="13"
                 IsVisible="{Binding HasNoHelpSearchResults}"
-                Text="没有找到匹配的帮助条目。"
+                Text="{Binding ToolsHelpNoResultsText}"
                 TextWrapping="Wrap" />
           </StackPanel>
         </controls:PclCard.CardContent>

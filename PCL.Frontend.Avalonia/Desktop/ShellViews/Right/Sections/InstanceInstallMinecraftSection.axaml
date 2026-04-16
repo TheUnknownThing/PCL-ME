@@ -5,7 +5,7 @@
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
   <controls:PclCard
       Margin="0,15,0,0"
-      Header="Minecraft"
+      Header="{Binding InstanceInstallMinecraftHeaderText}"
       HeaderCommand="{Binding EditInstanceInstallMinecraftCommand}"
       ContentMargin="0">
     <controls:PclCard.HeaderOverlayContent>
@@ -41,7 +41,7 @@
             VerticalAlignment="Center"
             Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12.5"
-            Text="修改" />
+            Text="{Binding InstanceInstallModifyText}" />
       </Grid>
     </controls:PclCard.HeaderOverlayContent>
     <controls:PclCard.CardContent>

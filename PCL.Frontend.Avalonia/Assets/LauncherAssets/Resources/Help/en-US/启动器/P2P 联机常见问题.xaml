@@ -1,0 +1,27 @@
+<local:MyCard Title="Can different launchers play together?" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Yes, if everyone ultimately launches the same Minecraft version and content set. The launcher is not the deciding factor once the game itself is running; version mismatches and network conditions matter more." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="What is NAT and why does it matter?" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="NAT describes how your router maps local devices to the public internet. Strict NAT types can make direct peer-to-peer connections harder, which is why some players need relays, port forwarding, or different network paths." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="TCP, UDP, and IPv6" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="TCP is connection-oriented and usually more tolerant of loss, while UDP is lighter and often used by real-time systems. IPv6 can improve connectivity by reducing the need for NAT, so disabling it is usually a bad first troubleshooting step." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Shortest path and lowest latency path" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="The shortest route on paper is not always the fastest route in practice. If the launcher offers different route strategies, test the one that delivers the lowest stable latency instead of assuming the shortest path will always win." />
+  </StackPanel>
+</local:MyCard>

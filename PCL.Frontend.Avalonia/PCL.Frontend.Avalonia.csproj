@@ -45,6 +45,7 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     <PackageReference Include="fNbt" Version="1.0.0" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -70,5 +71,26 @@
     <AvaloniaResource Include="Assets/icon.ico" />
     <AvaloniaResource Include="Assets/icon.png" />
     <Content Include="Assets/LauncherAssets/**" Link="LauncherAssets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Locales/**" Link="Locales/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <Target Name="ValidateI18nResources"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipI18nBuildValidation)' != 'true'">
+    <Exec Command='dotnet run -p:NuGetAudit=false --project "$(MSBuildProjectDirectory)/../PCL.Tools.I18n/PCL.Tools.I18n.csproj" -- validate --format msbuild --locales-dir "$(MSBuildProjectDirectory)/Locales"'
+          IgnoreExitCode="true"
+          ConsoleToMsBuild="true">
+      <Output TaskParameter="ConsoleOutput" ItemName="_I18nValidationOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_I18nValidationExitCode" />
+    </Exec>
+    <Message Text="%(_I18nValidationOutput.Identity)"
+             Importance="Low"
+             Condition="$([System.String]::Copy('%(_I18nValidationOutput.Identity)').StartsWith('MESSAGE|'))" />
+    <Warning Text="%(_I18nValidationOutput.Identity)"
+             Condition="$([System.String]::Copy('%(_I18nValidationOutput.Identity)').StartsWith('WARNING|'))" />
+    <Error Text="%(_I18nValidationOutput.Identity)"
+           Condition="$([System.String]::Copy('%(_I18nValidationOutput.Identity)').StartsWith('ERROR|'))" />
+    <Error Text="ERROR|I18N validation command failed with exit code $(_I18nValidationExitCode)."
+           Condition="'$(_I18nValidationExitCode)' != '0'" />
+  </Target>
 </Project>

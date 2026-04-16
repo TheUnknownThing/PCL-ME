@@ -10,6 +10,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using PCL.Core.App;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
@@ -25,13 +26,16 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal sealed class FrontendShellActionService(
     FrontendRuntimePaths runtimePaths,
     FrontendPlatformAdapter platformAdapter,
-    Action exitLauncher)
+    Action exitLauncher,
+    II18nService i18nService)
 {
     private static readonly HttpClient JavaRuntimeHttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(100));
 
     public FrontendRuntimePaths RuntimePaths { get; } = runtimePaths;
 
     public FrontendPlatformAdapter PlatformAdapter { get; } = platformAdapter;
+
+    private II18nService I18n { get; } = i18nService;
 
     public Func<string, string, string, bool, Task<bool>>? ConfirmPresenter { get; set; }
 
@@ -209,7 +213,7 @@ internal sealed class FrontendShellActionService(
     public async Task<string?> PickOpenFileAsync(string title, string typeName, params string[] patterns)
     {
         var storageProvider = TryGetStorageProvider(out var error)
-            ?? throw new InvalidOperationException(error ?? "当前环境不支持文件选择器。");
+            ?? throw new InvalidOperationException(error ?? "The current environment does not support file pickers.");
         var fileTypes = patterns.Length == 0
             ? null
             : new List<FilePickerFileType>
@@ -232,7 +236,7 @@ internal sealed class FrontendShellActionService(
     public async Task<string?> PickFolderAsync(string title)
     {
         var storageProvider = TryGetStorageProvider(out var error)
-            ?? throw new InvalidOperationException(error ?? "当前环境不支持文件夹选择器。");
+            ?? throw new InvalidOperationException(error ?? "The current environment does not support folder pickers.");
         var result = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = title,
@@ -249,7 +253,7 @@ internal sealed class FrontendShellActionService(
         params string[] patterns)
     {
         var storageProvider = TryGetStorageProvider(out var error)
-            ?? throw new InvalidOperationException(error ?? "当前环境不支持文件选择器。");
+            ?? throw new InvalidOperationException(error ?? "The current environment does not support file pickers.");
         var fileTypes = patterns.Length == 0
             ? null
             : new List<FilePickerFileType>
@@ -280,7 +284,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow?.Clipboard is null)
         {
-            throw new InvalidOperationException("当前环境不支持剪贴板。");
+            throw new InvalidOperationException("The current environment does not support the clipboard.");
         }
 
         return await desktop.MainWindow.Clipboard.TryGetTextAsync();
@@ -291,7 +295,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow?.Clipboard is null)
         {
-            throw new InvalidOperationException("当前环境不支持剪贴板。");
+            throw new InvalidOperationException("The current environment does not support the clipboard.");
         }
 
         await desktop.MainWindow.Clipboard.SetTextAsync(text ?? string.Empty);
@@ -301,7 +305,7 @@ internal sealed class FrontendShellActionService(
         string title,
         string message,
         string initialText = "",
-        string confirmText = "确定",
+        string confirmText = "Confirm",
         string? placeholderText = null,
         bool isPassword = false)
     {
@@ -318,7 +322,7 @@ internal sealed class FrontendShellActionService(
         string message,
         IReadOnlyList<PclChoiceDialogOption> options,
         string? selectedId = null,
-        string confirmText = "确定")
+        string confirmText = "Confirm")
     {
         if (options.Count == 0)
         {
@@ -336,7 +340,7 @@ internal sealed class FrontendShellActionService(
     public async Task<bool> ConfirmAsync(
         string title,
         string message,
-        string confirmText = "确定",
+        string confirmText = "Confirm",
         bool isDanger = false)
     {
         if (ConfirmPresenter is not null)
@@ -388,13 +392,23 @@ internal sealed class FrontendShellActionService(
 
         var exportRequest = crashPlan.ExportPlan.ExportRequest;
         var builder = new StringBuilder()
-            .AppendLine(crashPlan.OutputPrompt.Title)
+            .AppendLine(I18n.T(crashPlan.OutputPrompt.Title))
             .AppendLine()
             .AppendLine(crashPlan.OutputPrompt.Message)
             .AppendLine()
-            .AppendLine("导出计划")
-            .AppendLine($"- 建议压缩包: {crashPlan.ExportPlan.SuggestedArchiveName}")
-            .AppendLine($"- 源文件数量: {exportRequest.SourceFiles.Count}");
+            .AppendLine(I18n.T("crash.export.heading"))
+            .AppendLine(I18n.T(
+                "crash.export.suggested_archive",
+                new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["archive_name"] = crashPlan.ExportPlan.SuggestedArchiveName
+                }))
+            .AppendLine(I18n.T(
+                "crash.export.source_file_count",
+                new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["file_count"] = exportRequest.SourceFiles.Count
+                }));
 
         foreach (var sourceFile in exportRequest.SourceFiles)
         {
@@ -688,7 +702,7 @@ internal sealed class FrontendShellActionService(
         var process = SystemProcessManager.Current.Start(
             MinecraftLaunchProcessExecutionService.BuildGameProcessStartRequest(
                 launchComposition.SessionStartPlan.ProcessShellPlan))
-            ?? throw new InvalidOperationException("游戏进程启动失败。");
+            ?? throw new InvalidOperationException("Failed to start the game process.");
         MinecraftLaunchProcessExecutionService.TryApplyPriority(
             process,
             launchComposition.SessionStartPlan.ProcessShellPlan.PriorityKind);
@@ -713,7 +727,7 @@ internal sealed class FrontendShellActionService(
         }
 
         return startupSummaryLines
-            .Concat(["~ Natives 同步 ~"])
+            .Concat(["~ Natives Sync ~"])
             .Concat(nativeSyncResult.LogMessages)
             .ToArray();
     }
@@ -731,7 +745,7 @@ internal sealed class FrontendShellActionService(
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("解压游戏本地库失败。", ex);
+            throw new InvalidOperationException("Failed to extract game native libraries.", ex);
         }
     }
 
@@ -760,7 +774,7 @@ internal sealed class FrontendShellActionService(
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("准备 ASCII 兼容原生库路径失败。", ex);
+            throw new InvalidOperationException("Failed to prepare an ASCII-compatible native library path.", ex);
         }
     }
 
@@ -804,7 +818,7 @@ internal sealed class FrontendShellActionService(
             if (lastError is not null)
             {
                 throw new InvalidOperationException(
-                    $"缺少启动所需文件且自动下载失败：{requirement.TargetPath}",
+                    $"A required launch file is missing and automatic download failed: {requirement.TargetPath}",
                     lastError);
             }
         }
@@ -836,7 +850,7 @@ internal sealed class FrontendShellActionService(
     public string CreateLauncherShortcut(string displayName)
     {
         var desktopDirectory = PlatformAdapter.TryGetDesktopDirectory()
-            ?? throw new InvalidOperationException("当前系统未提供桌面目录。");
+            ?? throw new InvalidOperationException("The current system did not provide a desktop directory.");
         return CreateLauncherShortcutAt(desktopDirectory, displayName);
     }
 
@@ -1056,7 +1070,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow?.StorageProvider is null)
         {
-            error = "当前环境不支持文件选择。";
+            error = "The current environment does not support file selection.";
             return null;
         }
 
@@ -1068,7 +1082,7 @@ internal sealed class FrontendShellActionService(
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop
             || desktop.MainWindow is null)
         {
-            throw new InvalidOperationException("当前环境未提供主窗口。");
+            throw new InvalidOperationException("The current environment did not provide a main window.");
         }
 
         return desktop.MainWindow;
@@ -1198,7 +1212,7 @@ internal sealed class FrontendShellActionService(
             }
         }
 
-        throw new InvalidOperationException("无法下载 Java 运行时元数据。", lastError);
+        throw new InvalidOperationException("Unable to download Java runtime metadata.", lastError);
     }
 
     private static void DownloadJavaRuntimeFile(
@@ -1227,7 +1241,7 @@ internal sealed class FrontendShellActionService(
                 if (!string.Equals(sha1, file.Sha1, StringComparison.OrdinalIgnoreCase))
                 {
                     TryDeleteFile(tempPath);
-                    throw new InvalidOperationException($"Java 文件校验失败：{file.RelativePath}");
+                    throw new InvalidOperationException($"Java file verification failed: {file.RelativePath}");
                 }
 
                 File.Move(tempPath, file.TargetPath, overwrite: true);
@@ -1245,7 +1259,7 @@ internal sealed class FrontendShellActionService(
             }
         }
 
-        throw new InvalidOperationException($"无法下载 Java 文件：{file.RelativePath}", lastError);
+        throw new InvalidOperationException($"Unable to download Java file: {file.RelativePath}", lastError);
     }
 
     private static void DownloadJavaRuntimeArchivePackage(

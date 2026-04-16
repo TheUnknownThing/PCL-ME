@@ -1,0 +1,10 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Buy Minecraft",
+  "Description": "Open the official store page for Minecraft on PC",
+  "Types": ["Minecraft"],
+  "IsEvent": true,
+  "Keywords": "buy minecraft official",
+  "EventType": "打开网页",
+  "EventData": "https://www.xbox.com/en-US/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj"
+}

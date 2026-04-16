@@ -8,7 +8,7 @@ namespace PCL.Frontend.Avalonia.Desktop;
 
 internal static class FrontendFontDiagnostics
 {
-    private const int CjkProbeCodePoint = '汉';
+    private const int CjkProbeCodePoint = 0x6C49;
 
     public static bool ShouldWarnAboutMissingCjkFont(Application app, bool forceWarning)
     {

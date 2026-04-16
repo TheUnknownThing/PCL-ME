@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using PCL.Core.App.Configuration.Storage;
 
@@ -8,7 +9,7 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendAppearanceService
 {
-    private const string CustomThemeColorName = "自定义";
+    private const string CustomThemeColorName = "custom";
     private const string DefaultFontOptionName = "默认字体";
     private const string LaunchFontFamilyResourceKey = "LaunchFontFamily";
     private const string LaunchMotdFontFamilyResourceKey = "LaunchMotdFontFamily";
@@ -29,20 +30,20 @@ internal static class FrontendAppearanceService
 
     private static readonly FrontendPaletteDefinition[] LightPalettes =
     [
-        new("龙猫蓝", Color.Parse("#1370F3")),
-        new("甜柠青", Color.Parse("#159E95")),
-        new("小草绿", Color.Parse("#459A44")),
-        new("菠萝黄", Color.Parse("#C48910")),
-        new("橡木棕", Color.Parse("#9A6B42"))
+        new("cat_blue", Color.Parse("#1370F3")),
+        new("lemon_cyan", Color.Parse("#159E95")),
+        new("grass_green", Color.Parse("#459A44")),
+        new("pineapple_yellow", Color.Parse("#C48910")),
+        new("oak_brown", Color.Parse("#9A6B42"))
     ];
 
     private static readonly FrontendPaletteDefinition[] DarkPalettes =
     [
-        new("龙猫蓝", Color.Parse("#33BBFF")),
-        new("甜柠青", Color.Parse("#50DED4")),
-        new("小草绿", Color.Parse("#C4F1C4")),
-        new("菠萝黄", Color.Parse("#F0C44A")),
-        new("橡木棕", Color.Parse("#D8A06C"))
+        new("cat_blue", Color.Parse("#33BBFF")),
+        new("lemon_cyan", Color.Parse("#50DED4")),
+        new("grass_green", Color.Parse("#C4F1C4")),
+        new("pineapple_yellow", Color.Parse("#F0C44A")),
+        new("oak_brown", Color.Parse("#D8A06C"))
     ];
 
     public static IReadOnlyList<string> ThemeColorOptions { get; } =
@@ -285,11 +286,7 @@ internal static class FrontendAppearanceService
             _ => ThemeVariant.Default
         };
 
-        var effectiveVariant = application.ActualThemeVariant == ThemeVariant.Dark
-            ? ThemeVariant.Dark
-            : application.RequestedThemeVariant == ThemeVariant.Dark
-                ? ThemeVariant.Dark
-                : ThemeVariant.Light;
+        var effectiveVariant = ResolveEffectiveThemeVariant(application, selection.DarkModeIndex);
         var useDarkPalette = effectiveVariant == ThemeVariant.Dark;
 
         var accent = ResolveAccent(useDarkPalette, selection);
@@ -325,6 +322,21 @@ internal static class FrontendAppearanceService
         {
             _isReapplyingForThemeVariantChange = false;
         }
+    }
+
+    public static ThemeVariant ResolveCurrentThemeVariant(Application? application)
+    {
+        if (application is null)
+        {
+            return ThemeVariant.Light;
+        }
+
+        return ResolveEffectiveThemeVariant(application, _currentSelection.DarkModeIndex);
+    }
+
+    public static bool IsDarkTheme(Application? application)
+    {
+        return ResolveCurrentThemeVariant(application) == ThemeVariant.Dark;
     }
 
     private static FrontendResolvedPalette CreateLightPalette(Color accent)
@@ -729,6 +741,23 @@ internal static class FrontendAppearanceService
     private static void OnApplicationActualThemeVariantChanged(object? sender, EventArgs e)
     {
         ReapplyCurrentAppearance(sender as Application);
+    }
+
+    private static ThemeVariant ResolveEffectiveThemeVariant(Application application, int darkModeIndex)
+    {
+        return darkModeIndex switch
+        {
+            0 => ThemeVariant.Light,
+            1 => ThemeVariant.Dark,
+            _ => application.PlatformSettings?.GetColorValues().ThemeVariant switch
+            {
+                PlatformThemeVariant.Dark => ThemeVariant.Dark,
+                PlatformThemeVariant.Light => ThemeVariant.Light,
+                _ => application.ActualThemeVariant == ThemeVariant.Dark
+                    ? ThemeVariant.Dark
+                    : ThemeVariant.Light
+            }
+        };
     }
 
     private static Color Mix(Color left, Color right, double rightWeight)

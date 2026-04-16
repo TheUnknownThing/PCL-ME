@@ -3,7 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
-  <controls:PclCard Header="个性化" ContentMargin="20,40,20,18">
+  <controls:PclCard Header="{Binding InstanceOverviewPersonalizationHeaderText}" ContentMargin="20,40,20,18">
     <controls:PclCard.CardContent>
       <StackPanel Spacing="15">
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28">
@@ -13,7 +13,7 @@
               VerticalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
-              Text="图标" />
+              Text="{Binding InstanceOverviewIconLabelText}" />
           <ComboBox
               Grid.Row="0"
               Grid.Column="1"
@@ -32,7 +32,7 @@
               VerticalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
-              Text="分类" />
+              Text="{Binding InstanceOverviewCategoryLabelText}" />
           <ComboBox
               Grid.Row="2"
               Grid.Column="1"
@@ -52,13 +52,13 @@
               MinWidth="140"
               Margin="0,0,20,0"
               Command="{Binding RenameInstanceCommand}"
-              Text="修改实例名" />
+              Text="{Binding InstanceOverviewRenameText}" />
           <controls:PclButton
               Grid.Column="1"
               MinWidth="140"
               Margin="0,0,20,0"
               Command="{Binding EditInstanceDescriptionCommand}"
-              Text="修改实例描述" />
+              Text="{Binding InstanceOverviewEditDescriptionText}" />
           <controls:PclButton
               Grid.Column="2"
               MinWidth="140"

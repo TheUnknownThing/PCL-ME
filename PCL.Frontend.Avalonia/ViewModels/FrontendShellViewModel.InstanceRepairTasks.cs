@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -12,6 +13,7 @@ internal sealed partial class FrontendShellViewModel
         CancellationToken cancellationToken = default)
     {
         var repairTask = new FrontendManagedInstanceRepairTask(
+            _i18n,
             taskTitle,
             (taskProgress, taskCancellationToken) =>
             {
@@ -31,17 +33,19 @@ internal sealed partial class FrontendShellViewModel
 }
 
 internal sealed class FrontendManagedInstanceRepairTask(
+    II18nService i18n,
     string title,
     Func<Action<FrontendInstanceRepairProgressSnapshot>, CancellationToken, FrontendInstanceRepairResult> executeRepair)
     : ITask, ITaskProgressive, ITaskGroup, ITaskProgressStatus, ITaskCancelable
 {
-    private readonly FrontendInstallStageTask _supportStage = new("补全游戏主文件与支持库");
-    private readonly FrontendInstallStageTask _assetStage = new("补全游戏资源文件");
+    private readonly II18nService _i18n = i18n;
+    private readonly FrontendInstallStageTask _supportStage = new(i18n.T("download.install.workflow.tasks.repairing_game_files"));
+    private readonly FrontendInstallStageTask _assetStage = new(i18n.T("download.install.workflow.tasks.repairing_support_files"));
     private readonly CancellationTokenSource _cancellation = new();
     private bool _stagesAdded;
     private double _progress;
     private FrontendInstanceRepairProgressSnapshot? _lastSnapshot;
-    private TaskProgressStatusSnapshot _progressStatus = new("0%", "0 B/s", null, null);
+    private TaskProgressStatusSnapshot _progressStatus = new("0%", i18n.T("launch.dialog.download_speed.zero"), null, null);
 
     public string Title { get; } = title;
 
@@ -67,7 +71,7 @@ internal sealed class FrontendManagedInstanceRepairTask(
         }
 
         _cancellation.Cancel();
-        StateChanged(TaskState.Running, "正在取消实例文件校验…");
+        StateChanged(TaskState.Running, T("download.install.workflow.tasks.canceling"));
     }
 
     public async Task ExecuteAsync(CancellationToken cancelToken = default)
@@ -76,13 +80,13 @@ internal sealed class FrontendManagedInstanceRepairTask(
         var executionToken = linkedCancellation.Token;
 
         EnsureStagesAdded();
-        StateChanged(TaskState.Waiting, "已加入任务中心");
-        _supportStage.Report(TaskState.Waiting, "等待校验支持文件…", 0d);
-        _assetStage.Report(TaskState.Waiting, "等待校验资源文件…", 0d);
+        StateChanged(TaskState.Waiting, T("download.install.workflow.tasks.queued"));
+        _supportStage.Report(TaskState.Waiting, T("download.install.workflow.tasks.waiting_support_files"), 0d);
+        _assetStage.Report(TaskState.Waiting, T("download.install.workflow.tasks.waiting_asset_files"), 0d);
 
         try
         {
-            StateChanged(TaskState.Running, "正在校验并补全实例文件…");
+            StateChanged(TaskState.Running, T("download.install.workflow.tasks.repairing_game_files"));
             Result = await Task.Run(() => executeRepair(ApplyProgressSnapshot, executionToken), executionToken);
             CompleteSuccessfully(Result);
         }
@@ -91,11 +95,11 @@ internal sealed class FrontendManagedInstanceRepairTask(
             PublishProgressStatus(
                 new TaskProgressStatusSnapshot(
                     $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
-                    "0 B/s",
+                    T("launch.dialog.download_speed.zero"),
                     _progressStatus.RemainingFileCount,
                     null));
             MarkCancellation();
-            StateChanged(TaskState.Canceled, "实例文件校验已取消");
+            StateChanged(TaskState.Canceled, T("download.install.workflow.tasks.canceled"));
             throw;
         }
         catch (Exception ex)
@@ -103,7 +107,7 @@ internal sealed class FrontendManagedInstanceRepairTask(
             PublishProgressStatus(
                 new TaskProgressStatusSnapshot(
                     $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
-                    "0 B/s",
+                    T("launch.dialog.download_speed.zero"),
                     _progressStatus.RemainingFileCount,
                     null));
             MarkFailure(ex.Message);
@@ -138,28 +142,28 @@ internal sealed class FrontendManagedInstanceRepairTask(
         UpdateStageFromGroup(
             _supportStage,
             supportSnapshot,
-            "正在补全游戏主文件与支持库…",
-            "无需下载游戏支持文件");
+            T("download.install.workflow.tasks.repairing_game_files"),
+            T("download.install.workflow.tasks.no_support_files_to_repair"));
         UpdateStageFromGroup(
             _assetStage,
             assetSnapshot,
-            "正在下载游戏资源文件…",
-            "无需下载游戏资源文件");
+            T("download.install.workflow.tasks.downloading_asset_files"),
+            T("download.install.workflow.tasks.no_asset_files_to_download"));
 
         _progress = snapshot.Progress;
         ProgressChanged(_progress);
         PublishProgressStatus(
             new TaskProgressStatusSnapshot(
                 $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero):0.#}%",
-                snapshot.SpeedBytesPerSecond > 0d ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s" : "0 B/s",
+                snapshot.SpeedBytesPerSecond > 0d ? $"{FormatBytes(snapshot.SpeedBytesPerSecond)}/s" : T("launch.dialog.download_speed.zero"),
                 snapshot.RemainingFileCount,
                 null));
 
         StateChanged(
             TaskState.Running,
             string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
-                ? "正在校验实例文件…"
-                : $"正在处理 {snapshot.CurrentFileName}");
+                ? T("download.install.workflow.tasks.verifying_instance_files")
+                : T("download.install.workflow.tasks.processing_file", ("file_name", snapshot.CurrentFileName)));
     }
 
     private void CompleteSuccessfully(FrontendInstanceRepairResult result)
@@ -178,37 +182,35 @@ internal sealed class FrontendManagedInstanceRepairTask(
         _supportStage.Report(
             TaskState.Success,
             supportSnapshot.TotalFiles == 0
-                ? "无需下载游戏支持文件"
-                : $"游戏支持文件已就绪 ({supportSnapshot.CompletedFiles}/{supportSnapshot.TotalFiles})",
+                ? T("download.install.workflow.tasks.no_support_files_to_repair")
+                : T("download.install.workflow.tasks.support_files_completed"),
             1d);
         _assetStage.Report(
             TaskState.Success,
             assetSnapshot.TotalFiles == 0
-                ? "无需下载游戏资源文件"
-                : $"游戏资源文件已就绪 ({assetSnapshot.CompletedFiles}/{assetSnapshot.TotalFiles})",
+                ? T("download.install.workflow.tasks.no_asset_files_to_download")
+                : T("download.install.workflow.tasks.asset_files_completed"),
             1d);
 
         _progress = 1d;
         ProgressChanged(_progress);
-        PublishProgressStatus(new TaskProgressStatusSnapshot("100%", "0 B/s", 0, null));
-        StateChanged(
-            TaskState.Success,
-            $"已下载 {result.DownloadedFiles.Count} 个文件，复用 {result.ReusedFiles.Count} 个文件。");
+        PublishProgressStatus(new TaskProgressStatusSnapshot("100%", T("launch.dialog.download_speed.zero"), 0, null));
+        StateChanged(TaskState.Success, T("download.install.workflow.tasks.completed"));
     }
 
     private void MarkCancellation()
     {
         var runningStage = GetRunningStage();
-        runningStage?.Report(TaskState.Canceled, "任务已取消", runningStage.Progress);
+        runningStage?.Report(TaskState.Canceled, T("download.install.workflow.tasks.canceled"), runningStage.Progress);
 
         if (_supportStage.State == TaskState.Waiting)
         {
-            _supportStage.Report(TaskState.Canceled, "任务已取消", _supportStage.Progress);
+            _supportStage.Report(TaskState.Canceled, T("download.install.workflow.tasks.canceled"), _supportStage.Progress);
         }
 
         if (_assetStage.State == TaskState.Waiting)
         {
-            _assetStage.Report(TaskState.Canceled, "任务已取消", _assetStage.Progress);
+            _assetStage.Report(TaskState.Canceled, T("download.install.workflow.tasks.canceled"), _assetStage.Progress);
         }
     }
 
@@ -233,7 +235,7 @@ internal sealed class FrontendManagedInstanceRepairTask(
         return null;
     }
 
-    private static void UpdateStageFromGroup(
+    private void UpdateStageFromGroup(
         FrontendInstallStageTask stage,
         FrontendInstanceRepairGroupSnapshot snapshot,
         string activePrefix,
@@ -246,10 +248,10 @@ internal sealed class FrontendManagedInstanceRepairTask(
         }
 
         var message = snapshot.Progress >= 0.999
-            ? $"{snapshot.CompletedFiles}/{snapshot.TotalFiles} 个文件已就绪"
+            ? T("download.install.workflow.tasks.files_ready", ("completed_count", snapshot.CompletedFiles), ("total_count", snapshot.TotalFiles))
             : string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
-                ? $"{activePrefix} {snapshot.CompletedFiles}/{snapshot.TotalFiles}"
-                : $"{activePrefix} {snapshot.CompletedFiles}/{snapshot.TotalFiles} • {snapshot.CurrentFileName}";
+                ? T("download.install.workflow.tasks.progress_without_file", ("prefix", activePrefix), ("completed_count", snapshot.CompletedFiles), ("total_count", snapshot.TotalFiles))
+                : T("download.install.workflow.tasks.progress_with_file", ("prefix", activePrefix), ("completed_count", snapshot.CompletedFiles), ("total_count", snapshot.TotalFiles), ("file_name", snapshot.CurrentFileName));
         stage.Report(snapshot.Progress >= 0.999 ? TaskState.Success : TaskState.Running, message, snapshot.Progress);
     }
 
@@ -314,6 +316,24 @@ internal sealed class FrontendManagedInstanceRepairTask(
         }
 
         return $"{size:0.##} {units[unitIndex]}";
+    }
+
+    private string T(string key) => _i18n.T(key);
+
+    private string T(string key, params (string Name, object? Value)[] args)
+    {
+        if (args.Length == 0)
+        {
+            return _i18n.T(key);
+        }
+
+        var values = new Dictionary<string, object?>(args.Length, StringComparer.Ordinal);
+        foreach (var (name, value) in args)
+        {
+            values[name] = value;
+        }
+
+        return _i18n.T(key, values);
     }
 
 }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.Testing;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Core.Backend.Test.App;
@@ -13,7 +14,7 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
     {
         using var environment = new FrontendSetupEnvironment();
 
-        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths());
+        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths(), new DictionaryI18nService());
 
         Assert.AreEqual(11, result.Ui.HomepagePresetIndex);
         Assert.AreEqual(0, result.Ui.HomepageTypeIndex);
@@ -31,7 +32,7 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
             UiCustomPreset: 7
             """);
 
-        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths());
+        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths(), new DictionaryI18nService());
 
         Assert.AreEqual(3, result.Ui.HomepageTypeIndex);
         Assert.AreEqual("https://example.com/homepage.xaml", result.Ui.HomepageUrl);
@@ -43,7 +44,7 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
     {
         using var environment = new FrontendSetupEnvironment();
 
-        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths());
+        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths(), new DictionaryI18nService());
 
         Assert.AreEqual(1000d, result.Ui.BackgroundOpacity);
         Assert.AreEqual(0d, result.Ui.BackgroundBlur);
@@ -64,7 +65,7 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
             UiBackgroundColorful: false
             """);
 
-        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths());
+        var result = FrontendSetupCompositionService.Compose(environment.CreateRuntimePaths(), new DictionaryI18nService());
 
         Assert.AreEqual(640d, result.Ui.BackgroundOpacity);
         Assert.AreEqual(12d, result.Ui.BackgroundBlur);

@@ -77,6 +77,7 @@ public sealed class MinecraftCrashAnalysisServiceTest
                 CurrentLauncherLogFilePath: null));
 
             Assert.IsTrue(result.HasKnownReason);
+            Assert.IsTrue(result.HasModLoaderVersionMismatch);
             StringAssert.StartsWith(result.ResultText, "Mod 加载器版本与 Mod 不兼容");
             StringAssert.Contains(result.ResultText, "Mod ID: 'forge', Requested by 'demomod'");
         }

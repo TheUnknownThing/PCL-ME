@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Export a Modpack",
+  "Description": "Package an instance so it can be shared as a modpack",
+  "Keywords": "export modpack pack distribution",
+  "Types": ["Minecraft"]
+}

@@ -71,12 +71,12 @@
                     Command="{Binding AddLaunchProfileCommand}"
                     IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
                     IconBrush="{DynamicResource ColorBrush1}"
-                    ToolTip.Tip="新建 / 登录" />
+                    ToolTip.Tip="{Binding LaunchProfileAddTooltip}" />
                 <controls:PclIconButton
                     Command="{Binding SelectLaunchProfileCommand}"
                     IconData="M512 0A512 512 0 1 0 1024 512 512 512 0 0 0 512 0z m0 941.407086A429.407086 429.407086 0 1 1 941.407086 512 429.407086 429.407086 0 0 1 512 941.407086z m235.139657-368.64H264.045714a43.505371 43.505371 0 0 0-31.246628 72.060343l159.305143 166.765714a41.281829 41.281829 0 1 0 59.626057-56.788114l-94.997943-99.474286H747.227429a41.311086 41.311086 0 1 0 0-82.622172zM262.670629 450.940343H745.764571a43.505371 43.505371 0 0 0 31.246629-72.352914l-159.305143-166.765715a41.281829 41.281829 0 1 0-59.713828 57.022172l94.968685 99.474285H262.670629a41.281829 41.281829 0 0 0 0 82.563658z"
                     IconBrush="{DynamicResource ColorBrush1}"
-                    ToolTip.Tip="选择档案" />
+                    ToolTip.Tip="{Binding LaunchProfileSelectTooltip}" />
               </StackPanel>
             </Border>
           </StackPanel>
@@ -89,20 +89,20 @@
                 Height="34"
                 ColorType="Highlight"
                 Command="{Binding LoginMicrosoftLaunchProfileCommand}"
-                Text="微软登录" />
+                Text="{Binding LaunchProfileChooserMicrosoftText}" />
             <controls:PclButton
                 Height="34"
                 Command="{Binding CreateOfflineLaunchProfileCommand}"
-                Text="离线创建" />
+                Text="{Binding LaunchProfileChooserOfflineText}" />
             <controls:PclButton
                 Height="34"
                 Command="{Binding LoginAuthlibLaunchProfileCommand}"
-                Text="外置登录" />
+                Text="{Binding LaunchProfileChooserAuthlibText}" />
             <controls:PclButton
                 Height="32"
                 Command="{Binding BackLaunchProfileCommand}"
                 IsVisible="{Binding ShowLaunchProfileBackButton}"
-                Text="返回" />
+                Text="{Binding LaunchProfileBackText}" />
           </StackPanel>
 
           <StackPanel
@@ -152,7 +152,7 @@
                 FontSize="12.5"
                 Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 IsVisible="{Binding HasNoLaunchProfileEntries}"
-                Text="当前还没有可用档案。"
+                Text="{Binding LaunchProfileNoEntriesText}"
                 TextAlignment="Center" />
             <Border
                 Padding="10,4"
@@ -166,7 +166,7 @@
                     Command="{Binding AddLaunchProfileCommand}"
                     IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
                     IconBrush="{DynamicResource ColorBrush1}"
-                    ToolTip.Tip="新建 / 登录" />
+                    ToolTip.Tip="{Binding LaunchProfileAddTooltip}" />
               </StackPanel>
             </Border>
             <controls:PclButton
@@ -175,7 +175,7 @@
                 HorizontalAlignment="Center"
                 Command="{Binding BackLaunchProfileCommand}"
                 IsVisible="{Binding ShowLaunchProfileBackButton}"
-                Text="返回" />
+                Text="{Binding LaunchProfileBackText}" />
           </StackPanel>
 
           <Grid
@@ -185,12 +185,12 @@
                 HorizontalAlignment="Center"
                 FontSize="17"
                 Foreground="{DynamicResource ColorBrush1}"
-                Text="离线创建" />
+                Text="{Binding LaunchOfflineEditorTitle}" />
             <TextBox
                 Grid.Row="1"
                 Margin="0,8,0,0"
                 Text="{Binding LaunchOfflineUserName}"
-                Watermark="玩家 ID（3 - 16 位）" />
+                Watermark="{Binding LaunchOfflineUserNameWatermark}" />
             <ComboBox
                 Grid.Row="2"
                 Margin="0,8,0,0"
@@ -201,7 +201,7 @@
                 Margin="0,8,0,0"
                 IsVisible="{Binding IsLaunchOfflineCustomUuidVisible}"
                 Text="{Binding LaunchOfflineCustomUuid}"
-                Watermark="32 位 UUID（不含连字符）" />
+                Watermark="{Binding LaunchOfflineCustomUuidWatermark}" />
             <StackPanel
                 Grid.Row="4"
                 Margin="0,8,0,0"
@@ -217,13 +217,13 @@
                     Grid.Column="0"
                     Height="34"
                     Command="{Binding BackLaunchProfileCommand}"
-                    Text="返回" />
+                    Text="{Binding LaunchProfileBackText}" />
                 <controls:PclButton
                     Grid.Column="2"
                     Height="34"
                     ColorType="Highlight"
                     Command="{Binding SubmitOfflineLaunchProfileCommand}"
-                    Text="创建" />
+                    Text="{Binding LaunchOfflineCreateText}" />
               </Grid>
             </StackPanel>
           </Grid>
@@ -236,7 +236,7 @@
                 HorizontalAlignment="Center"
                 FontSize="17"
                 Foreground="{DynamicResource ColorBrush1}"
-                Text="微软登录" />
+                Text="{Binding LaunchMicrosoftEditorTitle}" />
             <TextBlock
                 FontSize="12.5"
                 Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
@@ -253,7 +253,7 @@
                     HorizontalAlignment="Center"
                     FontSize="12"
                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                    Text="授权码" />
+                    Text="{Binding LaunchMicrosoftDeviceCodeLabel}" />
                 <TextBlock
                     HorizontalAlignment="Center"
                     FontFamily="Menlo, Monaco, Consolas"
@@ -266,13 +266,13 @@
                 Height="32"
                 Command="{Binding OpenMicrosoftDeviceLinkCommand}"
                 IsVisible="{Binding HasLaunchMicrosoftVerificationUrl}"
-                Text="重新打开登录网页" />
+                Text="{Binding LaunchMicrosoftReopenBrowserText}" />
             <Grid ColumnDefinitions="*,10,*">
               <controls:PclButton
                   Grid.Column="0"
                   Height="34"
                   Command="{Binding BackLaunchProfileCommand}"
-                  Text="返回" />
+                  Text="{Binding LaunchProfileBackText}" />
               <controls:PclButton
                   Grid.Column="2"
                   Height="34"
@@ -289,12 +289,12 @@
                 HorizontalAlignment="Center"
                 FontSize="17"
                 Foreground="{DynamicResource ColorBrush1}"
-                Text="外置登录" />
+                Text="{Binding LaunchAuthlibEditorTitle}" />
             <TextBox
                 Grid.Row="1"
                 Margin="0,8,0,0"
                 Text="{Binding LaunchAuthlibServer}"
-                Watermark="验证服务器地址" />
+                Watermark="{Binding LaunchAuthlibServerWatermark}" />
             <Grid
                 Grid.Row="2"
                 Margin="0,8,0,0"
@@ -302,20 +302,20 @@
               <TextBox
                   Grid.Column="0"
                   Text="{Binding LaunchAuthlibLoginName}"
-                  Watermark="用户名或邮箱" />
+                  Watermark="{Binding LaunchAuthlibUserNameWatermark}" />
               <controls:PclButton
                   Grid.Column="2"
                   Width="88"
                   Height="32"
                   Command="{Binding UseLittleSkinLaunchProfileCommand}"
-                  Text="LittleSkin" />
+                  Text="{Binding LaunchAuthlibLittleSkinText}" />
             </Grid>
             <TextBox
                 Grid.Row="3"
                 Margin="0,8,0,0"
                 PasswordChar="●"
                 Text="{Binding LaunchAuthlibPassword}"
-                Watermark="密码" />
+                Watermark="{Binding LaunchAuthlibPasswordWatermark}" />
             <StackPanel
                 Grid.Row="4"
                 Margin="0,8,0,0"
@@ -331,13 +331,13 @@
                     Grid.Column="0"
                     Height="34"
                     Command="{Binding BackLaunchProfileCommand}"
-                    Text="返回" />
+                    Text="{Binding LaunchProfileBackText}" />
                 <controls:PclButton
                     Grid.Column="2"
                     Height="34"
                     ColorType="Highlight"
                     Command="{Binding SubmitAuthlibLaunchProfileCommand}"
-                    Text="登录" />
+                    Text="{Binding LaunchAuthlibLoginText}" />
               </Grid>
             </StackPanel>
           </Grid>
@@ -364,13 +364,13 @@
             Grid.Column="0"
             Height="35"
             Command="{Binding VersionSelectCommand}"
-            Text="版本选择" />
+            Text="{Binding LaunchVersionSelectButtonText}" />
 
         <controls:PclButton
             Grid.Column="2"
             Height="35"
             Command="{Binding VersionSetupCommand}"
-            Text="版本设置" />
+            Text="{Binding LaunchVersionSetupButtonText}" />
       </Grid>
     </Grid>
 
@@ -461,7 +461,7 @@
               FontSize="12.5"
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               Opacity="0.5"
-              Text="当前步骤" />
+              Text="{Binding LaunchDialogStepLabel}" />
           <TextBlock
               Grid.Row="0"
               Grid.Column="3"
@@ -481,7 +481,7 @@
               FontSize="12.5"
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               Opacity="0.5"
-              Text="验证方式" />
+              Text="{Binding LaunchDialogMethodLabel}" />
           <TextBlock
               Grid.Row="1"
               Grid.Column="3"
@@ -502,7 +502,7 @@
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               IsVisible="{Binding ShowLaunchDialogProgress}"
               Opacity="0.5"
-              Text="启动进度" />
+              Text="{Binding LaunchDialogProgressLabel}" />
           <TextBlock
               Grid.Row="2"
               Grid.Column="3"
@@ -522,7 +522,7 @@
               Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               IsVisible="{Binding ShowLaunchDialogDownload}"
               Opacity="0.5"
-              Text="下载速度" />
+              Text="{Binding LaunchDialogDownloadSpeedLabel}" />
           <TextBlock
               Grid.Row="3"
               Grid.Column="3"
@@ -555,7 +555,7 @@
                 FontSize="12.5"
                 Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                 Opacity="0.6"
-                Text="你知道吗" />
+                Text="{Binding LaunchDialogHintTitle}" />
           </Border>
           <TextBlock
               Margin="11,29,11,10"

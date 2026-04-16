@@ -11,7 +11,8 @@ internal static class FrontendDownloadCompositionService
 {
     public static FrontendDownloadComposition ComposeBootstrap(
         FrontendRuntimePaths runtimePaths,
-        FrontendInstanceComposition instanceComposition)
+        FrontendInstanceComposition instanceComposition,
+        II18nService? i18n = null)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         return new FrontendDownloadComposition(
@@ -24,7 +25,8 @@ internal static class FrontendDownloadCompositionService
     public static FrontendDownloadComposition Compose(
         FrontendRuntimePaths runtimePaths,
         FrontendInstanceComposition instanceComposition,
-        FrontendVersionSavesComposition versionSavesComposition)
+        FrontendVersionSavesComposition versionSavesComposition,
+        II18nService? i18n = null)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var preferredMinecraftVersion = ResolvePreferredMinecraftVersion(instanceComposition);
@@ -33,7 +35,7 @@ internal static class FrontendDownloadCompositionService
 
         return new FrontendDownloadComposition(
             BuildInstallState(instanceComposition),
-            BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion),
+            BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion, i18n),
             BuildFavoritesState(sharedConfig, communitySourcePreference),
             BuildResourceStates(instanceComposition, communitySourcePreference));
     }
@@ -42,6 +44,7 @@ internal static class FrontendDownloadCompositionService
         FrontendRuntimePaths runtimePaths,
         FrontendInstanceComposition instanceComposition,
         LauncherFrontendSubpageKey route,
+        II18nService? i18n = null,
         CancellationToken cancellationToken = default)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
@@ -51,6 +54,7 @@ internal static class FrontendDownloadCompositionService
             route,
             versionSourceIndex,
             preferredMinecraftVersion,
+            i18n,
             cancellationToken);
     }
 
@@ -59,6 +63,7 @@ internal static class FrontendDownloadCompositionService
         FrontendInstanceComposition instanceComposition,
         LauncherFrontendSubpageKey route,
         string lazyLoadToken,
+        II18nService? i18n = null,
         CancellationToken cancellationToken = default)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
@@ -69,6 +74,7 @@ internal static class FrontendDownloadCompositionService
             lazyLoadToken,
             versionSourceIndex,
             preferredMinecraftVersion,
+            i18n,
             cancellationToken);
     }
 
@@ -88,7 +94,7 @@ internal static class FrontendDownloadCompositionService
     private static FrontendDownloadInstallState BuildInstallState(FrontendInstanceComposition instanceComposition)
     {
         var selectionName = string.IsNullOrWhiteSpace(instanceComposition.Selection.InstanceName)
-            ? "新的安装方案"
+            ? "New install plan"
             : instanceComposition.Selection.InstanceName;
         return new FrontendDownloadInstallState(
             selectionName,
@@ -102,9 +108,10 @@ internal static class FrontendDownloadCompositionService
 
     private static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState> BuildCatalogStates(
         int versionSourceIndex,
-        string preferredMinecraftVersion)
+        string preferredMinecraftVersion,
+        II18nService? i18n = null)
     {
-        return FrontendDownloadRemoteCatalogService.BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion);
+        return FrontendDownloadRemoteCatalogService.BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion, i18n);
     }
 
     private static FrontendDownloadFavoritesState BuildFavoritesState(
@@ -199,32 +206,17 @@ internal static class FrontendDownloadCompositionService
                 infoParts.Add(project.Summary);
             }
 
-            var metaParts = new List<string> { target.Name, project.Source };
-            if (!string.IsNullOrWhiteSpace(project.ProjectType))
-            {
-                metaParts.Add(project.ProjectType!);
-            }
-
-            if (!string.IsNullOrWhiteSpace(project.Author))
-            {
-                metaParts.Add(project.Author!);
-            }
-
-            if (!string.IsNullOrWhiteSpace(project.UpdatedLabel) && project.UpdatedLabel != "未知")
-            {
-                metaParts.Add($"更新 {project.UpdatedLabel}");
-            }
-
-            if (project.DownloadCount > 0)
-            {
-                metaParts.Add($"{FormatCompactCount(project.DownloadCount)} 下载");
-            }
-
             return new FrontendDownloadCatalogEntry(
                 project.Title,
                 string.Join(" • ", infoParts.Where(part => !string.IsNullOrWhiteSpace(part))),
-                string.Join(" • ", metaParts),
-                "查看详情",
+                BuildFavoriteMeta(
+                    target.Name,
+                    project.Source,
+                    project.ProjectType,
+                    project.Author,
+                    project.UpdatedLabel,
+                    project.DownloadCount),
+                "view_details",
                 FrontendCommunityProjectService.CreateCompDetailTarget(project.ProjectId),
                 Identity: project.ProjectId,
                 IconUrl: project.IconUrl,
@@ -234,10 +226,10 @@ internal static class FrontendDownloadCompositionService
         }
 
         return new FrontendDownloadCatalogEntry(
-            note ?? $"项目 {favorite}",
-            $"工程 ID：{favorite}",
-            $"{target.Name} • 收藏元数据未解析",
-            "查看详情",
+            note ?? $"Project {favorite}",
+            $"Project ID: {favorite}",
+            $"Favorite target {target.Name} • Metadata not resolved",
+            "view_details",
             FrontendCommunityProjectService.CreateCompDetailTarget(favorite),
             Identity: favorite,
             IconName: ResolveFavoriteIconName(null),
@@ -271,20 +263,20 @@ internal static class FrontendDownloadCompositionService
             return project.ProjectType!;
         }
 
-        return "其他";
+        return "other";
     }
 
     private static int GetFavoriteCategorySortOrder(string category)
     {
         return category switch
         {
-            "Mod" => 0,
-            "数据包" => 1,
-            "整合包" => 2,
-            "资源包" => 3,
-            "光影包" => 4,
-            "世界" => 5,
-            "其他" => 99,
+            "mod" => 0,
+            "data_pack" => 1,
+            "modpack" => 2,
+            "resource_pack" => 3,
+            "shader" => 4,
+            "world" => 5,
+            "other" => 99,
             _ => 50
         };
     }
@@ -293,12 +285,12 @@ internal static class FrontendDownloadCompositionService
     {
         return projectType switch
         {
-            "Mod" => "CommandBlock.png",
-            "整合包" => "CommandBlock.png",
-            "数据包" => "RedstoneLampOn.png",
-            "资源包" => "Grass.png",
-            "光影包" => "GoldBlock.png",
-            "世界" => "GrassPath.png",
+            "mod" => "CommandBlock.png",
+            "modpack" => "CommandBlock.png",
+            "data_pack" => "RedstoneLampOn.png",
+            "resource_pack" => "Grass.png",
+            "shader" => "GoldBlock.png",
+            "world" => "GrassPath.png",
             _ => "Grass.png"
         };
     }
@@ -307,14 +299,41 @@ internal static class FrontendDownloadCompositionService
     {
         return projectType switch
         {
-            "Mod" => LauncherFrontendSubpageKey.DownloadMod,
-            "整合包" => LauncherFrontendSubpageKey.DownloadPack,
-            "数据包" => LauncherFrontendSubpageKey.DownloadDataPack,
-            "资源包" => LauncherFrontendSubpageKey.DownloadResourcePack,
-            "光影包" => LauncherFrontendSubpageKey.DownloadShader,
-            "世界" => LauncherFrontendSubpageKey.DownloadWorld,
+            "mod" => LauncherFrontendSubpageKey.DownloadMod,
+            "modpack" => LauncherFrontendSubpageKey.DownloadPack,
+            "data_pack" => LauncherFrontendSubpageKey.DownloadDataPack,
+            "resource_pack" => LauncherFrontendSubpageKey.DownloadResourcePack,
+            "shader" => LauncherFrontendSubpageKey.DownloadShader,
+            "world" => LauncherFrontendSubpageKey.DownloadWorld,
             _ => null
         };
+    }
+
+    private static string BuildFavoriteMeta(
+        string targetName,
+        string source,
+        string? projectType,
+        string? author,
+        string? updatedLabel,
+        int downloadCount)
+    {
+        static string Escape(string? value)
+        {
+            return Uri.EscapeDataString(value ?? string.Empty);
+        }
+
+        return string.Join(
+            "|",
+            new[]
+            {
+                "favorite_meta",
+                Escape(targetName),
+                Escape(source),
+                Escape(projectType),
+                Escape(author),
+                Escape(updatedLabel),
+                Escape(downloadCount > 0 ? downloadCount.ToString() : string.Empty)
+            });
     }
 
     private static IReadOnlyList<LocalManifestEntry> ReadLocalManifestEntries(string launcherFolder)

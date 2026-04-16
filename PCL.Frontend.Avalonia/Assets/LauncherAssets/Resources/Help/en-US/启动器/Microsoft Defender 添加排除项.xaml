@@ -1,0 +1,20 @@
+<local:MyCard Title="Why does the launcher disappear silently?" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Security software can quarantine launcher files when they are updated, extracted, or scanned from temporary folders. If PCL disappears or stops launching without a clear message, check Windows Security history first." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Windows 10" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open Windows Security, go to Virus and threat protection, then manage exclusions and add the launcher folder as an exclusion. Excluding the whole launcher directory is usually more reliable than excluding only one executable file." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Windows 11" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="The process is similar on Windows 11. Use the Windows Security app, open the exclusions section, and add the launcher directory so updates and generated helper files are not quarantined during normal use." />
+  </StackPanel>
+</local:MyCard>

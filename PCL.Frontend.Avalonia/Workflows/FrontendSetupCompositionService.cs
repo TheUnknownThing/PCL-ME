@@ -12,20 +12,20 @@ internal static class FrontendSetupCompositionService
 {
     private const int ObsoleteLaunchVisibilityIndex = 1;
 
-    public static FrontendSetupComposition Compose(FrontendRuntimePaths paths)
+    public static FrontendSetupComposition Compose(FrontendRuntimePaths paths, II18nService i18n)
     {
         var sharedConfig = paths.OpenSharedConfigProvider();
         var localConfig = paths.OpenLocalConfigProvider();
 
         return new FrontendSetupComposition(
-            BuildAboutState(),
-            BuildLogState(paths),
+            BuildAboutState(i18n),
+            BuildLogState(paths, i18n),
             BuildUpdateState(sharedConfig, localConfig),
             BuildLaunchState(sharedConfig, localConfig),
             BuildGameManageState(sharedConfig),
             BuildLauncherMiscState(paths, sharedConfig, localConfig),
-            BuildJavaState(sharedConfig, localConfig),
-            BuildUiState(sharedConfig, localConfig));
+            BuildJavaState(sharedConfig, localConfig, i18n),
+            BuildUiState(sharedConfig, localConfig, i18n));
     }
 
     public static int MapStoredLaunchVisibilityToDisplayIndex(int storedValue)
@@ -95,16 +95,22 @@ internal static class FrontendSetupCompositionService
         return Math.Max(34, (int)Math.Round((clamped - 16) / 2) + 33);
     }
 
-    private static FrontendSetupAboutState BuildAboutState()
+    private static FrontendSetupAboutState BuildAboutState(II18nService i18n)
     {
         var versionInfo = FileVersionInfo.GetVersionInfo(Environment.ProcessPath ?? AppContext.BaseDirectory);
         var versionText = string.IsNullOrWhiteSpace(versionInfo.ProductVersion)
             ? typeof(FrontendSetupCompositionService).Assembly.GetName().Version?.ToString() ?? "unknown"
             : versionInfo.ProductVersion;
-        return new FrontendSetupAboutState($"当前版本: {versionText}");
+        return new FrontendSetupAboutState(
+            i18n.T(
+                "setup.about.version_summary",
+                new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["version"] = versionText
+                }));
     }
 
-    private static FrontendSetupLogState BuildLogState(FrontendRuntimePaths paths)
+    private static FrontendSetupLogState BuildLogState(FrontendRuntimePaths paths, II18nService i18n)
     {
         var logDirectories = new[]
         {
@@ -133,8 +139,8 @@ internal static class FrontendSetupCompositionService
             entries =
             [
                 new FrontendSetupLogEntry(
-                    "暂无日志文件",
-                    "当前数据目录下还没有可供设置页展示的日志文件。",
+                    i18n.T("setup.log.empty.title"),
+                    i18n.T("setup.log.empty.summary"),
                     paths.LauncherAppDataDirectory)
             ];
         }
@@ -229,7 +235,8 @@ internal static class FrontendSetupCompositionService
 
     private static FrontendSetupJavaState BuildJavaState(
         JsonFileProvider sharedConfig,
-        YamlFileProvider localConfig)
+        YamlFileProvider localConfig,
+        II18nService i18n)
     {
         var selectedJava = ReadValue(sharedConfig, "LaunchArgumentJavaSelect", string.Empty);
         var rawJavaList = ReadValue(localConfig, "LaunchArgumentJavaUser", "[]");
@@ -241,7 +248,8 @@ internal static class FrontendSetupCompositionService
         var entries = FrontendJavaInventoryService.ParseAvailableRuntimes(rawJavaList)
             .Select(runtime => BuildJavaRuntimeEntry(
                 runtime,
-                storageSourceMap.TryGetValue(runtime.ExecutablePath, out var source) ? source : null))
+                storageSourceMap.TryGetValue(runtime.ExecutablePath, out var source) ? source : null,
+                i18n))
             .OrderByDescending(item => item.IsEnabled)
             .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -253,7 +261,8 @@ internal static class FrontendSetupCompositionService
 
     private static FrontendSetupJavaRuntimeEntry BuildJavaRuntimeEntry(
         FrontendStoredJavaRuntime runtime,
-        JavaSource? source)
+        JavaSource? source,
+        II18nService i18n)
     {
         var folder = ResolveJavaFolder(runtime.ExecutablePath);
         var title = string.IsNullOrWhiteSpace(runtime.DisplayName)
@@ -261,12 +270,14 @@ internal static class FrontendSetupCompositionService
             : runtime.DisplayName;
         var tags = new List<string>
         {
-            runtime.IsEnabled ? "已启用" : "已禁用",
+            runtime.IsEnabled
+                ? i18n.T("setup.java.tags.enabled")
+                : i18n.T("setup.java.tags.disabled"),
             source switch
             {
-                JavaSource.AutoInstalled => "自动安装",
-                JavaSource.ManualAdded => "手动添加",
-                _ => "自动扫描"
+                JavaSource.AutoInstalled => i18n.T("setup.java.tags.auto_installed"),
+                JavaSource.ManualAdded => i18n.T("setup.java.tags.manual_added"),
+                _ => i18n.T("setup.java.tags.auto_scanned")
             }
         };
 
@@ -280,7 +291,8 @@ internal static class FrontendSetupCompositionService
 
     private static FrontendSetupUiState BuildUiState(
         JsonFileProvider sharedConfig,
-        YamlFileProvider localConfig)
+        YamlFileProvider localConfig,
+        II18nService i18n)
     {
         return new FrontendSetupUiState(
             DarkModeIndex: ReadValue(sharedConfig, "UiDarkMode", 2),
@@ -310,58 +322,58 @@ internal static class FrontendSetupCompositionService
             HomepageTypeIndex: MapHomepageTypeToDisplayIndex(ReadValue(localConfig, "UiCustomType", 0)),
             HomepageUrl: ReadValue(localConfig, "UiCustomNet", string.Empty),
             HomepagePresetIndex: ReadValue(localConfig, "UiCustomPreset", 11),
-            ToggleGroups: BuildUiToggleGroups(localConfig));
+            ToggleGroups: BuildUiToggleGroups(localConfig, i18n));
     }
 
-    private static IReadOnlyList<FrontendSetupUiToggleGroup> BuildUiToggleGroups(YamlFileProvider localConfig)
+    private static IReadOnlyList<FrontendSetupUiToggleGroup> BuildUiToggleGroups(YamlFileProvider localConfig, II18nService i18n)
     {
         return
         [
             new FrontendSetupUiToggleGroup(
-                "主页面",
+                i18n.T("setup.ui.hidden_features.groups.main_pages"),
                 [
-                    CreateUiToggle(localConfig, "下载", "UiHiddenPageDownload"),
-                    CreateUiToggle(localConfig, "设置", "UiHiddenPageSetup"),
-                    CreateUiToggle(localConfig, "工具", "UiHiddenPageTools")
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.download"), "UiHiddenPageDownload"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup"), "UiHiddenPageSetup"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.tools"), "UiHiddenPageTools")
                 ]),
             new FrontendSetupUiToggleGroup(
-                "子页面 设置",
+                i18n.T("setup.ui.hidden_features.groups.setup_subpages"),
                 [
-                    CreateUiToggle(localConfig, "启动", "UiHiddenSetupLaunch"),
-                    CreateUiToggle(localConfig, "Java", "UiHiddenSetupJava"),
-                    CreateUiToggle(localConfig, "管理", "UiHiddenSetupGameManage"),
-                    CreateUiToggle(localConfig, "个性化", "UiHiddenSetupUi"),
-                    CreateUiToggle(localConfig, "杂项", "UiHiddenSetupLauncherMisc"),
-                    CreateUiToggle(localConfig, "软件更新", "UiHiddenSetupUpdate"),
-                    CreateUiToggle(localConfig, "关于", "UiHiddenSetupAbout"),
-                    CreateUiToggle(localConfig, "反馈", "UiHiddenSetupFeedback"),
-                    CreateUiToggle(localConfig, "查看日志", "UiHiddenSetupLog")
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_launch"), "UiHiddenSetupLaunch"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_java"), "UiHiddenSetupJava"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_game_manage"), "UiHiddenSetupGameManage"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_ui"), "UiHiddenSetupUi"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_launcher_misc"), "UiHiddenSetupLauncherMisc"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_update"), "UiHiddenSetupUpdate"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_about"), "UiHiddenSetupAbout"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_feedback"), "UiHiddenSetupFeedback"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.setup_log"), "UiHiddenSetupLog")
                 ]),
             new FrontendSetupUiToggleGroup(
-                "子页面 工具",
+                i18n.T("setup.ui.hidden_features.groups.tools_subpages"),
                 [
-                    CreateUiToggle(localConfig, "百宝箱", "UiHiddenToolsTest"),
-                    CreateUiToggle(localConfig, "帮助", "UiHiddenToolsHelp")
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.tools_test"), "UiHiddenToolsTest"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.tools_help"), "UiHiddenToolsHelp")
                 ]),
             new FrontendSetupUiToggleGroup(
-                "子页面 实例设置",
+                i18n.T("setup.ui.hidden_features.groups.instance_subpages"),
                 [
-                    CreateUiToggle(localConfig, "修改", "UiHiddenVersionEdit"),
-                    CreateUiToggle(localConfig, "导出", "UiHiddenVersionExport"),
-                    CreateUiToggle(localConfig, "存档", "UiHiddenVersionSave"),
-                    CreateUiToggle(localConfig, "截图", "UiHiddenVersionScreenshot"),
-                    CreateUiToggle(localConfig, "Mod", "UiHiddenVersionMod"),
-                    CreateUiToggle(localConfig, "资源包", "UiHiddenVersionResourcePack"),
-                    CreateUiToggle(localConfig, "光影包", "UiHiddenVersionShader"),
-                    CreateUiToggle(localConfig, "投影原理图", "UiHiddenVersionSchematic"),
-                    CreateUiToggle(localConfig, "服务器", "UiHiddenVersionServer")
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_install"), "UiHiddenVersionEdit"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_export"), "UiHiddenVersionExport"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_save"), "UiHiddenVersionSave"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_screenshot"), "UiHiddenVersionScreenshot"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_mod"), "UiHiddenVersionMod"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_resource_pack"), "UiHiddenVersionResourcePack"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_shader"), "UiHiddenVersionShader"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_schematic"), "UiHiddenVersionSchematic"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.instance_server"), "UiHiddenVersionServer")
                 ]),
             new FrontendSetupUiToggleGroup(
-                "特定功能",
+                i18n.T("setup.ui.hidden_features.groups.features"),
                 [
-                    CreateUiToggle(localConfig, "实例管理", "UiHiddenFunctionSelect"),
-                    CreateUiToggle(localConfig, "Mod 更新", "UiHiddenFunctionModUpdate"),
-                    CreateUiToggle(localConfig, "功能隐藏", "UiHiddenFunctionHidden")
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.feature_instance_select"), "UiHiddenFunctionSelect"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.feature_mod_update"), "UiHiddenFunctionModUpdate"),
+                    CreateUiToggle(localConfig, i18n.T("setup.ui.hidden_features.items.feature_hidden"), "UiHiddenFunctionHidden")
                 ])
         ];
     }

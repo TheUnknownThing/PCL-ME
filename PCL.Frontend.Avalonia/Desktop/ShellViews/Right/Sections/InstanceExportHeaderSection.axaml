@@ -15,7 +15,7 @@
       <TextBlock
           Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
           FontSize="12.5"
-          Text="受 Modrinth 整合包规范限制，导出的整合包中不会包含 OptiFine。"
+          Text="{Binding InstanceExportModrinthWarningText}"
           TextWrapping="Wrap" />
     </Border>
 
@@ -28,7 +28,7 @@
               VerticalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
-              Text="整合包名称" />
+              Text="{Binding InstanceExportNameLabelText}" />
           <TextBox
               Grid.Column="1"
               Text="{Binding InstanceExportName}" />
@@ -38,7 +38,7 @@
               VerticalAlignment="Center"
               Foreground="{DynamicResource ColorBrush1}"
               FontSize="13"
-              Text="整合包版本" />
+              Text="{Binding InstanceExportVersionLabelText}" />
           <TextBox
               Grid.Column="3"
               Text="{Binding InstanceExportVersion}" />

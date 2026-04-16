@@ -25,7 +25,9 @@ internal sealed record FrontendDownloadCatalogState(
     string IntroBody,
     string LoadingText,
     IReadOnlyList<FrontendDownloadCatalogAction> Actions,
-    IReadOnlyList<FrontendDownloadCatalogSection> Sections);
+    IReadOnlyList<FrontendDownloadCatalogSection> Sections,
+    string? StaleError = null,
+    string? LoadError = null);
 
 internal sealed record FrontendDownloadCatalogAction(
     string Text,
@@ -44,7 +46,7 @@ internal sealed record FrontendDownloadCatalogSection(
     bool IsCollapsible = false,
     bool IsInitiallyExpanded = true,
     string? LazyLoadToken = null,
-    string LoadingText = "正在获取版本列表");
+    string LoadingText = "");
 
 internal sealed record FrontendDownloadCatalogEntry(
     string Title,

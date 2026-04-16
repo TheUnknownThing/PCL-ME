@@ -66,7 +66,7 @@ internal sealed class FrontendPlatformAdapter
 
         if (string.IsNullOrWhiteSpace(target))
         {
-            error = "缺少可打开的目标。";
+            error = "Missing target to open.";
             return false;
         }
 
@@ -76,7 +76,7 @@ internal sealed class FrontendPlatformAdapter
             using var process = Process.Start(startInfo);
             if (!IsSuccessfulStart(startInfo, process))
             {
-                error = "系统未返回可用的打开进程。";
+                error = "The system did not return a usable process for opening the target.";
                 return false;
             }
 
@@ -95,7 +95,7 @@ internal sealed class FrontendPlatformAdapter
 
         if (string.IsNullOrWhiteSpace(target))
         {
-            error = "缺少可定位的目标。";
+            error = "Missing target to reveal.";
             return false;
         }
 
@@ -105,7 +105,7 @@ internal sealed class FrontendPlatformAdapter
             using var process = Process.Start(startInfo);
             if (!IsSuccessfulStart(startInfo, process))
             {
-                error = "系统未返回可用的定位进程。";
+                error = "The system did not return a usable process for revealing the target.";
                 return false;
             }
 
@@ -124,7 +124,7 @@ internal sealed class FrontendPlatformAdapter
 
         if (string.IsNullOrWhiteSpace(scriptPath) || !File.Exists(scriptPath))
         {
-            error = "未找到可执行的更新脚本。";
+            error = "No executable update script was found.";
             return false;
         }
 
@@ -154,7 +154,7 @@ internal sealed class FrontendPlatformAdapter
             using var process = Process.Start(startInfo);
             if (!IsSuccessfulStart(startInfo, process))
             {
-                error = "系统未返回可用的更新进程。";
+                error = "The system did not return a usable update process.";
                 return false;
             }
 
@@ -189,7 +189,7 @@ internal sealed class FrontendPlatformAdapter
             var link = shell.CreateShortcut(shortcutPath)!;
             link.TargetPath = executablePath;
             link.WorkingDirectory = Path.GetDirectoryName(executablePath) ?? Path.GetPathRoot(executablePath);
-            link.Description = $"{displayName} 快捷方式";
+            link.Description = $"{displayName} shortcut";
             link.Save();
             return new FrontendShortcutMaterializationResult(shortcutPath);
         }

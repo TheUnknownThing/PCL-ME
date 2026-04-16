@@ -9,13 +9,13 @@
         Margin="0,0,15,0"
         Height="30"
         Padding="8,4"
-        Watermark="输入服务器地址"
+        Watermark="{Binding MinecraftServerQueryAddressWatermark}"
         Text="{Binding MinecraftServerQueryAddress}" />
     <controls:PclButton
         Grid.Column="1"
         Width="60"
         Command="{Binding QueryMinecraftServerCommand}"
-        Text="查询" />
+        Text="{Binding MinecraftServerQueryQueryButtonText}" />
 
     <Border
         Grid.Row="1"

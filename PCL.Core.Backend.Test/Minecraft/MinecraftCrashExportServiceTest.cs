@@ -67,16 +67,16 @@ public sealed class MinecraftCrashExportServiceTest
             CollectionAssert.AreEquivalent(
                 new[]
                 {
-                    Path.Combine(reportDirectory, "PCL 启动器日志.txt"),
-                    Path.Combine(reportDirectory, "启动脚本.bat"),
-                    Path.Combine(reportDirectory, "游戏崩溃前的输出.txt"),
-                    Path.Combine(reportDirectory, "环境与启动信息.txt")
+                    Path.Combine(reportDirectory, "PCL Launcher Log.txt"),
+                    Path.Combine(reportDirectory, "Launch Script.bat"),
+                    Path.Combine(reportDirectory, "Pre-Crash Output.txt"),
+                    Path.Combine(reportDirectory, "Environment and Launch Info.txt")
                 },
                 result.WrittenFiles.ToArray());
 
-            var launchScript = File.ReadAllText(Path.Combine(reportDirectory, "启动脚本.bat"), Encoding.UTF8);
-            var rawOutput = File.ReadAllText(Path.Combine(reportDirectory, "游戏崩溃前的输出.txt"), Encoding.UTF8);
-            var environmentReport = File.ReadAllText(Path.Combine(reportDirectory, "环境与启动信息.txt"), Encoding.UTF8);
+            var launchScript = File.ReadAllText(Path.Combine(reportDirectory, "Launch Script.bat"), Encoding.UTF8);
+            var rawOutput = File.ReadAllText(Path.Combine(reportDirectory, "Pre-Crash Output.txt"), Encoding.UTF8);
+            var environmentReport = File.ReadAllText(Path.Combine(reportDirectory, "Environment and Launch Info.txt"), Encoding.UTF8);
 
             Assert.IsFalse(launchScript.Contains(accessToken, StringComparison.Ordinal));
             Assert.IsFalse(rawOutput.Contains(userProfilePath, StringComparison.Ordinal));
@@ -120,7 +120,7 @@ public sealed class MinecraftCrashExportServiceTest
                 UserProfilePath: null));
 
             Assert.AreEqual(1, result.WrittenFiles.Count);
-            Assert.AreEqual(Path.Combine(reportDirectory, "环境与启动信息.txt"), result.WrittenFiles.Single());
+            Assert.AreEqual(Path.Combine(reportDirectory, "Environment and Launch Info.txt"), result.WrittenFiles.Single());
             StringAssert.Contains(File.ReadAllText(result.WrittenFiles.Single(), Encoding.UTF8), "识别码：device-456");
         }
         finally

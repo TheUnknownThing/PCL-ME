@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using PCL.Core.App.Essentials;
@@ -21,37 +22,37 @@ internal sealed partial class FrontendShellViewModel
         ReplaceItems(AboutProjectEntries,
         [
             new AboutEntryViewModel(
-                "龙腾猫跃",
-                "Plain Craft Launcher 的原作者！",
+                _i18n.T("setup.about.project.original_author.title"),
+                _i18n.T("setup.about.project.original_author.summary"),
                 LoadLauncherBitmap("Images", "Heads", "LTCat.jpg"),
-                "赞助原作者",
-                CreateLinkCommand("赞助原作者", "https://ifdian.net/a/LTCat")),
+                _i18n.T("setup.about.project.original_author.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.original_author.command"), "https://ifdian.net/a/LTCat")),
             new AboutEntryViewModel(
-                "PCL Community",
-                "PCL-ME 当前延续自社区维护分支。",
+                _i18n.T("setup.about.project.community.title"),
+                _i18n.T("setup.about.project.community.summary"),
                 LoadLauncherBitmap("Images", "Heads", "PCL-Community.png"),
-                "GitHub 主页",
-                CreateLinkCommand("打开 PCL Community GitHub", "https://github.com/PCL-Community")),
+                _i18n.T("setup.about.project.community.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.community.command"), "https://github.com/PCL-Community")),
             new AboutEntryViewModel(
-                "PCL-ME",
+                _i18n.T("setup.about.project.repo.title"),
                 _setupComposition.About.LauncherVersionSummary,
                 LoadLauncherBitmap("Images", "Heads", "Logo-CE.png"),
-                "查看源代码",
-                CreateLinkCommand("查看仓库源代码", "https://github.com/TheUnknownThing/PCL-ME"))
+                _i18n.T("setup.about.project.repo.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.repo.command"), "https://github.com/TheUnknownThing/PCL-ME"))
         ]);
 
         ReplaceItems(AboutAcknowledgementEntries,
         [
-            new AboutEntryViewModel("bangbang93", "提供 BMCLAPI 镜像源和 Forge 安装工具。", LoadLauncherBitmap("Images", "Heads", "bangbang93.png"), "赞助镜像源", CreateLinkCommand("赞助 BMCLAPI 镜像源", "https://afdian.com/a/bangbang93")),
-            new AboutEntryViewModel("MC 百科", "提供了 Mod 名称的中文翻译和更多相关信息！", LoadLauncherBitmap("Images", "Heads", "wiki.png"), "打开百科", CreateLinkCommand("打开 MC 百科", "https://www.mcmod.cn")),
-            new AboutEntryViewModel("Pysio @ Akaere Network", "提供了 PCL-CE 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), "转到博客", CreateLinkCommand("打开 Pysio 博客", "https://www.pysio.online")),
-            new AboutEntryViewModel("云默安 @ 至远光辉", "提供了 PCL-CE 的相关云服务", LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), "打开网站", CreateLinkCommand("打开至远光辉", "https://www.zyghit.cn")),
-            new AboutEntryViewModel("z0z0r4", "提供了 MCIM 中国 Mod 下载镜像源和帮助库图床！", LoadLauncherBitmap("Images", "Heads", "z0z0r4.png"), null, null),
-            new AboutEntryViewModel("00ll00", "提供了 Java Launch Wrapper 和一些重要服务支持！", LoadLauncherBitmap("Images", "Heads", "00ll00.png"), null, null),
-            new AboutEntryViewModel("Patrick", "设计并制作了 PCL 图标，让龙猫从做图标的水深火热中得到了解脱……", LoadLauncherBitmap("Images", "Heads", "Patrick.png"), null, null),
-            new AboutEntryViewModel("Hao_Tian", "在 PCL 内测中找出了一大堆没人想得到的诡异 Bug，有非同寻常的 Bug 体质", LoadLauncherBitmap("Images", "Heads", "Hao_Tian.jpg"), null, null),
-            new AboutEntryViewModel("Minecraft 中文论坛", "虽然已经关站了，但感谢此前提供了 MCBBS 镜像源……", LoadLauncherBitmap("Images", "Heads", "MCBBS.png"), null, null),
-            new AboutEntryViewModel("PCL 内群的各位", "感谢内群的沙雕网友们这么久以来对龙猫和 PCL 的支持与鼓励！", LoadLauncherBitmap("Images", "Heads", "PCL2.png"), null, null)
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.bangbang93.title"), _i18n.T("setup.about.acknowledgements.bangbang93.summary"), LoadLauncherBitmap("Images", "Heads", "bangbang93.png"), _i18n.T("setup.about.acknowledgements.bangbang93.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.bangbang93.command"), "https://afdian.com/a/bangbang93")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.mcmod.title"), _i18n.T("setup.about.acknowledgements.mcmod.summary"), LoadLauncherBitmap("Images", "Heads", "wiki.png"), _i18n.T("setup.about.acknowledgements.mcmod.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.mcmod.command"), "https://www.mcmod.cn")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.pysio.title"), _i18n.T("setup.about.acknowledgements.pysio.summary"), LoadLauncherBitmap("Images", "Heads", "Pysio.jpg"), _i18n.T("setup.about.acknowledgements.pysio.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.pysio.command"), "https://www.pysio.online")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.yunmoan.title"), _i18n.T("setup.about.acknowledgements.yunmoan.summary"), LoadLauncherBitmap("Images", "Heads", "Yunmoan.jpg"), _i18n.T("setup.about.acknowledgements.yunmoan.action"), CreateLinkCommand(_i18n.T("setup.about.acknowledgements.yunmoan.command"), "https://www.zyghit.cn")),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.z0z0r4.title"), _i18n.T("setup.about.acknowledgements.z0z0r4.summary"), LoadLauncherBitmap("Images", "Heads", "z0z0r4.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.00ll00.title"), _i18n.T("setup.about.acknowledgements.00ll00.summary"), LoadLauncherBitmap("Images", "Heads", "00ll00.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.patrick.title"), _i18n.T("setup.about.acknowledgements.patrick.summary"), LoadLauncherBitmap("Images", "Heads", "Patrick.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.hao_tian.title"), _i18n.T("setup.about.acknowledgements.hao_tian.summary"), LoadLauncherBitmap("Images", "Heads", "Hao_Tian.jpg"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.mcbbs.title"), _i18n.T("setup.about.acknowledgements.mcbbs.summary"), LoadLauncherBitmap("Images", "Heads", "MCBBS.png"), null, null),
+            new AboutEntryViewModel(_i18n.T("setup.about.acknowledgements.community.title"), _i18n.T("setup.about.acknowledgements.community.summary"), LoadLauncherBitmap("Images", "Heads", "PCL2.png"), null, null)
         ]);
     }
 
@@ -62,7 +63,15 @@ internal sealed partial class FrontendShellViewModel
                 CreateSimpleEntry(
                     entry.Title,
                     entry.Summary,
-                    CreateOpenTargetCommand($"打开日志: {entry.Title}", entry.Path, entry.Summary))));
+                    CreateOpenTargetCommand(
+                        _i18n.T(
+                            "setup.log.activities.open_log",
+                            new Dictionary<string, object?>(StringComparer.Ordinal)
+                            {
+                                ["title"] = entry.Title
+                            }),
+                        entry.Path,
+                        entry.Summary))));
     }
 
     private void InitializeUpdateSurface()
@@ -143,7 +152,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!_downloadInstallIsInSelectionStage && !_downloadInstallIsNameEditedByUser)
         {
-            _downloadInstallName = "新的安装方案";
+            _downloadInstallName = T("download.install.generated_name.default");
         }
 
         RefreshDownloadInstallSurfaceState();
@@ -165,7 +174,9 @@ internal sealed partial class FrontendShellViewModel
         _downloadCatalogRefreshCts?.Cancel();
         DownloadCatalogIntroTitle = string.Empty;
         DownloadCatalogIntroBody = string.Empty;
-        DownloadCatalogLoadingText = FrontendDownloadRemoteCatalogService.GetLoadingText(_currentRoute.Subpage);
+        DownloadCatalogLoadingText = LocalizeDownloadCatalogLoadingText(
+            _currentRoute.Subpage,
+            FrontendDownloadRemoteCatalogService.GetLoadingText(_currentRoute.Subpage, _i18n));
         ReplaceItems(DownloadCatalogIntroActions, []);
         ReplaceItems(DownloadCatalogSections, []);
         SetDownloadCatalogLoading(false);
@@ -194,6 +205,7 @@ internal sealed partial class FrontendShellViewModel
                 _shellActionService.RuntimePaths,
                 _instanceComposition,
                 route,
+                _i18n,
                 cancellationToken);
 
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -223,24 +235,11 @@ internal sealed partial class FrontendShellViewModel
                     return;
                 }
 
-                DownloadCatalogIntroTitle = "远程目录加载失败";
-                DownloadCatalogIntroBody = ex.Message;
-                DownloadCatalogLoadingText = "请稍后重试。";
+                DownloadCatalogIntroTitle = T("download.catalog.errors.load_failed_title");
+                DownloadCatalogIntroBody = T("download.catalog.errors.load_failed_body", ("error", ex.Message));
+                DownloadCatalogLoadingText = T("download.catalog.errors.retry_later");
                 ReplaceItems(DownloadCatalogIntroActions, []);
-                ReplaceItems(
-                    DownloadCatalogSections,
-                    [
-                        CreateDownloadCatalogSection(
-                            "远程目录",
-                            [
-                                new DownloadCatalogEntryViewModel(
-                                    "暂无可显示数据",
-                                    "当前无法读取远程目录，请稍后重试。",
-                                    string.Empty,
-                                    "查看详情",
-                                    CreateIntentCommand("下载页加载失败", ex.Message))
-                            ])
-                    ]);
+                ReplaceItems(DownloadCatalogSections, BuildDownloadCatalogErrorSections(ex.Message));
                 SetDownloadCatalogLoading(false);
             });
         }
@@ -248,17 +247,36 @@ internal sealed partial class FrontendShellViewModel
 
     private void ApplyDownloadCatalogState(FrontendDownloadCatalogState state)
     {
-        DownloadCatalogLoadingText = state.LoadingText;
+        if (!string.IsNullOrWhiteSpace(state.LoadError))
+        {
+            DownloadCatalogLoadingText = T("download.catalog.errors.retry_later");
+            SetDownloadCatalogIntro(
+                T("download.catalog.errors.load_failed_title"),
+                T("download.catalog.errors.load_failed_body", ("error", state.LoadError)),
+                state.Actions.Select(action =>
+                    new DownloadCatalogActionViewModel(
+                        LocalizeDownloadCatalogActionText(action.Text),
+                        action.IsHighlight ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
+                        string.IsNullOrWhiteSpace(action.Target)
+                            ? CreateIntentCommand(LocalizeDownloadCatalogActionText(action.Text), state.LoadError)
+                            : CreateOpenTargetCommand(LocalizeDownloadCatalogActionText(action.Text), action.Target, action.Target))).ToArray());
+            ReplaceItems(DownloadCatalogSections, BuildDownloadCatalogErrorSections(state.LoadError));
+            return;
+        }
+
+        var localizedIntroTitle = LocalizeDownloadCatalogIntroTitle(_currentRoute.Subpage, state.IntroTitle);
+        var localizedIntroBody = LocalizeDownloadCatalogIntroBody(_currentRoute.Subpage, state.IntroBody, state.StaleError);
+        DownloadCatalogLoadingText = LocalizeDownloadCatalogLoadingText(_currentRoute.Subpage, state.LoadingText);
         SetDownloadCatalogIntro(
-            state.IntroTitle,
-            state.IntroBody,
+            localizedIntroTitle,
+            localizedIntroBody,
             state.Actions.Select(action =>
                 new DownloadCatalogActionViewModel(
-                    action.Text,
+                    LocalizeDownloadCatalogActionText(action.Text),
                     action.IsHighlight ? PclButtonColorState.Highlight : PclButtonColorState.Normal,
                     string.IsNullOrWhiteSpace(action.Target)
-                        ? CreateIntentCommand(action.Text, state.IntroTitle)
-                        : CreateOpenTargetCommand(action.Text, action.Target, action.Target))).ToArray());
+                        ? CreateIntentCommand(LocalizeDownloadCatalogActionText(action.Text), localizedIntroTitle)
+                        : CreateOpenTargetCommand(LocalizeDownloadCatalogActionText(action.Text), action.Target, action.Target))).ToArray());
         ReplaceItems(
             DownloadCatalogSections,
             state.Sections.Select(section => CreateDownloadCatalogSectionViewModel(_currentRoute.Subpage, section)));
@@ -276,6 +294,23 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowDownloadCatalogContent));
     }
 
+    private IReadOnlyList<DownloadCatalogSectionViewModel> BuildDownloadCatalogErrorSections(string error)
+    {
+        return
+        [
+            CreateDownloadCatalogSection(
+                T("download.catalog.errors.section_title"),
+                [
+                    new DownloadCatalogEntryViewModel(
+                        T("download.catalog.errors.empty_title"),
+                        T("download.catalog.errors.empty_description"),
+                        string.Empty,
+                        T("resource_detail.actions.view_details"),
+                        CreateIntentCommand(T("download.catalog.errors.load_failed_title"), error))
+                ])
+        ];
+    }
+
     private void RefreshDownloadFavoriteSurface()
     {
         ReplaceItems(DownloadFavoriteSections, []);
@@ -291,6 +326,13 @@ internal sealed partial class FrontendShellViewModel
         var selectedTarget = GetSelectedDownloadFavoriteTargetState();
         SyncDownloadFavoriteSelectionTarget(selectedTarget.Id);
         var visibleEntries = selectedTarget.Sections
+            .Select(section => new
+            {
+                Title = LocalizeDownloadFavoriteSectionTitle(section.Title),
+                Entries = section.Entries
+                    .Select(LocalizeDownloadFavoriteEntry)
+                    .ToArray()
+            })
             .Select(section => new DownloadFavoriteSectionViewModel(
                 section.Title,
                 section.Entries
@@ -320,7 +362,9 @@ internal sealed partial class FrontendShellViewModel
     {
         var projectId = entry.Identity ?? string.Empty;
         var actionCommand = string.IsNullOrWhiteSpace(entry.Target)
-            ? CreateIntentCommand($"收藏夹条目: {entry.Title}", entry.Info)
+            ? CreateIntentCommand(
+                T("download.catalog.activities.open_favorite_entry", ("entry_title", entry.Title)),
+                entry.Info)
             : CreateDownloadFavoriteCommand(entry);
         var icon = LoadCachedBitmapFromPath(entry.IconPath);
         if (icon is null && !string.IsNullOrWhiteSpace(entry.IconName))
@@ -335,7 +379,7 @@ internal sealed partial class FrontendShellViewModel
             meta: entry.Meta,
             path: projectId,
             actionCommand: actionCommand,
-            actionToolTip: "查看详情",
+            actionToolTip: T("resource_detail.actions.view_details"),
             isEnabled: true,
             description: entry.Info,
             showSelection: true,
@@ -347,6 +391,75 @@ internal sealed partial class FrontendShellViewModel
                 : new ActionCommand(() => _ = RemoveDownloadFavoriteAsync(projectId, entry.Title)));
         QueueDownloadFavoriteIconLoad(viewModel, entry.IconUrl);
         return viewModel;
+    }
+
+    private FrontendDownloadCatalogEntry LocalizeDownloadFavoriteEntry(FrontendDownloadCatalogEntry entry)
+    {
+        return entry with
+        {
+            Meta = LocalizeDownloadFavoriteMeta(entry.Meta)
+        };
+    }
+
+    private string LocalizeDownloadFavoriteSectionTitle(string value)
+    {
+        return value switch
+        {
+            "other" => T("resource_detail.values.other"),
+            _ => LocalizeCommunityProjectProjectType(value)
+        };
+    }
+
+    private string LocalizeDownloadFavoriteMeta(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || !value.StartsWith("favorite_meta|", StringComparison.Ordinal))
+        {
+            return value;
+        }
+
+        var segments = value
+            .Split('|')
+            .Skip(1)
+            .Select(Uri.UnescapeDataString)
+            .ToArray();
+        var parts = new List<string>();
+        var targetName = segments.ElementAtOrDefault(0);
+        if (!string.IsNullOrWhiteSpace(targetName))
+        {
+            parts.Add(targetName);
+        }
+
+        var source = segments.ElementAtOrDefault(1);
+        if (!string.IsNullOrWhiteSpace(source))
+        {
+            parts.Add(source);
+        }
+
+        var projectType = LocalizeCommunityProjectProjectType(segments.ElementAtOrDefault(2) ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(projectType))
+        {
+            parts.Add(projectType);
+        }
+
+        var author = segments.ElementAtOrDefault(3);
+        if (!string.IsNullOrWhiteSpace(author))
+        {
+            parts.Add(author);
+        }
+
+        var updatedLabel = segments.ElementAtOrDefault(4);
+        if (!string.IsNullOrWhiteSpace(updatedLabel) && !string.Equals(updatedLabel, "unknown", StringComparison.OrdinalIgnoreCase))
+        {
+            parts.Add(T("download.favorites.meta.updated", ("value", LocalizeCommunityProjectUpdatedLabel(updatedLabel))));
+        }
+
+        if (int.TryParse(segments.ElementAtOrDefault(5), out var downloadCount) && downloadCount > 0)
+        {
+            parts.Add(T("download.favorites.meta.downloads", ("value", FormatCompactCount(downloadCount))));
+        }
+
+        return string.Join(" • ", parts);
     }
 
     private void InitializeGameManageSurface()
@@ -369,6 +482,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void InitializeLauncherMiscSurface()
     {
+        _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
         _selectedSystemActivityIndex = _setupComposition.LauncherMisc.SystemActivityIndex;
         _animationFpsLimit = _setupComposition.LauncherMisc.AnimationFpsLimit;
         _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;
@@ -434,7 +548,12 @@ internal sealed partial class FrontendShellViewModel
         _selectedHomepagePresetIndex = Math.Clamp(_setupComposition.Ui.HomepagePresetIndex, 0, HomepagePresetOptions.Count - 1);
         RefreshTitleBarLogoImage();
         RefreshLaunchHomepage(forceRefresh: false);
+        RefreshUiFeatureToggleGroups();
+        RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
+    }
 
+    private void RefreshUiFeatureToggleGroups()
+    {
         ReplaceItems(UiFeatureToggleGroups,
             _setupComposition.Ui.ToggleGroups.Select(group =>
                 new UiFeatureToggleGroupViewModel(
@@ -443,8 +562,7 @@ internal sealed partial class FrontendShellViewModel
                         new UiFeatureToggleItemViewModel(
                             item.Title,
                             item.IsChecked,
-                            isChecked => PersistUiToggle(item.ConfigKey, isChecked))).ToArray())));
-        RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
+                            isChecked => PersistUiToggle(item.ConfigKey, item.Title, isChecked))).ToArray())));
     }
 
     private void RefreshHelpTopics()
@@ -457,7 +575,7 @@ internal sealed partial class FrontendShellViewModel
         {
             var results = entries
                 .Where(entry => entry.ShowInSearch && HelpEntryMatchesQuery(entry, query))
-                .Select(entry => CreateHelpTopic(entry, entry.GroupTitles.FirstOrDefault() ?? "帮助"))
+                .Select(entry => CreateHelpTopic(entry, entry.GroupTitles.FirstOrDefault() ?? LT("shell.tools.help.default_group")))
                 .OrderByDescending(topic => GetHelpSearchScore(topic, query))
                 .ThenBy(topic => topic.Title, StringComparer.Ordinal)
                 .ToArray();
@@ -474,7 +592,7 @@ internal sealed partial class FrontendShellViewModel
                 .Where(item => !string.IsNullOrWhiteSpace(item.GroupTitle))
                 .GroupBy(item => item.GroupTitle, StringComparer.Ordinal)
                 .Select(group => new { GroupTitle = group.Key, FirstEntryIndex = group.Min(item => item.EntryIndex) })
-                .OrderBy(title => string.Equals(title.GroupTitle, "指南", StringComparison.Ordinal) ? 0 : 1)
+                .OrderBy(title => IsPrimaryHelpGuideGroup(title.GroupTitle) ? 0 : 1)
                 .ThenBy(title => title.FirstEntryIndex)
                 .Select(title => title.GroupTitle)
                 .ToArray();
@@ -489,7 +607,7 @@ internal sealed partial class FrontendShellViewModel
                     return new HelpTopicGroupViewModel(
                         groupTitle,
                         items,
-                        isExpanded: string.Equals(groupTitle, "指南", StringComparison.Ordinal));
+                        isExpanded: IsPrimaryHelpGuideGroup(groupTitle));
                 })
                 .Where(group => group.Items.Count > 0)
                 .ToArray();
@@ -500,6 +618,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsHelpSearchActive));
         RaisePropertyChanged(nameof(ShowHelpTopicLibrary));
         RaisePropertyChanged(nameof(HelpSearchResultsHeader));
+        RaisePropertyChanged(nameof(ToolsHelpSearchWatermark));
+        RaisePropertyChanged(nameof(ToolsHelpNoResultsText));
         RaiseCollectionStateProperties();
     }
 
@@ -514,6 +634,12 @@ internal sealed partial class FrontendShellViewModel
             new ActionCommand(() => OpenHelpTopic(entry)));
     }
 
+    private static bool IsPrimaryHelpGuideGroup(string groupTitle)
+    {
+        return string.Equals(groupTitle, "指南", StringComparison.Ordinal)
+               || string.Equals(groupTitle, "Guides", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static Bitmap? ResolveHelpTopicIcon(FrontendToolsHelpEntry entry)
     {
         var customIcon = ResolveHelpTopicCustomIcon(entry.Logo);
@@ -524,7 +650,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (entry.IsEvent)
         {
-            return string.Equals(entry.EventType, "弹出窗口", StringComparison.OrdinalIgnoreCase)
+            return FrontendHelpEventTypeResolver.Resolve(entry.EventType) == FrontendHelpEventType.Popup
                 ? LoadLauncherBitmap("Images", "Blocks", "GrassPath.png")
                 : LoadLauncherBitmap("Images", "Blocks", "CommandBlock.png");
         }
@@ -610,7 +736,12 @@ internal sealed partial class FrontendShellViewModel
 
     private SimpleListEntryViewModel CreateSimpleEntry(string title, string info)
     {
-        return new SimpleListEntryViewModel(title, info, new ActionCommand(() => AddActivity($"查看条目: {title}", info)));
+        return new SimpleListEntryViewModel(
+            title,
+            info,
+            new ActionCommand(() => AddActivity(
+                T("resource_detail.activities.view_details", ("surface_title", title)),
+                info)));
     }
 
     private SimpleListEntryViewModel CreateSimpleEntry(string title, string info, ActionCommand command)
@@ -716,7 +847,7 @@ internal sealed partial class FrontendShellViewModel
         bool isCollapsible = false,
         bool isExpanded = true,
         Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null,
-        string loadingText = "正在获取版本列表")
+        string loadingText = "fetch_versions")
     {
         return new DownloadCatalogSectionViewModel(title, items, isCollapsible, isExpanded, loadEntriesAsync, loadingText);
     }
@@ -736,18 +867,19 @@ internal sealed partial class FrontendShellViewModel
                     _instanceComposition,
                     route,
                     lazyLoadToken,
+                    _i18n,
                     cancellationToken);
                 return entries.Select(CreateDownloadCatalogEntryViewModel).ToArray();
             };
         }
 
         return CreateDownloadCatalogSection(
-            section.Title,
+            LocalizeDownloadCatalogSectionTitle(route, section.Title),
             section.Entries.Select(CreateDownloadCatalogEntryViewModel).ToArray(),
             section.IsCollapsible,
             section.IsInitiallyExpanded,
             loadEntriesAsync,
-            section.LoadingText);
+            LocalizeDownloadCatalogLoadingText(route, section.LoadingText));
     }
 
     private DownloadCatalogEntryViewModel CreateDownloadCatalogEntry(string title, string info, string meta, string actionText)
@@ -756,8 +888,10 @@ internal sealed partial class FrontendShellViewModel
             title,
             info,
             meta,
-            actionText,
-            new ActionCommand(() => AddActivity($"下载页操作: {title}", $"{meta} • {info}")));
+            LocalizeDownloadCatalogActionText(actionText),
+            new ActionCommand(() => AddActivity(
+                T("download.catalog.activities.entry_action", ("entry_title", title)),
+                BuildActivityDetail(meta, info))));
     }
 
     private DownloadCatalogEntryViewModel CreateDownloadCatalogEntryViewModel(FrontendDownloadCatalogEntry entry)
@@ -766,8 +900,126 @@ internal sealed partial class FrontendShellViewModel
             entry.Title,
             entry.Info,
             entry.Meta,
-            entry.ActionText,
+            LocalizeDownloadCatalogActionText(entry.ActionText),
             CreateDownloadCatalogCommand(entry));
+    }
+
+    private string LocalizeDownloadCatalogActionText(string actionText)
+    {
+        return NormalizeDownloadCatalogActionToken(actionText) switch
+        {
+            "save_installer" => T("download.catalog.actions.save_installer"),
+            "open_website" => T("common.actions.open_website"),
+            "view_details" => T("resource_detail.actions.view_details"),
+            _ => actionText
+        };
+    }
+
+    private string LocalizeDownloadCatalogSectionTitle(LauncherFrontendSubpageKey route, string title)
+    {
+        if (string.IsNullOrWhiteSpace(title) || route != LauncherFrontendSubpageKey.DownloadClient)
+        {
+            return title switch
+            {
+                "latest_versions" => T("download.catalog.sections.latest_versions"),
+                "remote_catalog" => T("download.catalog.sections.remote_catalog"),
+                _ when title.StartsWith("version_list ", StringComparison.Ordinal) => title.Replace(
+                    "version_list",
+                    T("download.catalog.sections.version_list"),
+                    StringComparison.Ordinal),
+                _ => title
+            };
+        }
+
+        var match = Regex.Match(title, @"^(?<group>[^()]+?)(?: \((?<count>\d+)\))?$");
+        if (!match.Success)
+        {
+            return title;
+        }
+
+        var localizedGroup = NormalizeDownloadCatalogSectionGroupToken(match.Groups["group"].Value.Trim()) switch
+        {
+            "latest_versions" => T("download.catalog.sections.latest_versions"),
+            "remote_catalog" => T("download.catalog.sections.remote_catalog"),
+            "version_list" => T("download.catalog.sections.version_list"),
+            "latest" => T("download.install.catalog.groups.latest"),
+            "release" => T("download.install.catalog.groups.release"),
+            "preview" => T("download.install.catalog.groups.preview"),
+            "legacy" => T("download.install.catalog.groups.legacy"),
+            "april_fools" => T("download.install.catalog.groups.april_fools"),
+            _ => title
+        };
+
+        return match.Groups["count"].Success
+            ? $"{localizedGroup} ({match.Groups["count"].Value})"
+            : localizedGroup;
+    }
+
+    private string LocalizeDownloadCatalogIntroTitle(LauncherFrontendSubpageKey route, string title)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadForge => T("download.catalog.intro.forge.title"),
+            LauncherFrontendSubpageKey.DownloadNeoForge => T("download.catalog.intro.neoforge.title"),
+            LauncherFrontendSubpageKey.DownloadFabric => T("download.catalog.intro.fabric.title"),
+            LauncherFrontendSubpageKey.DownloadLegacyFabric => T("download.catalog.intro.legacy_fabric.title"),
+            LauncherFrontendSubpageKey.DownloadQuilt => T("download.catalog.intro.quilt.title"),
+            LauncherFrontendSubpageKey.DownloadOptiFine => T("download.catalog.intro.optifine.title"),
+            LauncherFrontendSubpageKey.DownloadLiteLoader => T("download.catalog.intro.liteloader.title"),
+            LauncherFrontendSubpageKey.DownloadLabyMod => T("download.catalog.intro.labymod.title"),
+            LauncherFrontendSubpageKey.DownloadCleanroom => T("download.catalog.intro.cleanroom.title"),
+            _ => title
+        };
+    }
+
+    private string LocalizeDownloadCatalogIntroBody(LauncherFrontendSubpageKey route, string body, string? staleError)
+    {
+        var localizedBody = route switch
+        {
+            LauncherFrontendSubpageKey.DownloadForge => T("download.catalog.intro.forge.body"),
+            LauncherFrontendSubpageKey.DownloadNeoForge => T("download.catalog.intro.neoforge.body"),
+            LauncherFrontendSubpageKey.DownloadFabric => T("download.catalog.intro.fabric.body"),
+            LauncherFrontendSubpageKey.DownloadLegacyFabric => T("download.catalog.intro.legacy_fabric.body"),
+            LauncherFrontendSubpageKey.DownloadQuilt => T("download.catalog.intro.quilt.body"),
+            LauncherFrontendSubpageKey.DownloadOptiFine => T("download.catalog.intro.optifine.body"),
+            LauncherFrontendSubpageKey.DownloadLiteLoader => T("download.catalog.intro.liteloader.body"),
+            LauncherFrontendSubpageKey.DownloadLabyMod => T("download.catalog.intro.labymod.body"),
+            LauncherFrontendSubpageKey.DownloadCleanroom => T("download.catalog.intro.cleanroom.body"),
+            _ => body
+        };
+
+        if (!string.IsNullOrWhiteSpace(staleError))
+        {
+            return T("download.catalog.intro.stale_cache", ("body", localizedBody), ("error", staleError));
+        }
+
+        return localizedBody;
+    }
+
+    private string LocalizeDownloadCatalogLoadingText(LauncherFrontendSubpageKey route, string loadingText)
+    {
+        if (string.IsNullOrWhiteSpace(loadingText))
+        {
+            return string.Empty;
+        }
+
+        if (string.Equals(loadingText, "fetch_list", StringComparison.Ordinal))
+        {
+            return T("download.catalog.loading.fetch_list", ("surface_name", ResolveDownloadCatalogRouteTitle(route)));
+        }
+
+        if (TryParseLegacyDownloadCatalogSurfaceName(loadingText, out var surfaceName))
+        {
+            return T("download.catalog.loading.fetch_list", ("surface_name", surfaceName));
+        }
+
+        if (string.Equals(loadingText, "fetch_versions", StringComparison.Ordinal)
+            || string.Equals(loadingText, "正在获取版本列表", StringComparison.Ordinal))
+        {
+            return T("download.catalog.loading.fetch_versions");
+        }
+
+        return loadingText;
     }
 
     private IReadOnlyList<DownloadCatalogSectionViewModel> BuildDownloadFavoriteSections()
@@ -776,19 +1028,58 @@ internal sealed partial class FrontendShellViewModel
         [
             CreateDownloadCatalogSection("Mod",
             [
-                CreateDownloadCatalogEntry("Sodium", "现代性能优化模组。", "Fabric • 已收藏", "查看详情"),
-                CreateDownloadCatalogEntry("Mod Menu", "管理 Fabric 模组菜单。", "Fabric • 已收藏", "查看详情")
+                CreateDownloadCatalogEntry("Sodium", T("download.favorites.demo.entries.sodium.info"), BuildActivityDetail("Fabric", T("instance.overview.tags.favorited")), "view_details"),
+                CreateDownloadCatalogEntry("Mod Menu", T("download.favorites.demo.entries.mod_menu.info"), BuildActivityDetail("Fabric", T("instance.overview.tags.favorited")), "view_details")
             ]),
-            CreateDownloadCatalogSection("整合包",
+            CreateDownloadCatalogSection(T("shell.navigation.subpages.download_pack.title"),
             [
-                CreateDownloadCatalogEntry("All The Mods 9", "大型整合包演示条目。", "整合包 • 已收藏", "查看详情")
+                CreateDownloadCatalogEntry("All The Mods 9", T("download.favorites.demo.entries.atm9.info"), BuildActivityDetail(T("shell.navigation.subpages.download_pack.title"), T("instance.overview.tags.favorited")), "view_details")
             ]),
-            CreateDownloadCatalogSection("资源包",
+            CreateDownloadCatalogSection(T("shell.navigation.subpages.download_resource_pack.title"),
             [
-                CreateDownloadCatalogEntry("Faithful 32x", "经典风格资源包。", "资源包 • 已收藏", "查看详情"),
-                CreateDownloadCatalogEntry("Complementary Shaders", "常用光影收藏条目。", "光影包 • 已收藏", "查看详情")
+                CreateDownloadCatalogEntry("Faithful 32x", T("download.favorites.demo.entries.faithful.info"), BuildActivityDetail(T("shell.navigation.subpages.download_resource_pack.title"), T("instance.overview.tags.favorited")), "view_details"),
+                CreateDownloadCatalogEntry("Complementary Shaders", T("download.favorites.demo.entries.complementary.info"), BuildActivityDetail(T("shell.navigation.subpages.download_shader.title"), T("instance.overview.tags.favorited")), "view_details")
             ])
         ];
+    }
+
+    private static string NormalizeDownloadCatalogActionToken(string actionText)
+    {
+        return actionText switch
+        {
+            "保存安装器" => "save_installer",
+            "打开官网" => "open_website",
+            "查看详情" => "view_details",
+            _ => actionText
+        };
+    }
+
+    private static string NormalizeDownloadCatalogSectionGroupToken(string group)
+    {
+        return group switch
+        {
+            "最新版本" => "latest",
+            "正式版" => "release",
+            "预览版" => "preview",
+            "远古版" => "legacy",
+            "愚人节版" => "april_fools",
+            _ => group
+        };
+    }
+
+    private static bool TryParseLegacyDownloadCatalogSurfaceName(string loadingText, out string surfaceName)
+    {
+        var listMatch = Regex.Match(loadingText, @"^正在获取 (?<surface>.+) 列表$|^正在获取(?<surface2>.+)列表$");
+        if (listMatch.Success)
+        {
+            surfaceName = listMatch.Groups["surface"].Success
+                ? listMatch.Groups["surface"].Value
+                : listMatch.Groups["surface2"].Value;
+            return true;
+        }
+
+        surfaceName = string.Empty;
+        return false;
     }
 
     private ActionCommand CreateLinkCommand(string title, string url)
@@ -801,6 +1092,15 @@ internal sealed partial class FrontendShellViewModel
         return new ActionCommand(() => AddActivity(title, detail));
     }
 
+    private static string BuildActivityDetail(params string?[] parts)
+    {
+        return string.Join(
+            " • ",
+            parts
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Select(part => part!.Trim()));
+    }
+
     private ActionCommand CreateDownloadCatalogCommand(FrontendDownloadCatalogEntry entry)
     {
         if (entry.ActionKind == FrontendDownloadCatalogEntryActionKind.DownloadFile
@@ -810,28 +1110,37 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return string.IsNullOrWhiteSpace(entry.Target)
-            ? CreateIntentCommand($"下载页操作: {entry.Title}", $"{entry.Info} • {entry.Meta}".Trim(' ', '•'))
-            : CreateOpenTargetCommand($"打开条目: {entry.Title}", entry.Target, entry.Target);
+            ? CreateIntentCommand(
+                T("download.catalog.activities.entry_action", ("entry_title", entry.Title)),
+                BuildActivityDetail(entry.Info, entry.Meta))
+            : CreateOpenTargetCommand(
+                T("download.catalog.activities.open_entry", ("entry_title", entry.Title)),
+                entry.Target,
+                entry.Target);
     }
 
     private async Task DownloadCatalogFileAsync(FrontendDownloadCatalogEntry entry)
     {
         if (string.IsNullOrWhiteSpace(entry.Target))
         {
-            AddFailureActivity($"下载条目失败: {entry.Title}", "当前没有可用的下载地址。");
+            AddFailureActivity(
+                T("resource_detail.activities.download_failed", ("entry_title", entry.Title)),
+                T("download.catalog.download.missing_url"));
             return;
         }
 
         var suggestedFileName = ResolveDownloadCatalogSuggestedFileName(entry);
         var extension = Path.GetExtension(suggestedFileName);
         var patterns = string.IsNullOrWhiteSpace(extension) ? Array.Empty<string>() : [$"*{extension}"];
-        var typeName = $"{GetDownloadCatalogRouteTitle(_currentRoute.Subpage)} 安装器";
+        var typeName = T(
+            "download.catalog.download.installer_type",
+            ("surface_name", ResolveDownloadCatalogRouteTitle(_currentRoute.Subpage)));
 
         string? targetPath;
         try
         {
             targetPath = await _shellActionService.PickSaveFileAsync(
-                "选择保存位置",
+                T("download.catalog.download.pick_save_path_title"),
                 suggestedFileName,
                 typeName,
                 ResolveDownloadCatalogStartDirectory(),
@@ -839,25 +1148,35 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"选择保存位置失败: {entry.Title}", ex.Message);
+            AddFailureActivity(
+                T("resource_detail.activities.pick_save_path_failed", ("entry_title", entry.Title)),
+                ex.Message);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(targetPath))
         {
-            AddActivity($"已取消下载: {entry.Title}", "没有选择保存位置。");
+            AddActivity(
+                T("resource_detail.activities.download_canceled", ("entry_title", entry.Title)),
+                T("download.catalog.download.no_save_path"));
             return;
         }
 
         TaskCenter.Register(new FrontendManagedFileDownloadTask(
-            $"下载 {Path.GetFileNameWithoutExtension(targetPath)}",
+            T("download.catalog.download.task_title", ("file_name", Path.GetFileNameWithoutExtension(targetPath))),
             entry.Target,
             targetPath,
             ResolveDownloadRequestTimeout(),
-            onStarted: filePath => AvaloniaHintBus.Show($"开始下载 {Path.GetFileName(filePath)}", AvaloniaHintTheme.Info),
-            onCompleted: filePath => AvaloniaHintBus.Show($"{Path.GetFileName(filePath)} 下载完成", AvaloniaHintTheme.Success),
+            onStarted: filePath => AvaloniaHintBus.Show(
+                T("download.catalog.download.hints.started", ("file_name", Path.GetFileName(filePath))),
+                AvaloniaHintTheme.Info),
+            onCompleted: filePath => AvaloniaHintBus.Show(
+                T("download.catalog.download.hints.completed", ("file_name", Path.GetFileName(filePath))),
+                AvaloniaHintTheme.Success),
             onFailed: message => AvaloniaHintBus.Show(message, AvaloniaHintTheme.Error)));
-        AddActivity($"开始下载: {entry.Title}", $"{entry.Target} -> {targetPath}");
+        AddActivity(
+            T("resource_detail.activities.download_started", ("entry_title", entry.Title)),
+            targetPath);
     }
 
     private string ResolveDownloadCatalogSuggestedFileName(FrontendDownloadCatalogEntry entry)
@@ -891,21 +1210,12 @@ internal sealed partial class FrontendShellViewModel
         return directory;
     }
 
-    private static string GetDownloadCatalogRouteTitle(LauncherFrontendSubpageKey route)
+    private string ResolveDownloadCatalogRouteTitle(LauncherFrontendSubpageKey route)
     {
-        return route switch
-        {
-            LauncherFrontendSubpageKey.DownloadOptiFine => "OptiFine",
-            LauncherFrontendSubpageKey.DownloadForge => "Forge",
-            LauncherFrontendSubpageKey.DownloadNeoForge => "NeoForge",
-            LauncherFrontendSubpageKey.DownloadCleanroom => "Cleanroom",
-            LauncherFrontendSubpageKey.DownloadFabric => "Fabric",
-            LauncherFrontendSubpageKey.DownloadQuilt => "Quilt",
-            LauncherFrontendSubpageKey.DownloadLiteLoader => "LiteLoader",
-            LauncherFrontendSubpageKey.DownloadLabyMod => "LabyMod",
-            LauncherFrontendSubpageKey.DownloadLegacyFabric => "Legacy Fabric",
-            _ => "文件"
-        };
+        var title = FrontendShellLocalizationService.ResolveSubpageTitle(route, _i18n);
+        return string.IsNullOrWhiteSpace(title)
+            ? T("download.catalog.download.file_type_default")
+            : title;
     }
 
     private ActionCommand CreateDownloadFavoriteCommand(FrontendDownloadCatalogEntry entry)
@@ -915,7 +1225,10 @@ internal sealed partial class FrontendShellViewModel
             return new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title));
         }
 
-        return CreateOpenTargetCommand($"打开收藏夹条目: {entry.Title}", entry.Target!, entry.Target!);
+        return CreateOpenTargetCommand(
+            T("download.catalog.activities.open_favorite_entry", ("entry_title", entry.Title)),
+            entry.Target!,
+            entry.Target!);
     }
 
     private ActionCommand CreateOpenTargetCommand(string title, string target, string detail)
@@ -928,7 +1241,7 @@ internal sealed partial class FrontendShellViewModel
             }
             else
             {
-                AddFailureActivity($"{title} 失败", error ?? detail);
+                AddFailureActivity(T("common.activities.failed", ("title", title)), error ?? detail);
             }
         });
     }

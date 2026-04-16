@@ -15,7 +15,8 @@ public sealed class MinecraftLaunchPrecheckServiceTest
         var result = MinecraftLaunchPrecheckService.Evaluate(request);
 
         Assert.IsFalse(result.IsSuccess);
-        Assert.AreEqual(@"游戏路径中不可包含 ! 或 ;（C:\Games\Bad;Path\）", result.FailureMessage);
+        Assert.AreEqual(MinecraftLaunchPrecheckFailureKind.InstancePathContainsReservedCharacters, result.Failure?.Kind);
+        Assert.AreEqual(@"C:\Games\Bad;Path\", result.Failure?.Path);
     }
 
     [TestMethod]
@@ -30,7 +31,7 @@ public sealed class MinecraftLaunchPrecheckServiceTest
         var result = MinecraftLaunchPrecheckService.Evaluate(request);
 
         Assert.IsFalse(result.IsSuccess);
-        Assert.AreEqual("当前实例要求使用正版验证，请使用正版验证档案启动游戏！", result.FailureMessage);
+        Assert.AreEqual(MinecraftLaunchPrecheckFailureKind.MicrosoftProfileRequired, result.Failure?.Kind);
     }
 
     [TestMethod]
@@ -47,7 +48,7 @@ public sealed class MinecraftLaunchPrecheckServiceTest
         Assert.IsTrue(result.IsSuccess);
         Assert.AreEqual(2, result.Prompts.Count);
         var pathPrompt = result.Prompts[0];
-        Assert.AreEqual("游戏路径检查", pathPrompt.Title);
+        Assert.AreEqual("launch.prompts.non_ascii_path.title", pathPrompt.Title.Key);
         Assert.AreEqual(3, pathPrompt.Buttons.Count);
         CollectionAssert.AreEqual(
             new[]
@@ -67,7 +68,7 @@ public sealed class MinecraftLaunchPrecheckServiceTest
 
         Assert.IsTrue(result.IsSuccess);
         var purchasePrompt = result.Prompts.Single();
-        Assert.AreEqual("正版验证", purchasePrompt.Title);
+        Assert.AreEqual("launch.prompts.purchase.required.title", purchasePrompt.Title.Key);
         Assert.IsFalse(purchasePrompt.Buttons[0].ClosesPrompt);
         CollectionAssert.AreEqual(
             new[]

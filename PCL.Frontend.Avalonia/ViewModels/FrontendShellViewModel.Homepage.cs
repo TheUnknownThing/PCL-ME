@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -13,21 +14,21 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private const string HomepageCacheUrlKey = "CacheSavedPageUrl";
-    private static readonly HomepagePresetDefinition[] HomepagePresetCatalog =
+    private IReadOnlyList<HomepagePresetDefinition> HomepagePresetCatalog =>
     [
-        new("你知道吗？", HomepagePresetKind.RandomHint, null),
-        new("Minecraft 新闻（作者：最亮的信标）", HomepagePresetKind.RemoteMarkup, "https://pcl.mcnews.thestack.top"),
-        new("简单主页（作者：MFn233）", HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/MFn233/Custom.xaml"),
-        new("每日整合包推荐（作者：wkea）", HomepagePresetKind.RemoteMarkup, "https://pclsub.sodamc.com/"),
-        new("Minecraft 皮肤推荐（作者：wkea）", HomepagePresetKind.RemoteMarkup, "https://forgepixel.com/pcl_sub_file"),
-        new("OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）", HomepagePresetKind.RemoteMarkup, "https://pcl-bmcl.milu.ink/"),
-        new("PCL 新闻速报（作者：Joker2184）", HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Joker2184/UpdateHomepage.xaml"),
-        new("PCL 新功能说明书（作者：WForst-Breeze）", HomepagePresetKind.RemoteMarkup, "https://raw.gitcode.com/WForst-Breeze/WhatsNewPCL/raw/main/Custom.xaml"),
-        new("杂志主页（作者：CreeperIsASpy）", HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Ext1nguisher/Custom.xaml"),
-        new("PCL GitHub 仪表盘（作者：Deep-Dark-Forest）", HomepagePresetKind.RemoteMarkup, "https://ddf.pcl-community.org/Custom.xaml"),
-        new("Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）", HomepagePresetKind.RemoteMarkup, "https://raw.gitcode.com/ENC_Euphony/PCL-AI-Summary-HomePage/raw/master/Custom.xaml"),
-        new("PCL-ME 公告栏", HomepagePresetKind.RemoteMarkup, "https://s3.pysio.online/pcl2-ce/apiv2/pages/announce.xaml"),
-        new("Minecraft 官方信息流", HomepagePresetKind.OfficialNews, null)
+        new(T("launch.homepage.presets.random_hint"), HomepagePresetKind.RandomHint, null),
+        new(T("launch.homepage.presets.minecraft_news"), HomepagePresetKind.RemoteMarkup, "https://pcl.mcnews.thestack.top"),
+        new(T("launch.homepage.presets.simple_homepage"), HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/MFn233/Custom.xaml"),
+        new(T("launch.homepage.presets.daily_modpacks"), HomepagePresetKind.RemoteMarkup, "https://pclsub.sodamc.com/"),
+        new(T("launch.homepage.presets.skin_recommendations"), HomepagePresetKind.RemoteMarkup, "https://forgepixel.com/pcl_sub_file"),
+        new(T("launch.homepage.presets.openbmclapi_dashboard"), HomepagePresetKind.RemoteMarkup, "https://pcl-bmcl.milu.ink/"),
+        new(T("launch.homepage.presets.news_flash"), HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Joker2184/UpdateHomepage.xaml"),
+        new(T("launch.homepage.presets.whats_new"), HomepagePresetKind.RemoteMarkup, "https://raw.gitcode.com/WForst-Breeze/WhatsNewPCL/raw/main/Custom.xaml"),
+        new(T("launch.homepage.presets.magazine"), HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Ext1nguisher/Custom.xaml"),
+        new(T("launch.homepage.presets.github_dashboard"), HomepagePresetKind.RemoteMarkup, "https://ddf.pcl-community.org/Custom.xaml"),
+        new(T("launch.homepage.presets.update_summary"), HomepagePresetKind.RemoteMarkup, "https://raw.gitcode.com/ENC_Euphony/PCL-AI-Summary-HomePage/raw/master/Custom.xaml"),
+        new(T("launch.homepage.presets.announcement_board"), HomepagePresetKind.RemoteMarkup, "https://s3.pysio.online/pcl2-ce/apiv2/pages/announce.xaml"),
+        new(T("launch.homepage.presets.official_news"), HomepagePresetKind.OfficialNews, null)
     ];
     private CancellationTokenSource? _homepageRefreshCts;
     private int _homepageRefreshVersion;
@@ -56,7 +57,9 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string LaunchHomepageStatusTitle => IsLaunchHomepageLoading ? "正在加载主页" : "主页不可用";
+    public string LaunchHomepageStatusTitle => IsLaunchHomepageLoading
+        ? T("launch.homepage.status.loading_title")
+        : T("launch.homepage.status.unavailable_title");
 
     public string LaunchHomepageStatusText
     {
@@ -85,7 +88,7 @@ internal sealed partial class FrontendShellViewModel
                 ApplyHomepageSections([], isLoading: false, statusText: string.Empty);
                 if (addActivity)
                 {
-                    AddActivity("刷新主页", "当前主页已切换为空白模式。");
+                    AddActivity(T("launch.homepage.actions.refresh"), T("launch.homepage.activities.switched_to_blank"));
                 }
 
                 return;
@@ -96,36 +99,42 @@ internal sealed partial class FrontendShellViewModel
                 RefreshLocalHomepage(addActivity);
                 return;
             default:
-                RefreshRemoteHomepage(HomepageUrl, "联网主页", forceRefresh, addActivity, refreshVersion, cancellationToken);
+                RefreshRemoteHomepage(HomepageUrl, T("launch.homepage.sources.remote"), forceRefresh, addActivity, refreshVersion, cancellationToken);
                 return;
         }
     }
 
     private void RefreshHomepagePreset(bool forceRefresh, bool addActivity, int refreshVersion, CancellationToken cancellationToken)
     {
-        var preset = HomepagePresetCatalog[Math.Clamp(SelectedHomepagePresetIndex, 0, HomepagePresetCatalog.Length - 1)];
+        var preset = HomepagePresetCatalog[Math.Clamp(SelectedHomepagePresetIndex, 0, HomepagePresetCatalog.Count - 1)];
         switch (preset.Kind)
         {
             case HomepagePresetKind.RandomHint:
                 ApplyHomepageSections(
                     [
                         new LaunchHomepageSectionViewModel(
-                            "你知道吗？",
+                            T("launch.homepage.random_hint.title"),
                             string.Empty,
                             [GetRandomHomepageHint()],
                             [],
-                            [CreateHomepageAction("换一条提示", "重新随机生成主页提示。", "刷新主页", "/")])
+                            [CreateHomepageAction(
+                                T("launch.homepage.random_hint.actions.next"),
+                                T("launch.homepage.random_hint.actions.next_info"),
+                                T("launch.homepage.actions.refresh"),
+                                "/")])
                     ],
                     isLoading: false,
                     statusText: string.Empty);
                 if (addActivity)
                 {
-                    AddActivity("刷新主页", $"已加载预设主页：{preset.Title}");
+                    AddActivity(
+                        T("launch.homepage.actions.refresh"),
+                        T("launch.homepage.activities.loaded_preset", ("preset_title", preset.Title)));
                 }
 
                 return;
             case HomepagePresetKind.OfficialNews:
-                ApplyHomepageSections([], isLoading: true, statusText: "正在获取 Minecraft 官方信息流。");
+                ApplyHomepageSections([], isLoading: true, statusText: T("launch.homepage.status.loading_official_news"));
                 _ = LoadOfficialNewsHomepageAsync(refreshVersion, cancellationToken, addActivity, preset.Title);
                 return;
             default:
@@ -139,10 +148,13 @@ internal sealed partial class FrontendShellViewModel
         var tutorialPath = GetHomepageTutorialPath();
         if (!File.Exists(tutorialPath))
         {
-            ApplyHomepageSections([], isLoading: false, statusText: $"未找到本地主页文件：{tutorialPath}");
+            ApplyHomepageSections(
+                [],
+                isLoading: false,
+                statusText: T("launch.homepage.status.local_file_missing", ("path", tutorialPath)));
             if (addActivity)
             {
-                AddFailureActivity("刷新主页失败", tutorialPath);
+                AddFailureActivity(T("launch.homepage.activities.refresh_failed"), tutorialPath);
             }
 
             return;
@@ -152,14 +164,14 @@ internal sealed partial class FrontendShellViewModel
         {
             var content = File.ReadAllText(tutorialPath);
             var origin = new HomepageContentOrigin(tutorialPath, BaseUri: null, BaseDirectory: Path.GetDirectoryName(tutorialPath));
-            ApplyHomepageMarkup(content, origin, addActivity ? "本地主页" : null);
+            ApplyHomepageMarkup(content, origin, addActivity ? T("launch.homepage.sources.local") : null);
         }
         catch (Exception ex)
         {
             ApplyHomepageSections([], isLoading: false, statusText: ex.Message);
             if (addActivity)
             {
-                AddFailureActivity("刷新主页失败", ex.Message);
+                AddFailureActivity(T("launch.homepage.activities.refresh_failed"), ex.Message);
             }
         }
     }
@@ -175,10 +187,10 @@ internal sealed partial class FrontendShellViewModel
         var normalizedUrl = rawUrl.Trim();
         if (!Uri.TryCreate(normalizedUrl, UriKind.Absolute, out var uri))
         {
-            ApplyHomepageSections([], isLoading: false, statusText: "联网主页地址无效或尚未填写。");
+            ApplyHomepageSections([], isLoading: false, statusText: T("launch.homepage.status.invalid_remote_url"));
             if (addActivity)
             {
-                AddFailureActivity("刷新主页失败", "联网主页地址无效或尚未填写。");
+                AddFailureActivity(T("launch.homepage.activities.refresh_failed"), T("launch.homepage.status.invalid_remote_url"));
             }
 
             return;
@@ -201,7 +213,7 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        ApplyHomepageLoadingState("正在联网获取主页内容。", clearSections: !appliedCachedContent);
+        ApplyHomepageLoadingState(T("launch.homepage.status.loading_remote"), clearSections: !appliedCachedContent);
         _ = LoadRemoteHomepageAsync(uri, sourceName, refreshVersion, cancellationToken, addActivity);
     }
 
@@ -255,7 +267,7 @@ internal sealed partial class FrontendShellViewModel
 
                 if (addActivity)
                 {
-                    AddFailureActivity("刷新主页失败", ex.Message);
+                    AddFailureActivity(T("launch.homepage.activities.refresh_failed"), ex.Message);
                 }
             });
         }
@@ -282,7 +294,7 @@ internal sealed partial class FrontendShellViewModel
                         "  •  ",
                         new[]
                         {
-                            string.IsNullOrWhiteSpace(item.Author) ? "Minecraft 官方" : item.Author.Trim(),
+                            string.IsNullOrWhiteSpace(item.Author) ? T("launch.homepage.official_news.author") : item.Author.Trim(),
                             publishTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
                         }.Where(segment => !string.IsNullOrWhiteSpace(segment)));
                     var imageEntries = string.IsNullOrWhiteSpace(item.Image)
@@ -293,7 +305,11 @@ internal sealed partial class FrontendShellViewModel
                         subtitle,
                         string.IsNullOrWhiteSpace(item.Description) ? [] : [WebUtility.HtmlDecode(item.Description).Trim()],
                         imageEntries,
-                        [CreateHomepageAction("查看详情", item.Url, "打开网页", item.Url)]);
+                        [CreateHomepageAction(
+                            T("launch.homepage.actions.view_details"),
+                            item.Url,
+                            T("launch.homepage.actions.open_web"),
+                            item.Url)]);
                 })
                 .ToArray() ?? [];
 
@@ -307,7 +323,9 @@ internal sealed partial class FrontendShellViewModel
                 ApplyHomepageSections(sections, isLoading: false, statusText: string.Empty);
                 if (addActivity)
                 {
-                    AddActivity("刷新主页", $"已加载预设主页：{sourceName}");
+                    AddActivity(
+                        T("launch.homepage.actions.refresh"),
+                        T("launch.homepage.activities.loaded_preset", ("preset_title", sourceName)));
                 }
             });
         }
@@ -327,7 +345,7 @@ internal sealed partial class FrontendShellViewModel
                 ApplyHomepageSections([], isLoading: false, statusText: ex.Message);
                 if (addActivity)
                 {
-                    AddFailureActivity("刷新主页失败", ex.Message);
+                    AddFailureActivity(T("launch.homepage.activities.refresh_failed"), ex.Message);
                 }
             });
         }
@@ -341,7 +359,9 @@ internal sealed partial class FrontendShellViewModel
             ApplyHomepageSections(sections, isLoading: false, statusText: string.Empty);
             if (!string.IsNullOrWhiteSpace(successActivity))
             {
-                AddActivity("刷新主页", $"已加载主页内容：{successActivity}");
+                AddActivity(
+                    T("launch.homepage.actions.refresh"),
+                    T("launch.homepage.activities.loaded_content", ("source_name", successActivity)));
             }
         }
         catch (Exception ex)
@@ -349,7 +369,7 @@ internal sealed partial class FrontendShellViewModel
             ApplyHomepageSections([], isLoading: false, statusText: ex.Message);
             if (!string.IsNullOrWhiteSpace(successActivity))
             {
-                AddFailureActivity("刷新主页失败", ex.Message);
+                AddFailureActivity(T("launch.homepage.activities.refresh_failed"), ex.Message);
             }
         }
     }
@@ -363,7 +383,7 @@ internal sealed partial class FrontendShellViewModel
 
         var wrapped = WrapHelpDetailContent(content);
         var root = XDocument.Parse(wrapped, LoadOptions.PreserveWhitespace).Root
-                   ?? throw new InvalidOperationException("主页内容缺少根节点。");
+                   ?? throw new InvalidOperationException(T("launch.homepage.errors.missing_root"));
         var sections = new List<LaunchHomepageSectionViewModel>();
         var pendingLines = new List<string>();
         var pendingImages = new List<LaunchHomepageImageViewModel>();
@@ -373,7 +393,7 @@ internal sealed partial class FrontendShellViewModel
         {
             if (IsNamed(child, "MyCard"))
             {
-                FlushHomepageSection(sections, pendingLines, pendingImages, pendingActions, "主页");
+                FlushHomepageSection(sections, pendingLines, pendingImages, pendingActions, T("launch.homepage.sections.default_title"));
                 sections.Add(ParseHomepageCard(child, origin));
                 continue;
             }
@@ -381,7 +401,7 @@ internal sealed partial class FrontendShellViewModel
             ParseHomepageElement(child, origin, pendingLines, pendingImages, pendingActions);
         }
 
-        FlushHomepageSection(sections, pendingLines, pendingImages, pendingActions, "主页");
+        FlushHomepageSection(sections, pendingLines, pendingImages, pendingActions, T("launch.homepage.sections.default_title"));
         return sections;
     }
 
@@ -398,7 +418,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return new LaunchHomepageSectionViewModel(
-            string.IsNullOrWhiteSpace(title) ? "主页内容" : title,
+            string.IsNullOrWhiteSpace(title) ? T("launch.homepage.sections.content_title") : title,
             string.Empty,
             lines.ToArray(),
             images.ToArray(),
@@ -426,7 +446,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (IsNamed(element, "MyHint"))
         {
-            AddHelpText(lines, $"提示：{ReadAttribute(element, "Text")}");
+            AddHelpText(lines, T("launch.homepage.hints.prefix", ("text", ReadAttribute(element, "Text"))));
             return;
         }
 
@@ -445,7 +465,7 @@ internal sealed partial class FrontendShellViewModel
             actions.Add(CreateHomepageAction(
                 string.IsNullOrWhiteSpace(title) ? DeriveHelpActionTitle(eventType, eventData) : title,
                 string.IsNullOrWhiteSpace(info)
-                    ? string.IsNullOrWhiteSpace(eventData) ? "打开主页内动作。" : eventData
+                    ? string.IsNullOrWhiteSpace(eventData) ? T("launch.homepage.actions.inline_default_info") : eventData
                     : info,
                 eventType,
                 eventData));
@@ -507,14 +527,14 @@ internal sealed partial class FrontendShellViewModel
             AddHelpText(
                 lines,
                 string.IsNullOrWhiteSpace(title)
-                    ? $"示例按钮：包含 {customEventSummary}。"
-                    : $"示例按钮：{title}（包含 {customEventSummary}）。");
+                    ? T("launch.homepage.examples.button_with_events_untitled", ("summary", customEventSummary))
+                    : T("launch.homepage.examples.button_with_events", ("title", title), ("summary", customEventSummary)));
             return;
         }
 
         if (!string.IsNullOrWhiteSpace(title))
         {
-            AddHelpText(lines, $"示例按钮：{title}");
+            AddHelpText(lines, T("launch.homepage.examples.button", ("title", title)));
         }
     }
 
@@ -600,14 +620,10 @@ internal sealed partial class FrontendShellViewModel
 
     private string ResolveHomepageEventData(string? eventType, string rawValue, HomepageContentOrigin origin)
     {
-        return eventType switch
-        {
-            "打开网页" => ResolveHomepageAssetTarget(rawValue, origin),
-            "打开文件" => ResolveHomepageAssetTarget(rawValue, origin),
-            "下载文件" => ResolveHomepageAssetTarget(rawValue, origin),
-            _ when string.IsNullOrWhiteSpace(eventType) => ResolveHomepageAssetTarget(rawValue, origin),
-            _ => rawValue
-        };
+        return FrontendHelpEventTypeResolver.UsesResolvedTarget(eventType)
+            || string.IsNullOrWhiteSpace(eventType)
+            ? ResolveHomepageAssetTarget(rawValue, origin)
+            : rawValue;
     }
 
     private static string ResolveHomepageAssetTarget(string rawValue, HomepageContentOrigin origin)
@@ -686,12 +702,12 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private static string GetRandomHomepageHint()
+    private string GetRandomHomepageHint()
     {
         var lines = ReadHomepageHintLines();
         if (lines.Count == 0)
         {
-            return "当前没有可用提示，请检查 hints.txt 是否存在。";
+            return T("launch.homepage.random_hint.fallback");
         }
 
         return lines[Random.Shared.Next(lines.Count)];

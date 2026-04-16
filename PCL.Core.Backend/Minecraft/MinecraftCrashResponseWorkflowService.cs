@@ -19,7 +19,7 @@ public static class MinecraftCrashResponseWorkflowService
         ArgumentException.ThrowIfNullOrWhiteSpace(archivePath);
 
         return new MinecraftCrashExportCompletionPlan(
-            HintMessage: "错误报告已导出！",
+            HintMessage: "Crash report exported.",
             RevealInShellPath: archivePath);
     }
 
@@ -28,9 +28,9 @@ public static class MinecraftCrashResponseWorkflowService
         ArgumentException.ThrowIfNullOrWhiteSpace(suggestedArchiveName);
 
         return new MinecraftCrashExportSaveDialogPlan(
-            Title: "选择保存位置",
+            Title: "Choose save location",
             DefaultFileName: suggestedArchiveName,
-            Filter: "Minecraft 错误报告(*.zip)|*.zip");
+            Filter: "Minecraft Crash Report (*.zip)|*.zip");
     }
 }
 

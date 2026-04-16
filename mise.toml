@@ -8,3 +8,7 @@ run = "dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -
 [tasks.build]
 description = "Build the Solution"
 run = "dotnet build"
+
+[tasks.i18n]
+description = "Run the standalone i18n developer tool"
+run = "dotnet run -p:NuGetAudit=false --project PCL.Tools.I18n/PCL.Tools.I18n.csproj --"

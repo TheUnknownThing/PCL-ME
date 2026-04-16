@@ -1,0 +1,26 @@
+<local:MyCard Title="How do I join a server?" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open the multiplayer page in Minecraft, add the server address if needed, and then connect. Make sure the game version, mod loader, and required mod set match the server before you try to join." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If the server owner provides a modpack, install that pack first. Joining with the wrong version or missing mods is the most common reason for connection failures." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Microsoft account says multiplayer is disabled" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="This usually means the Microsoft or Xbox privacy settings for the account are blocking online play. Check the family and privacy controls for the account and allow multiplayer or community features." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="If the account belongs to a child in a family group, an adult account may need to approve the change first." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Timeout and address troubleshooting" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="A timeout usually means the client could not reach the server. Confirm the server address, optional port, current online status, and whether the server is reachable from your network." />
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Errors such as Unknown host normally indicate a wrong address, a DNS problem, or a local network issue. Retry with the exact host name from the server owner and test a different network if possible." />
+  </StackPanel>
+</local:MyCard>

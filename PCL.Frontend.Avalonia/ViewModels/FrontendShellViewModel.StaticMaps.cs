@@ -8,6 +8,7 @@ using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Icons;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -75,8 +76,8 @@ internal sealed partial class FrontendShellViewModel
         var requiresAuth = string.Equals(scenario, "legacy-forge", StringComparison.OrdinalIgnoreCase);
         return MinecraftLaunchPrecheckService.Evaluate(new MinecraftLaunchPrecheckRequest(
             InstanceName: requiresAuth ? "Legacy Forge Demo" : "Modern Fabric Demo",
-            InstancePathIndie: "/Users/demo/.pcl/instances/示例实例",
-            InstancePath: "/Users/demo/.minecraft/instances/示例实例",
+            InstancePathIndie: "/Users/demo/.pcl/instances/sample-instance",
+            InstancePath: "/Users/demo/.minecraft/instances/sample-instance",
             IsInstanceSelected: true,
             IsInstanceError: false,
             InstanceErrorDescription: null,
@@ -130,9 +131,9 @@ internal sealed partial class FrontendShellViewModel
         };
     }
 
-    private static (string IconPath, double IconScale) GetNavigationIcon(string title)
+    private static (string IconPath, double IconScale) GetNavigationIcon(LauncherFrontendRoute route, string title)
     {
-        var icon = FrontendIconCatalog.GetNavigationIcon(title);
+        var icon = FrontendIconCatalog.GetNavigationIcon(ResolveCanonicalNavigationTitle(route, title));
         return (icon.Data, icon.Scale);
     }
 
@@ -141,41 +142,48 @@ internal sealed partial class FrontendShellViewModel
         return FrontendIconCatalog.GetUtilityIcon(id).Data;
     }
 
-    private static string GetSidebarSectionTitle(LauncherFrontendPageKey page, LauncherFrontendSubpageKey subpage)
+    private static string GetSidebarSectionTitle(
+        LauncherFrontendPageKey page,
+        LauncherFrontendSubpageKey subpage,
+        II18nService i18n)
     {
-        return page switch
+        var key = page switch
         {
-            LauncherFrontendPageKey.Download when subpage == LauncherFrontendSubpageKey.DownloadInstall => string.Empty,
+            LauncherFrontendPageKey.Download when subpage == LauncherFrontendSubpageKey.DownloadInstall => null,
             LauncherFrontendPageKey.Download when subpage is LauncherFrontendSubpageKey.DownloadMod
                 or LauncherFrontendSubpageKey.DownloadPack
                 or LauncherFrontendSubpageKey.DownloadDataPack
                 or LauncherFrontendSubpageKey.DownloadResourcePack
                 or LauncherFrontendSubpageKey.DownloadShader
                 or LauncherFrontendSubpageKey.DownloadWorld
-                or LauncherFrontendSubpageKey.DownloadCompFavorites => "社区资源",
-            LauncherFrontendPageKey.Download => "安装器",
+                or LauncherFrontendSubpageKey.DownloadCompFavorites => "community_resources",
+            LauncherFrontendPageKey.Download => "installers",
             LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupLaunch
                 or LauncherFrontendSubpageKey.SetupJava
-                or LauncherFrontendSubpageKey.SetupGameManage => "游戏",
+                or LauncherFrontendSubpageKey.SetupGameManage => "game",
             LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupUI
-                or LauncherFrontendSubpageKey.SetupLauncherMisc => "启动器",
-            LauncherFrontendPageKey.Setup => "关于",
-            LauncherFrontendPageKey.Tools => "奇妙小工具",
+                or LauncherFrontendSubpageKey.SetupLauncherMisc => "launcher",
+            LauncherFrontendPageKey.Setup => "about",
+            LauncherFrontendPageKey.Tools => "tools",
             LauncherFrontendPageKey.InstanceSetup when subpage is LauncherFrontendSubpageKey.VersionOverall
                 or LauncherFrontendSubpageKey.VersionSetup
                 or LauncherFrontendSubpageKey.VersionInstall
-                or LauncherFrontendSubpageKey.VersionExport => "实例",
+                or LauncherFrontendSubpageKey.VersionExport => "instance",
             LauncherFrontendPageKey.InstanceSetup when subpage is LauncherFrontendSubpageKey.VersionWorld
-                or LauncherFrontendSubpageKey.VersionScreenshot => "内容",
+                or LauncherFrontendSubpageKey.VersionScreenshot => "content",
             LauncherFrontendPageKey.InstanceSetup when subpage is LauncherFrontendSubpageKey.VersionMod
                 or LauncherFrontendSubpageKey.VersionModDisabled
                 or LauncherFrontendSubpageKey.VersionResourcePack
                 or LauncherFrontendSubpageKey.VersionShader
-                or LauncherFrontendSubpageKey.VersionSchematic => "资源",
-            LauncherFrontendPageKey.InstanceSetup => "其他",
-            LauncherFrontendPageKey.VersionSaves => "存档",
-            _ => string.Empty
+                or LauncherFrontendSubpageKey.VersionSchematic => "resources",
+            LauncherFrontendPageKey.InstanceSetup => "other",
+            LauncherFrontendPageKey.VersionSaves => "saves",
+            _ => null
         };
+
+        return key is null
+            ? string.Empty
+            : i18n.T("shell.navigation.sidebar_section_groups." + key);
     }
 
     private static (string IconPath, double IconScale) GetSidebarIcon(LauncherFrontendPageKey page, LauncherFrontendSubpageKey subpage, string title)
@@ -239,23 +247,95 @@ internal sealed partial class FrontendShellViewModel
                 "M12.653 8.008A1.5 1.5 0 0 1 14 9.5v2l-.008.153a1.5 1.5 0 0 1-1.339 1.34L12.5 13h-10l-.153-.008a1.5 1.5 0 0 1-1.34-1.339L1 11.5v-2a1.5 1.5 0 0 1 1.347-1.492L2.5 8h10zM2.5 9a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5zm1 1a.5.5 0 1 1 0 1a.5.5 0 0 1 0-1m9.153-7.992A1.5 1.5 0 0 1 14 3.5v2l-.008.153a1.5 1.5 0 0 1-1.339 1.34L12.5 7h-10l-.153-.008a1.5 1.5 0 0 1-1.34-1.339L1 5.5v-2a1.5 1.5 0 0 1 1.347-1.492L2.5 2h10zM2.5 3a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5zm1 1a.5.5 0 1 1 0 1a.5.5 0 0 1 0-1",
                 0.85);
             default:
-                var icon = FrontendIconCatalog.GetSidebarIcon(title);
+                var icon = FrontendIconCatalog.GetSidebarIcon(ResolveCanonicalNavigationTitle(
+                    new LauncherFrontendRoute(page, subpage),
+                    title));
                 return (icon.Data, icon.Scale);
         }
     }
 
-    private static (string ToolTip, string IconPath, string ActionLabel, string? Command) GetSidebarAccessory(LauncherFrontendPageKey page, LauncherFrontendSubpageKey subpage, string title)
+    private static (string ToolTip, string IconPath, string ActionLabel, string? Command) GetSidebarAccessory(
+        LauncherFrontendPageKey page,
+        LauncherFrontendSubpageKey subpage,
+        string title,
+        II18nService i18n)
     {
+        var refreshToolTip = i18n.T("shell.navigation.accessories.refresh");
+        var resetToolTip = i18n.T("shell.navigation.accessories.reset");
+
         return page switch
         {
-            LauncherFrontendPageKey.Download => ("刷新", FrontendIconCatalog.Refresh.Data, "刷新", $"刷新 {title} 页面"),
-            LauncherFrontendPageKey.Tools => ("刷新", FrontendIconCatalog.Refresh.Data, "刷新", $"刷新 {title} 页面"),
+            LauncherFrontendPageKey.Download => (refreshToolTip, FrontendIconCatalog.Refresh.Data, refreshToolTip, "refresh"),
+            LauncherFrontendPageKey.Tools => (refreshToolTip, FrontendIconCatalog.Refresh.Data, refreshToolTip, "refresh"),
             LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupJava
                 or LauncherFrontendSubpageKey.SetupFeedback
-                or LauncherFrontendSubpageKey.SetupUpdate => ("刷新", FrontendIconCatalog.Refresh.Data, "刷新", $"刷新 {title} 页面"),
-            LauncherFrontendPageKey.Setup when title is "关于" or "日志" => (string.Empty, string.Empty, string.Empty, null),
-            LauncherFrontendPageKey.Setup => ("初始化设置", FrontendIconCatalog.Reset.Data, "重置", $"初始化 {title} 页面设置"),
+                or LauncherFrontendSubpageKey.SetupUpdate => (refreshToolTip, FrontendIconCatalog.Refresh.Data, refreshToolTip, "refresh"),
+            LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupAbout or LauncherFrontendSubpageKey.SetupLog => (string.Empty, string.Empty, string.Empty, null),
+            LauncherFrontendPageKey.Setup => (resetToolTip, FrontendIconCatalog.Reset.Data, resetToolTip, "reset"),
             _ => (string.Empty, string.Empty, string.Empty, null)
+        };
+    }
+
+    private static string ResolveCanonicalNavigationTitle(LauncherFrontendRoute route, string fallbackTitle)
+    {
+        return (route.Page, route.Subpage) switch
+        {
+            (LauncherFrontendPageKey.Launch, _) => "launch",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall) => "auto_install",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadMod) => "Mod",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadPack) => "modpack",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadDataPack) => "data_pack",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadResourcePack) => "resource_pack",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadShader) => "shader_pack",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadWorld) => "world",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadCompFavorites) => "favorites",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadClient) => "Minecraft",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadOptiFine) => "OptiFine",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadForge) => "Forge",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadNeoForge) => "NeoForge",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadCleanroom) => "Cleanroom",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadFabric) => "Fabric",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadLegacyFabric) => "Legacy Fabric",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadQuilt) => "Quilt",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadLiteLoader) => "LiteLoader",
+            (LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadLabyMod) => "LabyMod",
+            (LauncherFrontendPageKey.Download, _) => "download",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch) => "launch",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupUI) => "ui",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupGameManage) => "game_manage",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupAbout) => "about",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLog) => "log",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupFeedback) => "feedback",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupUpdate) => "update",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava) => "Java",
+            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLauncherMisc) => "launcher_misc",
+            (LauncherFrontendPageKey.Setup, _) => "settings",
+            (LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsLauncherHelp) => "help",
+            (LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest) => "test",
+            (LauncherFrontendPageKey.Tools, _) => "tools",
+            (LauncherFrontendPageKey.InstanceSelect, _) => "instance_select",
+            (LauncherFrontendPageKey.TaskManager, _) => "task_manager",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionOverall) => "overview",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionSetup) => "settings",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionInstall) => "edit",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionExport) => "export",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionWorld) => "world",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionScreenshot) => "screenshot",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod) => "Mod",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionModDisabled) => "disabled_mod",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionResourcePack) => "resource_pack",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionShader) => "shader_pack",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionSchematic) => "schematic",
+            (LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionServer) => "server",
+            (LauncherFrontendPageKey.InstanceSetup, _) => "instance_settings",
+            (LauncherFrontendPageKey.CompDetail, _) => "resource_detail",
+            (LauncherFrontendPageKey.HelpDetail, _) => "help_detail",
+            (LauncherFrontendPageKey.GameLog, _) => "game_log",
+            (LauncherFrontendPageKey.VersionSaves, LauncherFrontendSubpageKey.VersionSavesInfo) => "overview",
+            (LauncherFrontendPageKey.VersionSaves, LauncherFrontendSubpageKey.VersionSavesBackup) => "backup",
+            (LauncherFrontendPageKey.VersionSaves, LauncherFrontendSubpageKey.VersionSavesDatapack) => "data_pack",
+            (LauncherFrontendPageKey.VersionSaves, _) => "save_manager",
+            _ => fallbackTitle
         };
     }
 

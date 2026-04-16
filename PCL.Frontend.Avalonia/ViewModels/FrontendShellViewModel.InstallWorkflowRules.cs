@@ -5,26 +5,6 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private static readonly string[] InstallHintOptiFabric =
-    [
-        "必须安装 OptiFabric 才能正常使用 OptiFine！"
-    ];
-
-    private static readonly string[] InstallHintOptiFabricOld =
-    [
-        "安装结束后，请在 Mod 下载中搜索 OptiFabric Origins 并下载，否则 OptiFine 会无法使用！"
-    ];
-
-    private static readonly string[] InstallHintLegacyOptiFabric =
-    [
-        "安装结束后，请在 Mod 下载中搜索 LegacyOptiFabric 并下载，否则 OptiFine 会无法使用！"
-    ];
-
-    private static readonly string[] InstallHintModOptiFine =
-    [
-        "OptiFine 与一部分 Mod 的兼容性不佳，请谨慎安装。"
-    ];
-
     private DownloadInstallOptionViewModel CreateInstallOptionViewModel(bool isExistingInstance, string optionTitle, string? iconName)
     {
         var presentation = GetInstallOptionPresentation(isExistingInstance, optionTitle);
@@ -46,8 +26,8 @@ internal sealed partial class FrontendShellViewModel
         if (!FrontendInstallWorkflowService.IsFrontendManagedOption(optionTitle))
         {
             return new InstallOptionPresentation(
-                "暂不支持自动安装这一项。",
-                "当前不可用",
+                SD("instance.install.option.unsupported"),
+                SD("instance.install.option.unavailable"),
                 false);
         }
 
@@ -56,7 +36,7 @@ internal sealed partial class FrontendShellViewModel
         {
             return new InstallOptionPresentation(
                 BuildInstallOptionUnavailableDetail(optionTitle, minecraftVersion, unavailableReason),
-                "当前不可用",
+                SD("instance.install.option.unavailable"),
                 false);
         }
 
@@ -71,20 +51,22 @@ internal sealed partial class FrontendShellViewModel
         var hints = new List<string>();
         if (HasInstallMinecraftVersionChanged(isExistingInstance))
         {
-            hints.Add($"当前已切换到 {GetEffectiveMinecraftVersion(isExistingInstance)}，旧版本的加载器组合不会被自动沿用，请重新确认兼容项。");
+            hints.Add(SD(
+                "instance.install.hints.minecraft_changed",
+                ("version", GetEffectiveMinecraftVersion(isExistingInstance))));
         }
 
         if (HasInstallSelection(isExistingInstance, "Fabric")
             && !HasInstallSelection(isExistingInstance, "Fabric API"))
         {
-            hints.Add("你尚未选择安装 Fabric API，这会导致大多数 Mod 无法使用！");
+            hints.Add(SD("instance.install.hints.fabric_api_missing"));
         }
 
         if (HasInstallSelection(isExistingInstance, "Quilt")
             && !HasInstallSelection(isExistingInstance, "QFAPI / QSL")
             && !HasInstallSelection(isExistingInstance, "Fabric API"))
         {
-            hints.Add("你尚未选择安装 QFAPI / QSL，这会导致大多数 Mod 无法使用！");
+            hints.Add(SD("instance.install.hints.qsl_missing"));
         }
 
         if ((HasInstallSelection(isExistingInstance, "Fabric") || HasInstallSelection(isExistingInstance, "Legacy Fabric"))
@@ -93,15 +75,15 @@ internal sealed partial class FrontendShellViewModel
         {
             if (IsOptiFabricOriginsOnlyVersion(GetEffectiveMinecraftVersion(isExistingInstance)))
             {
-                hints.AddRange(InstallHintOptiFabricOld);
+                hints.Add(SD("instance.install.hints.optifabric_origins"));
             }
             else if (HasInstallSelection(isExistingInstance, "Legacy Fabric"))
             {
-                hints.AddRange(InstallHintLegacyOptiFabric);
+                hints.Add(SD("instance.install.hints.legacy_optifabric"));
             }
             else
             {
-                hints.AddRange(InstallHintOptiFabric);
+                hints.Add(SD("instance.install.hints.optifabric"));
             }
         }
 
@@ -109,7 +91,7 @@ internal sealed partial class FrontendShellViewModel
             && IsVersionGreaterThan(GetEffectiveMinecraftVersion(isExistingInstance), "Minecraft 1.20.4")
             && (HasInstallSelection(isExistingInstance, "Forge") || HasInstallSelection(isExistingInstance, "Fabric")))
         {
-            hints.AddRange(InstallHintModOptiFine);
+            hints.Add(SD("instance.install.hints.optifine_mod_compatibility"));
         }
 
         return hints;
@@ -124,14 +106,14 @@ internal sealed partial class FrontendShellViewModel
         var parts = new List<string>();
 
         if (string.IsNullOrWhiteSpace(selectionText)
-            || string.Equals(selectionText, "未安装", StringComparison.Ordinal)
-            || string.Equals(selectionText, "可以添加", StringComparison.Ordinal))
+            || string.Equals(selectionText, SD("instance.common.not_installed"), StringComparison.Ordinal)
+            || string.Equals(selectionText, SD("instance.install.option.can_add"), StringComparison.Ordinal))
         {
-            parts.Add($"点击后会加载 {minecraftVersion} 的可用候选。");
+            parts.Add(SD("instance.install.option.preview_load_candidates", ("version", minecraftVersion)));
         }
         else
         {
-            parts.Add($"当前记录为 {selectionText}。点击后会加载 {minecraftVersion} 的兼容候选。");
+            parts.Add(SD("instance.install.option.preview_current_selection", ("selection", selectionText), ("version", minecraftVersion)));
         }
 
         parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
@@ -150,15 +132,15 @@ internal sealed partial class FrontendShellViewModel
 
         if (effectiveChoice is null)
         {
-            parts.Add($"推荐 {recommendedChoice.Title}。");
+            parts.Add(SD("instance.install.option.recommended", ("title", recommendedChoice.Title)));
         }
         else if (string.Equals(effectiveChoice.Id, recommendedChoice.Id, StringComparison.Ordinal))
         {
-            parts.Add($"当前已选推荐版本 {effectiveChoice.Title}。");
+            parts.Add(SD("instance.install.option.current_is_recommended", ("title", effectiveChoice.Title)));
         }
         else
         {
-            parts.Add($"当前已选 {effectiveChoice.Title}，推荐版本为 {recommendedChoice.Title}。");
+            parts.Add(SD("instance.install.option.current_and_recommended", ("current", effectiveChoice.Title), ("recommended", recommendedChoice.Title)));
         }
 
         if (!string.IsNullOrWhiteSpace(recommendedChoice.Summary))
@@ -166,14 +148,16 @@ internal sealed partial class FrontendShellViewModel
             parts.Add(recommendedChoice.Summary);
         }
 
-        parts.Add($"当前共有 {selectableChoices.Count} 个可用候选。");
+        parts.Add(SD("instance.install.option.available_count", ("count", selectableChoices.Count)));
         parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
         return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
     }
 
     private string ResolveInstallOptionPreviewSelectText(bool isExistingInstance, string optionTitle)
     {
-        return HasInstallSelection(isExistingInstance, optionTitle) ? "更换版本" : "选择版本";
+        return HasInstallSelection(isExistingInstance, optionTitle)
+            ? SD("instance.install.option.change_version")
+            : SD("instance.install.option.select_version");
     }
 
     private string ResolveInstallOptionSelectText(
@@ -185,10 +169,10 @@ internal sealed partial class FrontendShellViewModel
         var effectiveChoice = ResolveEffectiveChoice(isExistingInstance, optionTitle, minecraftVersion);
         if (effectiveChoice is null)
         {
-            return selectableChoices.Count > 0 ? "安装推荐" : "当前不可用";
+            return selectableChoices.Count > 0 ? SD("instance.install.option.install_recommended") : SD("instance.install.option.unavailable");
         }
 
-        return "更换版本";
+        return "Change version";
     }
 
     private string BuildInstallOptionUnresolvedDetail(
@@ -200,17 +184,17 @@ internal sealed partial class FrontendShellViewModel
         var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
         var parts = new List<string>
         {
-            $"当前记录的是 {baselineText}，但它无法映射到 {minecraftVersion} 的受支持安装源。"
+            SD("instance.install.option.unresolved_current", ("selection", baselineText), ("version", minecraftVersion))
         };
 
         if (selectableChoices.Count > 0)
         {
-            parts.Add($"请重新选择一个可用版本；当前可选 {selectableChoices.Count} 项。");
-            parts.Add($"推荐 {selectableChoices[0].Title}。");
+            parts.Add(SD("instance.install.option.reselect_available", ("count", selectableChoices.Count)));
+            parts.Add(SD("instance.install.option.recommended", ("title", selectableChoices[0].Title)));
         }
         else
         {
-            parts.Add("这个版本组合当前没有可直接选择的候选，建议清除该项或改用兼容的 Minecraft 版本。");
+            parts.Add(SD("instance.install.option.no_candidates"));
         }
 
         parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
@@ -221,7 +205,7 @@ internal sealed partial class FrontendShellViewModel
     {
         var parts = new List<string>
         {
-            $"当前 Minecraft {minecraftVersion} 下 {unavailableReason}。"
+            SD("instance.install.option.unavailable_detail", ("version", minecraftVersion), ("reason", unavailableReason))
         };
 
         parts.Add(GetInstallOptionRuleHint(optionTitle, minecraftVersion));
@@ -233,30 +217,30 @@ internal sealed partial class FrontendShellViewModel
         return optionTitle switch
         {
             "Forge" or "NeoForge" or "Cleanroom" or "Fabric" or "Legacy Fabric" or "Quilt" or "LabyMod" =>
-                "这会占用主加载器槽位，选择后会自动清除其他主加载器。",
+                SD("instance.install.rules.primary_loader"),
             "Fabric API" =>
-                "需要先安装 Fabric，或在 Quilt 兼容场景下作为共享 API 使用。",
+                SD("instance.install.rules.fabric_api"),
             "Legacy Fabric API" =>
-                "需要先安装 Legacy Fabric。",
+                SD("instance.install.rules.legacy_fabric_api"),
             "QFAPI / QSL" =>
-                "需要先安装 Quilt。",
+                SD("instance.install.rules.qsl"),
             "OptiFine" when IsVersionGreaterThan(minecraftVersion, "1.20.4") =>
-                "高于 1.20.4 时不再兼容 Fabric 组合，请优先确认当前加载器矩阵。",
+                SD("instance.install.rules.optifine_newer_than_1204"),
             "OptiFine" =>
-                "与部分 Forge / Fabric 版本组合存在额外兼容限制，保存前请确认提示条。",
+                SD("instance.install.rules.optifine"),
             "OptiFabric" when IsOptiFabricOriginsOnlyVersion(minecraftVersion) =>
-                "1.14-1.15 需要改用 OptiFabric Origins，当前不会自动代装旧分支。",
+                SD("instance.install.rules.optifabric_origins"),
             "OptiFabric" =>
-                "需要同时安装 Fabric 与 OptiFine。",
+                SD("instance.install.rules.optifabric"),
             "LiteLoader" =>
-                "仅旧版 Minecraft 提供候选，通常不建议与现代加载器混用。",
+                SD("instance.install.rules.liteloader"),
             _ => string.Empty
         };
     }
 
     private IReadOnlyList<FrontendInstallChoice> GetSelectableInstallChoices(bool isExistingInstance, string optionTitle, string minecraftVersion)
     {
-        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, SelectedDownloadSourceIndex);
+        var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, SelectedDownloadSourceIndex, _i18n);
         return optionTitle switch
         {
             "Forge" => FilterForgeChoicesForCurrentState(isExistingInstance, choices),
@@ -315,49 +299,49 @@ internal sealed partial class FrontendShellViewModel
 
         return optionTitle switch
         {
-            "OptiFine" when currentPrimary is "NeoForge" or "Quilt" or "LabyMod" => $"与 {currentPrimary} 不兼容",
-            "OptiFine" when hasCleanroom => "与 Cleanroom 不兼容",
-            "OptiFine" when hasForge && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3") => "与 Forge 不兼容",
-            "OptiFine" when hasFabric && IsVersionGreaterThan(minecraftVersion, "1.20.4") => "与 Fabric 不兼容",
+            "OptiFine" when currentPrimary is "NeoForge" or "Quilt" or "LabyMod" => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
+            "OptiFine" when hasCleanroom => SD("instance.install.unavailable.incompatible_with", ("target", "Cleanroom")),
+            "OptiFine" when hasForge && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3") => SD("instance.install.unavailable.incompatible_with", ("target", "Forge")),
+            "OptiFine" when hasFabric && IsVersionGreaterThan(minecraftVersion, "1.20.4") => SD("instance.install.unavailable.incompatible_with", ("target", "Fabric")),
 
-            "Forge" when IsVersionAtLeast("1.5.1", minecraftVersion) && IsVersionAtLeast(minecraftVersion, "1.1") => "无可用版本",
-            "Forge" when currentPrimary is not null && !string.Equals(currentPrimary, "Forge", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
-            "Forge" when hasOptiFine && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3") => "与 OptiFine 不兼容",
+            "Forge" when IsVersionAtLeast("1.5.1", minecraftVersion) && IsVersionAtLeast(minecraftVersion, "1.1") => SD("instance.install.unavailable.no_versions"),
+            "Forge" when currentPrimary is not null && !string.Equals(currentPrimary, "Forge", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
+            "Forge" when hasOptiFine && IsVersionAtLeast(minecraftVersion, "1.13") && IsVersionAtMost(minecraftVersion, "1.14.3") => SD("instance.install.unavailable.incompatible_with", ("target", "OptiFine")),
 
-            "NeoForge" when hasOptiFine => "与 OptiFine 不兼容",
-            "NeoForge" when currentPrimary is not null && !string.Equals(currentPrimary, "NeoForge", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+            "NeoForge" when hasOptiFine => SD("instance.install.unavailable.incompatible_with", ("target", "OptiFine")),
+            "NeoForge" when currentPrimary is not null && !string.Equals(currentPrimary, "NeoForge", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
 
-            "Cleanroom" when !minecraftVersion.StartsWith("1.", StringComparison.Ordinal) => "没有可用版本",
-            "Cleanroom" when hasOptiFine => "与 OptiFine 不兼容",
-            "Cleanroom" when currentPrimary is not null && !string.Equals(currentPrimary, "Cleanroom", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+            "Cleanroom" when !minecraftVersion.StartsWith("1.", StringComparison.Ordinal) => SD("instance.install.unavailable.no_versions"),
+            "Cleanroom" when hasOptiFine => SD("instance.install.unavailable.incompatible_with", ("target", "OptiFine")),
+            "Cleanroom" when currentPrimary is not null && !string.Equals(currentPrimary, "Cleanroom", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
 
-            "Fabric" when hasOptiFine && IsVersionGreaterThan(minecraftVersion, "1.20.4") => "与 OptiFine 不兼容",
-            "Fabric" when currentPrimary is not null && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+            "Fabric" when hasOptiFine && IsVersionGreaterThan(minecraftVersion, "1.20.4") => SD("instance.install.unavailable.incompatible_with", ("target", "OptiFine")),
+            "Fabric" when currentPrimary is not null && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
 
-            "Legacy Fabric" when hasLiteLoader => "与 LiteLoader 不兼容",
-            "Legacy Fabric" when currentPrimary is not null && !string.Equals(currentPrimary, "Legacy Fabric", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+            "Legacy Fabric" when hasLiteLoader => SD("instance.install.unavailable.incompatible_with", ("target", "LiteLoader")),
+            "Legacy Fabric" when currentPrimary is not null && !string.Equals(currentPrimary, "Legacy Fabric", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
 
-            "Quilt" when hasOptiFine => "与 OptiFine 不兼容",
+            "Quilt" when hasOptiFine => SD("instance.install.unavailable.incompatible_with", ("target", "OptiFine")),
             "Quilt" when currentPrimary is not null
                             && !string.Equals(currentPrimary, "Quilt", StringComparison.Ordinal)
-                            && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+                            && !string.Equals(currentPrimary, "Fabric", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
 
-            "LabyMod" when hasOptiFine => "与 OptiFine 不兼容",
-            "LabyMod" when currentPrimary is not null && !string.Equals(currentPrimary, "LabyMod", StringComparison.Ordinal) => $"与 {currentPrimary} 不兼容",
+            "LabyMod" when hasOptiFine => SD("instance.install.unavailable.incompatible_with", ("target", "OptiFine")),
+            "LabyMod" when currentPrimary is not null && !string.Equals(currentPrimary, "LabyMod", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentPrimary)),
 
-            "Fabric API" when currentApi is not null && !string.Equals(currentApi, "Fabric API", StringComparison.Ordinal) => $"与 {currentApi} 不兼容",
-            "Fabric API" when !hasFabric && !hasQuilt => "需要安装 Fabric",
+            "Fabric API" when currentApi is not null && !string.Equals(currentApi, "Fabric API", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentApi)),
+            "Fabric API" when !hasFabric && !hasQuilt => SD("instance.install.unavailable.requires_fabric"),
 
-            "Legacy Fabric API" when currentApi is not null && !string.Equals(currentApi, "Legacy Fabric API", StringComparison.Ordinal) => $"与 {currentApi} 不兼容",
-            "Legacy Fabric API" when !hasLegacyFabric => "需要安装 LegacyFabric",
+            "Legacy Fabric API" when currentApi is not null && !string.Equals(currentApi, "Legacy Fabric API", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentApi)),
+            "Legacy Fabric API" when !hasLegacyFabric => SD("instance.install.unavailable.requires_legacy_fabric"),
 
-            "QFAPI / QSL" when currentApi is not null && !string.Equals(currentApi, "QFAPI / QSL", StringComparison.Ordinal) => $"与 {currentApi} 不兼容",
-            "QFAPI / QSL" when !hasQuilt => "需要安装 Quilt",
+            "QFAPI / QSL" when currentApi is not null && !string.Equals(currentApi, "QFAPI / QSL", StringComparison.Ordinal) => SD("instance.install.unavailable.incompatible_with", ("target", currentApi)),
+            "QFAPI / QSL" when !hasQuilt => SD("instance.install.unavailable.requires_quilt"),
 
-            "OptiFabric" when IsOptiFabricOriginsOnlyVersion(minecraftVersion) => "不兼容老版本 Fabric，请手动下载 OptiFabric Origins",
-            "OptiFabric" when !hasFabric && !hasOptiFine => "需要安装 OptiFine 与 Fabric",
-            "OptiFabric" when !hasFabric => "需要安装 Fabric",
-            "OptiFabric" when !hasOptiFine => "需要安装 OptiFine",
+            "OptiFabric" when IsOptiFabricOriginsOnlyVersion(minecraftVersion) => SD("instance.install.unavailable.optifabric_origins"),
+            "OptiFabric" when !hasFabric && !hasOptiFine => SD("instance.install.unavailable.requires_optifine_and_fabric"),
+            "OptiFabric" when !hasFabric => SD("instance.install.unavailable.requires_fabric"),
+            "OptiFabric" when !hasOptiFine => SD("instance.install.unavailable.requires_optifine"),
             _ => null
         };
     }
@@ -382,21 +366,21 @@ internal sealed partial class FrontendShellViewModel
             case "OptiFine":
                 if (selectableChoices.Count == 0 && hasForge)
                 {
-                    return "仅兼容特定版本的 Forge";
+                    return SD("instance.install.unavailable.specific_forge_only");
                 }
 
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
+                return selectableChoices.Count == 0 ? SD("instance.install.unavailable.no_versions") : null;
 
             case "LiteLoader":
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
+                return selectableChoices.Count == 0 ? SD("instance.install.unavailable.no_versions") : null;
 
             case "Forge":
                 return selectableChoices.Count == 0
-                    ? hasOptiFine ? "与 OptiFine 不兼容" : "无可用版本"
+                    ? hasOptiFine ? SD("instance.install.unavailable.incompatible_with", ("target", "OptiFine")) : SD("instance.install.unavailable.no_versions")
                     : null;
 
             default:
-                return selectableChoices.Count == 0 ? "无可用版本" : null;
+                return selectableChoices.Count == 0 ? SD("instance.install.unavailable.no_versions") : null;
         }
     }
 
@@ -404,8 +388,8 @@ internal sealed partial class FrontendShellViewModel
     {
         var selection = GetEffectiveSelectionText(isExistingInstance, optionTitle);
         return !string.IsNullOrWhiteSpace(selection)
-               && !string.Equals(selection, "未安装", StringComparison.Ordinal)
-               && !string.Equals(selection, "可以添加", StringComparison.Ordinal);
+               && !string.Equals(selection, SD("instance.common.not_installed"), StringComparison.Ordinal)
+               && !string.Equals(selection, SD("instance.install.option.can_add"), StringComparison.Ordinal);
     }
 
     private bool CanClearInstallSelection(bool isExistingInstance, string optionTitle)

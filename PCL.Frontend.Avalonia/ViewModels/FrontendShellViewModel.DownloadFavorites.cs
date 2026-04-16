@@ -20,7 +20,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasSelectedDownloadFavorites => DownloadFavoriteSelectedCount > 0;
 
-    public string DownloadFavoriteSelectionText => $"已选择 {DownloadFavoriteSelectedCount} 项";
+    public string DownloadFavoriteSelectionText => T("download.favorites.selection.summary", ("count", DownloadFavoriteSelectedCount));
 
     public bool ShowDownloadFavoriteDefaultActions => !HasSelectedDownloadFavorites;
 
@@ -117,7 +117,9 @@ internal sealed partial class FrontendShellViewModel
         var visibleEntries = GetVisibleDownloadFavoriteEntries();
         if (visibleEntries.Count == 0)
         {
-            AddActivity("全选收藏", $"{GetSelectedDownloadFavoriteTargetName()} 中没有可选择的项目。");
+            AddActivity(
+                T("download.favorites.activities.select_all"),
+                T("download.favorites.select_all.empty", ("target_name", GetSelectedDownloadFavoriteTargetName())));
             return;
         }
 
@@ -149,7 +151,9 @@ internal sealed partial class FrontendShellViewModel
         }
 
         RaiseDownloadFavoriteSelectionProperties();
-        AddActivity("全选收藏", $"{GetSelectedDownloadFavoriteTargetName()} • 已选中 {visibleEntries.Count} 项。");
+        AddActivity(
+            T("download.favorites.activities.select_all"),
+            T("download.favorites.select_all.completed", ("target_name", GetSelectedDownloadFavoriteTargetName()), ("count", visibleEntries.Count)));
     }
 
     private void ClearDownloadFavoriteSelection()
@@ -192,14 +196,14 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             confirmed = await _shellActionService.ConfirmAsync(
-                "移出收藏夹",
-                $"确认从 {targetName} 中移出 {selectedIds.Length} 个项目？",
-                "移出",
+                T("download.favorites.remove.confirmation.title"),
+                T("download.favorites.remove.confirmation.message", ("target_name", targetName), ("count", selectedIds.Length)),
+                T("download.favorites.actions.remove"),
                 isDanger: true);
         }
         catch (Exception ex)
         {
-            AddFailureActivity("移出收藏夹失败", ex.Message);
+            AddFailureActivity(T("download.favorites.activities.remove_failed"), ex.Message);
             return;
         }
 
@@ -219,13 +223,13 @@ internal sealed partial class FrontendShellViewModel
 
         if (removedCount == 0)
         {
-            AddActivity("移出收藏夹", $"{targetName} 中没有匹配的收藏项目。");
+            AddActivity(T("download.favorites.activities.remove"), T("download.favorites.remove.no_matches", ("target_name", targetName)));
             return;
         }
 
         PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
         ClearDownloadFavoriteSelection();
-        AddActivity("移出收藏夹", $"已从 {targetName} 中移出 {removedCount} 个项目。");
+        AddActivity(T("download.favorites.activities.remove"), T("download.favorites.remove.completed", ("target_name", targetName), ("count", removedCount)));
     }
 
     private async Task FavoriteSelectedDownloadFavoritesToTargetAsync()
@@ -239,8 +243,8 @@ internal sealed partial class FrontendShellViewModel
         var currentTarget = GetSelectedDownloadFavoriteTarget(root);
         var target = await PromptForDownloadFavoriteTargetAsync(
             root,
-            "收藏到",
-            $"选择一个收藏夹，用于接收这 {DownloadFavoriteSelectedCount} 个项目。",
+            T("download.favorites.activities.favorite_to"),
+            T("download.favorites.favorite_to.selection_prompt", ("count", DownloadFavoriteSelectedCount)),
             excludeTarget: currentTarget);
         if (target is null)
         {
@@ -258,12 +262,12 @@ internal sealed partial class FrontendShellViewModel
 
         if (addedCount == 0)
         {
-            AddActivity("收藏到", $"{GetDownloadFavoriteTargetName(target)} 中已包含所选项目。");
+            AddActivity(T("download.favorites.activities.favorite_to"), T("download.favorites.favorite_to.already_contains_selected", ("target_name", GetDownloadFavoriteTargetName(target))));
             return;
         }
 
         PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
-        AddActivity("收藏到", $"已将 {addedCount} 个项目加入 {GetDownloadFavoriteTargetName(target)}。");
+        AddActivity(T("download.favorites.activities.favorite_to"), T("download.favorites.favorite_to.completed", ("count", addedCount), ("target_name", GetDownloadFavoriteTargetName(target))));
     }
 
     private async Task ShareSelectedDownloadFavoritesAsync()
@@ -276,7 +280,7 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (selectedIds.Length == 0)
         {
-            AddActivity("分享所选", "分享了个寂寞啊！");
+            AddActivity(T("download.favorites.activities.share_selected"), T("download.favorites.share_selected.empty"));
             return;
         }
 
@@ -284,11 +288,11 @@ internal sealed partial class FrontendShellViewModel
         {
             await _shellActionService.SetClipboardTextAsync(JsonSerializer.Serialize(selectedIds));
             ClearDownloadFavoriteSelection();
-            AddActivity("分享所选", $"已复制 {selectedIds.Length} 个收藏项目的分享代码。");
+            AddActivity(T("download.favorites.activities.share_selected"), T("download.favorites.share_selected.completed", ("count", selectedIds.Length)));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("分享所选失败", ex.Message);
+            AddFailureActivity(T("download.favorites.activities.share_selected_failed"), ex.Message);
         }
     }
 
@@ -297,7 +301,7 @@ internal sealed partial class FrontendShellViewModel
         var selectedEntries = GetSelectedDownloadFavoriteCatalogEntries();
         if (selectedEntries.Count == 0)
         {
-            AddActivity("批量安装收藏", "当前没有选中的收藏项目。");
+            AddActivity(T("download.favorites.activities.batch_install"), T("download.favorites.batch_install.empty_selection"));
             return;
         }
 
@@ -307,8 +311,8 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        AvaloniaHintBus.Show($"正在分析 {selectedEntries.Count} 个收藏项目…", AvaloniaHintTheme.Info);
-        AddActivity("批量安装收藏", $"正在为 {targetSnapshot.DisplayName} 分析 {selectedEntries.Count} 个收藏项目。");
+        AvaloniaHintBus.Show(T("download.favorites.batch_install.analyzing_hint", ("count", selectedEntries.Count)), AvaloniaHintTheme.Info);
+        AddActivity(T("download.favorites.activities.batch_install"), T("download.favorites.batch_install.analyzing_activity", ("target_name", targetSnapshot.DisplayName), ("count", selectedEntries.Count)));
         CommunityProjectInstallBuildResult result;
         try
         {
@@ -316,19 +320,19 @@ internal sealed partial class FrontendShellViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity("批量安装收藏失败", ex.Message);
+            AddFailureActivity(T("download.favorites.activities.batch_install_failed"), ex.Message);
             return;
         }
 
         var confirmed = await ConfirmDownloadFavoriteBatchInstallAsync(targetSnapshot, result);
         if (!confirmed)
         {
-            AddActivity("批量安装收藏", "已取消加入批量安装任务。");
+            AddActivity(T("download.favorites.activities.batch_install"), T("download.favorites.batch_install.canceled"));
             return;
         }
 
-        AvaloniaHintBus.Show("批量安装已开始，正在加入任务中心…", AvaloniaHintTheme.Info);
-        AddActivity("批量安装收藏", $"{targetSnapshot.DisplayName} • 正在把分析完成的资源加入任务中心。");
+        AvaloniaHintBus.Show(T("download.favorites.batch_install.started_hint"), AvaloniaHintTheme.Info);
+        AddActivity(T("download.favorites.activities.batch_install"), T("download.favorites.batch_install.started_activity", ("target_name", targetSnapshot.DisplayName)));
         foreach (var plan in result.Plans)
         {
             RegisterDownloadFavoriteBatchInstallTask(plan);
@@ -337,26 +341,29 @@ internal sealed partial class FrontendShellViewModel
         var summaryParts = new List<string>();
         if (result.Plans.Count > 0)
         {
-            summaryParts.Add($"已加入 {result.Plans.Count} 个安装任务");
+            summaryParts.Add(T("download.favorites.batch_install.summary.tasks", ("count", result.Plans.Count)));
             var dependencyCount = result.Plans.Count(plan => plan.IsDependency);
             if (dependencyCount > 0)
             {
-                summaryParts.Add($"包含 {dependencyCount} 个依赖");
+                summaryParts.Add(T("download.favorites.batch_install.summary.dependencies", ("count", dependencyCount)));
             }
         }
 
         if (result.Skipped.Count > 0)
         {
-            summaryParts.Add($"跳过 {result.Skipped.Count} 个项目");
+            summaryParts.Add(T("download.favorites.batch_install.summary.skipped", ("count", result.Skipped.Count)));
         }
 
         AddActivity(
-            "批量安装收藏",
-            $"{targetSnapshot.DisplayName} • {(summaryParts.Count == 0 ? "没有可执行的安装任务。" : string.Join("，", summaryParts))}");
+            T("download.favorites.activities.batch_install"),
+            T(
+                "download.favorites.batch_install.summary.completed",
+                ("target_name", targetSnapshot.DisplayName),
+                ("summary", summaryParts.Count == 0 ? T("download.favorites.batch_install.summary.none") : string.Join(T("common.punctuation.comma"), summaryParts))));
 
         foreach (var skipped in result.Skipped.Take(5))
         {
-            AddActivity("批量安装收藏", skipped);
+            AddActivity(T("download.favorites.activities.batch_install"), skipped);
         }
     }
 
@@ -367,13 +374,13 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             return await _shellActionService.ConfirmAsync(
-                "确认批量安装",
+                T("download.favorites.batch_install.confirmation.title"),
                 BuildDownloadFavoriteBatchInstallConfirmationMessage(targetSnapshot, result),
-                "开始安装");
+                T("download.favorites.batch_install.confirmation.confirm"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("批量安装确认失败", ex.Message);
+            AddFailureActivity(T("download.favorites.batch_install.confirmation.failed"), ex.Message);
             return false;
         }
     }
@@ -382,7 +389,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(_communityProjectState.ProjectId))
         {
-            AddActivity("收藏项目", "当前没有可收藏的项目。");
+            AddActivity(T("download.favorites.activities.favorite"), T("download.favorites.favorite.none_selected"));
             return false;
         }
 
@@ -401,12 +408,14 @@ internal sealed partial class FrontendShellViewModel
             PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
             RebuildCommunityProjectSurfaceCollections();
             RaiseCommunityProjectProperties();
-            AddActivity(added ? "加入收藏夹" : "移出收藏夹", $"{CommunityProjectTitle} • {targetName}");
+            AddActivity(
+                added ? T("download.favorites.activities.favorite_added") : T("download.favorites.activities.favorite_removed"),
+                T("download.favorites.favorite.changed", ("title", CommunityProjectTitle), ("target_name", targetName)));
             return added;
         }
         catch (Exception ex)
         {
-            AddFailureActivity("收藏项目失败", ex.Message);
+            AddFailureActivity(T("download.favorites.activities.favorite_failed"), ex.Message);
             return false;
         }
     }
@@ -415,7 +424,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (string.IsNullOrWhiteSpace(_communityProjectState.ProjectId))
         {
-            AddActivity("收藏到", "当前没有可收藏的项目。");
+            AddActivity(T("download.favorites.activities.favorite_to"), T("download.favorites.favorite_to.none_selected"));
             return;
         }
 
@@ -424,8 +433,8 @@ internal sealed partial class FrontendShellViewModel
             var root = LoadDownloadFavoriteTargetRoot();
             var target = await PromptForDownloadFavoriteTargetAsync(
                 root,
-                "收藏到",
-                "选择一个收藏夹来保存当前项目。",
+                T("download.favorites.activities.favorite_to"),
+                T("download.favorites.favorite_to.title"),
                 defaultTarget: GetSelectedDownloadFavoriteTarget(root));
             if (target is null)
             {
@@ -434,18 +443,22 @@ internal sealed partial class FrontendShellViewModel
 
             if (!AddProjectToFavoriteTarget(target, _communityProjectState.ProjectId))
             {
-                AddActivity("收藏到", $"{GetDownloadFavoriteTargetName(target)} 中已包含 {CommunityProjectTitle}。");
+                AddActivity(
+                    T("download.favorites.activities.favorite_to"),
+                    T("download.favorites.favorite_to.already_contains", ("target_name", GetDownloadFavoriteTargetName(target)), ("title", CommunityProjectTitle)));
                 return;
             }
 
             PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
             RebuildCommunityProjectSurfaceCollections();
             RaiseCommunityProjectProperties();
-            AddActivity("收藏到", $"{CommunityProjectTitle} 已加入 {GetDownloadFavoriteTargetName(target)}。");
+            AddActivity(
+                T("download.favorites.activities.favorite_to"),
+                T("download.favorites.favorite_to.completed", ("title", CommunityProjectTitle), ("target_name", GetDownloadFavoriteTargetName(target))));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("收藏到失败", ex.Message);
+            AddFailureActivity(T("download.favorites.activities.favorite_to_failed"), ex.Message);
         }
     }
 
@@ -460,14 +473,18 @@ internal sealed partial class FrontendShellViewModel
         var target = GetSelectedDownloadFavoriteTarget(root);
         if (!RemoveProjectFromFavoriteTarget(target, projectId))
         {
-            AddActivity("移出收藏夹", $"{title} 不在 {GetDownloadFavoriteTargetName(target)} 中。");
+            AddActivity(
+                T("download.favorites.activities.remove_from_target"),
+                T("download.favorites.remove_from_target.not_in_target", ("title", title), ("target_name", GetDownloadFavoriteTargetName(target))));
             return;
         }
 
         PersistDownloadFavoriteTargetRoot(root, SelectedDownloadFavoriteTargetIndex);
         _downloadFavoriteSelectedProjectIds.Remove(projectId);
         RaiseDownloadFavoriteSelectionProperties();
-        AddActivity("移出收藏夹", $"{title} 已从 {GetDownloadFavoriteTargetName(target)} 中移出。");
+        AddActivity(
+            T("download.favorites.activities.remove_from_target"),
+            T("download.favorites.remove_from_target.completed", ("title", title), ("target_name", GetDownloadFavoriteTargetName(target))));
     }
 
     private IReadOnlyList<FrontendDownloadCatalogEntry> GetSelectedDownloadFavoriteCatalogEntries()
@@ -486,7 +503,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (_downloadComposition.Favorites.Targets.Count == 0)
         {
-            return new FrontendDownloadFavoriteTargetState("默认收藏夹", "default", []);
+            return new FrontendDownloadFavoriteTargetState(T("download.favorites.targets.default_name"), "default", []);
         }
 
         var index = Math.Clamp(SelectedDownloadFavoriteTargetIndex, 0, _downloadComposition.Favorites.Targets.Count - 1);
@@ -506,7 +523,7 @@ internal sealed partial class FrontendShellViewModel
         var instances = LoadAvailableDownloadTargetInstances();
         if (instances.Count == 0)
         {
-            AddActivity("批量安装收藏", "当前没有可安装的实例。");
+            AddActivity(T("download.favorites.activities.batch_install"), T("download.favorites.batch_install.no_instances"));
             return null;
         }
 
@@ -514,21 +531,19 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             selectedId = await _shellActionService.PromptForChoiceAsync(
-                "选择安装目标版本",
-                includesDatapacks
-                    ? $"批量安装会根据目标实例的 Minecraft 版本与加载器，为这 {selectedCount} 个收藏选择推荐版本。数据包会在下一步继续选择目标存档。"
-                    : $"批量安装会根据目标实例的 Minecraft 版本与加载器，为这 {selectedCount} 个收藏选择推荐版本。",
+                T("download.favorites.batch_install.target.title"),
+                T("download.favorites.batch_install.target.body", ("count", selectedCount)),
                 instances.Select(entry => new PclChoiceDialogOption(
                     entry.Name,
                     entry.Name,
                     entry.Subtitle))
                     .ToArray(),
                 _instanceComposition.Selection.HasSelection ? _instanceComposition.Selection.InstanceName : instances[0].Name,
-                "开始安装");
+                T("download.favorites.batch_install.target.confirm"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity("选择安装目标失败", ex.Message);
+            AddFailureActivity(T("download.favorites.batch_install.target.failed"), ex.Message);
             return null;
         }
 
@@ -639,7 +654,7 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         if (targets.Length == 0)
         {
-            AddActivity(title, "当前没有可用的其他收藏夹。");
+            AddActivity(title, T("download.favorites.targets.none_available"));
             return null;
         }
 
@@ -656,14 +671,14 @@ internal sealed partial class FrontendShellViewModel
                 targets.Select(target => new PclChoiceDialogOption(
                     GetDownloadFavoriteTargetId(target),
                     GetDownloadFavoriteTargetName(target),
-                    $"收藏夹 ID：{GetDownloadFavoriteTargetId(target)}"))
+                    T("download.favorites.targets.option.id", ("target_id", GetDownloadFavoriteTargetId(target)))))
                     .ToArray(),
                 defaultTargetId,
-                "继续");
+                T("common.actions.continue"));
         }
         catch (Exception ex)
         {
-            AddFailureActivity($"{title}失败", ex.Message);
+            AddFailureActivity(T("download.favorites.targets.prompt_failed", ("title", title)), ex.Message);
             return null;
         }
 
@@ -720,7 +735,7 @@ internal sealed partial class FrontendShellViewModel
         var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, targetSnapshot.Instance.Name);
         if (!targetComposition.Selection.HasSelection)
         {
-            return new CommunityProjectInstallBuildResult([], [$"{targetSnapshot.Instance.Name} 当前不可用，无法执行批量安装。"]);
+            return new CommunityProjectInstallBuildResult([], [T("download.favorites.batch_install.target_unavailable", ("target_name", targetSnapshot.Instance.Name))]);
         }
 
         var roots = new List<CommunityProjectInstallRootRequest>();
@@ -729,19 +744,19 @@ internal sealed partial class FrontendShellViewModel
         {
             if (string.IsNullOrWhiteSpace(favorite.Identity))
             {
-                skipped.Add($"已跳过 {favorite.Title}：缺少项目标识。");
+                skipped.Add(T("download.favorites.batch_install.skip.missing_project_id", ("title", favorite.Title)));
                 continue;
             }
 
             if (favorite.OriginSubpage is null)
             {
-                skipped.Add($"已跳过 {favorite.Title}：无法识别资源类型。");
+                skipped.Add(T("download.favorites.batch_install.skip.unknown_type", ("title", favorite.Title)));
                 continue;
             }
 
             if (favorite.OriginSubpage == LauncherFrontendSubpageKey.DownloadPack)
             {
-                skipped.Add($"已跳过 {favorite.Title}：整合包暂不支持收藏夹批量安装。");
+                skipped.Add(T("download.favorites.batch_install.skip.pack_unsupported", ("title", favorite.Title)));
                 continue;
             }
 
@@ -764,17 +779,17 @@ internal sealed partial class FrontendShellViewModel
 
     private void RegisterDownloadFavoriteBatchInstallTask(CommunityProjectInstallPlan plan)
     {
-        RegisterCommunityProjectInstallTask(plan, "批量安装收藏");
+        RegisterCommunityProjectInstallTask(plan, T("download.favorites.batch_install.task_title"));
     }
 
     private void RegisterCommunityProjectInstallTask(CommunityProjectInstallPlan plan, string activityTitle)
     {
         TaskCenter.Register(new FrontendManagedFileDownloadTask(
-            $"{activityTitle}：{plan.Title}",
+            T("download.favorites.batch_install.task_display", ("activity_title", activityTitle), ("title", plan.Title)),
             plan.SourceUrl,
             plan.TargetPath,
             ResolveDownloadRequestTimeout(),
-            onStarted: _ => AvaloniaHintBus.Show($"开始安装到 {plan.TargetName}", AvaloniaHintTheme.Info),
+            onStarted: _ => AvaloniaHintBus.Show(T("download.favorites.batch_install.task_started", ("instance_name", plan.InstanceName)), AvaloniaHintTheme.Info),
             onCompleted: downloadedPath =>
             {
                 var installedPath = FinalizeCommunityProjectInstalledArtifact(plan.Route, downloadedPath, plan.ReplacedPath);
@@ -790,13 +805,13 @@ internal sealed partial class FrontendShellViewModel
                         }
                     }
 
-                    AddActivity(activityTitle, $"{plan.Title} -> {installedPath}");
-                    AvaloniaHintBus.Show($"{plan.Title} 已安装到 {plan.TargetName}", AvaloniaHintTheme.Success);
+                    AddActivity(activityTitle, T("download.favorites.batch_install.task_completed", ("title", plan.Title), ("path", installedPath)));
+                    AvaloniaHintBus.Show(T("download.favorites.batch_install.task_completed_hint", ("title", plan.Title), ("instance_name", plan.InstanceName)), AvaloniaHintTheme.Success);
                 });
             },
             onFailed: message =>
             {
-                Dispatcher.UIThread.Post(() => AddFailureActivity($"{activityTitle}失败", $"{plan.Title} • {message}"));
+                Dispatcher.UIThread.Post(() => AddFailureActivity(T("download.favorites.batch_install.task_failed", ("activity_title", activityTitle)), T("download.favorites.batch_install.task_failed_body", ("title", plan.Title), ("message", message))));
             }));
     }
 
@@ -809,7 +824,7 @@ internal sealed partial class FrontendShellViewModel
     {
         if (!targetComposition.Selection.HasSelection)
         {
-            return new CommunityProjectInstallBuildResult([], ["目标实例当前不可用。"]);
+            return new CommunityProjectInstallBuildResult([], [T("download.favorites.batch_install.target_unavailable")]);
         }
 
         var plans = new List<CommunityProjectInstallPlan>();
@@ -830,7 +845,7 @@ internal sealed partial class FrontendShellViewModel
         {
             if (string.IsNullOrWhiteSpace(request.ProjectId))
             {
-                skipped.Add($"已跳过 {request.Title}：缺少项目标识。");
+                skipped.Add(T("download.favorites.batch_install.skip.missing_project_id", ("title", request.Title)));
                 return false;
             }
 
@@ -874,7 +889,7 @@ internal sealed partial class FrontendShellViewModel
                     datapackSaveSelection);
                 if (release is null || string.IsNullOrWhiteSpace(release.Target))
                 {
-                    skipped.Add($"已跳过 {projectTitle}：没有找到适合 {installTargetName} 的可安装版本。");
+                    skipped.Add(T("download.favorites.batch_install.skip.no_version", ("title", projectTitle), ("instance_name", targetComposition.Selection.InstanceName)));
                     resolvedResults[requestKey] = false;
                     return false;
                 }
@@ -891,7 +906,7 @@ internal sealed partial class FrontendShellViewModel
                             isDependency: true);
                         if (!dependencyResolved && dependency.Kind == FrontendCommunityProjectDependencyKind.Required)
                         {
-                            skipped.Add($"已跳过 {projectTitle}：必需依赖 {dependency.Title} 没有可安装版本。");
+                            skipped.Add(T("download.favorites.batch_install.skip.missing_dependency", ("title", projectTitle), ("dependency_title", dependency.Title)));
                             resolvedResults[requestKey] = false;
                             return false;
                         }
@@ -901,7 +916,7 @@ internal sealed partial class FrontendShellViewModel
                 var targetDirectory = ResolveCommunityProjectInstallDirectory(targetComposition.Selection, request.Route, datapackSaveSelection);
                 if (string.IsNullOrWhiteSpace(targetDirectory))
                 {
-                    skipped.Add($"已跳过 {projectTitle}：{installTargetName} 没有可用的安装目录。");
+                    skipped.Add(T("download.favorites.batch_install.skip.no_install_dir", ("title", projectTitle), ("instance_name", targetComposition.Selection.InstanceName)));
                     resolvedResults[requestKey] = false;
                     return false;
                 }
@@ -918,7 +933,7 @@ internal sealed partial class FrontendShellViewModel
                     && installed is not null
                     && !ShouldInstallFavoriteResourceUpdate(installed, targetFileName, release))
                 {
-                    skipped.Add($"已跳过 {projectTitle}：{installTargetName} 中已安装相同或更新的版本。");
+                    skipped.Add(T("download.favorites.batch_install.skip.already_installed", ("title", projectTitle), ("instance_name", targetComposition.Selection.InstanceName)));
                     resolvedAliases.UnionWith(projectAliases);
 
                     resolvedResults[requestKey] = true;
@@ -953,7 +968,7 @@ internal sealed partial class FrontendShellViewModel
             }
             catch (Exception ex)
             {
-                skipped.Add($"已跳过 {request.Title}：{ex.Message}");
+                skipped.Add(T("download.favorites.batch_install.skip.exception", ("title", request.Title), ("message", ex.Message)));
                 resolvedResults[requestKey] = false;
                 return false;
             }
@@ -1186,50 +1201,50 @@ internal sealed partial class FrontendShellViewModel
         return new Version(0, 0);
     }
 
-    private static string BuildDownloadFavoriteBatchInstallConfirmationMessage(
+    private string BuildDownloadFavoriteBatchInstallConfirmationMessage(
         DownloadFavoriteInstallTargetSnapshot targetSnapshot,
         CommunityProjectInstallBuildResult result)
     {
         return BuildCommunityProjectInstallConfirmationMessage(targetSnapshot.DisplayName, result);
     }
 
-    private static string BuildCommunityProjectInstallConfirmationMessage(
-        string targetName,
+    private string BuildCommunityProjectInstallConfirmationMessage(
+        string instanceName,
         CommunityProjectInstallBuildResult result)
     {
         var lines = new List<string>
         {
-            $"安装目标：{targetName}",
-            $"准备安装：{result.Plans.Count} 项"
+            T("download.favorites.batch_install.confirmation.instance", ("instance_name", instanceName)),
+            T("download.favorites.batch_install.confirmation.count", ("count", result.Plans.Count))
         };
 
         if (result.Plans.Count > 0)
         {
             lines.Add(string.Empty);
-            lines.Add("将安装的版本：");
+            lines.Add(T("download.favorites.batch_install.confirmation.plans"));
             foreach (var plan in result.Plans)
             {
                 var releaseText = string.IsNullOrWhiteSpace(plan.ReleaseSummary)
                     ? plan.ReleaseTitle
                     : $"{plan.ReleaseTitle} | {plan.ReleaseSummary}";
                 lines.Add(plan.IsDependency
-                    ? $"• {plan.Title} -> {releaseText}（依赖）"
-                    : $"• {plan.Title} -> {releaseText}");
+                    ? T("download.favorites.batch_install.confirmation.plan_dependency", ("title", plan.Title), ("release_text", releaseText))
+                    : T("download.favorites.batch_install.confirmation.plan", ("title", plan.Title), ("release_text", releaseText)));
             }
         }
 
         if (result.Skipped.Count > 0)
         {
             lines.Add(string.Empty);
-            lines.Add("未安装 / 缺少兼容版本：");
+            lines.Add(T("download.favorites.batch_install.confirmation.skipped"));
             foreach (var skipped in result.Skipped)
             {
-                lines.Add($"• {skipped}");
+                lines.Add(T("download.favorites.batch_install.confirmation.skipped_item", ("value", skipped)));
             }
         }
 
         lines.Add(string.Empty);
-        lines.Add("确认后会把以上资源加入任务中心。");
+        lines.Add(T("download.favorites.batch_install.confirmation.footer"));
         return string.Join(Environment.NewLine, lines);
     }
 

@@ -1,41 +1,38 @@
+using System.Globalization;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    public IReadOnlyList<string> DownloadSourceOptions { get; } =
-    [
-        "尽量使用镜像源",
-        "优先使用官方源，在加载缓慢时换用镜像源",
-        "尽量使用官方源"
-    ];
+    public IReadOnlyList<string> DownloadSourceOptions => SetupText.GameManage.DownloadSourceOptions;
 
-    public IReadOnlyList<string> FileNameFormatOptions { get; } =
-    [
-        "【机械动力】create-1.21.1-6.0.4",
-        "[机械动力] create-1.21.1-6.0.4",
-        "机械动力-create-1.21.1-6.0.4",
-        "create-1.21.1-6.0.4-机械动力",
-        "create-1.21.1-6.0.4"
-    ];
+    public IReadOnlyList<string> FileNameFormatOptions => SetupText.GameManage.FileNameFormatOptions;
 
-    public IReadOnlyList<string> ModLocalNameStyleOptions { get; } =
-    [
-        "标题显示译名，详情显示文件名",
-        "标题显示文件名，详情显示译名"
-    ];
+    public IReadOnlyList<string> ModLocalNameStyleOptions => SetupText.GameManage.ModLocalNameStyleOptions;
 
     public int SelectedDownloadSourceIndex
     {
         get => _selectedDownloadSourceIndex;
-        set => SetProperty(ref _selectedDownloadSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, DownloadSourceOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedDownloadSourceIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedVersionSourceIndex
     {
         get => _selectedVersionSourceIndex;
-        set => SetProperty(ref _selectedVersionSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, DownloadSourceOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedVersionSourceIndex, normalizedValue);
+            }
+        }
     }
 
     public double DownloadThreadLimit
@@ -78,7 +75,12 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string DownloadTimeoutLabel => $"{Math.Round(DownloadTimeoutSeconds)} s";
+    public string DownloadTimeoutLabel => _i18n.T(
+        "setup.game_manage.labels.download_timeout_value",
+        new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["value"] = Math.Round(DownloadTimeoutSeconds)
+        });
 
     public bool AutoSelectNewInstance
     {
@@ -89,19 +91,37 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedCommunityDownloadSourceIndex
     {
         get => _selectedCommunityDownloadSourceIndex;
-        set => SetProperty(ref _selectedCommunityDownloadSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, DownloadSourceOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedCommunityDownloadSourceIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedFileNameFormatIndex
     {
         get => _selectedFileNameFormatIndex;
-        set => SetProperty(ref _selectedFileNameFormatIndex, Math.Clamp(value, 0, FileNameFormatOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, FileNameFormatOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedFileNameFormatIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedModLocalNameStyleIndex
     {
         get => _selectedModLocalNameStyleIndex;
-        set => SetProperty(ref _selectedModLocalNameStyleIndex, Math.Clamp(value, 0, ModLocalNameStyleOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, ModLocalNameStyleOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedModLocalNameStyleIndex, normalizedValue);
+            }
+        }
     }
 
     public bool IgnoreQuiltLoader
@@ -134,17 +154,44 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _detectClipboardResourceLinks, value);
     }
 
-    public IReadOnlyList<string> SystemActivityOptions { get; } =
-    [
-        "显示所有公告",
-        "仅在有重要通知时显示公告",
-        "关闭所有公告"
-    ];
+    public IReadOnlyList<string> LauncherLocaleOptions => _launcherLocaleOptions;
+
+    public int SelectedLauncherLocaleIndex
+    {
+        get => _selectedLauncherLocaleIndex;
+        set
+        {
+            if (!TryNormalizeSelectionIndex(value, LauncherLocaleOptions.Count, out var clamped))
+            {
+                return;
+            }
+
+            if (!SetProperty(ref _selectedLauncherLocaleIndex, clamped))
+            {
+                return;
+            }
+
+            if (clamped >= 0 &&
+                clamped < _launcherLocaleKeys.Count &&
+                !string.Equals(_i18n.Locale, _launcherLocaleKeys[clamped], StringComparison.Ordinal))
+            {
+                _i18n.SetLocale(_launcherLocaleKeys[clamped]);
+            }
+        }
+    }
+
+    public IReadOnlyList<string> SystemActivityOptions => SetupText.LauncherMisc.SystemActivityOptions;
 
     public int SelectedSystemActivityIndex
     {
         get => _selectedSystemActivityIndex;
-        set => SetProperty(ref _selectedSystemActivityIndex, Math.Clamp(value, 0, SystemActivityOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, SystemActivityOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedSystemActivityIndex, normalizedValue);
+            }
+        }
     }
 
     public double AnimationFpsLimit
@@ -195,7 +242,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedHttpProxyTypeIndex;
         set
         {
-            var clamped = Math.Clamp(value, 0, 2);
+            if (!TryNormalizeSelectionIndex(value, 3, out var clamped))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedHttpProxyTypeIndex, clamped))
             {
                 RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
@@ -314,12 +365,47 @@ internal sealed partial class FrontendShellViewModel
     }
 
     public string DebugAnimationSpeedLabel => Math.Round(DebugAnimationSpeed) > 29
-        ? "关闭"
+        ? _i18n.T("setup.launcher_misc.labels.debug_animation_speed_off")
         : $"{Math.Round(DebugAnimationSpeed / 10 + 0.1, 1):0.0}x";
 
     public bool DebugModeEnabled
     {
         get => _debugModeEnabled;
         set => SetProperty(ref _debugModeEnabled, value);
+    }
+
+    public bool DebugDelayEnabled
+    {
+        get => _debugDelayEnabled;
+        set => SetProperty(ref _debugDelayEnabled, value);
+    }
+
+    private int ResolveLauncherLocaleIndex(string locale)
+    {
+        for (var i = 0; i < _launcherLocaleKeys.Count; i++)
+        {
+            if (string.Equals(_launcherLocaleKeys[i], locale, StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    private static string FormatLauncherLocaleOption(string locale)
+    {
+        try
+        {
+            var culture = CultureInfo.GetCultureInfo(locale);
+            var nativeName = culture.NativeName;
+            return string.IsNullOrWhiteSpace(nativeName)
+                ? locale
+                : $"{nativeName} ({locale})";
+        }
+        catch (CultureNotFoundException)
+        {
+            return locale;
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCL.Core.App.I18n;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch;
 
@@ -133,7 +134,9 @@ public static class LauncherFrontendPromptService
             id,
             LauncherFrontendPromptSource.CrashOutput,
             prompt.Title,
-            prompt.Message,
+            I18nText.WithArgs(
+                "crash.prompts.output.message",
+                I18nTextArgument.String("message", prompt.Message)),
             LauncherFrontendPromptSeverity.Warning,
             prompt.Buttons.Select(MapCrashButton).ToArray());
     }
@@ -235,13 +238,13 @@ public static class LauncherFrontendPromptService
 public sealed record LauncherFrontendPrompt(
     string Id,
     LauncherFrontendPromptSource Source,
-    string Title,
-    string Message,
+    I18nText Title,
+    I18nText Message,
     LauncherFrontendPromptSeverity Severity,
     IReadOnlyList<LauncherFrontendPromptOption> Options);
 
 public sealed record LauncherFrontendPromptOption(
-    string Label,
+    I18nText Label,
     bool ClosesPrompt,
     IReadOnlyList<LauncherFrontendPromptCommand> Commands);
 

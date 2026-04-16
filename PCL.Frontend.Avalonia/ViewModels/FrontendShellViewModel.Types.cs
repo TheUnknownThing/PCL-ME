@@ -204,11 +204,14 @@ internal sealed class KeyValueEntryViewModel(string label, string value)
 }
 
 internal sealed class ExportOptionEntryViewModel(
+    string key,
     string title,
     string description,
     bool isChecked) : ViewModelBase
 {
     private bool _isChecked = isChecked;
+
+    public string Key { get; } = key;
 
     public string Title { get; } = title;
 
@@ -655,7 +658,7 @@ internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
         bool isCollapsible = false,
         bool isExpanded = true,
         Func<CancellationToken, Task<IReadOnlyList<DownloadCatalogEntryViewModel>>>? loadEntriesAsync = null,
-        string loadingText = "正在获取版本列表")
+        string loadingText = "Loading versions")
     {
         Title = title;
         LoadingText = loadingText;
@@ -772,10 +775,10 @@ internal sealed class DownloadCatalogSectionViewModel : ViewModelBase
             ReplaceVisibleItems(
             [
                 new DownloadCatalogEntryViewModel(
-                    "加载失败",
+                    "Load failed",
                     ex.Message,
                     string.Empty,
-                    "重试",
+                    "Retry",
                     new ActionCommand(ReloadEntries))
             ]);
         }
@@ -926,12 +929,16 @@ internal sealed class DownloadResourceEntryViewModel(
     string version,
     string loader,
     IReadOnlyList<string> tags,
+    IReadOnlyList<string> displayTags,
     IReadOnlyList<string> supportedVersions,
     IReadOnlyList<string> supportedLoaders,
     int downloadCount,
     int followCount,
     int releaseRank,
     int updateRank,
+    string versionLabel,
+    string downloadCountLabel,
+    string updatedLabel,
     string actionText,
     ActionCommand command,
     string? iconUrl)
@@ -970,6 +977,8 @@ internal sealed class DownloadResourceEntryViewModel(
 
     public IReadOnlyList<string> Tags { get; } = tags;
 
+    public IReadOnlyList<string> DisplayTags { get; } = displayTags;
+
     public IReadOnlyList<string> SupportedVersions { get; } = supportedVersions;
 
     public IReadOnlyList<string> SupportedLoaders { get; } = supportedLoaders;
@@ -992,7 +1001,7 @@ internal sealed class DownloadResourceEntryViewModel(
 
     public bool HasInfo => !string.IsNullOrWhiteSpace(Info);
 
-    public IReadOnlyList<string> VisibleTags => Tags
+    public IReadOnlyList<string> VisibleTags => DisplayTags
         .Where(tag => !string.IsNullOrWhiteSpace(tag))
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .Take(4)
@@ -1000,30 +1009,11 @@ internal sealed class DownloadResourceEntryViewModel(
 
     public bool HasVisibleTags => VisibleTags.Count > 0;
 
-    public string VersionLabel => string.IsNullOrWhiteSpace(Version) ? "未标注版本" : Version;
+    public string VersionLabel { get; } = versionLabel;
 
-    public string DownloadCountLabel => DownloadCount <= 0 ? "暂无下载" : $"{FormatCompactCount(DownloadCount)} 下载";
+    public string DownloadCountLabel { get; } = downloadCountLabel;
 
-    public string UpdatedLabel
-    {
-        get
-        {
-            var rank = UpdateRank > 0 ? UpdateRank : ReleaseRank;
-            if (rank <= 0)
-            {
-                return "时间未知";
-            }
-
-            try
-            {
-                return DateTimeOffset.FromUnixTimeSeconds(rank).LocalDateTime.ToString("yyyy/MM/dd");
-            }
-            catch
-            {
-                return "时间未知";
-            }
-        }
-    }
+    public string UpdatedLabel { get; } = updatedLabel;
 
     public string Meta
     {
@@ -1054,7 +1044,7 @@ internal sealed class DownloadResourceEntryViewModel(
         Loader,
         string.Join(" ", SupportedVersions),
         string.Join(" ", SupportedLoaders),
-        string.Join(" ", Tags)
+        string.Join(" ", DisplayTags)
     });
 
     public bool TryBeginIconLoad()
@@ -1070,17 +1060,6 @@ internal sealed class DownloadResourceEntryViewModel(
             Icon = icon;
         }
     }
-
-    private static string FormatCompactCount(int value)
-    {
-        return value switch
-        {
-            >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
-            >= 10_000 => $"{value / 10_000d:0.#}万",
-            _ => value.ToString()
-        };
-    }
-
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -1113,7 +1092,7 @@ internal sealed class InstanceServerEntryViewModel(
     ActionCommand inspectCommand) : ViewModelBase
 {
     private Bitmap? _logo = logo;
-    private string _statusText = "已保存服务器";
+    private string _statusText = "Saved server";
     private IBrush _statusBrush = Brushes.White;
     private string _playerCount = "-/-";
     private string _latency = string.Empty;
@@ -1217,6 +1196,13 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
     private Bitmap? _icon;
     private bool _isSelected;
     private bool _isEnabled;
+    private readonly string _infoToolTip;
+    private readonly string _websiteToolTip;
+    private readonly string _openToolTip;
+    private readonly string _enableToolTip;
+    private readonly string _disableToolTip;
+    private readonly string _deleteToolTip;
+    private readonly string _disabledTagText;
 
     public InstanceResourceEntryViewModel(
         Bitmap? icon,
@@ -1225,7 +1211,7 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         string meta,
         string path,
         ActionCommand actionCommand,
-        string actionToolTip = "查看",
+        string actionToolTip = "View",
         bool isEnabled = true,
         string description = "",
         string website = "",
@@ -1236,7 +1222,14 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         ActionCommand? websiteCommand = null,
         ActionCommand? openCommand = null,
         ActionCommand? toggleCommand = null,
-        ActionCommand? deleteCommand = null)
+        ActionCommand? deleteCommand = null,
+        string infoToolTip = "Details",
+        string websiteToolTip = "Open website",
+        string openToolTip = "Open file location",
+        string enableToolTip = "Enable",
+        string disableToolTip = "Disable",
+        string deleteToolTip = "Delete",
+        string disabledTagText = "Disabled")
     {
         _icon = icon;
         Title = title;
@@ -1257,6 +1250,13 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         OpenCommand = openCommand ?? actionCommand;
         ToggleCommand = toggleCommand;
         DeleteCommand = deleteCommand;
+        _infoToolTip = infoToolTip;
+        _websiteToolTip = websiteToolTip;
+        _openToolTip = openToolTip;
+        _enableToolTip = enableToolTip;
+        _disableToolTip = disableToolTip;
+        _deleteToolTip = deleteToolTip;
+        _disabledTagText = disabledTagText;
     }
 
     public Bitmap? Icon
@@ -1333,11 +1333,19 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
         ? FrontendIconCatalog.DisableCircle.Scale
         : FrontendIconCatalog.EnableCircle.Scale;
 
-    public string ToggleToolTip => IsEnabledState ? "禁用" : "启用";
+    public string ToggleToolTip => IsEnabledState ? _disableToolTip : _enableToolTip;
 
     public string DeleteIconData => FrontendIconCatalog.DeleteOutline.Data;
 
     public double DeleteIconScale => FrontendIconCatalog.DeleteOutline.Scale;
+
+    public string InfoToolTip => _infoToolTip;
+
+    public string WebsiteToolTip => _websiteToolTip;
+
+    public string OpenToolTip => _openToolTip;
+
+    public string DeleteToolTip => _deleteToolTip;
 
     public IReadOnlyList<string> Tags
     {
@@ -1354,7 +1362,7 @@ internal sealed class InstanceResourceEntryViewModel : ViewModelBase
 
             if (HasToggleAction && !IsEnabledState)
             {
-                tags.Add("已禁用");
+                tags.Add(_disabledTagText);
             }
 
             return tags;
@@ -1457,7 +1465,9 @@ internal sealed class JavaRuntimeEntryViewModel(
     ActionCommand selectCommand,
     ActionCommand openCommand,
     ActionCommand infoCommand,
-    ActionCommand toggleEnabledCommand) : ViewModelBase
+    ActionCommand toggleEnabledCommand,
+    string enableText = "Enable",
+    string disableText = "Disable") : ViewModelBase
 {
     private bool _isSelected;
     private bool _isEnabled = isEnabled;
@@ -1477,6 +1487,10 @@ internal sealed class JavaRuntimeEntryViewModel(
     public ActionCommand InfoCommand { get; } = infoCommand;
 
     public ActionCommand ToggleEnabledCommand { get; } = toggleEnabledCommand;
+
+    public string EnableText { get; } = enableText;
+
+    public string DisableText { get; } = disableText;
 
     public bool IsSelected
     {
@@ -1498,7 +1512,7 @@ internal sealed class JavaRuntimeEntryViewModel(
         }
     }
 
-    public string ToggleButtonText => IsEnabled ? "禁用" : "启用";
+    public string ToggleButtonText => IsEnabled ? DisableText : EnableText;
 
     public double TitleOpacity => IsEnabled ? 1.0 : 0.48;
 

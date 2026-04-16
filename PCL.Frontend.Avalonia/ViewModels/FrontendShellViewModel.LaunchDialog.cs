@@ -19,14 +19,14 @@ internal sealed partial class FrontendShellViewModel
     private bool _showLaunchDialogDownload;
     private bool _showLaunchDialogHint;
     private double _launchDialogProgress;
-    private string _launchDialogTitle = "正在启动游戏";
-    private string _launchDialogStage = "初始化";
+    private string _launchDialogTitle = string.Empty;
+    private string _launchDialogStage = string.Empty;
     private string _launchDialogMethod = string.Empty;
     private string _launchDialogInstanceName = string.Empty;
     private string _launchDialogProgressText = "0.00 %";
-    private string _launchDialogDownloadText = "0 B/s";
+    private string _launchDialogDownloadText = string.Empty;
     private string _launchDialogHint = string.Empty;
-    private string _launchDialogActionText = "取消";
+    private string _launchDialogActionText = string.Empty;
 
     public bool IsLaunchDialogVisible => _isLaunchDialogVisible;
 
@@ -65,21 +65,21 @@ internal sealed partial class FrontendShellViewModel
         _launchDialogMethod = LaunchProfileDescription;
         _launchDialogInstanceName = LaunchVersionSubtitle;
         _launchDialogHint = _showLaunchingHint
-            ? FrontendLaunchHintService.GetRandomHint(_shellActionService.RuntimePaths)
+            ? FrontendLaunchHintService.GetRandomHint(_shellActionService.RuntimePaths, _i18n)
             : string.Empty;
         _launchDialogHasSuccessfulSession = false;
         _launchProcessTerminationRequested = false;
-        _launchDialogActionText = "取消";
+        _launchDialogActionText = T("common.actions.cancel");
         _isLaunchDialogBusy = true;
         _isLaunchDialogError = false;
         _showLaunchDialogHint = _showLaunchingHint && !string.IsNullOrWhiteSpace(_launchDialogHint);
         _showLaunchDialogProgress = true;
         _showLaunchDialogDownload = false;
-        _launchDialogDownloadText = "0 B/s";
+        _launchDialogDownloadText = T("launch.dialog.download_speed.zero");
         _launchDialogProgress = 0d;
         _launchDialogProgressText = "0.00 %";
-        _launchDialogTitle = "正在启动游戏";
-        _launchDialogStage = "初始化";
+        _launchDialogTitle = T("launch.dialog.state.running.title");
+        _launchDialogStage = T("launch.dialog.state.running.initializing");
         if (!_isLaunchDialogVisible)
         {
             _isLaunchDialogVisible = true;
@@ -119,7 +119,7 @@ internal sealed partial class FrontendShellViewModel
         _showLaunchDialogDownload = showDownload;
         _isLaunchDialogBusy = !isError;
         _isLaunchDialogError = isError;
-        _launchDialogActionText = "取消";
+        _launchDialogActionText = T("common.actions.cancel");
         RaiseLaunchDialogProperties();
     }
 
@@ -134,11 +134,11 @@ internal sealed partial class FrontendShellViewModel
         _launchDialogStage = stage;
         _showLaunchDialogHint = false;
         _showLaunchDialogDownload = false;
-        _launchDialogDownloadText = "0 B/s";
+        _launchDialogDownloadText = T("launch.dialog.download_speed.zero");
         _launchDialogHasSuccessfulSession = false;
         _isLaunchDialogBusy = false;
         _isLaunchDialogError = isError;
-        _launchDialogActionText = "关闭";
+        _launchDialogActionText = T("common.actions.close");
         RaiseLaunchDialogProperties();
     }
 
@@ -152,7 +152,7 @@ internal sealed partial class FrontendShellViewModel
             _launchDialogProgressText = $"{_launchDialogProgress * 100:0.00} %";
             _launchDialogDownloadText = snapshot.SpeedBytesPerSecond > 0d
                 ? $"{FormatLaunchDialogBytes(snapshot.SpeedBytesPerSecond)}/s"
-                : "0 B/s";
+                : T("launch.dialog.download_speed.zero");
             _showLaunchDialogDownload = snapshot.TotalFileCount > 0;
             _showLaunchDialogProgress = true;
             _showLaunchDialogHint = _showLaunchingHint && !string.IsNullOrWhiteSpace(_launchDialogHint);
@@ -160,12 +160,48 @@ internal sealed partial class FrontendShellViewModel
         });
     }
 
+    private string ResolveLaunchRepairStage(FrontendInstanceRepairProgressSnapshot snapshot)
+    {
+        var assets = snapshot.Groups.TryGetValue(FrontendInstanceRepairFileGroup.Assets, out var assetGroup)
+            ? assetGroup
+            : null;
+        if (assets is not null && assets.TotalFiles > 0 && assets.Progress < 0.999d)
+        {
+            return string.IsNullOrWhiteSpace(assets.CurrentFileName)
+                ? T("launch.dialog.stages.assets")
+                : T("launch.dialog.stages.assets_file", ("file_name", assets.CurrentFileName));
+        }
+
+        var supportGroups = new[]
+        {
+            FrontendInstanceRepairFileGroup.Client,
+            FrontendInstanceRepairFileGroup.Libraries,
+            FrontendInstanceRepairFileGroup.AssetIndex
+        };
+        foreach (var group in supportGroups)
+        {
+            if (!snapshot.Groups.TryGetValue(group, out var snapshotGroup) || snapshotGroup.TotalFiles == 0 || snapshotGroup.Progress >= 0.999d)
+            {
+                continue;
+            }
+
+            return string.IsNullOrWhiteSpace(snapshotGroup.CurrentFileName)
+                ? T("launch.dialog.stages.support")
+                : T("launch.dialog.stages.support_file", ("file_name", snapshotGroup.CurrentFileName));
+        }
+
+        return T("launch.dialog.stages.verify_instance");
+    }
+
     private void HandleCancelLaunchRequested()
     {
         if (_launchSessionCancellation is { IsCancellationRequested: false })
         {
             _launchSessionCancellation.Cancel();
-            SetLaunchDialogStoppedState("正在取消启动", "正在取消启动前任务…", isError: false);
+            SetLaunchDialogStoppedState(
+                T("launch.dialog.state.canceling.title"),
+                T("launch.dialog.state.canceling.prelaunch_tasks"),
+                isError: false);
             return;
         }
 
@@ -183,7 +219,10 @@ internal sealed partial class FrontendShellViewModel
                 {
                     _launchProcessTerminationRequested = true;
                     _activeLaunchProcess.Kill(entireProcessTree: true);
-                    SetLaunchDialogStoppedState("正在取消启动", "正在结束游戏进程…", isError: false);
+                    SetLaunchDialogStoppedState(
+                        T("launch.dialog.state.canceling.title"),
+                        T("launch.dialog.state.canceling.game_process"),
+                        isError: false);
                     return;
                 }
             }

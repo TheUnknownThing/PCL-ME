@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,25,25,10" Spacing="15">
-      <controls:PclCard Header="启动选项" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.Launch.OptionsCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,28,9,28,9,28,9,28,9,28,9,28">
             <TextBlock
@@ -14,7 +14,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="默认版本隔离" />
+                Text="{Binding SetupText.Launch.DefaultIsolationLabel}" />
             <ComboBox
                 Grid.Column="1"
                 Height="28"
@@ -27,7 +27,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="游戏窗口标题" />
+                Text="{Binding SetupText.Launch.GameWindowTitleLabel}" />
             <TextBox
                 Grid.Row="2"
                 Grid.Column="1"
@@ -41,7 +41,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="自定义信息" />
+                Text="{Binding SetupText.Launch.CustomInfoLabel}" />
             <TextBox
                 Grid.Row="4"
                 Grid.Column="1"
@@ -55,7 +55,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="启动器可见性" />
+                Text="{Binding SetupText.Launch.LauncherVisibilityLabel}" />
             <ComboBox
                 Grid.Row="6"
                 Grid.Column="1"
@@ -69,7 +69,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="进程优先级" />
+                Text="{Binding SetupText.Launch.ProcessPriorityLabel}" />
             <ComboBox
                 Grid.Row="8"
                 Grid.Column="1"
@@ -83,7 +83,7 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="窗口大小" />
+                Text="{Binding SetupText.Launch.WindowSizeLabel}" />
             <Grid Grid.Row="10" Grid.Column="1" ColumnDefinitions="220,10,70,10,70">
               <ComboBox
                   Grid.Column="0"
@@ -120,7 +120,22 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="IP 协议偏好" />
+                Text="{Binding SetupText.Launch.MicrosoftAuthLabel}" />
+            <ComboBox
+                Grid.Row="12"
+                Grid.Column="1"
+                Height="28"
+                IsEnabled="False"
+                ItemsSource="{Binding LaunchMicrosoftAuthOptions}"
+                SelectedIndex="{Binding SelectedLaunchMicrosoftAuthIndex}" />
+
+            <TextBlock
+                Grid.Row="14"
+                VerticalAlignment="Center"
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13.5"
+                Margin="0,0,25,0"
+                Text="{Binding SetupText.Launch.PreferredIpStackLabel}" />
             <ComboBox
                 Grid.Row="12"
                 Grid.Column="1"
@@ -131,7 +146,7 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="游戏内存" ContentMargin="20,12,20,15">
+      <controls:PclCard Header="{Binding SetupText.Launch.MemoryCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="12">
             <Border
@@ -143,7 +158,7 @@
               <TextBlock
                   Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                   FontSize="12.5"
-                  Text="32 位 Java 只能分配最多 1 GB 的内存。强烈建议换用 64 位的 Java！"
+                  Text="{Binding SetupText.Launch.Memory32BitWarning}"
                   TextWrapping="Wrap" />
             </Border>
 
@@ -157,13 +172,13 @@
               <TextBlock
                   Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                   FontSize="12.5"
-                  Text="你给游戏分配的内存过多，这可能引发游戏崩溃。建议优先考虑自动分配。"
+                  Text="{Binding SetupText.Launch.MemoryOverallocationWarning}"
                   TextWrapping="Wrap" />
             </Border>
 
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto">
               <RadioButton
-                  Content="自动配置"
+                  Content="{Binding SetupText.Launch.AutomaticAllocationLabel}"
                   IsChecked="{Binding UseAutomaticRamAllocation}" />
               <TextBlock
                   Grid.Column="1"
@@ -171,12 +186,12 @@
                   VerticalAlignment="Center"
                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12.5"
-                  Text="根据安装的 Mod 量与电脑剩余内存，动态调整为游戏分配的内存。"
+                  Text="{Binding SetupText.Launch.AutomaticAllocationDescription}"
                   TextWrapping="Wrap" />
 
               <RadioButton
                   Grid.Row="2"
-                  Content="自定义"
+                  Content="{Binding SetupText.Launch.CustomAllocationLabel}"
                   IsChecked="{Binding UseCustomRamAllocation}" />
               <Grid Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" ColumnDefinitions="*,62">
                 <Slider
@@ -198,7 +213,7 @@
                   Grid.Row="4"
                   Grid.ColumnSpan="2"
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="启动游戏前进行内存优化"
+                  Content="{Binding SetupText.Launch.OptimizeBeforeLaunchLabel}"
                   IsChecked="{Binding OptimizeMemoryBeforeLaunch}" />
             </Grid>
 
@@ -206,15 +221,17 @@
                 UsedBarWidth="{Binding UsedRamBarWidth}"
                 AllocatedBarWidth="{Binding AllocatedRamBarWidth}"
                 FreeBarWidth="{Binding FreeRamBarWidth}"
+                UsageHeaderText="{Binding MemorySummaryUsageHeaderText}"
                 UsedRamLabel="{Binding UsedRamLabel}"
-                TotalRamLabel="{Binding TotalRamLabel, StringFormat=' / {0}'}"
-                AllocatedRamLabel="{Binding AllocatedRamLabel}" />
+                TotalRamLabel="{Binding TotalRamLabel}"
+                AllocatedRamLabel="{Binding AllocatedRamLabel}"
+                AllocationPrefixText="{Binding MemorySummaryAllocationPrefixText}" />
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
       <controls:PclCard
-          Header="高级启动选项"
+          Header="{Binding SetupText.Launch.AdvancedCardHeader}"
           ShowChevron="True"
           IsChevronExpanded="{Binding IsLaunchAdvancedOptionsExpanded}"
           HeaderCommand="{Binding ToggleLaunchAdvancedOptionsCommand}"
@@ -227,7 +244,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="渲染器" />
+                  Text="{Binding SetupText.Launch.RendererLabel}" />
               <ComboBox
                   Grid.Column="1"
                   Height="28"
@@ -241,7 +258,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
-                  Text="JVM 参数头部" />
+                  Text="{Binding SetupText.Launch.JvmArgumentsLabel}" />
               <TextBox
                   Grid.Column="1"
                   MinHeight="92"
@@ -257,7 +274,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,25,0"
-                  Text="游戏参数尾部" />
+                  Text="{Binding SetupText.Launch.GameArgumentsLabel}" />
               <TextBox
                   Grid.Row="2"
                   Grid.Column="1"
@@ -271,7 +288,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
-                  Text="启动前执行命令" />
+                  Text="{Binding SetupText.Launch.BeforeCommandLabel}" />
               <StackPanel Grid.Row="4" Grid.Column="1" Spacing="8">
                 <TextBox
                     MinHeight="72"
@@ -282,7 +299,7 @@
                     VerticalContentAlignment="Top" />
                 <CheckBox
                     Foreground="{DynamicResource ColorBrush1}"
-                    Content="等待命令执行完成后再继续启动"
+                    Content="{Binding SetupText.Launch.WaitForBeforeCommandLabel}"
                     IsChecked="{Binding WaitForLaunchBeforeCommand}" />
               </StackPanel>
 
@@ -292,7 +309,7 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
-                  Text="环境变量" />
+                  Text="{Binding SetupText.Launch.EnvironmentVariablesLabel}" />
               <StackPanel Grid.Row="6" Grid.Column="1" Spacing="6">
                 <TextBox
                     MinHeight="92"
@@ -304,7 +321,7 @@
                 <TextBlock
                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
-                    Text="每行一个 KEY=VALUE，实例设置中的同名变量会覆盖这里的值。"
+                    Text="{Binding SetupText.Launch.EnvironmentVariablesHint}"
                     TextWrapping="Wrap" />
               </StackPanel>
 
@@ -314,16 +331,16 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
-                  Text="Linux 显示后端" />
+                  Text="{Binding SetupText.Launch.LinuxDisplayBackendLabel}" />
               <StackPanel Grid.Row="8" Grid.Column="1" Spacing="6">
                 <CheckBox
                     Foreground="{DynamicResource ColorBrush1}"
-                    Content="Wayland 会话下强制使用 X11 启动"
+                    Content="{Binding SetupText.Launch.ForceX11Label}"
                     IsChecked="{Binding ForceX11OnWaylandForLaunch}" />
                 <TextBlock
                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     FontSize="12"
-                    Text="仅在 Linux Wayland 会话且当前存在 X11 DISPLAY 时生效。"
+                    Text="{Binding SetupText.Launch.ForceX11Hint}"
                     TextWrapping="Wrap" />
               </StackPanel>
             </Grid>
@@ -331,19 +348,19 @@
             <StackPanel Spacing="8">
               <CheckBox
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="禁用 Java Launch Wrapper"
+                  Content="{Binding SetupText.Launch.DisableJavaLaunchWrapperLabel}"
                   IsChecked="{Binding DisableJavaLaunchWrapper}" />
               <CheckBox
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="禁用 RetroWrapper"
+                  Content="{Binding SetupText.Launch.DisableRetroWrapperLabel}"
                   IsChecked="{Binding DisableRetroWrapper}" />
               <CheckBox
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="要求 Java 使用高性能显卡"
+                  Content="{Binding SetupText.Launch.RequireDedicatedGpuLabel}"
                   IsChecked="{Binding RequireDedicatedGpu}" />
               <CheckBox
                   Foreground="{DynamicResource ColorBrush1}"
-                  Content="使用 java.exe 而不是 javaw.exe"
+                  Content="{Binding SetupText.Launch.UseJavaExecutableLabel}"
                   IsChecked="{Binding UseJavaExecutable}" />
             </StackPanel>
 
@@ -356,7 +373,7 @@
               <TextBlock
                   Foreground="{DynamicResource ColorBrush2}"
                   FontSize="12.5"
-                  Text="你还可以在实例独立设置中找到更多高级启动选项。"
+                  Text="{Binding SetupText.Launch.InstanceSettingsHint}"
                   TextWrapping="Wrap" />
             </Border>
           </StackPanel>
@@ -374,7 +391,7 @@
           <TextBlock
               Foreground="{DynamicResource ColorBrush3}"
               FontSize="13.5"
-              Text="实例独立设置" />
+              Text="{Binding SetupText.Launch.InstanceSettingsButton}" />
           <Path
               Width="10"
               Height="10"

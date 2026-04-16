@@ -15,13 +15,13 @@ internal static class FrontendSetupUpdateStatusService
     private const string GithubReleaseBaseUrl = "https://github.com/TheUnknownThing/PCL-ME/releases";
     private static readonly HttpClient HttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(10));
 
-    public static FrontendSetupUpdateStatus CreateDefault()
+    public static FrontendSetupUpdateStatus CreateDefault(II18nService i18n)
     {
-        var currentVersion = ReadCurrentVersion();
+        var currentVersion = ReadCurrentVersion(i18n);
         return new FrontendSetupUpdateStatus(
             UpdateSurfaceState.Checking,
-            CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
-            CurrentVersionDescription: "正在检查更新...",
+            CurrentVersionName: BuildVersionDisplayName(currentVersion.VersionName, i18n),
+            CurrentVersionDescription: i18n.T("setup.update.states.checking"),
             AvailableUpdateName: string.Empty,
             AvailableUpdatePublisher: string.Empty,
             AvailableUpdateSummary: string.Empty,
@@ -29,16 +29,18 @@ internal static class FrontendSetupUpdateStatusService
             AvailableUpdateSha256: string.Empty,
             AvailableUpdateChangelog: null,
             AvailableUpdateReleaseUrl: BuildVersionReleaseUrl(currentVersion.VersionName),
-            AvailableUpdateDownloadUrl: null);
+            AvailableUpdateDownloadUrl: null,
+            CurrentVersionTag: currentVersion.VersionName,
+            AvailableUpdateTag: null);
     }
 
-    public static FrontendSetupUpdateStatus CreateChecking()
+    public static FrontendSetupUpdateStatus CreateChecking(II18nService i18n)
     {
-        var currentVersion = ReadCurrentVersion();
+        var currentVersion = ReadCurrentVersion(i18n);
         return new FrontendSetupUpdateStatus(
             UpdateSurfaceState.Checking,
-            CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
-            CurrentVersionDescription: "正在检查更新...",
+            CurrentVersionName: BuildVersionDisplayName(currentVersion.VersionName, i18n),
+            CurrentVersionDescription: i18n.T("setup.update.states.checking"),
             AvailableUpdateName: string.Empty,
             AvailableUpdatePublisher: string.Empty,
             AvailableUpdateSummary: string.Empty,
@@ -46,14 +48,17 @@ internal static class FrontendSetupUpdateStatusService
             AvailableUpdateSha256: string.Empty,
             AvailableUpdateChangelog: null,
             AvailableUpdateReleaseUrl: BuildVersionReleaseUrl(currentVersion.VersionName),
-            AvailableUpdateDownloadUrl: null);
+            AvailableUpdateDownloadUrl: null,
+            CurrentVersionTag: currentVersion.VersionName,
+            AvailableUpdateTag: null);
     }
 
     public static async Task<FrontendSetupUpdateStatus> QueryAsync(
         int selectedUpdateChannelIndex,
+        II18nService i18n,
         CancellationToken cancellationToken = default)
     {
-        var currentVersion = ReadCurrentVersion();
+        var currentVersion = ReadCurrentVersion(i18n);
 
         try
         {
@@ -61,7 +66,7 @@ internal static class FrontendSetupUpdateStatusService
             var architecture = RuntimeInformation.OSArchitecture == Architecture.Arm64
                 ? UpdateArchitecture.Arm64
                 : UpdateArchitecture.X64;
-            var latestVersion = await QueryLatestVersionAsync(channel, architecture, cancellationToken);
+            var latestVersion = await QueryLatestVersionAsync(channel, architecture, i18n, cancellationToken);
             var currentSemVer = SemVer.Parse(currentVersion.VersionName);
             var latestSemVer = SemVer.Parse(latestVersion.VersionName);
             var hasUpdate = latestSemVer > currentSemVer
@@ -71,22 +76,34 @@ internal static class FrontendSetupUpdateStatusService
             {
                 return new FrontendSetupUpdateStatus(
                     UpdateSurfaceState.Available,
-                    CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
-                    CurrentVersionDescription: $"发现新版本：{FormatVersionName(latestVersion.VersionName)}",
-                    AvailableUpdateName: $"PCL-ME {FormatVersionName(latestVersion.VersionName)}",
-                    AvailableUpdatePublisher: $"by PCL-ME Contributors • {latestVersion.SourceName}",
-                    AvailableUpdateSummary: ExtractSummary(latestVersion.Changelog),
+                    CurrentVersionName: BuildVersionDisplayName(currentVersion.VersionName, i18n),
+                    CurrentVersionDescription: i18n.T(
+                        "setup.update.states.available",
+                        new Dictionary<string, object?>(StringComparer.Ordinal)
+                        {
+                            ["version"] = FormatVersionName(latestVersion.VersionName)
+                        }),
+                    AvailableUpdateName: BuildVersionDisplayName(latestVersion.VersionName, i18n),
+                    AvailableUpdatePublisher: i18n.T(
+                        "setup.update.available.publisher",
+                        new Dictionary<string, object?>(StringComparer.Ordinal)
+                        {
+                            ["source"] = latestVersion.SourceName
+                        }),
+                    AvailableUpdateSummary: ExtractSummary(latestVersion.Changelog, i18n),
                     AvailableUpdateSource: latestVersion.SourceName,
                     AvailableUpdateSha256: latestVersion.Sha256,
                     AvailableUpdateChangelog: latestVersion.Changelog,
                     AvailableUpdateReleaseUrl: latestVersion.ReleaseUrl,
-                    AvailableUpdateDownloadUrl: latestVersion.DownloadUrl);
+                    AvailableUpdateDownloadUrl: latestVersion.DownloadUrl,
+                    CurrentVersionTag: currentVersion.VersionName,
+                    AvailableUpdateTag: latestVersion.VersionName);
             }
 
             return new FrontendSetupUpdateStatus(
                 UpdateSurfaceState.Latest,
-                CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
-                CurrentVersionDescription: "已是最新版本",
+                CurrentVersionName: BuildVersionDisplayName(currentVersion.VersionName, i18n),
+                CurrentVersionDescription: i18n.T("setup.update.states.latest"),
                 AvailableUpdateName: string.Empty,
                 AvailableUpdatePublisher: string.Empty,
                 AvailableUpdateSummary: string.Empty,
@@ -94,14 +111,21 @@ internal static class FrontendSetupUpdateStatusService
                 AvailableUpdateSha256: latestVersion.Sha256,
                 AvailableUpdateChangelog: latestVersion.Changelog,
                 AvailableUpdateReleaseUrl: latestVersion.ReleaseUrl,
-                AvailableUpdateDownloadUrl: latestVersion.DownloadUrl);
+                AvailableUpdateDownloadUrl: latestVersion.DownloadUrl,
+                CurrentVersionTag: currentVersion.VersionName,
+                AvailableUpdateTag: latestVersion.VersionName);
         }
         catch (Exception ex)
         {
             return new FrontendSetupUpdateStatus(
                 UpdateSurfaceState.Error,
-                CurrentVersionName: $"PCL-ME {FormatVersionName(currentVersion.VersionName)}",
-                CurrentVersionDescription: $"检查更新时出错: {ex.Message}",
+                CurrentVersionName: BuildVersionDisplayName(currentVersion.VersionName, i18n),
+                CurrentVersionDescription: i18n.T(
+                    "setup.update.states.error",
+                    new Dictionary<string, object?>(StringComparer.Ordinal)
+                    {
+                        ["message"] = ex.Message
+                    }),
                 AvailableUpdateName: string.Empty,
                 AvailableUpdatePublisher: string.Empty,
                 AvailableUpdateSummary: string.Empty,
@@ -109,8 +133,52 @@ internal static class FrontendSetupUpdateStatusService
                 AvailableUpdateSha256: string.Empty,
                 AvailableUpdateChangelog: null,
                 AvailableUpdateReleaseUrl: BuildVersionReleaseUrl(currentVersion.VersionName),
-                AvailableUpdateDownloadUrl: null);
+                AvailableUpdateDownloadUrl: null,
+                CurrentVersionTag: currentVersion.VersionName,
+                AvailableUpdateTag: null);
         }
+    }
+
+    public static FrontendSetupUpdateStatus Relocalize(FrontendSetupUpdateStatus status, II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(status);
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        return status.SurfaceState switch
+        {
+            UpdateSurfaceState.Available when !string.IsNullOrWhiteSpace(status.AvailableUpdateTag) => status with
+            {
+                CurrentVersionName = BuildVersionDisplayName(status.CurrentVersionTag, i18n),
+                CurrentVersionDescription = i18n.T(
+                    "setup.update.states.available",
+                    new Dictionary<string, object?>(StringComparer.Ordinal)
+                    {
+                        ["version"] = FormatVersionName(status.AvailableUpdateTag)
+                    }),
+                AvailableUpdateName = BuildVersionDisplayName(status.AvailableUpdateTag, i18n),
+                AvailableUpdatePublisher = i18n.T(
+                    "setup.update.available.publisher",
+                    new Dictionary<string, object?>(StringComparer.Ordinal)
+                    {
+                        ["source"] = status.AvailableUpdateSource
+                    }),
+                AvailableUpdateSummary = ExtractSummary(status.AvailableUpdateChangelog, i18n)
+            },
+            UpdateSurfaceState.Latest => status with
+            {
+                CurrentVersionName = BuildVersionDisplayName(status.CurrentVersionTag, i18n),
+                CurrentVersionDescription = i18n.T("setup.update.states.latest")
+            },
+            UpdateSurfaceState.Error => status with
+            {
+                CurrentVersionName = BuildVersionDisplayName(status.CurrentVersionTag, i18n)
+            },
+            _ => status with
+            {
+                CurrentVersionName = BuildVersionDisplayName(status.CurrentVersionTag, i18n),
+                CurrentVersionDescription = i18n.T("setup.update.states.checking")
+            }
+        };
     }
 
     public static string BuildVersionReleaseUrl(string versionName)
@@ -121,6 +189,7 @@ internal static class FrontendSetupUpdateStatusService
     private static async Task<RemoteVersionInfo> QueryLatestVersionAsync(
         UpdateChannel channel,
         UpdateArchitecture architecture,
+        II18nService i18n,
         CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, GithubApiReleasesUrl);
@@ -133,14 +202,15 @@ internal static class FrontendSetupUpdateStatusService
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var releases = await JsonSerializer.DeserializeAsync<IReadOnlyList<GithubRelease>>(stream, cancellationToken: cancellationToken)
-            ?? throw new InvalidOperationException("GitHub 返回了空结果。");
-        return SelectLatestGithubRelease(releases, channel, ResolveCurrentAssetSuffix(architecture));
+            ?? throw new InvalidOperationException(i18n.T("setup.update.errors.github_empty_result"));
+        return SelectLatestGithubRelease(releases, channel, ResolveCurrentAssetSuffix(architecture), i18n);
     }
 
     internal static RemoteVersionInfo SelectLatestGithubRelease(
         IReadOnlyList<GithubRelease> releases,
         UpdateChannel channel,
-        string? requiredAssetSuffix)
+        string? requiredAssetSuffix,
+        II18nService i18n)
     {
         ArgumentNullException.ThrowIfNull(releases);
 
@@ -179,7 +249,7 @@ internal static class FrontendSetupUpdateStatusService
         var selected = candidates.FirstOrDefault();
         if (selected is null)
         {
-            throw new InvalidOperationException("GitHub 没有可用的更新版本。");
+            throw new InvalidOperationException(i18n.T("setup.update.errors.no_release"));
         }
 
         return new RemoteVersionInfo(
@@ -240,17 +310,17 @@ internal static class FrontendSetupUpdateStatusService
         return archives.FirstOrDefault()?.BrowserDownloadUrl;
     }
 
-    private static LocalVersionInfo ReadCurrentVersion()
+    private static LocalVersionInfo ReadCurrentVersion(II18nService i18n)
     {
         var metadataPath = FrontendLauncherAssetLocator.GetPath("metadata.json");
         if (!File.Exists(metadataPath))
         {
-            throw new FileNotFoundException("未找到启动器版本元数据。", metadataPath);
+            throw new FileNotFoundException(i18n.T("setup.update.errors.metadata_missing"), metadataPath);
         }
 
         using var stream = File.OpenRead(metadataPath);
         var metadata = JsonSerializer.Deserialize<LauncherMetadata>(stream)
-            ?? throw new InvalidOperationException("无法读取启动器版本元数据。");
+            ?? throw new InvalidOperationException(i18n.T("setup.update.errors.metadata_invalid"));
         var versionName = metadata.Version.Base + (string.IsNullOrWhiteSpace(metadata.Version.Suffix) ? string.Empty : $"-{metadata.Version.Suffix}");
         return new LocalVersionInfo(
             versionName,
@@ -265,11 +335,11 @@ internal static class FrontendSetupUpdateStatusService
             : UpdateChannel.Stable;
     }
 
-    private static string ExtractSummary(string changelog)
+    private static string ExtractSummary(string? changelog, II18nService i18n)
     {
         if (string.IsNullOrWhiteSpace(changelog))
         {
-            return "开发者似乎忘记提供更新摘要了...也许你可以点击下方看看完整更新日志？";
+            return i18n.T("setup.update.available.summary_missing");
         }
 
         const string summaryStart = "<summary>";
@@ -285,7 +355,17 @@ internal static class FrontendSetupUpdateStatusService
             }
         }
 
-        return "开发者似乎忘记提供更新摘要了...也许你可以点击下方看看完整更新日志？";
+        return i18n.T("setup.update.available.summary_missing");
+    }
+
+    private static string BuildVersionDisplayName(string versionName, II18nService i18n)
+    {
+        return i18n.T(
+            "setup.update.version_name",
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["version"] = FormatVersionName(versionName)
+            });
     }
 
     private static string FormatVersionName(string versionName)

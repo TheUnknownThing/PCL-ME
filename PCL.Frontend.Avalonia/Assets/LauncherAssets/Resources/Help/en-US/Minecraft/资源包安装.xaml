@@ -1,0 +1,20 @@
+<local:MyCard Title="Get the resource pack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Download the pack from a trusted source. Resource packs are usually distributed as zip files and should normally remain zipped when copied into the resourcepacks folder." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Import the pack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Copy the downloaded zip into the target instance resourcepacks folder. If you keep separate instances for different versions, install the pack into the matching instance so it is easy to manage later." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Enable it in game" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Open the resource pack settings inside Minecraft, move the pack to the enabled side, and confirm any compatibility warning if you know the pack works with that version." />
+  </StackPanel>
+</local:MyCard>

@@ -6,7 +6,7 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="15">
-      <controls:PclCard Header="关于" ContentMargin="21,40,21,16">
+      <controls:PclCard Header="{Binding SetupText.About.AboutCardHeader}" ContentMargin="21,40,21,16">
         <controls:PclCard.CardContent>
           <ItemsControl ItemsSource="{Binding AboutProjectEntries}">
             <ItemsControl.ItemTemplate>
@@ -46,7 +46,7 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="特别鸣谢" ContentMargin="21,40,21,16">
+      <controls:PclCard Header="{Binding SetupText.About.AcknowledgementsCardHeader}" ContentMargin="21,40,21,16">
         <controls:PclCard.CardContent>
           <ItemsControl ItemsSource="{Binding AboutAcknowledgementEntries}">
             <ItemsControl.ItemTemplate>

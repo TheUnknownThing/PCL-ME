@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using PCL.Core.App.I18n;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Desktop.ShellViews;
 using PCL.Frontend.Avalonia.ViewModels;
@@ -14,6 +15,7 @@ internal sealed class App : Application
     private readonly AvaloniaCommandOptions _options;
     private readonly FrontendRuntimePaths _runtimePaths;
     private readonly FrontendPlatformAdapter _platformAdapter;
+    private I18nService? _i18nService;
 
     public App(
         AvaloniaCommandOptions options,
@@ -59,19 +61,23 @@ internal sealed class App : Application
     {
         try
         {
+            var settingsManager = new I18nSettingsManager(
+                new FrontendConfigProviderAdapter(runtimePaths.OpenSharedConfigProvider()));
+            _i18nService = new I18nService(settingsManager);
             var shellActionService = new FrontendShellActionService(
                 runtimePaths,
                 platformAdapter,
-                () => desktop.Shutdown());
+                () => desktop.Shutdown(),
+                _i18nService);
             var mainWindow = new MainWindow
             {
-                DataContext = FrontendShellViewModel.CreateBootstrap(_options, shellActionService)
+                DataContext = FrontendShellViewModel.CreateBootstrap(_options, shellActionService, _i18nService)
             };
 
             mainWindow.Opened += async (_, _) =>
             {
                 await CloseSplashScreenAsync(splashSession);
-                await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(shellActionService, runtimePaths);
+                await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(shellActionService, runtimePaths, _i18nService!);
 
                 if (FrontendFontDiagnostics.ShouldWarnAboutMissingCjkFont(this, _options.ForceCjkFontWarning))
                 {
@@ -92,8 +98,9 @@ internal sealed class App : Application
         }
     }
 
-    private static void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    private void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
+        _i18nService?.Dispose();
         FrontendLoggingBootstrap.Dispose();
     }
 

@@ -20,6 +20,7 @@ internal static class FrontendInstanceCompositionService
     private static readonly Regex TomlQuotedValueRegex = new("\"(?<value>(?:\\\\.|[^\"\\\\])*)\"", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private static readonly Regex TomlSingleQuotedValueRegex = new("'(?<value>[^']*)'", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private const int MaxEmbeddedIconBytes = 2 * 1024 * 1024;
+    private const string LegacyGlobalJavaPreferenceLabel = "\u4f7f\u7528\u5168\u5c40\u8bbe\u7f6e";
 
     internal enum LoadMode
     {
@@ -28,29 +29,34 @@ internal static class FrontendInstanceCompositionService
         Full = 2
     }
 
-    public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths)
+    public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths, II18nService? i18n = null)
     {
         var localConfig = runtimePaths.OpenLocalConfigProvider();
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
-        return Compose(runtimePaths, selectedInstanceName, LoadMode.Full);
+        return Compose(runtimePaths, selectedInstanceName, LoadMode.Full, i18n);
     }
 
     public static FrontendInstanceComposition Compose(
         FrontendRuntimePaths runtimePaths,
-        LoadMode loadMode)
+        LoadMode loadMode,
+        II18nService? i18n = null)
     {
         var localConfig = runtimePaths.OpenLocalConfigProvider();
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty).Trim();
-        return Compose(runtimePaths, selectedInstanceName, loadMode);
+        return Compose(runtimePaths, selectedInstanceName, loadMode, i18n);
     }
-
-    public static FrontendInstanceComposition Compose(FrontendRuntimePaths runtimePaths, string? selectedInstanceName)
-        => Compose(runtimePaths, selectedInstanceName, LoadMode.Full);
 
     public static FrontendInstanceComposition Compose(
         FrontendRuntimePaths runtimePaths,
         string? selectedInstanceName,
-        LoadMode loadMode)
+        II18nService? i18n = null)
+        => Compose(runtimePaths, selectedInstanceName, LoadMode.Full, i18n);
+
+    public static FrontendInstanceComposition Compose(
+        FrontendRuntimePaths runtimePaths,
+        string? selectedInstanceName,
+        LoadMode loadMode,
+        II18nService? i18n = null)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var localConfig = runtimePaths.OpenLocalConfigProvider();
@@ -61,20 +67,20 @@ internal static class FrontendInstanceCompositionService
 
         if (string.IsNullOrWhiteSpace(resolvedInstanceName))
         {
-            return CreateEmptyComposition(launcherDirectory);
+            return CreateEmptyComposition(launcherDirectory, i18n: i18n);
         }
 
         var instanceDirectory = Path.Combine(launcherDirectory, "versions", resolvedInstanceName);
         if (!Directory.Exists(instanceDirectory))
         {
-            return CreateEmptyComposition(launcherDirectory, resolvedInstanceName);
+            return CreateEmptyComposition(launcherDirectory, resolvedInstanceName, i18n);
         }
 
         var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
         var manifestSummary = ReadManifestSummary(launcherDirectory, resolvedInstanceName);
         var isIndie = ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary);
         var indieDirectory = isIndie ? instanceDirectory : launcherDirectory;
-        var vanillaVersion = manifestSummary.VanillaVersion?.ToString() ?? ReadValue(instanceConfig, "VersionVanillaName", "Unknown");
+        var vanillaVersion = manifestSummary.VanillaVersion?.ToString() ?? ReadValue(instanceConfig, "VersionVanillaName", Text(i18n, "instance.common.unknown_version", "Unknown"));
         var selection = new FrontendInstanceSelectionState(
             HasSelection: true,
             InstanceName: resolvedInstanceName,
@@ -90,35 +96,35 @@ internal static class FrontendInstanceCompositionService
             selection,
             manifestSummary,
             includeMetadataFallback: loadMode >= LoadMode.InstallAware);
-        var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries);
+        var setupState = BuildSetupState(selection, manifestSummary, sharedConfig, localConfig, instanceConfig, javaEntries, i18n);
         var exportState = loadMode == LoadMode.Full
-            ? BuildExportState(selection, manifestSummary)
+            ? BuildExportState(selection, manifestSummary, i18n)
             : CreatePlaceholderExportState(selection, manifestSummary);
         var modEntries = loadMode == LoadMode.Full
-            ? BuildResourceEntries(selection, ResourceKind.Mods)
+            ? BuildResourceEntries(selection, ResourceKind.Mods, i18n)
             : [];
         var disabledModEntries = loadMode == LoadMode.Full
-            ? BuildResourceEntries(selection, ResourceKind.DisabledMods)
+            ? BuildResourceEntries(selection, ResourceKind.DisabledMods, i18n)
             : [];
         var resourcePackEntries = loadMode == LoadMode.Full
-            ? BuildResourceEntries(selection, ResourceKind.ResourcePacks)
+            ? BuildResourceEntries(selection, ResourceKind.ResourcePacks, i18n)
             : [];
         var shaderEntries = loadMode == LoadMode.Full
-            ? BuildResourceEntries(selection, ResourceKind.Shaders)
+            ? BuildResourceEntries(selection, ResourceKind.Shaders, i18n)
             : [];
         var schematicEntries = loadMode == LoadMode.Full
-            ? BuildResourceEntries(selection, ResourceKind.Schematics)
+            ? BuildResourceEntries(selection, ResourceKind.Schematics, i18n)
             : [];
 
         return new FrontendInstanceComposition(
             selection,
-            BuildOverviewState(selection, manifestSummary, instanceConfig, setupState),
+            BuildOverviewState(selection, manifestSummary, instanceConfig, setupState, i18n),
             setupState,
             exportState,
-            BuildInstallState(selection, installManifestSummary),
-            new FrontendInstanceContentState(BuildWorldEntries(selection)),
-            new FrontendInstanceScreenshotState(BuildScreenshotEntries(selection)),
-            new FrontendInstanceServerState(BuildServerEntries(selection)),
+            BuildInstallState(selection, installManifestSummary, i18n),
+            new FrontendInstanceContentState(BuildWorldEntries(selection, i18n)),
+            new FrontendInstanceScreenshotState(BuildScreenshotEntries(selection, i18n)),
+            new FrontendInstanceServerState(BuildServerEntries(selection, i18n)),
             new FrontendInstanceResourceState(modEntries),
             new FrontendInstanceResourceState(disabledModEntries),
             new FrontendInstanceResourceState(resourcePackEntries),
@@ -126,18 +132,24 @@ internal static class FrontendInstanceCompositionService
             new FrontendInstanceResourceState(schematicEntries));
     }
 
-    private static FrontendInstanceComposition CreateEmptyComposition(string launcherDirectory, string instanceName = "未选择实例")
+    private static FrontendInstanceComposition CreateEmptyComposition(
+        string launcherDirectory,
+        string? instanceName = null,
+        II18nService? i18n = null)
     {
+        var resolvedInstanceName = string.IsNullOrWhiteSpace(instanceName)
+            ? Text(i18n, "instance.common.no_selection", "No instance selected")
+            : instanceName;
         var selection = new FrontendInstanceSelectionState(
             HasSelection: false,
-            InstanceName: instanceName,
+            InstanceName: resolvedInstanceName,
             InstanceDirectory: string.Empty,
             IndieDirectory: launcherDirectory,
             LauncherDirectory: launcherDirectory,
             IsIndie: false,
             IsModable: false,
             HasLabyMod: false,
-            VanillaVersion: "Unknown");
+            VanillaVersion: Text(i18n, "instance.common.unknown_version", "Unknown"));
         var setup = new FrontendInstanceSetupState(
             IsolationIndex: 0,
             WindowTitle: string.Empty,
@@ -145,8 +157,8 @@ internal static class FrontendInstanceCompositionService
             CustomInfo: string.Empty,
             JavaOptions:
             [
-                new FrontendInstanceJavaOption("global", "跟随全局设置"),
-                new FrontendInstanceJavaOption("auto", "自动选择合适的 Java")
+                new FrontendInstanceJavaOption("global", Text(i18n, "instance.settings.options.follow_global", "Follow global setting")),
+                new FrontendInstanceJavaOption("auto", Text(i18n, "instance.settings.java_options.auto_select", "Automatically choose a suitable Java"))
             ],
             SelectedJavaIndex: 0,
             SelectedJavaKey: "global",
@@ -186,8 +198,8 @@ internal static class FrontendInstanceCompositionService
         return new FrontendInstanceComposition(
             selection,
             new FrontendInstanceOverviewState(
-                instanceName,
-                "请选择一个实例后再查看详细内容。",
+                resolvedInstanceName,
+                Text(i18n, "instance.overview.messages.select_to_view_details", "Select an instance to view details."),
                 null,
                 0,
                 0,
@@ -195,8 +207,14 @@ internal static class FrontendInstanceCompositionService
                 [],
                 []),
             setup,
-            new FrontendInstanceExportState(instanceName, "1.0.0", false, false, false, []),
-            new FrontendInstanceInstallState(instanceName, "未选择实例", "Minecraft", "Grass.png", [], []),
+            new FrontendInstanceExportState(resolvedInstanceName, "1.0.0", false, false, false, []),
+            new FrontendInstanceInstallState(
+                resolvedInstanceName,
+                Text(i18n, "instance.common.no_selection", "No instance selected"),
+                Text(i18n, "instance.install.minecraft.version", "Minecraft {version}", ("version", Text(i18n, "instance.common.unknown_version", "Unknown"))),
+                "Grass.png",
+                [],
+                []),
             new FrontendInstanceContentState([]),
             new FrontendInstanceScreenshotState([]),
             new FrontendInstanceServerState([]),
@@ -211,7 +229,8 @@ internal static class FrontendInstanceCompositionService
         FrontendInstanceSelectionState selection,
         FrontendVersionManifestSummary manifestSummary,
         YamlFileProvider instanceConfig,
-        FrontendInstanceSetupState setupState)
+        FrontendInstanceSetupState setupState,
+        II18nService? i18n)
     {
         var isStarred = ReadValue(instanceConfig, "IsStar", false);
         var categoryIndex = MapInstanceCategoryIndex(ReadValue(instanceConfig, "DisplayType", 0));
@@ -224,12 +243,14 @@ internal static class FrontendInstanceCompositionService
         var infoEntries = new List<FrontendInstanceInfoEntry>();
 
         infoEntries.Add(new FrontendInstanceInfoEntry(
-            "启动次数",
-            launchCount == 0 ? "从未启动" : $"已启动 {launchCount} 次"));
+            Text(i18n, "instance.overview.info.launch_count", "Launch count"),
+            launchCount == 0
+                ? Text(i18n, "instance.overview.info.launch_count_never", "Never launched")
+                : Text(i18n, "instance.overview.info.launch_count_value", "Launched {count} times", ("count", launchCount))));
 
         if (!string.IsNullOrWhiteSpace(modpackVersion))
         {
-            infoEntries.Add(new FrontendInstanceInfoEntry("整合包版本", modpackVersion));
+            infoEntries.Add(new FrontendInstanceInfoEntry(Text(i18n, "instance.overview.info.modpack_version", "Modpack version"), modpackVersion));
         }
 
         infoEntries.Add(new FrontendInstanceInfoEntry("Minecraft", selection.VanillaVersion));
@@ -266,7 +287,7 @@ internal static class FrontendInstanceCompositionService
 
         if (manifestSummary.HasLiteLoader)
         {
-            infoEntries.Add(new FrontendInstanceInfoEntry("LiteLoader", "已安装"));
+            infoEntries.Add(new FrontendInstanceInfoEntry("LiteLoader", Text(i18n, "instance.common.installed", "Installed")));
         }
 
         if (!string.IsNullOrWhiteSpace(manifestSummary.LegacyFabricVersion))
@@ -281,29 +302,29 @@ internal static class FrontendInstanceCompositionService
 
         if (!string.IsNullOrWhiteSpace(customInfo))
         {
-            infoEntries.Add(new FrontendInstanceInfoEntry("实例描述", customInfo));
+            infoEntries.Add(new FrontendInstanceInfoEntry(Text(i18n, "instance.overview.info.description", "Description"), customInfo));
         }
 
         var tags = new List<string>();
         AddIfNotEmpty(tags, DeterminePrimaryLoaderLabel(manifestSummary));
         if (selection.IsModable)
         {
-            tags.Add("支持 Mod");
+            tags.Add(Text(i18n, "instance.overview.tags.mod_supported", "Supports Mods"));
         }
 
         if (isStarred)
         {
-            tags.Add("已收藏");
+            tags.Add(Text(i18n, "instance.overview.tags.favorited", "Favorited"));
         }
         else
         {
-            AddIfNotEmpty(tags, DetermineCategoryLabel(categoryIndex));
+            AddIfNotEmpty(tags, DetermineCategoryLabel(categoryIndex, i18n));
         }
 
         var iconPath = ResolveOverviewIconPath(selection, manifestSummary, instanceConfig);
         return new FrontendInstanceOverviewState(
             selection.InstanceName,
-            BuildInstanceSubtitle(selection, manifestSummary),
+            BuildInstanceSubtitle(selection, manifestSummary, i18n),
             iconPath,
             ResolveOverviewIconIndex(instanceConfig, manifestSummary),
             categoryIndex,
@@ -318,10 +339,11 @@ internal static class FrontendInstanceCompositionService
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig,
         YamlFileProvider instanceConfig,
-        IReadOnlyList<FrontendJavaEntry> javaEntries)
+        IReadOnlyList<FrontendJavaEntry> javaEntries,
+        II18nService? i18n)
     {
-        var javaPreference = ReadJavaPreference(ReadValue(instanceConfig, "VersionArgumentJavaSelect", "使用全局设置"));
-        var javaOptions = BuildJavaOptions(javaEntries, selection.LauncherDirectory, javaPreference);
+        var javaPreference = ReadJavaPreference(ReadValue(instanceConfig, "VersionArgumentJavaSelect", "global"));
+        var javaOptions = BuildJavaOptions(javaEntries, selection.LauncherDirectory, javaPreference, i18n);
         var selectedJavaKey = ResolveSelectedJavaKey(javaPreference, selection.LauncherDirectory);
         var selectedJavaIndex = javaOptions.FindIndex(option => string.Equals(option.Key, selectedJavaKey, StringComparison.Ordinal));
         if (selectedJavaIndex < 0)
@@ -405,14 +427,15 @@ internal static class FrontendInstanceCompositionService
 
     private static FrontendInstanceExportState BuildExportState(
         FrontendInstanceSelectionState selection,
-        FrontendVersionManifestSummary manifestSummary)
+        FrontendVersionManifestSummary manifestSummary,
+        II18nService? i18n)
     {
         var resourcePackEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.ResourcePacks), ArchiveExtensions, allowDirectories: true, recursive: false);
         var shaderEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.Shaders), ArchiveExtensions, allowDirectories: true, recursive: false);
         var schematicEntries = BuildFolderEntries(ResolveResourceDirectory(selection, ResourceKind.Schematics), SchematicExtensions, allowDirectories: false, recursive: true);
-        var disabledModEntries = BuildResourceEntries(selection, ResourceKind.DisabledMods);
+        var disabledModEntries = BuildResourceEntries(selection, ResourceKind.DisabledMods, i18n);
         var saveEntries = BuildExportWorldOptions(selection);
-        var screenshotEntries = BuildScreenshotEntries(selection);
+        var screenshotEntries = BuildScreenshotEntries(selection, i18n);
         var replayEntries = BuildFolderEntries(Path.Combine(selection.IndieDirectory, "replay_recordings"), [".mcpr"], allowDirectories: false, recursive: false);
         var hasServers = File.Exists(Path.Combine(selection.IndieDirectory, "servers.dat"));
         var hasLauncherContent = Directory.Exists(Path.Combine(selection.InstanceDirectory, "PCL"));
@@ -420,39 +443,43 @@ internal static class FrontendInstanceCompositionService
         var groups = new List<FrontendInstanceExportOptionGroup>
         {
             new(
-                "游戏本体",
+                "game",
+                Text(i18n, "instance.export.groups.game", "Game"),
                 string.Empty,
                 true,
                 [
-                    CreateExportOption("游戏本体设置", File.Exists(Path.Combine(selection.IndieDirectory, "options.txt")) ? "检测到 options.txt" : "未检测到配置文件", File.Exists(Path.Combine(selection.IndieDirectory, "options.txt"))),
-                    CreateExportOption("游戏本体个人信息", File.Exists(Path.Combine(selection.IndieDirectory, "optionsof.txt")) ? "检测到 OptiFine 设置" : "未检测到个人设置", File.Exists(Path.Combine(selection.IndieDirectory, "optionsof.txt"))),
+                    CreateExportOption("game_settings", Text(i18n, "instance.export.items.game_settings", "Game settings"), File.Exists(Path.Combine(selection.IndieDirectory, "options.txt")) ? Text(i18n, "instance.export.detected.options", "Detected options.txt") : Text(i18n, "instance.export.detected.config_missing", "Configuration file not found"), File.Exists(Path.Combine(selection.IndieDirectory, "options.txt"))),
+                    CreateExportOption("game_personal", Text(i18n, "instance.export.items.game_personal", "Personal game data"), File.Exists(Path.Combine(selection.IndieDirectory, "optionsof.txt")) ? Text(i18n, "instance.export.detected.optifine_settings", "Detected OptiFine settings") : Text(i18n, "instance.export.detected.personal_missing", "Personal settings not found"), File.Exists(Path.Combine(selection.IndieDirectory, "optionsof.txt"))),
                     CreateExportOption(
-                        "OptiFine 设置",
-                        !string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion) ? "当前实例包含 OptiFine" : "当前实例未安装 OptiFine",
+                        "optifine_settings",
+                        Text(i18n, "instance.export.items.optifine_settings", "OptiFine settings"),
+                        !string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion) ? Text(i18n, "instance.export.detected.optifine_present", "This instance includes OptiFine") : Text(i18n, "instance.export.detected.optifine_missing", "This instance does not have OptiFine installed"),
                         !string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion))
                 ]),
             new(
-                "Mod",
-                "模组",
+                "mods",
+                Text(i18n, "instance.export.groups.mods", "Mods"),
+                Text(i18n, "instance.export.descriptions.mods", "Mods"),
                 selection.IsModable,
                 [
-                    CreateExportOption("已禁用的 Mod", $"{disabledModEntries.Count} 项", disabledModEntries.Count > 0),
-                    CreateExportOption("整合包重要数据", Directory.Exists(Path.Combine(selection.IndieDirectory, "config")) ? "检测到 config 文件夹" : "未检测到 config 文件夹", Directory.Exists(Path.Combine(selection.IndieDirectory, "config"))),
-                    CreateExportOption("Mod 设置", Directory.Exists(Path.Combine(selection.IndieDirectory, "config")) ? "检测到配置目录" : "未检测到配置目录", Directory.Exists(Path.Combine(selection.IndieDirectory, "config")))
+                    CreateExportOption("disabled_mods", Text(i18n, "instance.export.items.disabled_mods", "Disabled mods"), Text(i18n, "instance.export.count.items", "{count} items", ("count", disabledModEntries.Count)), disabledModEntries.Count > 0),
+                    CreateExportOption("important_data", Text(i18n, "instance.export.items.important_data", "Important modpack data"), Directory.Exists(Path.Combine(selection.IndieDirectory, "config")) ? Text(i18n, "instance.export.detected.config_folder", "Detected config folder") : Text(i18n, "instance.export.detected.config_folder_missing", "Config folder not found"), Directory.Exists(Path.Combine(selection.IndieDirectory, "config"))),
+                    CreateExportOption("mod_settings", Text(i18n, "instance.export.items.mod_settings", "Mod settings"), Directory.Exists(Path.Combine(selection.IndieDirectory, "config")) ? Text(i18n, "instance.export.detected.config_directory", "Detected configuration directory") : Text(i18n, "instance.export.detected.config_directory_missing", "Configuration directory not found"), Directory.Exists(Path.Combine(selection.IndieDirectory, "config")))
                 ]),
-            new("资源包", "纹理包 / 材质包", resourcePackEntries.Count > 0, resourcePackEntries.Select(ToExportOption).ToArray()),
-            new("光影包", string.Empty, shaderEntries.Count > 0, shaderEntries.Select(ToExportOption).ToArray()),
-            new("截图", string.Empty, screenshotEntries.Count > 0, []),
-            new("导出的结构", "schematics 文件夹", schematicEntries.Count > 0, schematicEntries.Select(ToExportOption).ToArray()),
-            new("录像回放", "Replay Mod 的录像文件", replayEntries.Count > 0, replayEntries.Select(ToExportOption).ToArray()),
-            new("单人游戏存档", "世界 / 地图", false, saveEntries),
-            new("多人游戏服务器列表", string.Empty, hasServers, []),
+            new("resource_packs", Text(i18n, "instance.export.groups.resource_packs", "Resource packs"), Text(i18n, "instance.export.descriptions.resource_packs", "Texture packs / resource packs"), resourcePackEntries.Count > 0, resourcePackEntries.Select(ToExportOption).ToArray()),
+            new("shaders", Text(i18n, "instance.export.groups.shaders", "Shader packs"), string.Empty, shaderEntries.Count > 0, shaderEntries.Select(ToExportOption).ToArray()),
+            new("screenshots", Text(i18n, "instance.export.groups.screenshots", "Screenshots"), string.Empty, screenshotEntries.Count > 0, []),
+            new("schematics", Text(i18n, "instance.export.groups.schematics", "Schematics"), Text(i18n, "instance.export.descriptions.schematics", "schematics folder"), schematicEntries.Count > 0, schematicEntries.Select(ToExportOption).ToArray()),
+            new("replays", Text(i18n, "instance.export.groups.replays", "Replays"), Text(i18n, "instance.export.descriptions.replays", "Replay Mod recordings"), replayEntries.Count > 0, replayEntries.Select(ToExportOption).ToArray()),
+            new("worlds", Text(i18n, "instance.export.groups.worlds", "World saves"), Text(i18n, "instance.export.descriptions.worlds", "Worlds / maps"), false, saveEntries),
+            new("servers", Text(i18n, "instance.export.groups.servers", "Server list"), string.Empty, hasServers, []),
             new(
-                "PCL 启动器程序",
-                "打包跨平台版 PCL，以便没有启动器的玩家安装整合包",
+                "launcher",
+                Text(i18n, "instance.export.groups.launcher", "PCL launcher"),
+                Text(i18n, "instance.export.descriptions.launcher", "Bundle the cross-platform PCL launcher so players without it can install the modpack."),
                 hasLauncherContent,
                 [
-                    CreateExportOption("PCL 个性化内容", hasLauncherContent ? "检测到实例 PCL 配置目录" : "未检测到实例 PCL 配置目录", hasLauncherContent)
+                    CreateExportOption("launcher_personalization", Text(i18n, "instance.export.items.launcher_personalization", "PCL personalization content"), hasLauncherContent ? Text(i18n, "instance.export.detected.pcl_directory", "Detected instance PCL configuration directory") : Text(i18n, "instance.export.detected.pcl_directory_missing", "Instance PCL configuration directory not found"), hasLauncherContent)
                 ])
         };
 
@@ -480,45 +507,46 @@ internal static class FrontendInstanceCompositionService
 
     private static FrontendInstanceInstallState BuildInstallState(
         FrontendInstanceSelectionState selection,
-        FrontendVersionManifestSummary manifestSummary)
+        FrontendVersionManifestSummary manifestSummary,
+        II18nService? i18n)
     {
         var hints = new List<string>();
         if (!string.IsNullOrWhiteSpace(manifestSummary.FabricVersion) && !manifestSummary.HasFabricApi)
         {
-            hints.Add("你尚未选择安装 Fabric API，这会导致大多数 Mod 无法使用！");
+            hints.Add(Text(i18n, "instance.install.hints.fabric_api_required", "Fabric API is not installed, so most mods will not work."));
         }
 
         if (!string.IsNullOrWhiteSpace(manifestSummary.QuiltVersion) && !manifestSummary.HasQsl)
         {
-            hints.Add("你尚未选择安装 QFAPI / QSL，这会导致大多数 Mod 无法使用！");
+            hints.Add(Text(i18n, "instance.install.hints.qsl_required", "QFAPI / QSL is not installed, so most mods will not work."));
         }
 
         if (!string.IsNullOrWhiteSpace(manifestSummary.OptiFineVersion)
             && !string.IsNullOrWhiteSpace(manifestSummary.FabricVersion)
             && !manifestSummary.HasOptiFabric)
         {
-            hints.Add("你尚未选择安装 OptiFabric，这会导致 OptiFine 无法使用！");
+            hints.Add(Text(i18n, "instance.install.hints.optifabric_required", "OptiFabric is not installed, so OptiFine will not work."));
         }
 
         return new FrontendInstanceInstallState(
             selection.InstanceName,
-            BuildInstanceSubtitle(selection, manifestSummary),
-            $"Minecraft {selection.VanillaVersion}",
+            BuildInstanceSubtitle(selection, manifestSummary, i18n),
+            Text(i18n, "instance.install.minecraft.version", "Minecraft {version}", ("version", selection.VanillaVersion)),
             DetermineInstallIconName(manifestSummary),
             hints,
             [
-                new FrontendInstanceInstallOption("Forge", DisplayVersion(manifestSummary.ForgeVersion), "Anvil.png"),
-                new FrontendInstanceInstallOption("Cleanroom", DisplayVersion(manifestSummary.CleanroomVersion), "Cleanroom.png"),
-                new FrontendInstanceInstallOption("NeoForge", DisplayVersion(manifestSummary.NeoForgeVersion), "NeoForge.png"),
-                new FrontendInstanceInstallOption("Fabric", DisplayVersion(manifestSummary.FabricVersion), "Fabric.png"),
-                new FrontendInstanceInstallOption("Legacy Fabric", DisplayVersion(manifestSummary.LegacyFabricVersion), "Fabric.png"),
-                new FrontendInstanceInstallOption("Fabric API", DisplayInstalled(manifestSummary.HasFabricApi, manifestSummary.FabricApiVersion), "Fabric.png"),
-                new FrontendInstanceInstallOption("QFAPI / QSL", DisplayInstalled(manifestSummary.HasQsl, manifestSummary.QslVersion), "Quilt.png"),
-                new FrontendInstanceInstallOption("Quilt", DisplayVersion(manifestSummary.QuiltVersion), "Quilt.png"),
-                new FrontendInstanceInstallOption("LabyMod", DisplayVersion(manifestSummary.LabyModVersion), "LabyMod.png"),
-                new FrontendInstanceInstallOption("OptiFine", DisplayVersion(manifestSummary.OptiFineVersion), "GrassPath.png"),
-                new FrontendInstanceInstallOption("OptiFabric", DisplayInstalled(manifestSummary.HasOptiFabric, manifestSummary.OptiFabricVersion), "OptiFabric.png"),
-                new FrontendInstanceInstallOption("LiteLoader", DisplayInstalled(manifestSummary.HasLiteLoader, manifestSummary.LiteLoaderVersion), "Egg.png")
+                new FrontendInstanceInstallOption("Forge", DisplayVersion(manifestSummary.ForgeVersion, i18n), "Anvil.png"),
+                new FrontendInstanceInstallOption("Cleanroom", DisplayVersion(manifestSummary.CleanroomVersion, i18n), "Cleanroom.png"),
+                new FrontendInstanceInstallOption("NeoForge", DisplayVersion(manifestSummary.NeoForgeVersion, i18n), "NeoForge.png"),
+                new FrontendInstanceInstallOption("Fabric", DisplayVersion(manifestSummary.FabricVersion, i18n), "Fabric.png"),
+                new FrontendInstanceInstallOption("Legacy Fabric", DisplayVersion(manifestSummary.LegacyFabricVersion, i18n), "Fabric.png"),
+                new FrontendInstanceInstallOption("Fabric API", DisplayInstalled(manifestSummary.HasFabricApi, manifestSummary.FabricApiVersion, i18n), "Fabric.png"),
+                new FrontendInstanceInstallOption("QFAPI / QSL", DisplayInstalled(manifestSummary.HasQsl, manifestSummary.QslVersion, i18n), "Quilt.png"),
+                new FrontendInstanceInstallOption("Quilt", DisplayVersion(manifestSummary.QuiltVersion, i18n), "Quilt.png"),
+                new FrontendInstanceInstallOption("LabyMod", DisplayVersion(manifestSummary.LabyModVersion, i18n), "LabyMod.png"),
+                new FrontendInstanceInstallOption("OptiFine", DisplayVersion(manifestSummary.OptiFineVersion, i18n), "GrassPath.png"),
+                new FrontendInstanceInstallOption("OptiFabric", DisplayInstalled(manifestSummary.HasOptiFabric, manifestSummary.OptiFabricVersion, i18n), "OptiFabric.png"),
+                new FrontendInstanceInstallOption("LiteLoader", DisplayInstalled(manifestSummary.HasLiteLoader, manifestSummary.LiteLoaderVersion, i18n), "Egg.png")
             ]);
     }
 
@@ -647,7 +675,7 @@ internal static class FrontendInstanceCompositionService
             .ToArray());
     }
 
-    private static IReadOnlyList<FrontendInstanceDirectoryEntry> BuildWorldEntries(FrontendInstanceSelectionState selection)
+    private static IReadOnlyList<FrontendInstanceDirectoryEntry> BuildWorldEntries(FrontendInstanceSelectionState selection, II18nService? i18n)
     {
         var savesDirectory = Path.Combine(selection.IndieDirectory, "saves");
         if (!Directory.Exists(savesDirectory))
@@ -660,7 +688,7 @@ internal static class FrontendInstanceCompositionService
             .OrderByDescending(directory => directory.LastWriteTimeUtc)
             .Select(directory => new FrontendInstanceDirectoryEntry(
                 directory.Name,
-                $"创建时间：{directory.CreationTime:yyyy/MM/dd}，最后修改时间：{directory.LastWriteTime:yyyy/MM/dd}",
+                Text(i18n, "instance.content.world.summary", "Created: {created_at} • Modified: {modified_at}", ("created_at", directory.CreationTime.ToString("yyyy/MM/dd")), ("modified_at", directory.LastWriteTime.ToString("yyyy/MM/dd"))),
                 directory.FullName))
             .ToArray();
     }
@@ -677,13 +705,14 @@ internal static class FrontendInstanceCompositionService
             .Select(path => new DirectoryInfo(path))
             .OrderByDescending(directory => directory.LastWriteTimeUtc)
             .Select(directory => new FrontendInstanceExportOptionEntry(
+                directory.FullName,
                 directory.Name,
                 directory.LastWriteTime.ToString("yyyy/MM/dd HH:mm"),
                 true))
             .ToArray();
     }
 
-    private static IReadOnlyList<FrontendInstanceScreenshotEntry> BuildScreenshotEntries(FrontendInstanceSelectionState selection)
+    private static IReadOnlyList<FrontendInstanceScreenshotEntry> BuildScreenshotEntries(FrontendInstanceSelectionState selection, II18nService? i18n)
     {
         var screenshotDirectory = Path.Combine(selection.IndieDirectory, "screenshots");
         if (!Directory.Exists(screenshotDirectory))
@@ -698,12 +727,12 @@ internal static class FrontendInstanceCompositionService
             .OrderByDescending(file => file.CreationTimeUtc)
             .Select(file => new FrontendInstanceScreenshotEntry(
                 file.Name,
-                $"{file.CreationTime:yyyy/MM/dd HH:mm} • {FormatFileSize(file.Length)}",
+                Text(i18n, "instance.content.screenshot.summary", "{created_at} • {file_size}", ("created_at", file.CreationTime.ToString("yyyy/MM/dd HH:mm")), ("file_size", FormatFileSize(file.Length))),
                 file.FullName))
             .ToArray();
     }
 
-    private static IReadOnlyList<FrontendInstanceServerEntry> BuildServerEntries(FrontendInstanceSelectionState selection)
+    private static IReadOnlyList<FrontendInstanceServerEntry> BuildServerEntries(FrontendInstanceSelectionState selection, II18nService? i18n)
     {
         var serversPath = Path.Combine(selection.IndieDirectory, "servers.dat");
         if (!File.Exists(serversPath))
@@ -725,9 +754,9 @@ internal static class FrontendInstanceCompositionService
             return list
                 .OfType<NbtCompound>()
                 .Select(server => new FrontendInstanceServerEntry(
-                    Title: server.Get<NbtString>("name")?.Value ?? "Minecraft服务器",
+                    Title: server.Get<NbtString>("name")?.Value ?? Text(i18n, "instance.content.server.dialogs.edit.name_default", "Minecraft Server"),
                     Address: server.Get<NbtString>("ip")?.Value ?? string.Empty,
-                    Status: "已保存服务器"))
+                    Status: Text(i18n, "instance.content.server.status.saved", "Saved server")))
                 .ToArray();
         }
         catch
@@ -738,7 +767,8 @@ internal static class FrontendInstanceCompositionService
 
     private static IReadOnlyList<FrontendInstanceResourceEntry> BuildResourceEntries(
         FrontendInstanceSelectionState selection,
-        ResourceKind kind)
+        ResourceKind kind,
+        II18nService? i18n)
     {
         return kind switch
         {
@@ -746,20 +776,23 @@ internal static class FrontendInstanceCompositionService
                 ResolveResourceDirectory(selection, kind),
                 fileFilter: path => EnabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
                 defaultIconName: DetermineInstallIconNameFromExtension("mods", selection),
-                isEnabled: true),
+                isEnabled: true,
+                i18n: i18n),
             ResourceKind.DisabledMods => BuildModResourceEntries(
                 ResolveResourceDirectory(selection, ResourceKind.Mods),
                 fileFilter: path => DisabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
                 defaultIconName: "RedstoneBlock.png",
-                isEnabled: false),
-            ResourceKind.ResourcePacks => BuildFolderAndArchiveEntries(ResolveResourceDirectory(selection, kind), "资源包", "Grass.png"),
-            ResourceKind.Shaders => BuildFolderAndArchiveEntries(ResolveResourceDirectory(selection, kind), "光影包", "RedstoneLampOn.png"),
+                isEnabled: false,
+                i18n: i18n),
+            ResourceKind.ResourcePacks => BuildFolderAndArchiveEntries(ResolveResourceDirectory(selection, kind), Text(i18n, "instance.content.resource.kind.resource_pack", "Resource pack"), "Grass.png", i18n),
+            ResourceKind.Shaders => BuildFolderAndArchiveEntries(ResolveResourceDirectory(selection, kind), Text(i18n, "instance.content.resource.kind.shader", "Shader pack"), "RedstoneLampOn.png", i18n),
             ResourceKind.Schematics => BuildFileResourceEntries(
                 ResolveResourceDirectory(selection, kind),
                 recursive: true,
                 fileFilter: path => SchematicExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
-                metaPrefix: "投影文件",
-                defaultIconName: "CommandBlock.png"),
+                metaPrefix: Text(i18n, "instance.content.resource.kind.schematic_file", "Schematic file"),
+                defaultIconName: "CommandBlock.png",
+                i18n: i18n),
             _ => []
         };
     }
@@ -768,7 +801,8 @@ internal static class FrontendInstanceCompositionService
         string directory,
         Func<string, bool> fileFilter,
         string defaultIconName,
-        bool isEnabled)
+        bool isEnabled,
+        II18nService? i18n)
     {
         if (!Directory.Exists(directory))
         {
@@ -779,7 +813,7 @@ internal static class FrontendInstanceCompositionService
             .Where(fileFilter)
             .Select(path => new FileInfo(path))
             .OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(file => BuildModResourceEntry(directory, file, defaultIconName, isEnabled))
+            .Select(file => BuildModResourceEntry(directory, file, defaultIconName, isEnabled, i18n))
             .ToArray();
     }
 
@@ -789,7 +823,8 @@ internal static class FrontendInstanceCompositionService
         Func<string, bool> fileFilter,
         string metaPrefix,
         string defaultIconName,
-        bool isEnabled = true)
+        bool isEnabled = true,
+        II18nService? i18n = null)
     {
         if (!Directory.Exists(directory))
         {
@@ -803,7 +838,7 @@ internal static class FrontendInstanceCompositionService
             .OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase)
             .Select(file => new FrontendInstanceResourceEntry(
                 Title: Path.GetFileNameWithoutExtension(file.Name),
-                Summary: $"{GetRelativeParent(directory, file.FullName)} • {file.LastWriteTime:yyyy/MM/dd HH:mm}",
+                Summary: Text(i18n, "instance.content.resource.summary.file", "{parent_directory} • {modified_at}", ("parent_directory", GetRelativeParent(directory, file.FullName, i18n)), ("modified_at", file.LastWriteTime.ToString("yyyy/MM/dd HH:mm"))),
                 Meta: $"{metaPrefix} • {file.Extension.TrimStart('.').ToUpperInvariant()}",
                 Path: file.FullName,
                 IconName: defaultIconName,
@@ -815,14 +850,15 @@ internal static class FrontendInstanceCompositionService
         string directory,
         FileInfo file,
         string defaultIconName,
-        bool isEnabled)
+        bool isEnabled,
+        II18nService? i18n)
     {
         var metadata = TryReadLocalModMetadata(file.FullName);
         var title = !string.IsNullOrWhiteSpace(metadata?.Title)
             ? metadata.Title!
             : GetFallbackModTitle(file.Name);
-        var summary = BuildModSummary(file, metadata);
-        var meta = BuildModMeta(file, metadata);
+        var summary = BuildModSummary(file, metadata, i18n);
+        var meta = BuildModMeta(file, metadata, i18n);
         var iconName = DetermineModIconName(metadata?.Loader, defaultIconName);
 
         return new FrontendInstanceResourceEntry(
@@ -841,7 +877,11 @@ internal static class FrontendInstanceCompositionService
             IconBytes: metadata?.IconBytes);
     }
 
-    private static IReadOnlyList<FrontendInstanceResourceEntry> BuildFolderAndArchiveEntries(string directory, string metaPrefix, string iconName)
+    private static IReadOnlyList<FrontendInstanceResourceEntry> BuildFolderAndArchiveEntries(
+        string directory,
+        string metaPrefix,
+        string iconName,
+        II18nService? i18n)
     {
         if (!Directory.Exists(directory))
         {
@@ -853,8 +893,8 @@ internal static class FrontendInstanceCompositionService
             .Select(path => new FileInfo(path))
             .Select(file => new FrontendInstanceResourceEntry(
                 Title: Path.GetFileNameWithoutExtension(file.Name),
-                Summary: $"{file.LastWriteTime:yyyy/MM/dd HH:mm} • {FormatFileSize(file.Length)}",
-                Meta: $"{metaPrefix} • 压缩包",
+                Summary: Text(i18n, "instance.content.resource.summary.archive", "{modified_at} • {file_size}", ("modified_at", file.LastWriteTime.ToString("yyyy/MM/dd HH:mm")), ("file_size", FormatFileSize(file.Length))),
+                Meta: $"{metaPrefix} • {Text(i18n, "instance.content.resource.meta.archive", "Archive")}",
                 Path: file.FullName,
                 IconName: iconName));
         var folders = Directory.EnumerateDirectories(directory, "*", SearchOption.TopDirectoryOnly)
@@ -862,8 +902,8 @@ internal static class FrontendInstanceCompositionService
             .Where(folder => folder.EnumerateFileSystemInfos().Any())
             .Select(folder => new FrontendInstanceResourceEntry(
                 Title: folder.Name,
-                Summary: $"{folder.LastWriteTime:yyyy/MM/dd HH:mm} • 文件夹",
-                Meta: $"{metaPrefix} • 文件夹",
+                Summary: Text(i18n, "instance.content.resource.summary.folder", "{modified_at} • {folder_kind}", ("modified_at", folder.LastWriteTime.ToString("yyyy/MM/dd HH:mm")), ("folder_kind", Text(i18n, "instance.content.resource.meta.folder", "Folder"))),
+                Meta: $"{metaPrefix} • {Text(i18n, "instance.content.resource.meta.folder", "Folder")}",
                 Path: folder.FullName,
                 IconName: iconName));
         return files.Concat(folders)
@@ -909,12 +949,12 @@ internal static class FrontendInstanceCompositionService
 
     private static FrontendInstanceExportOptionEntry ToExportOption(FrontendInstanceDirectoryEntry entry)
     {
-        return new FrontendInstanceExportOptionEntry(entry.Title, entry.Summary, true);
+        return new FrontendInstanceExportOptionEntry(entry.Path, entry.Title, entry.Summary, true);
     }
 
-    private static FrontendInstanceExportOptionEntry CreateExportOption(string title, string description, bool isChecked)
+    private static FrontendInstanceExportOptionEntry CreateExportOption(string key, string title, string description, bool isChecked)
     {
-        return new FrontendInstanceExportOptionEntry(title, description, isChecked);
+        return new FrontendInstanceExportOptionEntry(key, title, description, isChecked);
     }
 
     private static string ReadVersionFallback(string instanceDirectory)
@@ -926,23 +966,24 @@ internal static class FrontendInstanceCompositionService
     private static List<FrontendInstanceJavaOption> BuildJavaOptions(
         IReadOnlyList<FrontendJavaEntry> javaEntries,
         string launcherDirectory,
-        FrontendJavaPreference preference)
+        FrontendJavaPreference preference,
+        II18nService? i18n)
     {
         var options = new List<FrontendInstanceJavaOption>
         {
-            new("global", "跟随全局设置"),
-            new("auto", "自动选择合适的 Java")
+            new("global", Text(i18n, "instance.settings.options.follow_global", "Follow global setting")),
+            new("auto", Text(i18n, "instance.settings.java_options.auto_select", "Automatically choose a suitable Java"))
         };
 
         if (preference.Kind == FrontendJavaPreferenceKind.RelativePath && !string.IsNullOrWhiteSpace(preference.Value))
         {
             options.Add(new FrontendInstanceJavaOption(
                 $"relative:{preference.Value}",
-                $"启动器目录下的 Java | {preference.Value}"));
+                Text(i18n, "instance.settings.java_options.launcher_relative_selected", "Java under launcher directory | {relative_path}", ("relative_path", preference.Value))));
         }
         else
         {
-            options.Add(new FrontendInstanceJavaOption("relative", "选择启动器目录下的 Java"));
+            options.Add(new FrontendInstanceJavaOption("relative", Text(i18n, "instance.settings.java_options.launcher_relative", "Choose Java under launcher directory")));
         }
 
         foreach (var entry in javaEntries)
@@ -982,7 +1023,7 @@ internal static class FrontendInstanceCompositionService
 
     private static FrontendJavaPreference ReadJavaPreference(string rawValue)
     {
-        if (string.IsNullOrWhiteSpace(rawValue) || string.Equals(rawValue, "使用全局设置", StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(rawValue) || IsGlobalJavaPreferenceValue(rawValue))
         {
             return new FrontendJavaPreference(FrontendJavaPreferenceKind.Global, null);
         }
@@ -1031,12 +1072,17 @@ internal static class FrontendInstanceCompositionService
                || !string.IsNullOrWhiteSpace(manifestSummary.LabyModVersion);
     }
 
-    private static string BuildInstanceSubtitle(FrontendInstanceSelectionState selection, FrontendVersionManifestSummary manifestSummary)
+    private static string BuildInstanceSubtitle(
+        FrontendInstanceSelectionState selection,
+        FrontendVersionManifestSummary manifestSummary,
+        II18nService? i18n)
     {
         var parts = new List<string>();
         AddIfNotEmpty(parts, DeterminePrimaryLoaderLabel(manifestSummary));
-        AddIfNotEmpty(parts, $"Minecraft {selection.VanillaVersion}");
-        parts.Add(selection.IsIndie ? "独立实例" : "共用实例");
+        AddIfNotEmpty(parts, Text(i18n, "instance.install.minecraft.version", "Minecraft {version}", ("version", selection.VanillaVersion)));
+        parts.Add(selection.IsIndie
+            ? Text(i18n, "instance.common.independent", "Independent instance")
+            : Text(i18n, "instance.common.shared", "Shared instance"));
         return string.Join(" / ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
     }
 
@@ -1281,7 +1327,7 @@ internal static class FrontendInstanceCompositionService
             IconBytes: IconBytes);
     }
 
-    private static string BuildModSummary(FileInfo file, RecognizedModMetadata? metadata)
+    private static string BuildModSummary(FileInfo file, RecognizedModMetadata? metadata, II18nService? i18n)
     {
         var segments = new List<string>();
         AddIfNotEmpty(segments, metadata?.Authors);
@@ -1289,13 +1335,13 @@ internal static class FrontendInstanceCompositionService
 
         if (segments.Count == 0)
         {
-            segments.Add($"{file.LastWriteTime:yyyy/MM/dd HH:mm} • {FormatFileSize(file.Length)}");
+            segments.Add(Text(i18n, "instance.content.resource.summary.archive", "{modified_at} • {file_size}", ("modified_at", file.LastWriteTime.ToString("yyyy/MM/dd HH:mm")), ("file_size", FormatFileSize(file.Length))));
         }
 
         return string.Join(" • ", segments);
     }
 
-    private static string BuildModMeta(FileInfo file, RecognizedModMetadata? metadata)
+    private static string BuildModMeta(FileInfo file, RecognizedModMetadata? metadata, II18nService? i18n)
     {
         var segments = new List<string>();
         AddIfNotEmpty(segments, metadata?.Loader);
@@ -1304,7 +1350,7 @@ internal static class FrontendInstanceCompositionService
         if (segments.Count == 0)
         {
             var extension = GetModContainerExtension(file.Name);
-            AddIfNotEmpty(segments, string.IsNullOrWhiteSpace(extension) ? "Mod" : extension.ToUpperInvariant());
+            AddIfNotEmpty(segments, string.IsNullOrWhiteSpace(extension) ? Text(i18n, "instance.content.resource.kind.mod", "Mod") : extension.ToUpperInvariant());
         }
 
         return string.Join(" • ", segments);
@@ -1746,32 +1792,32 @@ internal static class FrontendInstanceCompositionService
         };
     }
 
-    private static string DetermineCategoryLabel(int categoryIndex)
+    private static string DetermineCategoryLabel(int categoryIndex, II18nService? i18n)
     {
         return categoryIndex switch
         {
-            1 => "隐藏实例",
-            2 => "可安装 Mod",
-            3 => "常规实例",
-            4 => "不常用实例",
-            5 => "愚人节版本",
-            _ => "自动"
+            1 => Text(i18n, "instance.overview.categories.hidden", "Hidden instance"),
+            2 => Text(i18n, "instance.overview.categories.modable", "Mod-capable"),
+            3 => Text(i18n, "instance.overview.categories.regular", "Regular instance"),
+            4 => Text(i18n, "instance.overview.categories.rare", "Rarely used instance"),
+            5 => Text(i18n, "instance.overview.categories.april_fools", "April Fools version"),
+            _ => Text(i18n, "instance.overview.categories.auto", "Auto")
         };
     }
 
-    private static string DisplayVersion(string? version)
+    private static string DisplayVersion(string? version, II18nService? i18n)
     {
-        return string.IsNullOrWhiteSpace(version) ? "未安装" : version;
+        return string.IsNullOrWhiteSpace(version) ? Text(i18n, "instance.common.not_installed", "Not installed") : version;
     }
 
-    private static string DisplayInstalled(bool installed, string? version)
+    private static string DisplayInstalled(bool installed, string? version, II18nService? i18n)
     {
         if (!installed)
         {
-            return "未安装";
+            return Text(i18n, "instance.common.not_installed", "Not installed");
         }
 
-        return string.IsNullOrWhiteSpace(version) ? "已安装" : version;
+        return string.IsNullOrWhiteSpace(version) ? Text(i18n, "instance.common.installed", "Installed") : version;
     }
 
     private static string PrefixVersion(string title, string? version)
@@ -1779,16 +1825,23 @@ internal static class FrontendInstanceCompositionService
         return string.IsNullOrWhiteSpace(version) ? string.Empty : $"{title} {version}";
     }
 
-    private static string GetRelativeParent(string rootDirectory, string path)
+    private static string GetRelativeParent(string rootDirectory, string path, II18nService? i18n)
     {
         var parent = Path.GetDirectoryName(path);
         if (string.IsNullOrWhiteSpace(parent))
         {
-            return "根目录";
+            return Text(i18n, "instance.content.resource.meta.root_directory", "Root directory");
         }
 
         var relative = Path.GetRelativePath(rootDirectory, parent);
-        return string.Equals(relative, ".", StringComparison.Ordinal) ? "根目录" : relative;
+        return string.Equals(relative, ".", StringComparison.Ordinal) ? Text(i18n, "instance.content.resource.meta.root_directory", "Root directory") : relative;
+    }
+
+    private static bool IsGlobalJavaPreferenceValue(string rawValue)
+    {
+        return string.Equals(rawValue, LegacyGlobalJavaPreferenceLabel, StringComparison.Ordinal)
+               || string.Equals(rawValue, "Follow global setting", StringComparison.Ordinal)
+               || string.Equals(rawValue, "global", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ResolveResourceDirectory(FrontendInstanceSelectionState selection, ResourceKind kind)
@@ -1931,6 +1984,41 @@ internal static class FrontendInstanceCompositionService
         }
 
         return $"{length} B";
+    }
+
+    private static string Text(
+        II18nService? i18n,
+        string key,
+        string fallback,
+        params (string Key, object? Value)[] args)
+    {
+        if (i18n is null)
+        {
+            return ApplyFallbackArgs(fallback, args);
+        }
+
+        if (args.Length == 0)
+        {
+            return i18n.T(key);
+        }
+
+        return i18n.T(
+            key,
+            args.ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value,
+                StringComparer.Ordinal));
+    }
+
+    private static string ApplyFallbackArgs(string fallback, IReadOnlyList<(string Key, object? Value)> args)
+    {
+        var result = fallback;
+        foreach (var (key, value) in args)
+        {
+            result = result.Replace("{" + key + "}", value?.ToString() ?? string.Empty, StringComparison.Ordinal);
+        }
+
+        return result;
     }
 
     private sealed record FrontendJavaEntry(

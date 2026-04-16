@@ -13,7 +13,7 @@ namespace PCL.Frontend.Avalonia.Desktop.Controls;
 internal sealed partial class PclLoading : UserControl
 {
     public static readonly StyledProperty<string> TextProperty =
-        AvaloniaProperty.Register<PclLoading, string>(nameof(Text), "加载中");
+        AvaloniaProperty.Register<PclLoading, string>(nameof(Text), "Loading");
 
     public static readonly StyledProperty<bool> ShowTextProperty =
         AvaloniaProperty.Register<PclLoading, bool>(nameof(ShowText), true);

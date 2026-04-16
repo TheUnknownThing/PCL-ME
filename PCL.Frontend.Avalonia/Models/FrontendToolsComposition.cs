@@ -40,6 +40,7 @@ internal sealed record FrontendToolsHelpEntry(
     string Keywords,
     string? Logo,
     string RawPath,
+    string SourcePath,
     bool ShowInSearch,
     bool ShowInPublic,
     bool ShowInSnapshot,

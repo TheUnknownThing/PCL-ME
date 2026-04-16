@@ -30,5 +30,6 @@
   <ItemGroup>
     <ProjectReference Include="..\PCL.Core.Backend\PCL.Core.Backend.csproj" />
     <ProjectReference Include="..\PCL.Frontend.Avalonia\PCL.Frontend.Avalonia.csproj" />
+    <ProjectReference Include="..\PCL.Tools.I18n\PCL.Tools.I18n.csproj" />
   </ItemGroup>
 </Project>

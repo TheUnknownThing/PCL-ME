@@ -146,7 +146,7 @@
           IconScale="{Binding InfoIconScale}"
           IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasInfoAction}"
-          ToolTip.Tip="详情" />
+          ToolTip.Tip="{Binding InfoToolTip}" />
       <controls:PclIconButton
           Width="25"
           Height="25"
@@ -157,7 +157,7 @@
           IconScale="{Binding WebsiteIconScale}"
           IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasWebsiteAction}"
-          ToolTip.Tip="打开主页" />
+          ToolTip.Tip="{Binding WebsiteToolTip}" />
       <controls:PclIconButton
           Width="25"
           Height="25"
@@ -168,7 +168,7 @@
           IconScale="{Binding OpenIconScale}"
           IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasOpenAction}"
-          ToolTip.Tip="打开文件位置" />
+          ToolTip.Tip="{Binding OpenToolTip}" />
       <controls:PclIconButton
           Width="25"
           Height="25"
@@ -190,7 +190,7 @@
           IconScale="{Binding DeleteIconScale}"
           IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
           IsVisible="{Binding HasDeleteAction}"
-          ToolTip.Tip="删除" />
+          ToolTip.Tip="{Binding DeleteToolTip}" />
     </StackPanel>
   </Grid>
 </UserControl>

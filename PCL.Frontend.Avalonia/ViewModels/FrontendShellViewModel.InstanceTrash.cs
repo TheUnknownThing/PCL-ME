@@ -32,7 +32,10 @@ internal sealed partial class FrontendShellViewModel
         var targetDirectory = string.IsNullOrWhiteSpace(launcherDirectory)
             ? string.Empty
             : ResolveInstanceVersionTrashDirectory(launcherDirectory);
-        OpenInstanceDirectoryTarget("实例回收区", targetDirectory, "当前未找到启动目录。");
+        OpenInstanceDirectoryTarget(
+            T("instance.trash.activities.open_directory"),
+            targetDirectory,
+            T("instance.trash.messages.launcher_missing"));
     }
 
     private async Task<InstanceDeleteOutcome?> DeleteInstanceDirectoryAsync(
@@ -43,13 +46,15 @@ internal sealed partial class FrontendShellViewModel
     {
         var isPermanentDelete = IsPermanentInstanceDeleteRequested();
         var confirmed = await _shellActionService.ConfirmAsync(
-            "实例删除确认",
+            T("instance.trash.dialogs.delete.title"),
             BuildInstanceDeleteConfirmationMessage(instanceName, isPermanentDelete, showIndieWarning),
-            isPermanentDelete ? "永久删除" : "移入回收区",
+            isPermanentDelete
+                ? T("instance.trash.dialogs.delete.confirm_permanent")
+                : T("instance.trash.dialogs.delete.confirm_recycle"),
             isDanger: showIndieWarning || isPermanentDelete);
         if (!confirmed)
         {
-            AddActivity("删除实例", "已取消删除。");
+            AddActivity(SD("instance.overview.advanced.delete"), T("instance.trash.messages.delete_canceled"));
             return null;
         }
 
@@ -80,30 +85,33 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceDeleteOutcome(instanceName, false, trashDirectory);
     }
 
-    private static string BuildInstanceDeleteConfirmationMessage(
+    private string BuildInstanceDeleteConfirmationMessage(
         string instanceName,
         bool isPermanentDelete,
         bool showIndieWarning)
     {
         var builder = new StringBuilder()
-            .Append("你确定要")
-            .Append(isPermanentDelete ? "永久" : string.Empty)
-            .Append("删除实例 ")
-            .Append(instanceName)
-            .Append(" 吗？");
+            .Append(
+                isPermanentDelete
+                    ? T(
+                        "instance.trash.messages.confirm_permanent",
+                        ("instance_name", instanceName))
+                    : T(
+                        "instance.trash.messages.confirm_recycle",
+                        ("instance_name", instanceName)));
 
         if (showIndieWarning)
         {
             builder
                 .AppendLine()
-                .Append("由于该实例开启了版本隔离，删除时该实例对应的存档、资源包、Mod 等文件也将被一并删除！");
+                .Append(T("instance.trash.messages.confirm_indie_warning"));
         }
 
         if (!isPermanentDelete)
         {
             builder
                 .AppendLine()
-                .Append("实例会先移入实例回收区，便于你手动清理或恢复。");
+                .Append(T("instance.trash.messages.confirm_recycle_note"));
         }
 
         return builder.ToString();

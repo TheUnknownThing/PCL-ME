@@ -35,7 +35,7 @@ internal sealed partial class FrontendShellViewModel
         RefreshInstanceSelectionRouteMetadata();
 
         var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
-        AddActivity("切换实例目录", activityMessage);
+        AddActivity(LT("shell.instance_select.activities.switch_directory"), activityMessage);
         QueueSelectedInstanceStateRefresh(refreshVersion, suppressInstanceSelectionSurfaceRefresh: true);
     }
 
@@ -46,7 +46,9 @@ internal sealed partial class FrontendShellViewModel
         SetOptimisticLaunchInstanceName(instanceName);
 
         var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
-        AddActivity("切换启动实例", $"已切换到 {instanceName}，正在后台刷新实例状态。");
+        AddActivity(
+            LT("shell.instance_select.activities.switch_instance"),
+            LT("shell.instance_select.activities.switch_instance_detail", ("name", instanceName)));
         QueueSelectedInstanceStateRefresh(refreshVersion);
     }
 
@@ -76,7 +78,7 @@ internal sealed partial class FrontendShellViewModel
     private void SetOptimisticLaunchInstanceName(string? instanceName, bool raiseProperties = true)
     {
         var normalizedInstanceName = string.IsNullOrWhiteSpace(instanceName)
-            ? "未选择实例"
+            ? LT("shell.instance_select.route.values.none_selected")
             : instanceName.Trim();
         var previousDisplayName = GetDisplayedLaunchInstanceName();
         _optimisticLaunchInstanceName = normalizedInstanceName;
@@ -132,7 +134,7 @@ internal sealed partial class FrontendShellViewModel
             var options = _options;
             var loadMode = ResolveInstanceCompositionLoadMode(_currentRoute);
             var refreshedState = await Task.Run(() => new DeferredInstanceSelectionRefreshState(
-                FrontendInstanceCompositionService.Compose(runtimePaths, loadMode),
+                FrontendInstanceCompositionService.Compose(runtimePaths, loadMode, _i18n),
                 FrontendLaunchCompositionService.Compose(options, runtimePaths)));
 
             if (refreshVersion != Volatile.Read(ref _instanceSelectionRefreshVersion))
@@ -189,7 +191,8 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() => AddFailureActivity("刷新实例状态失败", ex.Message));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                AddFailureActivity(LT("shell.instance_select.activities.refresh_failure"), ex.Message));
         }
     }
 
@@ -202,6 +205,7 @@ internal sealed partial class FrontendShellViewModel
             .Select(group =>
                 new InstanceSelectionGroupViewModel(
                     group.Title,
+                    group.HeaderText,
                     group.Entries.Select(entry => CloneInstanceSelectionEntry(entry, instanceName)).ToArray(),
                     group.IsExpanded))
             .ToArray();
@@ -227,6 +231,11 @@ internal sealed partial class FrontendShellViewModel
             string.Equals(entry.Title, selectedInstanceName, StringComparison.OrdinalIgnoreCase),
             entry.IsFavorite,
             entry.Icon,
+            entry.SelectText,
+            entry.FavoriteToolTip,
+            entry.OpenFolderToolTip,
+            entry.DeleteToolTip,
+            entry.SettingsToolTip,
             entry.SelectCommand,
             entry.OpenSettingsCommand,
             entry.ToggleFavoriteCommand,

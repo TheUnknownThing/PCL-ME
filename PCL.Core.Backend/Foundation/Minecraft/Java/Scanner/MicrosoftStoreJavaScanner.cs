@@ -42,7 +42,7 @@ public class MicrosoftStoreJavaScanner : IJavaScanner
                         var javaExe = Path.Combine(versionDir, "bin", "java.exe");
                         if (File.Exists(javaExe))
                         {
-                            LogWrapper.Info($"[Java] 检测到 Microsoft Store Java: {javaExe}");
+                            LogWrapper.Info($"[Java] Detected Microsoft Store Java: {javaExe}");
                             results.Add(javaExe);
                         }
                     }
@@ -51,7 +51,7 @@ public class MicrosoftStoreJavaScanner : IJavaScanner
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, "Java", "Microsoft Store Java 扫描失败");
+            LogWrapper.Error(ex, "Java", "Microsoft Store Java scan failed.");
         }
     }
 }

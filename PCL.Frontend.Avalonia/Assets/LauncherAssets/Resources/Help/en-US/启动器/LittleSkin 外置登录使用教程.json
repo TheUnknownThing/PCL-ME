@@ -1,0 +1,7 @@
+{
+  "__Author__": "PCL-ME",
+  "Title": "Set Up LittleSkin Login",
+  "Description": "Configure a LittleSkin style external authentication profile",
+  "Keywords": "littleskin authlib third-party login",
+  "Types": ["Launcher"]
+}

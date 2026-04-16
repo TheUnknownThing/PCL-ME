@@ -94,12 +94,14 @@ internal sealed record FrontendInstanceExportState(
     IReadOnlyList<FrontendInstanceExportOptionGroup> OptionGroups);
 
 internal sealed record FrontendInstanceExportOptionGroup(
+    string Key,
     string Title,
     string Description,
     bool IsChecked,
     IReadOnlyList<FrontendInstanceExportOptionEntry> Children);
 
 internal sealed record FrontendInstanceExportOptionEntry(
+    string Key,
     string Title,
     string Description,
     bool IsChecked);

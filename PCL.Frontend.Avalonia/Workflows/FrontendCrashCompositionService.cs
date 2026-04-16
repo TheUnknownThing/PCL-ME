@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using PCL.Core.App.I18n;
 using PCL.Core.Minecraft;
 using PCL.Core.Utils.OS;
 using PCL.Frontend.Avalonia.Models;
@@ -7,11 +8,12 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendCrashCompositionService
 {
-    public static CrashAvaloniaPlan Compose(FrontendRuntimePaths runtimePaths)
+    public static CrashAvaloniaPlan Compose(FrontendRuntimePaths runtimePaths, II18nService i18n)
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
+        ArgumentNullException.ThrowIfNull(i18n);
 
-        return Compose(CreateRuntimeInputs(runtimePaths));
+        return Compose(CreateRuntimeInputs(runtimePaths, i18n));
     }
 
     public static CrashAvaloniaPlan Compose(CrashAvaloniaInputs inputs)
@@ -24,7 +26,8 @@ internal static class FrontendCrashCompositionService
         var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(inputs.OutputPromptRequest with
         {
             ResultText = analysisResult.ResultText,
-            HasDirectFile = analysisResult.HasDirectFile
+            HasDirectFile = analysisResult.HasDirectFile,
+            HasModLoaderVersionMismatch = analysisResult.HasModLoaderVersionMismatch
         });
 
         return new CrashAvaloniaPlan(
@@ -32,9 +35,10 @@ internal static class FrontendCrashCompositionService
             MinecraftCrashExportWorkflowService.CreatePlan(inputs.ExportPlanRequest));
     }
 
-    public static CrashAvaloniaInputs CreateRuntimeInputs(FrontendRuntimePaths runtimePaths)
+    public static CrashAvaloniaInputs CreateRuntimeInputs(FrontendRuntimePaths runtimePaths, II18nService i18n)
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
+        ArgumentNullException.ThrowIfNull(i18n);
 
         var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var minecraftRoot = GetMinecraftRootDirectory(homeDirectory);
@@ -62,7 +66,7 @@ internal static class FrontendCrashCompositionService
 
         return new CrashAvaloniaInputs(
             new MinecraftCrashOutputPromptRequest(
-                ResultText: "Minecraft 启动或运行过程中发生错误。",
+                ResultText: i18n.T("crash.prompts.output.launch_failure.result_text"),
                 IsManualAnalysis: false,
                 HasDirectFile: true,
                 CanOpenModLoaderSettings: true),

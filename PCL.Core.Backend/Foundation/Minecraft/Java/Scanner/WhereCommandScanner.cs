@@ -29,7 +29,7 @@ public class WhereCommandScanner(IJavaRuntimeEnvironment? runtime = null, IComma
         }
         catch (Exception ex)
         {
-            LogWrapper.Error(ex, "Java", "where 命令扫描失败");
+            LogWrapper.Error(ex, "Java", "Command lookup scan failed.");
         }
     }
 }

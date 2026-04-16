@@ -10,6 +10,11 @@ namespace PCL.Core.Minecraft;
 
 public static class MinecraftCrashExportService
 {
+    private const string LauncherLogReportName = "PCL Launcher Log.txt";
+    private const string LaunchScriptReportName = "Launch Script.bat";
+    private const string RawOutputReportName = "Pre-Crash Output.txt";
+    private const string EnvironmentReportName = "Environment and Launch Info.txt";
+
     public static MinecraftCrashExportResult PrepareReportDirectory(MinecraftCrashExportRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -32,7 +37,7 @@ public static class MinecraftCrashExportService
             var content = encoding.GetString(bytes);
             content = SanitizeContent(
                 content,
-                outputName == "启动脚本.bat" ? 'F' : '*',
+                outputName == LaunchScriptReportName ? 'F' : '*',
                 request.CurrentAccessToken,
                 request.CurrentUserUuid,
                 request.UserProfilePath);
@@ -40,9 +45,9 @@ public static class MinecraftCrashExportService
             writtenFiles.Add(outputPath);
         }
 
-        var launcherLogContent = ReadReportFile(request.ReportDirectory, "PCL 启动器日志.txt");
-        var launchScriptContent = ReadReportFile(request.ReportDirectory, "启动脚本.bat");
-        var environmentReportPath = Path.Combine(request.ReportDirectory, "环境与启动信息.txt");
+        var launcherLogContent = ReadReportFile(request.ReportDirectory, LauncherLogReportName);
+        var launchScriptContent = ReadReportFile(request.ReportDirectory, LaunchScriptReportName);
+        var environmentReportPath = Path.Combine(request.ReportDirectory, EnvironmentReportName);
         var environmentReport = MinecraftCrashReportBuilder.BuildEnvironmentReport(
             new MinecraftCrashEnvironmentReportRequest(
                 request.LauncherVersionName,
@@ -71,20 +76,20 @@ public static class MinecraftCrashExportService
         var fileName = Path.GetFileName(sourcePath);
         if (PathsEqual(sourcePath, currentLauncherLogFilePath))
         {
-            return "PCL 启动器日志.txt";
+            return LauncherLogReportName;
         }
 
         return fileName switch
         {
-            "LatestLaunch.bat" => "启动脚本.bat",
-            "RawOutput.log" => "游戏崩溃前的输出.txt",
+            "LatestLaunch.bat" => LaunchScriptReportName,
+            "RawOutput.log" => RawOutputReportName,
             _ => fileName
         };
     }
 
     private static Encoding GetEncoding(string outputName, byte[] bytes)
     {
-        if (outputName is "游戏崩溃前的输出.txt" or "PCL 启动器日志.txt")
+        if (outputName is RawOutputReportName or LauncherLogReportName)
         {
             return Encoding.UTF8;
         }

@@ -45,7 +45,7 @@
                 Height="35"
                 Command="{Binding RefreshHomepageCommand}"
                 IsVisible="{Binding ShowLaunchHomepageRefreshAction}"
-                Text="刷新主页" />
+                Text="{Binding LaunchHomepageRefreshButtonText}" />
           </StackPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>

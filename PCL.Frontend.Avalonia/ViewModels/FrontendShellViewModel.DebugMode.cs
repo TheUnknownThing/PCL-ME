@@ -85,8 +85,8 @@ internal sealed partial class FrontendShellViewModel
 
         AppendLaunchDebugLine("实例", _launchComposition.InstanceName);
         AppendLaunchDebugLine("实例目录", _launchComposition.InstancePath);
-        AppendLaunchDebugLine("登录方式", _launchComposition.SelectedProfile.AuthLabel);
-        AppendLaunchDebugLine("账号", _launchComposition.SelectedProfile.IdentityLabel);
+        AppendLaunchDebugLine("登录方式", LaunchAuthLabel);
+        AppendLaunchDebugLine("账号", GetLaunchProfileIdentityLabel());
         AppendLaunchDebugLine("Java", _launchComposition.SelectedJavaRuntime?.DisplayName);
         AppendLaunchDebugLine("Java 路径", _launchComposition.SelectedJavaRuntime?.ExecutablePath);
         AppendLaunchDebugLine("工作目录", _launchComposition.SessionStartPlan.ProcessShellPlan.WorkingDirectory);

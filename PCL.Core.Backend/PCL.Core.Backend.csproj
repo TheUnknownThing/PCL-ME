@@ -36,10 +36,12 @@
              Exclude="Foundation/bin/**;Foundation/obj/**;Foundation/publish/**;Foundation/**/*.g.cs"
              Link="Foundation/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="App/ConfigEnums.cs" />
+    <Compile Include="App/I18n/I18nSettingsManager.cs" />
+    <Compile Include="App/I18n/I18nText.cs" />
     <Compile Include="App/Essentials/LauncherAnnouncementService.cs" />
     <Compile Include="App/Essentials/LauncherDataProtectionService.cs" />
     <Compile Include="App/Essentials/LauncherFrontendNavigationService.cs" />
-    <Compile Include="App/Essentials/LauncherFrontendPageContentService.cs" />
+    <Compile Include="App/Essentials/LauncherFrontendPageContentContracts.cs" />
     <Compile Include="App/Essentials/LauncherFrontendPromptService.cs" />
     <Compile Include="App/Essentials/LauncherFrontendRuntimeStateService.cs" />
     <Compile Include="App/Essentials/LauncherIdentityResolutionService.cs" />

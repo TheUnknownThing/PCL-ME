@@ -1,0 +1,23 @@
+<local:MyCard Title="Overview" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Replacement tokens are placeholders that the launcher resolves at runtime. They are useful when one homepage or help template should display different values depending on the current environment or selection." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Example" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="A token can insert data such as the current launcher path, selected instance, or similar runtime-specific content into a line of text without editing the article for every user." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="More details" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <local:MyListItem Margin="-5,0,-5,8"
+                      EventType="打开网页"
+                      EventData="https://github.com/PCL-Community/PCL-ME"
+                      Title="Project repository"
+                      Info="Use the repository and related documentation as the authoritative reference for supported replacement markers." />
+  </StackPanel>
+</local:MyCard>

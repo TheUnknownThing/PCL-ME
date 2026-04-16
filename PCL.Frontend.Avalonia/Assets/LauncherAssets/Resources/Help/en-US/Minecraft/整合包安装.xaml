@@ -1,0 +1,20 @@
+<local:MyCard Title="Get the modpack" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Obtain the pack from a trusted source. Common formats include zip archives and .mrpack files. Always keep the original archive until the install succeeds so you can retry if needed." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Install an existing archive" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="Use the launcher import or install flow and point it at the downloaded archive. Let the launcher unpack the pack into a new instance instead of extracting it into an old instance by hand." />
+  </StackPanel>
+</local:MyCard>
+
+<local:MyCard Title="Download packs from supported sources" Margin="0,0,0,15">
+  <StackPanel Margin="25,40,23,15">
+    <TextBlock Margin="0,0,0,4" LineHeight="17" TextWrapping="Wrap"
+               Text="When the pack is available on CurseForge or Modrinth, search for it in the resource pages and start installation directly from the detail view. That route usually preserves dependency metadata better than a manual copy." />
+  </StackPanel>
+</local:MyCard>

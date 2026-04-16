@@ -86,7 +86,7 @@ internal static class FrontendCommunityProjectService
         {
             "Modrinth" => ResolveModrinthClipboardProjectLink(link, communitySourcePreference),
             "CurseForge" => ResolveCurseForgeClipboardProjectLink(link, communitySourcePreference),
-            _ => throw new InvalidOperationException($"不支持的社区来源：{link.Source}")
+            _ => throw new InvalidOperationException($"Unsupported community source: {link.Source}")
         };
     }
 
@@ -141,7 +141,7 @@ internal static class FrontendCommunityProjectService
             }
             catch (Exception ex)
             {
-                errors.Add($"Modrinth 收藏元数据加载失败：{ex.Message}");
+                errors.Add($"Failed to load Modrinth favorite metadata: {ex.Message}");
             }
         }
 
@@ -157,7 +157,7 @@ internal static class FrontendCommunityProjectService
             }
             catch (Exception ex)
             {
-                errors.Add($"CurseForge 收藏元数据加载失败：{ex.Message}");
+                errors.Add($"Failed to load CurseForge favorite metadata: {ex.Message}");
             }
         }
 
@@ -174,22 +174,22 @@ internal static class FrontendCommunityProjectService
         {
             return new FrontendCommunityProjectState(
                 string.Empty,
-                "未选择工程",
-                "先从收藏夹或资源条目进入，才能查看对应工程详情。",
+                "No project selected",
+                "Open a project from favorites or a resource entry to inspect its details.",
                 string.Empty,
-                "未指定来源",
+                "Unspecified source",
                 null,
                 null,
                 string.Empty,
-                "等待选择",
-                "尚未加载",
+                "waiting",
+                "unknown",
                 0,
                 0,
-                "未提供兼容信息",
-                "未提供标签信息",
+                BuildCompatibilitySummary([], []),
+                string.Empty,
                 [],
                 [],
-                "当前详情页没有携带工程标识。",
+                "The current detail route does not include a project identifier.",
                 true);
         }
 
@@ -210,22 +210,22 @@ internal static class FrontendCommunityProjectService
         {
             state = new FrontendCommunityProjectState(
                 normalizedId,
-                $"项目 {normalizedId}",
-                "无法从实时来源加载该工程。",
+                $"Project {normalizedId}",
+                "Unable to load this project from a live source.",
                 string.Empty,
                 IsCurseForgeId(normalizedId) ? "CurseForge" : "Modrinth",
                 null,
                 null,
                 string.Empty,
-                "加载失败",
-                "未知",
+                "load_failed",
+                "unknown",
                 0,
                 0,
-                "未提供兼容信息",
-                "未提供标签信息",
+                BuildCompatibilitySummary([], []),
+                string.Empty,
                 [],
                 [],
-                ex.Message,
+                BuildToken("warning_load_failed", ex.Message),
                 true);
         }
 
@@ -337,7 +337,7 @@ internal static class FrontendCommunityProjectService
         return new FrontendCommunityProjectState(
             projectId,
             title,
-            string.IsNullOrWhiteSpace(summary) ? "该项目没有提供额外摘要。" : summary,
+            string.IsNullOrWhiteSpace(summary) ? "This project does not provide additional summary information." : summary,
             body,
             "Modrinth",
             iconUrl,
@@ -368,7 +368,7 @@ internal static class FrontendCommunityProjectService
             communitySourcePreference,
             officialRequiresApiKey: true,
             postBody: null);
-        var data = project["data"]?.AsObject() ?? throw new InvalidOperationException("CurseForge 返回了空的工程数据。");
+        var data = project["data"]?.AsObject() ?? throw new InvalidOperationException("CurseForge returned an empty project payload.");
         var website = GetString(data["links"] as JsonObject, "websiteUrl")
                       ?? BuildCurseForgeWebsite(data);
         var logo = data["logo"] as JsonObject;
@@ -420,10 +420,10 @@ internal static class FrontendCommunityProjectService
 
         return new FrontendCommunityProjectState(
             projectId,
-            GetString(data, "name") ?? $"项目 {projectId}",
+            GetString(data, "name") ?? $"Project {projectId}",
             NormalizeWhitespace(GetString(data, "summary")) is { Length: > 0 } summary
                 ? summary
-                : "该项目没有提供额外摘要。",
+                : "This project does not provide additional summary information.",
             string.Empty,
             "CurseForge",
             iconUrl,
@@ -453,7 +453,7 @@ internal static class FrontendCommunityProjectService
             communitySourcePreference,
             officialRequiresApiKey: false,
             postBody: null);
-        var projectId = GetString(project, "id") ?? throw new InvalidOperationException("Modrinth 工程缺少项目 ID。");
+        var projectId = GetString(project, "id") ?? throw new InvalidOperationException("Modrinth project is missing a project ID.");
         var title = GetString(project, "title") ?? projectId;
         var route = TryMapModrinthProjectTypeToRoute(GetString(project, "project_type"), out var resolvedRoute)
             ? resolvedRoute
@@ -480,11 +480,11 @@ internal static class FrontendCommunityProjectService
             .OrderByDescending(candidate => MapCurseForgeClassToRoute(GetInt(candidate, "classId")) == link.Route)
             .ThenByDescending(candidate => GetInt(candidate, "downloadCount"))
             .FirstOrDefault()
-            ?? throw new InvalidOperationException("CurseForge 没有返回匹配的工程。");
+            ?? throw new InvalidOperationException("CurseForge did not return a matching project.");
         var projectId = GetInt(project, "id");
         if (projectId <= 0)
         {
-            throw new InvalidOperationException("CurseForge 工程缺少项目 ID。");
+            throw new InvalidOperationException("CurseForge project is missing a project ID.");
         }
 
         var title = GetString(project, "name") ?? projectId.ToString();
@@ -504,7 +504,7 @@ internal static class FrontendCommunityProjectService
         return new FrontendCommunityProjectSummary(
             projectId,
             title,
-            NormalizeWhitespace(GetString(project, "description")) ?? "该项目没有提供摘要。",
+            NormalizeWhitespace(GetString(project, "description")) ?? "This project does not provide a summary.",
             "Modrinth",
             null,
             TranslateProjectType(GetString(project, "project_type")),
@@ -534,7 +534,7 @@ internal static class FrontendCommunityProjectService
         return new FrontendCommunityProjectSummary(
             projectId.ToString(),
             title,
-            NormalizeWhitespace(GetString(project, "summary")) ?? "该项目没有提供摘要。",
+            NormalizeWhitespace(GetString(project, "summary")) ?? "This project does not provide a summary.",
             "CurseForge",
             authors.Length == 0 ? null : string.Join(" / ", authors),
             TranslateCurseForgeClass(GetInt(project, "classId")),
@@ -573,15 +573,17 @@ internal static class FrontendCommunityProjectService
         var target = GetString(file, "url") ?? website;
         var downloads = GetInt(version, "downloads");
         var publishedAt = ParseDateTimeOffset(version["date_published"]);
-        var meta = $"发布 {FormatDateLabel(publishedAt)}"
-                   + (downloads > 0 ? $" • {FormatCompactCount(downloads)} 下载" : string.Empty);
+        var meta = BuildToken(
+            "release_meta",
+            FormatDateLabel(publishedAt),
+            downloads > 0 ? downloads.ToString() : string.Empty);
         var dependencies = BuildModrinthDependencyEntries(version["dependencies"] as JsonArray, dependencyLookup);
 
         return new FrontendCommunityProjectReleaseEntry(
             title,
             info,
             meta,
-            string.IsNullOrWhiteSpace(target) ? "查看详情" : "打开下载",
+            string.IsNullOrWhiteSpace(target) ? "view_details" : "open_download",
             target,
             GetString(file, "filename"),
             !string.IsNullOrWhiteSpace(GetString(file, "url")),
@@ -626,14 +628,16 @@ internal static class FrontendCommunityProjectService
         {
             downloadUrl = BuildCurseForgeMediaUrl(fileId, fileName);
         }
-        var meta = $"发布 {FormatDateLabel(publishedAt)}"
-                   + (downloads > 0 ? $" • {FormatCompactCount(downloads)} 下载" : string.Empty);
+        var meta = BuildToken(
+            "release_meta",
+            FormatDateLabel(publishedAt),
+            downloads > 0 ? downloads.ToString() : string.Empty);
         var dependencies = BuildCurseForgeDependencyEntries(file["dependencies"] as JsonArray, dependencyLookup);
         return new FrontendCommunityProjectReleaseEntry(
             title,
             info,
             meta,
-            string.IsNullOrWhiteSpace(downloadUrl) ? (string.IsNullOrWhiteSpace(website) ? "查看详情" : "打开项目页") : "打开下载",
+            string.IsNullOrWhiteSpace(downloadUrl) ? (string.IsNullOrWhiteSpace(website) ? "view_details" : "open_project_page") : "open_download",
             downloadUrl ?? website,
             fileName,
             !string.IsNullOrWhiteSpace(downloadUrl),
@@ -813,18 +817,11 @@ internal static class FrontendCommunityProjectService
 
     private static string BuildDependencyMeta(FrontendCommunityProjectSummary summary)
     {
-        var parts = new List<string> { summary.Source };
-        if (!string.IsNullOrWhiteSpace(summary.ProjectType))
-        {
-            parts.Add(summary.ProjectType!);
-        }
-
-        if (!string.IsNullOrWhiteSpace(summary.Author))
-        {
-            parts.Add(summary.Author!);
-        }
-
-        return string.Join(" • ", parts);
+        return BuildToken(
+            "dependency_meta",
+            summary.Source,
+            summary.ProjectType ?? string.Empty,
+            summary.Author ?? string.Empty);
     }
 
     private static string BuildCurseForgeMediaUrl(int fileId, string fileName)
@@ -855,11 +852,11 @@ internal static class FrontendCommunityProjectService
     private static IReadOnlyList<FrontendDownloadCatalogEntry> BuildModrinthLinkEntries(JsonObject project, string? website)
     {
         var entries = new List<FrontendDownloadCatalogEntry>();
-        AddLinkEntry(entries, "项目主页", website, "打开项目主页");
-        AddLinkEntry(entries, "问题反馈", GetString(project, "issues_url"), "打开 Issues");
-        AddLinkEntry(entries, "源码仓库", GetString(project, "source_url"), "打开源码");
-        AddLinkEntry(entries, "Wiki", GetString(project, "wiki_url"), "打开 Wiki");
-        AddLinkEntry(entries, "Discord", GetString(project, "discord_url"), "打开社区");
+        AddLinkEntry(entries, "homepage", website, "open_homepage");
+        AddLinkEntry(entries, "issues", GetString(project, "issues_url"), "open_issues");
+        AddLinkEntry(entries, "source", GetString(project, "source_url"), "open_source");
+        AddLinkEntry(entries, "wiki", GetString(project, "wiki_url"), "open_wiki");
+        AddLinkEntry(entries, "community", GetString(project, "discord_url"), "open_community");
 
         foreach (var donation in (project["donation_urls"] as JsonArray ?? [])
                      .Select(node => node as JsonObject)
@@ -867,9 +864,9 @@ internal static class FrontendCommunityProjectService
         {
             AddLinkEntry(
                 entries,
-                $"支持作者 · {GetString(donation, "platform") ?? "赞助"}",
+                BuildToken("support_author", GetString(donation, "platform") ?? "donation"),
                 GetString(donation, "url"),
-                "打开链接");
+                "open_link");
         }
 
         return entries;
@@ -879,10 +876,10 @@ internal static class FrontendCommunityProjectService
     {
         var links = project["links"] as JsonObject;
         var entries = new List<FrontendDownloadCatalogEntry>();
-        AddLinkEntry(entries, "项目主页", website, "打开项目主页");
-        AddLinkEntry(entries, "问题反馈", GetString(links, "issuesUrl"), "打开 Issues");
-        AddLinkEntry(entries, "源码仓库", GetString(links, "sourceUrl"), "打开源码");
-        AddLinkEntry(entries, "Wiki", GetString(links, "wikiUrl"), "打开 Wiki");
+        AddLinkEntry(entries, "homepage", website, "open_homepage");
+        AddLinkEntry(entries, "issues", GetString(links, "issuesUrl"), "open_issues");
+        AddLinkEntry(entries, "source", GetString(links, "sourceUrl"), "open_source");
+        AddLinkEntry(entries, "wiki", GetString(links, "wikiUrl"), "open_wiki");
         return entries;
     }
 
@@ -895,7 +892,7 @@ internal static class FrontendCommunityProjectService
         string? postBody)
     {
         return ReadJsonNode(sourceName, officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey, postBody)?.AsArray()
-               ?? throw new InvalidOperationException($"{sourceName} 返回了无效的 JSON 数组。");
+               ?? throw new InvalidOperationException($"{sourceName} returned an invalid JSON array.");
     }
 
     private static JsonObject ReadJsonObject(
@@ -907,7 +904,7 @@ internal static class FrontendCommunityProjectService
         string? postBody)
     {
         return ReadJsonNode(sourceName, officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey, postBody)?.AsObject()
-               ?? throw new InvalidOperationException($"{sourceName} 返回了无效的 JSON 对象。");
+               ?? throw new InvalidOperationException($"{sourceName} returned an invalid JSON object.");
     }
 
     private static JsonNode? ReadJsonNode(
@@ -948,7 +945,7 @@ internal static class FrontendCommunityProjectService
             }
         }
 
-        throw new InvalidOperationException(string.Join("；", errors.Distinct(StringComparer.Ordinal)));
+        throw new InvalidOperationException(string.Join("; ", errors.Distinct(StringComparer.Ordinal)));
     }
 
     private static IReadOnlyList<RequestCandidate> BuildCandidateUrls(
@@ -1052,6 +1049,13 @@ internal static class FrontendCommunityProjectService
             target));
     }
 
+    private static string BuildToken(string prefix, params string?[] values)
+    {
+        return string.Join(
+            "|",
+            new[] { prefix }.Concat(values.Select(value => Uri.EscapeDataString(value ?? string.Empty))));
+    }
+
     private static bool IsCurseForgeId(string projectId)
     {
         return int.TryParse(projectId, out _);
@@ -1077,20 +1081,16 @@ internal static class FrontendCommunityProjectService
         IReadOnlyList<string> versions,
         IReadOnlyList<string> loaders)
     {
-        var versionLabel = versions.Count == 0
-            ? "未提供 Minecraft 版本列表"
-            : $"Minecraft {string.Join(" / ", versions.Take(6))}{(versions.Count > 6 ? " 等" : string.Empty)}";
-        var loaderLabel = loaders.Count == 0
-            ? "未提供加载器信息"
-            : $"加载器：{string.Join(" / ", loaders)}";
-        return $"{versionLabel} • {loaderLabel}";
+        return BuildToken(
+            "compatibility",
+            string.Join(",", versions.Take(6)),
+            versions.Count > 6 ? "1" : string.Empty,
+            string.Join(",", loaders));
     }
 
     private static string BuildCategorySummary(IReadOnlyList<string> categories)
     {
-        return categories.Count == 0
-            ? "未提供标签信息"
-            : string.Join(" / ", categories.Take(10));
+        return string.Join("/", categories.Take(10));
     }
 
     private static string BuildReleaseInfo(
@@ -1102,18 +1102,11 @@ internal static class FrontendCommunityProjectService
             .Where(version => !string.IsNullOrWhiteSpace(version))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        var parts = new List<string>();
-        if (normalizedVersions.Length > 0)
-        {
-            parts.Add($"Minecraft {string.Join(" / ", normalizedVersions.Take(4))}{(normalizedVersions.Length > 4 ? " 等" : string.Empty)}");
-        }
-
-        if (loaders.Count > 0)
-        {
-            parts.Add(string.Join(" / ", loaders.Take(4)));
-        }
-
-        return parts.Count == 0 ? "未提供版本信息" : string.Join(" • ", parts);
+        return BuildToken(
+            "release_info",
+            string.Join(",", normalizedVersions.Take(4)),
+            normalizedVersions.Length > 4 ? "1" : string.Empty,
+            string.Join(",", loaders.Take(4)));
     }
 
     private static string? CleanProjectDescription(string? rawValue)
@@ -1161,15 +1154,15 @@ internal static class FrontendCommunityProjectService
 
     private static string FormatDateLabel(DateTimeOffset? value)
     {
-        return value?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "未知";
+        return value?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "unknown";
     }
 
     private static string FormatCompactCount(int value)
     {
         return value switch
         {
-            >= 100_000_000 => $"{value / 100_000_000d:0.#}亿",
-            >= 10_000 => $"{value / 10_000d:0.#}万",
+            >= 100_000_000 => $"{value / 100_000_000d:0.#}\u4EBF",
+            >= 10_000 => $"{value / 10_000d:0.#}\u4E07",
             _ => value.ToString()
         };
     }
@@ -1252,13 +1245,13 @@ internal static class FrontendCommunityProjectService
 
     private static string TranslateProjectType(string? projectType)
     {
-        return projectType switch
+        return projectType?.Trim().ToLowerInvariant() switch
         {
-            "mod" => "Mod",
-            "modpack" => "整合包",
-            "resourcepack" => "资源包",
-            "shader" => "光影包",
-            "datapack" => "数据包",
+            "mod" => "mod",
+            "modpack" => "modpack",
+            "resourcepack" => "resource_pack",
+            "shader" => "shader",
+            "datapack" => "data_pack",
             _ => string.Empty
         };
     }
@@ -1267,12 +1260,12 @@ internal static class FrontendCommunityProjectService
     {
         return classId switch
         {
-            6 => "Mod",
-            12 => "资源包",
-            17 => "世界",
-            4471 => "整合包",
-            6552 => "光影包",
-            6945 => "数据包",
+            6 => "mod",
+            12 => "resource_pack",
+            17 => "world",
+            4471 => "modpack",
+            6552 => "shader",
+            6945 => "data_pack",
             _ => string.Empty
         };
     }
@@ -1358,13 +1351,13 @@ internal static class FrontendCommunityProjectService
 
     private static string TranslateProjectStatus(string? status)
     {
-        return status switch
+        return status?.Trim().ToLowerInvariant() switch
         {
-            "approved" or "listed" => "已发布",
-            "unlisted" => "未列出",
-            "archived" => "已归档",
-            "draft" => "草稿",
-            _ => string.IsNullOrWhiteSpace(status) ? "未知" : status
+            "approved" or "listed" => "published",
+            "unlisted" => "unlisted",
+            "archived" => "archived",
+            "draft" => "draft",
+            _ => string.IsNullOrWhiteSpace(status) ? "unknown" : status.Trim()
         };
     }
 
@@ -1372,9 +1365,9 @@ internal static class FrontendCommunityProjectService
     {
         return status switch
         {
-            4 => "已发布",
-            5 => "已下架",
-            _ => status == 0 ? "未知" : $"状态 {status}"
+            4 => "published",
+            5 => "removed",
+            _ => status == 0 ? "unknown" : $"status_{status}"
         };
     }
 
@@ -1383,32 +1376,32 @@ internal static class FrontendCommunityProjectService
         return categories
             .Select(category => category switch
             {
-                "technology" => "科技",
-                "magic" => "魔法",
-                "adventure" => "冒险",
-                "utility" => "实用",
-                "optimization" => "性能优化",
-                "vanilla-like" => "原版风",
-                "realistic" => "写实风",
-                "worldgen" => "世界元素",
-                "food" => "食物/烹饪",
-                "game-mechanics" => "游戏机制",
-                "transportation" => "运输",
-                "storage" => "仓储",
-                "decoration" => "装饰",
-                "mobs" => "生物",
-                "equipment" => "装备",
-                "social" => "服务器",
-                "library" => "支持库",
-                "multiplayer" => "多人",
-                "challenging" => "硬核",
-                "combat" => "战斗",
-                "quests" => "任务",
-                "kitchen-sink" => "水槽包",
-                "lightweight" => "轻量",
-                "simplistic" => "简洁",
-                "tweaks" => "改良",
-                "datapack" => "数据包",
+                "technology" => "technology",
+                "magic" => "magic",
+                "adventure" => "adventure",
+                "utility" => "utility",
+                "optimization" => "performance",
+                "vanilla-like" => "vanilla_style",
+                "realistic" => "realistic",
+                "worldgen" => "worldgen",
+                "food" => "food_cooking",
+                "game-mechanics" => "game_mechanics",
+                "transportation" => "transportation",
+                "storage" => "storage",
+                "decoration" => "decoration",
+                "mobs" => "mobs",
+                "equipment" => "equipment_tools",
+                "social" => "server",
+                "library" => "library",
+                "multiplayer" => "multiplayer",
+                "challenging" => "hardcore",
+                "combat" => "combat",
+                "quests" => "quests",
+                "kitchen-sink" => "kitchen_sink",
+                "lightweight" => "lightweight",
+                "simplistic" => "simple",
+                "tweaks" => "tweaks",
+                "datapack" => "data_pack",
                 "iris" => "Iris",
                 "optifine" => "OptiFine",
                 "quilt" => "Quilt",
@@ -1426,46 +1419,46 @@ internal static class FrontendCommunityProjectService
     {
         return categoryId switch
         {
-            406 => "世界元素",
-            407 => "生物群系",
-            410 => "维度",
-            408 => "矿物/资源",
-            409 => "天然结构",
-            412 => "科技",
-            415 => "管道/物流",
-            4843 => "自动化",
-            417 => "能源",
-            4558 => "红石",
-            436 => "食物/烹饪",
-            416 => "农业",
-            414 => "运输",
-            420 => "仓储",
-            419 => "魔法",
-            422 => "冒险",
-            424 => "装饰",
-            411 => "生物",
-            434 => "装备",
-            6814 => "性能优化",
-            423 => "信息显示",
-            435 => "服务器",
-            5191 => "改良",
-            421 => "支持库",
-            4484 => "多人",
-            4479 => "硬核",
-            4483 => "战斗",
-            4478 => "任务",
-            4472 => "科技",
-            4473 => "魔法",
-            4475 => "冒险",
-            4476 => "探索",
-            4477 => "小型整合包",
-            5193 => "数据包",
+            406 => "worldgen",
+            407 => "biomes",
+            410 => "dimensions",
+            408 => "ores_resources",
+            409 => "structures",
+            412 => "technology",
+            415 => "pipes_logistics",
+            4843 => "automation",
+            417 => "energy",
+            4558 => "redstone",
+            436 => "food_cooking",
+            416 => "farming",
+            414 => "transportation",
+            420 => "storage",
+            419 => "magic",
+            422 => "adventure",
+            424 => "decoration",
+            411 => "mobs",
+            434 => "equipment_tools",
+            6814 => "performance",
+            423 => "information",
+            435 => "server",
+            5191 => "tweaks",
+            421 => "library",
+            4484 => "multiplayer",
+            4479 => "hardcore",
+            4483 => "combat",
+            4478 => "quests",
+            4472 => "technology",
+            4473 => "magic",
+            4475 => "adventure",
+            4476 => "exploration",
+            4477 => "small_modpack",
+            5193 => "data_pack",
             4546 => "16x",
             4547 => "32x",
             4548 => "64x+",
-            5314 => "写实风",
-            5315 => "卡通风",
-            5317 => "幻想风",
+            5314 => "realistic",
+            5315 => "cartoon",
+            5317 => "fantasy",
             6553 => "Iris",
             6554 => "OptiFine",
             _ => string.Empty

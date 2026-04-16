@@ -42,7 +42,7 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="日志操作" ContentMargin="25,40,20,20">
+      <controls:PclCard Header="{Binding SetupText.Log.ActionsCardHeader}" ContentMargin="25,40,20,20">
         <controls:PclCard.CardContent>
           <WrapPanel>
             <controls:PclButton
@@ -51,30 +51,30 @@
                 Margin="0,0,15,0"
                 Command="{Binding ExportLogCommand}"
                 ColorType="Highlight"
-                Text="导出日志" />
+                Text="{Binding SetupText.Log.ExportLogButton}" />
             <controls:PclButton
                 Width="120"
                 Height="35"
                 Margin="0,0,15,0"
                 Command="{Binding ExportAllLogsCommand}"
-                Text="导出全部日志" />
+                Text="{Binding SetupText.Log.ExportAllLogsButton}" />
             <controls:PclButton
                 Width="120"
                 Height="35"
                 Margin="0,0,15,0"
                 Command="{Binding OpenLogDirectoryCommand}"
-                Text="打开日志目录" />
+                Text="{Binding SetupText.Log.OpenDirectoryButton}" />
             <controls:PclButton
                 Width="120"
                 Height="35"
                 Command="{Binding CleanLogsCommand}"
                 ColorType="Red"
-                Text="清理历史日志" />
+                Text="{Binding SetupText.Log.CleanHistoryButton}" />
           </WrapPanel>
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <controls:PclCard Header="所有日志" ContentMargin="20,36,18,18">
+      <controls:PclCard Header="{Binding SetupText.Log.AllLogsCardHeader}" ContentMargin="20,36,18,18">
         <controls:PclCard.CardContent>
           <ItemsControl ItemsSource="{Binding LogEntries}">
             <ItemsControl.ItemTemplate>

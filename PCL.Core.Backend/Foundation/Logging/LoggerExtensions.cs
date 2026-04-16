@@ -7,28 +7,28 @@ namespace PCL.Core.Logging;
 public static class LoggerExtensions
 {
     /// <summary>
-    /// 创建 ILogger 实例
+    /// Creates an ILogger instance.
     /// </summary>
-    /// <param name="logger">现有的 Logger 实例</param>
-    /// <param name="categoryName">日志类别名称</param>
-    /// <returns>ILogger 实例</returns>
+    /// <param name="logger">The existing Logger instance.</param>
+    /// <param name="categoryName">The log category name.</param>
+    /// <returns>An ILogger instance.</returns>
     public static ILogger CreateLogger(this Logger logger, string categoryName)
     {
         return new LoggerAdapter(logger, categoryName);
     }
 
     /// <summary>
-    /// 创建 ILogger 工厂
+    /// Creates an ILogger factory.
     /// </summary>
-    /// <param name="logger">现有的 Logger 实例</param>
-    /// <returns>ILoggerFactory 实例</returns>
+    /// <param name="logger">The existing Logger instance.</param>
+    /// <returns>An ILoggerFactory instance.</returns>
     public static ILoggerFactory CreateLoggerFactory(this Logger logger)
     {
         return new LoggerFactoryAdapter(logger);
     }
 
     /// <summary>
-    /// 使用结构化日志记录的扩展方法
+    /// Extension methods for structured logging.
     /// </summary>
     public static void LogInformation<T0>(this ILogger logger, string message, T0 arg0)
     {
@@ -66,7 +66,7 @@ public static class LoggerExtensions
     }
 
     /// <summary>
-    /// 条件日志记录扩展方法
+    /// Conditional logging extension methods.
     /// </summary>
     public static void LogIf(this ILogger logger, bool condition, Microsoft.Extensions.Logging.LogLevel level, string message)
     {
@@ -85,11 +85,11 @@ public static class LoggerExtensions
     }
 
     /// <summary>
-    /// 性能计时日志记录
+    /// Performance timing logging.
     /// </summary>
     public static IDisposable LogPerformance(this ILogger logger, string operationName)
     {
-        logger.LogInformation("开始执行: {OperationName}", operationName);
+        logger.LogInformation("Starting operation: {OperationName}", operationName);
         
         return new PerformanceLoggerDisposable(logger, operationName);
     }
@@ -101,7 +101,7 @@ public static class LoggerExtensions
         public void Dispose()
         {
             var elapsed = Stopwatch.GetElapsedTime(_startTime);
-            logger.LogInformation("完成执行: {OperationName}, 耗时: {ElapsedMs}ms", operationName, elapsed.TotalMilliseconds);
+            logger.LogInformation("Completed operation: {OperationName}, elapsed: {ElapsedMs}ms", operationName, elapsed.TotalMilliseconds);
         }
     }
 }
