@@ -197,7 +197,7 @@ shell:
       active_summary: 当前已显示该工具页面。
       pinned_summary: 固定显示的工具页面入口。
     status:
-      line: '即时命令：{command} | 启动画面：{splash} | 导航深度：{depth}'
+      line: "即时命令：{command} | 启动画面：{splash} | 导航深度：{depth}"
       splash_on: 开启
       splash_off: 关闭
       commands:
@@ -206,7 +206,7 @@ shell:
         optimize_memory: 优化内存
         invalid: 无效
     surface_meta:
-      line: '{kind} 页面 • {sidebar_group} • {navigation_state}'
+      line: "{kind} 页面 • {sidebar_group} • {navigation_state}"
       no_sidebar_group: 无侧边栏分组
       back_available: 可返回
       top_level_route: 顶级路由
@@ -283,18 +283,18 @@ shell:
         title: 崩溃
         summary: 崩溃恢复操作与诊断信息。
     inbox:
-      title: '{lane} 提示'
-      empty: '{lane} 分组当前没有待处理提示。'
+      title: "{lane} 提示"
+      empty: "{lane} 分组当前没有待处理提示。"
     activities:
       failure_default: 操作失败。
       switch_lane:
         title: 已切换提示分组
-        body: '{lane} 当前有 {count} 条待处理提示。'
+        body: "{lane} 当前有 {count} 条待处理提示。"
       action:
-        title: '提示操作：{label}'
+        title: "提示操作：{label}"
       closed:
         title: 提示已关闭
-        body: '{prompt_id} 已从 {lane} 分组移除。'
+        body: "{prompt_id} 已从 {lane} 分组移除。"
       reject_consent:
         title: 已拒绝协议授权
         body: 当前提示未写入同意状态。
@@ -316,7 +316,7 @@ shell:
         title: 启动前检查未通过
       pending_launch_prompts:
         title: 启动前提示待处理
-        body: '{instance} 还有 {count} 个提示需要确认。'
+        body: "{instance} 还有 {count} 个提示需要确认。"
       accept_consent:
         title: 已同意协议授权
         body: 协议授权状态已写入共享配置。
@@ -333,7 +333,7 @@ shell:
       persist_setting:
         title: 已保存提示设置
         body_non_ascii_disabled: 已关闭非 ASCII 游戏路径提示。
-        body_value: '已保存设置：{value}'
+        body_value: "已保存设置：{value}"
       persist_java_override_failed:
         title: 无法强制启动
         body: 当前没有可写入设置的实例。
@@ -356,10 +356,10 @@ shell:
         java_settings: 提示已在准备运行时后跳转到 Java 设置页。
       open_log:
         title: 查看日志
-        body: '已生成崩溃日志，可在实时日志页点击打开：{path}'
+        body: "已生成崩溃日志，可在实时日志页点击打开：{path}"
       crash_report_exported:
         title: 崩溃报告已导出
-        body: '{path} • 已归档 {count} 个文件。'
+        body: "{path} • 已归档 {count} 个文件。"
       java_runtime_prepare_failed:
         title: Java 运行时准备失败
         body_missing_plan: 当前启动状态没有可执行的 Java 下载计划。
@@ -368,10 +368,10 @@ shell:
         body: 正在后台下载并注册 Java 运行时。
       java_runtime_ready:
         title: Java 运行时已准备
-        body: '{path} • 下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。'
+        body: "{path} • 下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。"
       game_process_ended:
         title: 游戏进程已结束
-        body: '{instance} • ExitCode {exit_code}'
+        body: "{instance} • ExitCode {exit_code}"
       monitor_exception:
         title: 会话监控异常
       crash_prompt_shown:
@@ -387,12 +387,12 @@ shell:
       continue_flow: 继续流程
       accept_consent: 同意协议授权
       reject_consent: 拒绝协议授权
-      open_url: '打开链接（{value}）'
+      open_url: "打开链接（{value}）"
       exit_launcher: 退出启动器
       abort_launch: 中止启动
-      append_launch_argument: '追加启动参数（{value}）'
-      persist_setting: '保存设置（{value}）'
-      download_java_runtime: '下载 Java（{value}）'
+      append_launch_argument: "追加启动参数（{value}）"
+      persist_setting: "保存设置（{value}）"
+      download_java_runtime: "下载 Java（{value}）"
       persist_java_override: 保存 Java 兼容性忽略设置
       ignore_java_once: 仅本次忽略 Java 兼容性检查
       close_prompt: 关闭提示
@@ -402,33 +402,33 @@ shell:
     external_open:
       success:
         title: 已打开外部目标
-        body: '{message} {target}'
+        body: "{message} {target}"
         url: 已根据提示打开外部链接。
         crash_report_exported: 已导出并打开崩溃报告压缩包。
       failure:
         title: 外部打开失败
         missing_target: 缺少可打开的目标。
-        body: '{target} • {error}'
+        body: "{target} • {error}"
         unknown_error: 未知错误
     launch_logs:
-      process_exited: '游戏进程已退出，退出码 {exit_code}。'
-      monitor_exception: '会话监控异常：{message}'
+      process_exited: "游戏进程已退出，退出码 {exit_code}。"
+      monitor_exception: "会话监控异常：{message}"
     crash:
       details_header: 详细信息：
       launch_failure:
-        exit_code: '游戏进程异常退出，退出码 {exit_code}。'
-        raw_output_log: '原始输出日志：{path}'
+        exit_code: "游戏进程异常退出，退出码 {exit_code}。"
+        raw_output_log: "原始输出日志：{path}"
     java:
-      runtime_name: 'Java {version}'
-      component_runtime_name: '{component}（Java {version}）'
+      runtime_name: "Java {version}"
+      component_runtime_name: "{component}（Java {version}）"
       tags:
         bit64: 64 位
         prompt_download: 提示下载
-        reused_count: '复用 {count}'
+        reused_count: "复用 {count}"
   surface_actions:
     sidebar:
-      title: '左侧操作：{action}'
-      body: '{title} • {command}'
+      title: "左侧操作：{action}"
+      body: "{title} • {command}"
   game_log:
     actions:
       clear_cache: 清空缓存
@@ -479,7 +479,7 @@ shell:
       description: 选择一个帮助条目以查看内容、来源和可用操作。
       title: 未选择帮助条目
     failures:
-      action: '{title} 失败'
+      action: "{title} 失败"
       download_target_missing: 下载后的目标文件不存在。
       entry_not_found: 未找到帮助条目：{reference}
       invalid_download_address: 下载地址无效。
@@ -532,7 +532,7 @@ shell:
       moved_to_trash: 已将实例 {name} 移入回收站：{path}
       permanently_deleted: 已永久删除实例 {name}。
     detail:
-      last_modified: '{path} • 最后修改于 {time}'
+      last_modified: "{path} • 最后修改于 {time}"
     empty:
       download: 下载实例
       no_match_description: 没有找到与“{query}”匹配的实例，请尝试更换关键词或清空搜索。
@@ -568,12 +568,12 @@ shell:
       not_saved: 该文件夹未被保存，无法从列表中移除。
       removed: 已从文件夹列表中移除 {path}。
       removed_and_switched: 已移除 {removed}，并切换到 {target}。
-      still_active: '{path} 仍是当前正在使用的实例目录。'
+      still_active: "{path} 仍是当前正在使用的实例目录。"
     groups:
       api_installable: API 可安装
       error: 异常实例
       favorites: 收藏
-      header: '{title}（{count}）'
+      header: "{title}（{count}）"
       hidden: 隐藏
       loaders:
         cleanroom: Cleanroom
@@ -655,9 +655,9 @@ shell:
       success: 已完成，用时 {duration}
       waiting: 已等待 {duration}
     duration:
-      hours_minutes: '{hours} 小时 {minutes} 分钟'
-      minutes_seconds: '{minutes} 分 {seconds} 秒'
-      seconds: '{seconds} 秒'
+      hours_minutes: "{hours} 小时 {minutes} 分钟"
+      minutes_seconds: "{minutes} 分 {seconds} 秒"
+      seconds: "{seconds} 秒"
     empty:
       description: 当前没有正在进行的后台任务。
       title: 当前没有后台任务
@@ -676,8 +676,8 @@ shell:
       waiting_state_message: 正在等待执行
     recent:
       just_now: 刚刚
-      minutes_ago: '{minutes} 分钟前'
-      seconds_ago: '{seconds} 秒前'
+      minutes_ago: "{minutes} 分钟前"
+      seconds_ago: "{seconds} 秒前"
     route:
       description: 查看后台任务的等待、执行、完成和失败状态。
       facts:
@@ -703,7 +703,7 @@ shell:
   tools:
     common:
       confirm: 确定
-      failure_title: '{title} 失败'
+      failure_title: "{title} 失败"
     help:
       default_group: 常规
       search:
@@ -812,7 +812,7 @@ shell:
             confirm: 创建
             created_hint: 已在 {target} 创建快捷方式。
             failure_title: 创建快捷方式失败
-            location: '{title} 位置：{path}'
+            location: "{title} 位置：{path}"
             no_targets: 当前系统未提供可用的快捷方式目录。
             summary_warning: 该快捷方式不会自动移除，请在删除或移动启动器前手动移除。
             targets:
@@ -898,11 +898,11 @@ launch:
       message: 你正在使用 PCL 跨平台版！此版本为独立开发和维护，与官方版本维护路线不同，体验有所出入。
       detail: 现在软件仍未经过充分测试，欢迎参与测试并提出反馈！
   notifications:
-    success: '{instance_name} 已成功启动。'
+    success: "{instance_name} 已成功启动。"
     abort_with_hint: 启动已取消：{hint}
     script_export_canceled: 导出启动脚本已完成，启动流程已中止。
     launch_canceled: 启动已取消。
-    none: ''
+    none: ""
   precheck:
     failures:
       instance_path_reserved_chars: 实例路径中不可包含 ! 或 ;（{path}）。
@@ -918,7 +918,7 @@ launch:
   prompts:
     non_ascii_path:
       title: 非 ASCII 路径警告
-      message: '{instance_name} 当前使用包含非 ASCII 字符的路径，部分 Java 运行时或模组可能因此启动失败。'
+      message: "{instance_name} 当前使用包含非 ASCII 字符的路径，部分 Java 运行时或模组可能因此启动失败。"
       actions:
         continue: 仍然继续
         abort: 取消启动
@@ -963,7 +963,7 @@ launch:
         continue: 继续
     java_compatibility:
       title: Java 兼容性警告
-      message: '{runtime_label} 可能不满足当前实例要求的 Java 范围（{minimum_version} - {maximum_version}）。'
+      message: "{runtime_label} 可能不满足当前实例要求的 Java 范围（{minimum_version} - {maximum_version}）。"
       actions:
         force_current: 继续使用当前 Java
         use_compatible: 改用兼容 Java
@@ -1028,9 +1028,9 @@ launch:
     instance_create:
       title: 新建档案
       status_default: 已从实例设置带入第三方验证服务器。
-      status_named: '已从实例设置带入 {auth_name}。'
+      status_named: "已从实例设置带入 {auth_name}。"
       navigation: 已从实例设置跳转到启动页，准备创建第三方验证档案。
-      completed: '已跳转到启动页，为 {instance_name} 创建第三方验证档案。'
+      completed: "已跳转到启动页，为 {instance_name} 创建第三方验证档案。"
     authlib:
       actions:
         login: 登录
@@ -1176,7 +1176,7 @@ launch:
       game_process_started: 已启动 {instance_name}（PID {pid}）
       instance_verification_completed: 实例校验完成，下载了 {downloaded_count} 个文件，复用了 {reused_count} 个文件。
       returned_to_launch_page: 已返回启动页
-    overview_title: '{instance_name} 概览'
+    overview_title: "{instance_name} 概览"
     steps:
       prepare_arguments: 正在准备启动参数
       read_configuration: 正在读取启动配置
@@ -1250,7 +1250,7 @@ launch:
 crash:
   prompts:
     output:
-      message: '{message}'
+      message: "{message}"
       launch_failure:
         title: 启动失败
         result_text: Minecraft 启动或运行过程中发生错误。
@@ -1263,8 +1263,8 @@ crash:
         export_report: 导出报告
   export:
     heading: 导出计划
-    suggested_archive: '- 建议压缩包：{archive_name}'
-    source_file_count: '- 源文件数量：{file_count}'
+    suggested_archive: "- 建议压缩包：{archive_name}"
+    source_file_count: "- 源文件数量：{file_count}"
 setup:
   launch:
     cards:
@@ -1393,7 +1393,7 @@ setup:
         title_local_detail_file: 优先本地名，其次描述，最后文件名
         title_file_detail_local: 优先文件名，其次描述，最后本地名
     labels:
-      download_timeout_value: '{value} 秒'
+      download_timeout_value: "{value} 秒"
     activities:
       reset: 重置游戏管理设置
       reset_completed: 下载、社区资源和辅助功能设置已恢复到当前启动器的默认配置。
@@ -1508,12 +1508,12 @@ setup:
       duplicate: 重复
       other: 其他
     actions:
-      open_issue: '打开 Issue #{number}'
+      open_issue: "打开 Issue #{number}"
     summary:
       unknown_author: 未知作者
       unknown_time: 未知时间
       uncategorized_type: 未分类
-      line: '{author} | {created_at} | {type}'
+      line: "{author} | {created_at} | {type}"
     activities:
       refresh: 刷新反馈页
       refresh_completed: 已同步 {count} 条 GitHub 反馈。
@@ -1556,13 +1556,13 @@ setup:
       change_mode: 切换自动更新设置
       refresh: 刷新更新页
       available: 检测到可用更新：{version}
-      latest: '{version} 已是最新版本'
+      latest: "{version} 已是最新版本"
       checking: 正在检查更新...
       download_install: 下载并安装更新
       no_pending_update: 当前没有待下载的更新。
       no_download_url: 当前更新源没有提供可用下载地址。
       download_install_failed: 下载并安装更新失败
-      package_ready: '{version} 的更新包已准备完成，启动器即将退出并应用更新。'
+      package_ready: "{version} 的更新包已准备完成，启动器即将退出并应用更新。"
       package_ready_hint: 更新包已准备完成，启动器即将关闭并自动安装。
       view_detail: 查看更新详情
       view_detail_title: 更新详情：{version}
@@ -1608,7 +1608,7 @@ setup:
       title_bar:
         header: 标题栏
     fields:
-      custom_theme_hint: '支持 #RRGGBB，例如 #159E95'
+      custom_theme_hint: "支持 #RRGGBB，例如 #159E95"
       custom_theme_refresh_hint: 自定义主题色会实时刷新当前界面配色与标题栏对比度。
       dark_custom: 深色自定义
       dark_palette: 深色配色
@@ -1794,9 +1794,9 @@ setup:
       add_completed: 已添加并选中 {path}
       add_exists: Java 已存在于配置列表中：{path}
       add_unrecognized: 无法识别所选文件为可用的 Java：{path}
-      open_folder: '打开 Java 文件夹: {title}'
-      toggle_result: '{title} • {state}'
-      view_detail: '查看 Java 详情: {title}'
+      open_folder: "打开 Java 文件夹: {title}"
+      toggle_result: "{title} • {state}"
+      view_detail: "查看 Java 详情: {title}"
     auto_select:
       description: Java 选择自动挡，依据游戏需要自动选择合适的 Java。
       label: 自动选择
@@ -1806,19 +1806,19 @@ setup:
       no: 否
       unavailable: 不可用
       yes: 是
-      architecture: '架构: {value}'
-      availability: '可用性: {value}'
-      brand: '品牌: {value}'
-      default_java: '默认 Java: {value}'
-      enabled: '已启用: {value}'
-      executable: '可执行文件: {value}'
-      folder: '目录: {value}'
-      major_version: '主版本: {value}'
-      path: '路径: {value}'
-      source: '来源: {value}'
-      tags: '当前标签: {value}'
-      type: '类型: {value}'
-      version: '版本: {value}'
+      architecture: "架构: {value}"
+      availability: "可用性: {value}"
+      brand: "品牌: {value}"
+      default_java: "默认 Java: {value}"
+      enabled: "已启用: {value}"
+      executable: "可执行文件: {value}"
+      folder: "目录: {value}"
+      major_version: "主版本: {value}"
+      path: "路径: {value}"
+      source: "来源: {value}"
+      tags: "当前标签: {value}"
+      type: "类型: {value}"
+      version: "版本: {value}"
     tags:
       auto_installed: 自动安装
       auto_scanned: 自动扫描
@@ -1882,7 +1882,7 @@ setup:
       debug_mode_enabled: 已启用更详细的日志与诊断信息。
       proxy_invalid_address: 自定义代理地址无效。
       proxy_test_started: 正在通过 {mode} 访问 {host}。
-      proxy_test_succeeded: '{mode} 连接成功，HTTP {status_code} {reason_phrase}。'
+      proxy_test_succeeded: "{mode} 连接成功，HTTP {status_code} {reason_phrase}。"
       proxy_test_succeeded_hint: 代理连接测试成功。
     options:
       http_proxy:
@@ -1905,14 +1905,14 @@ common:
     select_all: 全选
     continue: 继续
   activities:
-    failed: '{title} 失败'
+    failed: "{title} 失败"
   filters:
     all: 全部
     any: 任意
   memory:
     summary:
       allocation_prefix: 游戏分配
-      size_gb: '{value} GB'
+      size_gb: "{value} GB"
       usage_header: 已使用内存 / 已安装内存
   punctuation:
     comma: 、
@@ -1921,39 +1921,39 @@ download:
     actions:
       save_installer: 保存安装器
     activities:
-      entry_action: '下载页操作：{entry_title}'
-      open_entry: '打开条目：{entry_title}'
-      open_favorite_entry: '打开收藏夹条目：{entry_title}'
+      entry_action: "下载页操作：{entry_title}"
+      open_entry: "打开条目：{entry_title}"
+      open_favorite_entry: "打开收藏夹条目：{entry_title}"
     download:
       file_type_default: 文件
       hints:
-        completed: '{file_name} 下载完成'
+        completed: "{file_name} 下载完成"
         started: 开始下载 {file_name}
-      installer_type: '{surface_name} 安装器'
+      installer_type: "{surface_name} 安装器"
       missing_url: 当前没有可用的下载地址。
       no_save_path: 没有选择保存位置。
       pick_save_path_title: 选择保存位置
-      task_title: '下载 {file_name}'
+      task_title: "下载 {file_name}"
     errors:
       empty_description: 当前无法读取远程目录，请稍后重试。
       empty_title: 暂无可显示数据
-      load_failed_body: '读取远程目录失败。错误：{error}'
+      load_failed_body: "读取远程目录失败。错误：{error}"
       load_failed_title: 远程目录加载失败
       retry_later: 请稍后重试。
       section_title: 远程目录
     remote:
       latest:
-        preview_published: '最新快照，发布时间 {published_at}'
-        release_published: '最新正式版，发布时间 {published_at}'
+        preview_published: "最新快照，发布时间 {published_at}"
+        release_published: "最新正式版，发布时间 {published_at}"
       groups:
         snapshot: 快照版本
       labels:
-        forge_compatible: '兼容 Forge {forge_version}'
+        forge_compatible: "兼容 Forge {forge_version}"
         forge_incompatible: 不兼容 Forge
         installer: 安装器
         latest: 最新
         no_display_data: 暂无可显示数据
-        published_at: '发布时间 {published_at}'
+        published_at: "发布时间 {published_at}"
         recommended: 推荐
         separator: ，
         unknown_version: 未知版本
@@ -1962,9 +1962,9 @@ download:
         variant_red: （红色变种）
       empty:
         cleanroom: 当前没有可用的 Cleanroom 远程条目。
-        forge_version_entries: '当前没有适用于 {minecraft_version} 的 Forge 条目。'
+        forge_version_entries: "当前没有适用于 {minecraft_version} 的 Forge 条目。"
         forge_versions: Forge 远程目录没有返回任何 Minecraft 版本。
-        group_entries: '{group_name} 当前没有可用条目。'
+        group_entries: "{group_name} 当前没有可用条目。"
         installer_versions: 当前没有可用的安装器版本。
         labymod_channels: 当前没有可用的 LabyMod 渠道。
         latest_versions: 远程版本清单没有返回任何最新版本。
@@ -2064,15 +2064,15 @@ download:
       started_activity: 已开始为 {target_name} 批量安装
       started_hint: 已开始批量安装
       summary:
-        dependencies: '{count} 个依赖项'
+        dependencies: "{count} 个依赖项"
         none: 无任务
         skipped: 跳过了 {count} 项
-        tasks: '{count} 个任务'
+        tasks: "{count} 个任务"
     empty:
       body: 把项目加入收藏夹，之后即可安装或分享。
       title: 还没有收藏项
     favorite_to:
-      already_contains_selected: '{target_name} 已经包含所有选中的收藏项'
+      already_contains_selected: "{target_name} 已经包含所有选中的收藏项"
       completed: 已将 {count} 个收藏项添加到 {target_name}
       selection_prompt: 为 {count} 个已选收藏项选择目标
     remove:
@@ -2085,15 +2085,15 @@ download:
       watermark: 搜索收藏项
     select_all:
       completed: 已在 {target_name} 中选中 {count} 个可见收藏项
-      empty: '{target_name} 中没有可见收藏项'
+      empty: "{target_name} 中没有可见收藏项"
     selection:
       summary: 已选择 {count} 项
     share_selected:
       completed: 已复制 {count} 个选中收藏项的 ID
       empty: 没有可分享的已选收藏项
     meta:
-      downloads: '{value} 下载'
-      updated: '更新 {value}'
+      downloads: "{value} 下载"
+      updated: "更新 {value}"
     demo:
       entries:
         sodium:
@@ -2111,9 +2111,9 @@ download:
       empty_share_code: 分享了个寂寞啊！
       manage:
         title: 管理收藏夹
-        current_target: '当前收藏夹：{target_name}'
+        current_target: "当前收藏夹：{target_name}"
         failed: 管理收藏夹失败
-        unknown_action: '未识别的收藏夹操作：{action_id}'
+        unknown_action: "未识别的收藏夹操作：{action_id}"
         options:
           share:
             label: 分享当前收藏夹
@@ -2132,7 +2132,7 @@ download:
             description: 删除当前收藏夹。
       share:
         activity: 分享当前收藏夹
-        completed: '已复制 {target_name} 的分享代码。'
+        completed: "已复制 {target_name} 的分享代码。"
         failed: 分享当前收藏夹失败
       import:
         title: 导入收藏
@@ -2140,9 +2140,9 @@ download:
         prompt: 输入分享的收藏。
         watermark: '例如：["23333"]'
         failed: 导入收藏失败
-        destination_prompt: '识别到 {count} 个收藏项目，要加入到哪里？'
-        completed_new: '已导入到新收藏夹：{target_name}'
-        completed_current: '已导入到当前收藏夹：{target_name}'
+        destination_prompt: "识别到 {count} 个收藏项目，要加入到哪里？"
+        completed_new: "已导入到新收藏夹：{target_name}"
+        completed_current: "已导入到当前收藏夹：{target_name}"
         options:
           new_target:
             label: 新的收藏夹
@@ -2171,7 +2171,7 @@ download:
           收藏夹 ID 为 {target_id}
           此操作不可逆！
         confirm: 删除
-        completed: '已删除 {target_name}。'
+        completed: "已删除 {target_name}。"
         failed: 删除当前收藏夹失败
   install:
     refresh:
@@ -2190,7 +2190,7 @@ download:
         release: 正式版
       latest:
         preview: 最新预览版
-        published_at: '{label}：{published_at}'
+        published_at: "{label}：{published_at}"
         release: 最新正式版
       load_failed: 加载版本失败
       loading: 正在加载版本...
@@ -2199,19 +2199,19 @@ download:
         snapshot: 快照版
         stable: 稳定版
       summaries:
-        current_instance_with_time: '当前实例 • {published_at}'
-        installer_with_time: '安装器 • {published_at}'
-        labymod_for_minecraft: 'LabyMod 4 • {minecraft_version}'
-        loader_testing: '{loader_name} 测试版'
+        current_instance_with_time: "当前实例 • {published_at}"
+        installer_with_time: "安装器 • {published_at}"
+        labymod_for_minecraft: "LabyMod 4 • {minecraft_version}"
+        loader_testing: "{loader_name} 测试版"
         preview: 预览版
         quilt_installer: Quilt 安装器
         release: 正式版
         release_time_unavailable: 未记录发布时间
-        release_with_time: '正式版 • {published_at}'
+        release_with_time: "正式版 • {published_at}"
         stable: 稳定版
-        status_with_time: '{status} • {published_at}'
+        status_with_time: "{status} • {published_at}"
         testing: 测试版
-        april_fools_special: '发布于 {published_at} 的愚人节特辑'
+        april_fools_special: "发布于 {published_at} 的愚人节特辑"
         april_fools:
           2013: 2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！
           2013_blue: 2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！（蓝色版本）
@@ -2281,20 +2281,20 @@ download:
         copy_generated_libraries: 正在复制安装器生成的支持库…
         copy_optifine_libraries: 正在复制 OptiFine 生成的支持库…
         creating_instance_directories: 正在创建实例目录结构…
-        download_loader_installer: '正在下载 {loader_title} 安装器…'
+        download_loader_installer: "正在下载 {loader_title} 安装器…"
         download_optifine_installer: 正在下载 OptiFine 安装器…
         downloading_asset_files: 正在下载资源文件
         downloading_dependencies: 正在下载依赖
-        download_vanilla_client: '正在下载 Minecraft {version} 原版客户端…'
-        extract_loader_libraries: '正在解包 {loader_title} 安装器中的支持库…'
+        download_vanilla_client: "正在下载 Minecraft {version} 原版客户端…"
+        extract_loader_libraries: "正在解包 {loader_title} 安装器中的支持库…"
         fetch_labymod_manifest: 正在获取 LabyMod 安装清单…
-        fetch_loader_manifest: '正在获取 {loader_title} 安装清单…'
-        fetch_vanilla_manifest: '正在获取 Minecraft {version} 原版清单…'
+        fetch_loader_manifest: "正在获取 {loader_title} 安装清单…"
+        fetch_vanilla_manifest: "正在获取 Minecraft {version} 原版清单…"
         finalizing_installation: 正在整理实例目录并完成安装…
-        files_ready: '{completed_count}/{total_count} 个文件已就绪'
+        files_ready: "{completed_count}/{total_count} 个文件已就绪"
         generating_target_manifest: 正在生成目标安装清单…
         initialize_launcher_profiles: 正在初始化 launcher_profiles.json…
-        inspect_loader_installer: '正在解析 {loader_title} 安装器内容…'
+        inspect_loader_installer: "正在解析 {loader_title} 安装器内容…"
         manifest_written: 清单已写入
         merging_liteloader_manifest: 正在合并 LiteLoader 安装信息…
         no_asset_files_needed: 无需资源文件
@@ -2305,20 +2305,20 @@ download:
         prepare_environment: 正在准备环境
         preparing_managed_dependencies: 正在准备受管依赖文件…
         preparing_manifest: 正在写入安装清单并准备安装环境…
-        prepare_loader_installer: '正在准备 {loader_title} 安装器…'
-        prepare_vanilla_files: '正在准备 Minecraft {version} 原版文件…'
+        prepare_loader_installer: "正在准备 {loader_title} 安装器…"
+        prepare_vanilla_files: "正在准备 Minecraft {version} 原版文件…"
         processing_optifine_manifest: 正在处理 OptiFine 安装信息…
         processing_file: 正在处理 {file_name}
-        progress_with_file: '{prefix}：{completed_count}/{total_count}（{file_name}）'
-        progress_without_file: '{prefix}：{completed_count}/{total_count}'
+        progress_with_file: "{prefix}：{completed_count}/{total_count}（{file_name}）"
+        progress_without_file: "{prefix}：{completed_count}/{total_count}"
         queued: 已排队
         read_generated_manifest: 正在读取安装器版本清单…
         read_optifine_manifest: 正在读取 OptiFine 生成的版本清单…
-        read_vanilla_version_details: '正在读取 Minecraft {version} 版本详情…'
+        read_vanilla_version_details: "正在读取 Minecraft {version} 版本详情…"
         repairing_game_files: 正在补全游戏主文件与支持库…
-        repair_loader_dependencies: '正在补全 {loader_title} 安装依赖…'
+        repair_loader_dependencies: "正在补全 {loader_title} 安装依赖…"
         repairing_support_files: 正在修复支持文件
-        run_loader_installer: '正在执行 {loader_title} 安装步骤…'
+        run_loader_installer: "正在执行 {loader_title} 安装步骤…"
         run_optifine_installer: 正在执行 OptiFine 安装器…
         support_files_completed: 支持文件已完成
         support_files_ready: 支持文件已就绪
@@ -2326,16 +2326,16 @@ download:
         waiting_execution: 等待执行
         waiting_finalize: 等待完成收尾
         waiting_support_files: 等待支持文件
-        write_loader_libraries: '正在写入 {loader_title} 支持库…'
-        writing_manifest_file: '正在写入安装清单文件 {file_name}…'
+        write_loader_libraries: "正在写入 {loader_title} 支持库…"
+        writing_manifest_file: "正在写入安装清单文件 {file_name}…"
         writing_instance_config: 正在写入实例配置…
-        write_vanilla_manifest: '正在写入 Minecraft {version} 原版清单…'
+        write_vanilla_manifest: "正在写入 Minecraft {version} 原版清单…"
   resource:
     activities:
-      entry_action: '资源操作：{entry_title}'
+      entry_action: "资源操作：{entry_title}"
       install_pack: 安装整合包
       install_pack_failed: 安装整合包失败
-      open_page: '打开资源页面：{entry_title}'
+      open_page: "打开资源页面：{entry_title}"
       reset_filters: 重置筛选条件
       reset_filters_message: 已重置 {surface_title} 的筛选条件
     current_instance:
@@ -2363,7 +2363,7 @@ download:
     entry:
       count_style: east_asian
       downloads_none: 暂无下载
-      downloads_with_count: '{count} 下载'
+      downloads_with_count: "{count} 下载"
       updated_unknown: 时间未知
       version_unknown: 未标注版本
     install_pack:
@@ -2392,7 +2392,7 @@ download:
     surface:
       empty: 没有找到 {surface_name}
       loading: 正在加载 {surface_name}...
-      title: '{surface_name}'
+      title: "{surface_name}"
     tag_groups:
       features: 特性
       performance: 性能负荷
@@ -2509,20 +2509,20 @@ resource_detail:
   copy:
     messages:
       completed: 复制成功
-      failed: '{title} 失败'
+      failed: "{title} 失败"
   copy_link:
     empty: 没有可复制的链接
   copy_name:
     empty: 没有可复制的名称
   counts:
-    hundred_million: '{value} 亿'
-    ten_thousand: '{value} 万'
+    hundred_million: "{value} 亿"
+    ten_thousand: "{value} 万"
   compatibility:
     no_loaders: 未提供加载器信息
     no_versions: 未提供 Minecraft 版本列表
-    loaders: '加载器：{loaders}'
-    summary: '{version_summary} • {loader_summary}'
-    versions: 'Minecraft {versions}'
+    loaders: "加载器：{loaders}"
+    summary: "{version_summary} • {loader_summary}"
+    versions: "Minecraft {versions}"
   current_instance:
     none_selected: 未选择当前实例
     summary_none_selected: 选择一个实例即可直接安装此项目
@@ -2580,7 +2580,7 @@ resource_detail:
       required: 必需
       tool: 工具
     title: 依赖项
-    title_for_release: '{release_title} 的依赖项'
+    title_for_release: "{release_title} 的依赖项"
   download:
     dialogs:
       pick_save_path:
@@ -2620,9 +2620,9 @@ resource_detail:
       queued_in_task_center: 已加入任务中心：{task_title}
     summary:
       completed: 已为 {instance_name} 加入安装队列：{summary}
-      dependencies: '{count} 个依赖项'
+      dependencies: "{count} 个依赖项"
       skipped: 跳过了 {count} 项
-      tasks: '{count} 个任务'
+      tasks: "{count} 个任务"
   instance_selection:
     activities:
       select: 选择实例
@@ -2631,7 +2631,7 @@ resource_detail:
       message: 选择一个实例来安装此项目
       title: 选择实例
     messages:
-      already_selected: '{instance_name} 已经被选中'
+      already_selected: "{instance_name} 已经被选中"
       no_instances: 没有可用实例
   links:
     title: 链接
@@ -2650,7 +2650,7 @@ resource_detail:
     homepage: 项目主页
     issues: 问题反馈
     source: 源码仓库
-    support_author: '支持作者 · {platform}'
+    support_author: "支持作者 · {platform}"
     wiki: Wiki
   loading:
     releases: 正在加载版本...
@@ -2665,11 +2665,11 @@ resource_detail:
     world: 世界
   release_info:
     unavailable: 未提供版本信息
-    versions: 'Minecraft {versions}'
+    versions: "Minecraft {versions}"
   release_meta:
-    downloads: '{count} 下载'
-    published: '发布 {date}'
-    published_with_downloads: '发布 {date} • {downloads}'
+    downloads: "{count} 下载"
+    published: "发布 {date}"
+    published_with_downloads: "发布 {date} • {downloads}"
   modpack:
     activities:
       install_canceled: 已取消整合包安装：{entry_title}
@@ -2686,7 +2686,7 @@ resource_detail:
         title: 实例名称无效
     hints:
       download_and_install_started: 已开始下载并安装 {file_name}
-      install_completed: '{instance_name} 已安装完成'
+      install_completed: "{instance_name} 已安装完成"
     messages:
       install_completed: 已将 {instance_name} 安装到 {target_directory}
       missing_instance_name: 未提供实例名称
@@ -2716,7 +2716,7 @@ resource_detail:
         downloading_bundled_files: 正在下载整合包附带文件…
         processing_file: 正在处理 {file_name}…
         bundled_files_ready: 整合包附带文件已处理。
-        file_ready: '{file_name} 已就绪'
+        file_ready: "{file_name} 已就绪"
         installing_game: 正在安装游戏与加载器…
         repairing_game_files: 正在补全游戏文件…
         finalizing_instance: 正在整理实例目录…
@@ -2729,17 +2729,17 @@ resource_detail:
         curseforge_missing_files: 整合包中的部分 CurseForge 文件已不存在，无法继续自动安装。
         pcl_missing_addons: 该 PCL 标准整合包未提供游戏版本附加信息，无法安装。
         pcl_missing_game_version: 该 PCL 标准整合包未提供游戏版本信息，无法安装。
-        missing_critical_file: '整合包缺少关键文件：{path}'
-        minecraft_choice_missing: '未找到可用的 Minecraft {version} 安装方案。'
-        loader_choice_missing: '未找到 {option_title} {requested_version} 的安装方案。'
-        file_download_failed: '无法下载整合包文件：{file_name}'
+        missing_critical_file: "整合包缺少关键文件：{path}"
+        minecraft_choice_missing: "未找到可用的 Minecraft {version} 安装方案。"
+        loader_choice_missing: "未找到 {option_title} {requested_version} 的安装方案。"
+        file_download_failed: "无法下载整合包文件：{file_name}"
         curseforge_metadata_empty: CurseForge 文件元数据返回为空。
         curseforge_metadata_missing_data: CurseForge 文件元数据缺少 data 数组。
-        file_path_outside_instance: '整合包文件路径超出了实例目录：{relative_path}'
-        archive_illegal_path: '整合包包含非法路径：{entry_path}'
+        file_path_outside_instance: "整合包文件路径超出了实例目录：{relative_path}"
+        archive_illegal_path: "整合包包含非法路径：{entry_path}"
         rar_unsupported: PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试。
         archive_open_failed: 打开整合包文件失败，文件可能损坏或为不支持的压缩包格式。
-        json_parse_failed: '无法解析整合包内的 JSON 文件：{entry_path}'
+        json_parse_failed: "无法解析整合包内的 JSON 文件：{entry_path}"
   releases:
     empty:
       body: 当前筛选条件下没有可用版本
@@ -2757,7 +2757,7 @@ resource_detail:
   statuses:
     archived: 已归档
     draft: 草稿
-    fallback: '状态 {status}'
+    fallback: "状态 {status}"
     load_failed: 加载失败
     published: 已发布
     removed: 已下架
@@ -2776,12 +2776,12 @@ resource_detail:
     legacy: 旧版
     snapshot: 快照
   warnings:
-    load_failed: '无法从实时来源加载工程数据：{message}'
+    load_failed: "无法从实时来源加载工程数据：{message}"
   world_archive:
-    extract_failed: '存档压缩包下载完成，但自动解压失败：{message}'
+    extract_failed: "存档压缩包下载完成，但自动解压失败：{message}"
     install_directory_unavailable: 存档安装目录不可用。
     no_importable_content: 压缩包中没有可导入的存档内容。
-    unsafe_path: '压缩包中包含不安全的路径：{path}'
+    unsafe_path: "压缩包中包含不安全的路径：{path}"
 instance:
   common:
     independent: 独立实例
@@ -2820,7 +2820,7 @@ instance:
     info:
       launch_count: 启动次数
       launch_count_never: 从未启动
-      launch_count_value: '已启动 {count} 次'
+      launch_count_value: "已启动 {count} 次"
       modpack_version: 整合包版本
       description: 实例描述
     personalization:
@@ -2843,7 +2843,7 @@ instance:
       delete: 删除实例
       patch_core: 修补核心
     artifacts:
-      launch_script_name: '启动 {instance_name}'
+      launch_script_name: "启动 {instance_name}"
     messages:
       select_to_view_details: 请选择一个实例后再查看详细内容。
       no_instance_selected: 当前未选择实例。
@@ -2853,35 +2853,35 @@ instance:
       rename_empty: 实例名称不能为空。
       rename_unchanged: 实例名称未发生变化。
       rename_invalid: 实例名称包含无效字符。
-      rename_exists: '已存在同名实例：{name}'
+      rename_exists: "已存在同名实例：{name}"
       description_canceled: 已取消修改。
       description_restored: 已恢复为默认描述。
       launch_script_missing: 启动脚本不存在。
       repair_disable_validation_hint: 请先关闭 [实例设置 -> 设置 -> 高级启动选项 -> 关闭文件校验]，然后再尝试补全文件！
-      repair_completed: '已补全 {downloaded_count} 个文件，复用 {reused_count} 个文件。'
+      repair_completed: "已补全 {downloaded_count} 个文件，复用 {reused_count} 个文件。"
       repair_canceled_title: 补全文件已取消
       repair_canceled: 实例文件补全过程已取消。
       reset_canceled_title: 重置实例已取消
       reset_canceled: 已取消重置。
-      reset_completed: '已重置核心文件并下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。'
-      delete_permanent: '实例 {instance_name} 已永久删除。'
-      delete_recycled: '实例 {instance_name} 已移入回收区：{trash_directory}'
+      reset_completed: "已重置核心文件并下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。"
+      delete_permanent: "实例 {instance_name} 已永久删除。"
+      delete_recycled: "实例 {instance_name} 已移入回收区：{trash_directory}"
       patch_canceled: 已取消修补。
       patch_file_canceled: 已取消选择修补文件。
       patched_core_missing: 修补后的核心文件不存在。
-      rename_completed: '已将实例 {old_name} 重命名为 {new_name}。'
-      test_instance_navigated: '已跳转到启动页，准备测试启动 {instance_name}。'
-      repair_task_title: '{action_title}：{instance_name}'
+      rename_completed: "已将实例 {old_name} 重命名为 {new_name}。"
+      test_instance_navigated: "已跳转到启动页，准备测试启动 {instance_name}。"
+      repair_task_title: "{action_title}：{instance_name}"
       repair_summary:
-        instance: '实例：{instance_name}'
-        instance_directory: '实例目录：{path}'
-        core_json: '核心 Json：{status} • {path}'
-        core_jar: '核心 Jar：{status} • {path}'
-        backup_directory: '备份目录：{path}'
-        downloaded_count: '下载文件数：{count}'
-        reused_count: '复用文件数：{count}'
-        downloaded_item: '已下载：{path}'
-        reused_item: '已复用：{path}'
+        instance: "实例：{instance_name}"
+        instance_directory: "实例目录：{path}"
+        core_json: "核心 Json：{status} • {path}"
+        core_jar: "核心 Jar：{status} • {path}"
+        backup_directory: "备份目录：{path}"
+        downloaded_count: "下载文件数：{count}"
+        reused_count: "复用文件数：{count}"
+        downloaded_item: "已下载：{path}"
+        reused_item: "已复用：{path}"
         intro: 实例修复结果如下。
         present: 已检测到
         missing: 缺失
@@ -2916,7 +2916,7 @@ instance:
   install:
     minecraft:
       header: Minecraft
-      version: 'Minecraft {version}'
+      version: "Minecraft {version}"
     actions:
       apply_changes: 应用更改
       reset_to_scanned: 重置为扫描结果
@@ -2946,7 +2946,7 @@ instance:
       empty:
         title: 没有存档
         description: 打开存档文件夹，或从剪贴板粘贴世界文件或文件夹路径来导入存档。
-      summary: '创建时间：{created_at} • 最后修改：{modified_at}'
+      summary: "创建时间：{created_at} • 最后修改：{modified_at}"
       actions:
         open_folder: 打开存档文件夹
         paste_clipboard: 粘贴剪贴板内容
@@ -2958,7 +2958,7 @@ instance:
       empty:
         title: 没有截图
         description: 打开截图文件夹，为当前实例添加或生成截图。
-      summary: '{created_at} • {file_size}'
+      summary: "{created_at} • {file_size}"
       actions:
         open_folder: 打开截图文件夹
         open_file: 打开截图
@@ -2982,7 +2982,7 @@ instance:
         offline: 服务器离线
         offline_short: 离线
         connecting_short: 正在连接
-        connection_failed: '无法连接：{message}'
+        connection_failed: "无法连接：{message}"
       motd:
         click_to_refresh: 点击刷新查看服务器状态
         connecting: 正在连接...
@@ -2993,15 +2993,15 @@ instance:
         refreshed_count: 已刷新 {count} 个服务器。
         address_empty: 服务器地址为空。
         no_server_info: 未返回服务器信息
-        no_copyable_address: '{entry_title} 没有可复制的地址。'
-        copied_address: '{entry_title} • {address}'
-        no_connectable_address: '{entry_title} 没有可用的服务器地址。'
-        added: '{name} • {address}'
+        no_copyable_address: "{entry_title} 没有可复制的地址。"
+        copied_address: "{entry_title} • {address}"
+        no_connectable_address: "{entry_title} 没有可用的服务器地址。"
+        added: "{name} • {address}"
         address_required: 服务器地址不能为空。
         read_list_failed: |-
           无法读取当前实例的服务器列表。
           {error}
-        launch_route_prepared: '已切换到启动页并准备连接服务器 {entry_title}。'
+        launch_route_prepared: "已切换到启动页并准备连接服务器 {entry_title}。"
         update_list_failed: |-
           无法更新当前实例的服务器列表。
           {error}
@@ -3050,8 +3050,8 @@ instance:
         instance_select: 选择兼容实例
         go_to_download: 前往下载
       activities:
-        open_homepage: '打开{surface_title}主页：{entry_title}'
-        view_details: '查看{surface_title}详情'
+        open_homepage: "打开{surface_title}主页：{entry_title}"
+        view_details: "查看{surface_title}详情"
       filters:
         all: 全部（{count}）
         enabled: 已启用（{count}）
@@ -3070,34 +3070,34 @@ instance:
         folder: 文件夹
         root_directory: 根目录
       summary:
-        file: '{parent_directory} • {modified_at}'
-        archive: '{modified_at} • {file_size}'
-        folder: '{modified_at} • {folder_kind}'
+        file: "{parent_directory} • {modified_at}"
+        archive: "{modified_at} • {file_size}"
+        folder: "{modified_at} • {folder_kind}"
       messages:
         no_instance_selected: 当前未选择实例。
-        list_empty: '{surface_title} 列表为空。'
-        selected_all: '{surface_title} • 已选中 {count} 项。'
+        list_empty: "{surface_title} 列表为空。"
+        selected_all: "{surface_title} • 已选中 {count} 项。"
         no_toggleable_entries: 当前没有可切换状态的资源。
         no_deletable_entries: 当前没有可删除的资源。
         install_from_file_canceled: 已取消选择资源文件。
-        toggle_not_supported: '{surface_title} 当前不支持启用或禁用操作。'
+        toggle_not_supported: "{surface_title} 当前不支持启用或禁用操作。"
         no_selected: 当前没有选中的资源。
         already_enabled: 选中的资源已经全部启用。
         already_disabled: 选中的资源已经全部禁用。
-        enabled_completed: '已启用 {count} 项：{titles}'
-        disabled_completed: '已禁用 {count} 项：{titles}'
-        enabled_partial: '已启用 {count} 项，{failed_count} 项失败。'
-        disabled_partial: '已禁用 {count} 项，{failed_count} 项失败。'
+        enabled_completed: "已启用 {count} 项：{titles}"
+        disabled_completed: "已禁用 {count} 项：{titles}"
+        enabled_partial: "已启用 {count} 项，{failed_count} 项失败。"
+        disabled_partial: "已禁用 {count} 项，{failed_count} 项失败。"
         delete_canceled: 已取消删除。
         deleted_completed: 已移入回收区 {count} 项。
         export_missing: 导出文件不存在。
-        entry_missing: '{surface_title} 项目不存在。'
-        details_read_failed: '附加信息读取失败：{error}'
-        checked_mods_summary: '已检查 {instance_name}：启用 {enabled_count} 个，禁用 {disabled_count} 个，重复 {duplicate_count} 组。'
-        open_download_route: '{surface_title} 页面已跳转到下载页。'
+        entry_missing: "{surface_title} 项目不存在。"
+        details_read_failed: "附加信息读取失败：{error}"
+        checked_mods_summary: "已检查 {instance_name}：启用 {enabled_count} 个，禁用 {disabled_count} 个，重复 {duplicate_count} 组。"
+        open_download_route: "{surface_title} 页面已跳转到下载页。"
       dialogs:
         install_from_file:
-          title: '选择{surface_title}文件'
+          title: "选择{surface_title}文件"
           file_types:
             mod: Mod 文件
             resource_pack: 资源包文件
@@ -3105,9 +3105,9 @@ instance:
             schematic: 投影原理图文件
         delete:
           title: 资源删除确认
-          message: '确定要将这 {count} 个{surface_title}项目移入回收区吗？'
+          message: "确定要将这 {count} 个{surface_title}项目移入回收区吗？"
           confirm: 移入回收区
-          extra_items: '- 以及另外 {count} 项'
+          extra_items: "- 以及另外 {count} 项"
       details:
         fields:
           name: 名称
@@ -3156,7 +3156,7 @@ instance:
     java_options:
       auto_select: 自动选择合适的 Java
       launcher_relative: 选择启动器目录下的 Java
-      launcher_relative_selected: '启动器目录下的 Java | {relative_path}'
+      launcher_relative_selected: "启动器目录下的 Java | {relative_path}"
     launch:
       isolation: 隔离设置
       window_title: 窗口标题
@@ -3212,7 +3212,7 @@ instance:
       system_default: 系统默认
   export:
     count:
-      items: '{count} 项'
+      items: "{count} 项"
     activities:
       reset: 重置导出选项
       import_config: 读取配置
@@ -3309,8 +3309,8 @@ instance:
     messages:
       launcher_missing: 当前未找到启动目录。
       delete_canceled: 已取消删除。
-      confirm_permanent: '你确定要永久删除实例 {instance_name} 吗？'
-      confirm_recycle: '你确定要删除实例 {instance_name} 吗？'
+      confirm_permanent: "你确定要永久删除实例 {instance_name} 吗？"
+      confirm_recycle: "你确定要删除实例 {instance_name} 吗？"
       confirm_indie_warning: 由于该实例开启了版本隔离，删除时该实例对应的存档、资源包、Mod 等文件也将被一并删除！
       confirm_recycle_note: 实例会先移入实例回收区，便于你手动清理或恢复。
 save_detail:
@@ -3377,3 +3377,23 @@ save_detail:
     cleaned_empty_backups: 已清理 {count} 个空备份文件
     install_datapack_canceled: 已取消选择数据包文件
     export_missing: 导出文件不存在
+
+welcome:
+  step_0:
+    title: 选择语言
+    description: 请选择 PCL ME 的界面显示语言。
+  step_1:
+    title: 许可协议
+    description: 请阅读并接受最终用户许可协议（EULA），以继续使用 PCL ME。
+    eula_summary: PCL ME 是一款免费开源软件，按"现状"提供。继续使用即表示您接受最终用户许可协议的条款。请阅读完整 EULA，以了解允许的使用方式和再发行规定。
+    open_eula: 查看完整 EULA
+    accept_label: 我已阅读并接受 EULA
+    decline: 拒绝并退出
+  step_2:
+    title: 选择主题
+    description: 选择颜色模式与强调色。您可以随时在设置中更改。
+  step_3:
+    title: 设置完成！
+    description: PCL ME 已准备就绪，欢迎探索以下链接。
+    feedback: 提交反馈
+    github: GitHub

@@ -20,7 +20,15 @@ internal static class FrontendShellCompositionService
 
         var startupWorkflowRequest = BuildStartupWorkflowRequest(paths, localConfig);
         var mainWindowRequest = BuildMainWindowRequest(paths, sharedConfig, localConfig);
-        var mainWindowPlan = LauncherMainWindowStartupWorkflowService.BuildPlan(mainWindowRequest);
+
+        // When onboarding is needed, the welcome overlay handles EULA acceptance.
+        // Suppress the legacy EULA prompt so it doesn't appear alongside the overlay.
+        var needsOnboarding = !ReadValue(sharedConfig, "SystemOnboardingCompleted", false);
+        var effectiveMainWindowRequest = needsOnboarding
+            ? mainWindowRequest with { HasAcceptedEula = true }
+            : mainWindowRequest;
+
+        var mainWindowPlan = LauncherMainWindowStartupWorkflowService.BuildPlan(effectiveMainWindowRequest);
         ApplyVersionIsolationMigration(localConfig, mainWindowPlan.VersionIsolationMigration);
 
         return new FrontendShellComposition(
@@ -32,7 +40,8 @@ internal static class FrontendShellCompositionService
             mainWindowPlan.Consent,
             BuildNavigationRequest(paths, platformAdapter),
             "Runtime-composed shell inputs",
-            $"Config: {paths.SharedConfigPath}");
+            $"Config: {paths.SharedConfigPath}",
+            NeedsOnboarding: needsOnboarding);
     }
 
     private static LauncherStartupWorkflowRequest BuildStartupWorkflowRequest(

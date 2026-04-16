@@ -3,13 +3,13 @@ shell:
     pages:
       launch:
         title: Starten
-        summary: 'Instanzauswahl, Kontoeinrichtung und Startbereitschaft.'
+        summary: "Instanzauswahl, Kontoeinrichtung und Startbereitschaft."
       download:
         title: Herunterladen
-        summary: 'Minecraft, Mod-Loader und Community-Ressourcen installieren.'
+        summary: "Minecraft, Mod-Loader und Community-Ressourcen installieren."
       setup:
         title: Einstellungen
-        summary: 'Launcher-, Java- und Spieleinstellungen.'
+        summary: "Launcher-, Java- und Spieleinstellungen."
       tools:
         title: Werkzeuge
         summary: Hilfeinhalte und experimentelle Dienstprogramme.
@@ -24,13 +24,13 @@ shell:
         summary: Instanzdetails einsehen und Ressourcen verwalten.
       comp_detail:
         title: Ressourcendetails
-        summary: 'Eine ausgewählte Community-Ressource untersuchen.'
+        summary: "Eine ausgewählte Community-Ressource untersuchen."
       help_detail:
         title: Hilfedetails
         summary: Das aktuell ausgewählte Hilfethema lesen.
       game_log:
         title: Spielprotokoll
-        summary: 'Startausgabe und Live-Protokolle überprüfen.'
+        summary: "Startausgabe und Live-Protokolle überprüfen."
       version_saves:
         title: Spielstandverwaltung
         summary: Einen ausgewählten Spielstand und seine Sicherungen verwalten.
@@ -52,16 +52,16 @@ shell:
         summary: Ressourcenpakete suchen und installieren.
       download_shader:
         title: Shader
-        summary: 'Shader-Pakete suchen und installieren.'
+        summary: "Shader-Pakete suchen und installieren."
       download_world:
         title: Welten
         summary: Karten und Spielstandarchive importieren.
       download_comp_favorites:
         title: Favoriten
-        summary: 'Favorisierte Community-Ressourcen überprüfen.'
+        summary: "Favorisierte Community-Ressourcen überprüfen."
       download_client:
         title: Minecraft
-        summary: 'Eine Minecraft-Version zum Installieren auswählen.'
+        summary: "Eine Minecraft-Version zum Installieren auswählen."
       download_opti_fine:
         title: OptiFine
         summary: OptiFine für die ausgewählte Spielversion installieren.
@@ -91,10 +91,10 @@ shell:
         summary: Legacy Fabric für ältere Versionen installieren.
       setup_launch:
         title: Start
-        summary: 'Startargumente, Sichtbarkeit und Laufzeitverhalten anpassen.'
+        summary: "Startargumente, Sichtbarkeit und Laufzeitverhalten anpassen."
       setup_u_i:
         title: Oberfläche
-        summary: 'Themen, Animationen und Shell-Darstellung anpassen.'
+        summary: "Themen, Animationen und Shell-Darstellung anpassen."
       setup_game_manage:
         title: Spielverwaltung
         summary: Instanzspeicher und Dateiverwaltung steuern.
@@ -109,22 +109,22 @@ shell:
         summary: Protokollierung und Diagnoseausgabe konfigurieren.
       setup_feedback:
         title: Feedback
-        summary: 'Verknüpfte Issues und Feedback-Kanäle einsehen.'
+        summary: "Verknüpfte Issues und Feedback-Kanäle einsehen."
       setup_update:
         title: Updates
-        summary: 'Update-Kanäle und Prüfstrategie konfigurieren.'
+        summary: "Update-Kanäle und Prüfstrategie konfigurieren."
       setup_java:
         title: Java
-        summary: 'Java-Laufzeiten und Auswahlregeln verwalten.'
+        summary: "Java-Laufzeiten und Auswahlregeln verwalten."
       setup_launcher_misc:
         title: Sonstiges
-        summary: 'Verschiedene Launcher-Verhaltensweisen anpassen.'
+        summary: "Verschiedene Launcher-Verhaltensweisen anpassen."
       tools_launcher_help:
         title: Hilfe
-        summary: 'Launcher-Hilfethemen durchsuchen.'
+        summary: "Launcher-Hilfethemen durchsuchen."
       tools_test:
         title: Tests
-        summary: 'Experimentelle und Diagnose-Dienstprogramme öffnen.'
+        summary: "Experimentelle und Diagnose-Dienstprogramme öffnen."
       version_overall:
         title: Übersicht
         summary: Instanzidentität und übergeordnete Metadaten überprüfen.
@@ -151,13 +151,13 @@ shell:
         summary: Installierte Ressourcenpakete verwalten.
       version_shader:
         title: Shader
-        summary: 'Installierte Shader-Pakete verwalten.'
+        summary: "Installierte Shader-Pakete verwalten."
       version_schematic:
         title: Schematiken
         summary: Schematiken und Baudateien verwalten.
       version_install:
         title: Ändern
-        summary: 'Instanzversion und Loader-Komponenten anpassen.'
+        summary: "Instanzversion und Loader-Komponenten anpassen."
       version_server:
         title: Server
         summary: Gespeicherte Servereinträge verwalten.
@@ -166,18 +166,18 @@ shell:
         summary: Metadaten des ausgewählten Spielstands überprüfen.
       version_saves_backup:
         title: Sicherungen
-        summary: 'Spielstandsicherungen erstellen, importieren und wiederherstellen.'
+        summary: "Spielstandsicherungen erstellen, importieren und wiederherstellen."
       version_saves_datapack:
         title: Datenpakete
         summary: Datenpakete im ausgewählten Spielstand verwalten.
     sidebar_groups:
-      download: 'Download-Arbeitsbereich'
-      setup: 'Einstellungs-Arbeitsbereich'
-      tools: 'Werkzeug-Arbeitsbereich'
-      instance_setup: 'Instanz-Arbeitsbereich'
-      version_saves: 'Spielstand-Arbeitsbereich'
+      download: "Download-Arbeitsbereich"
+      setup: "Einstellungs-Arbeitsbereich"
+      tools: "Werkzeug-Arbeitsbereich"
+      instance_setup: "Instanz-Arbeitsbereich"
+      version_saves: "Spielstand-Arbeitsbereich"
     sidebar_section_groups:
-      community_resources: 'Community-Ressourcen'
+      community_resources: "Community-Ressourcen"
       installers: Installationsprogramme
       game: Spiel
       launcher: Launcher
@@ -190,14 +190,14 @@ shell:
       saves: Spielstände
     utilities:
       back: Zurück
-      back_target: 'Zurück zu {target}'
+      back_target: "Zurück zu {target}"
       task_manager: Aufgabenmanager
       game_log: Spielprotokoll
       home: Zurück zur Startseite
       active_summary: Hilfsoberfläche ist in der Shell aktiv.
       pinned_summary: Angeheftete Hilfsoberfläche der Shell.
     status:
-      line: 'Sofortbefehl: {command} | Splash: {splash} | Navigationstiefe: {depth}'
+      line: "Sofortbefehl: {command} | Splash: {splash} | Navigationstiefe: {depth}"
       splash_on: Ein
       splash_off: Aus
       commands:
@@ -206,7 +206,7 @@ shell:
         optimize_memory: Arbeitsspeicher optimieren
         invalid: Ungültig
     surface_meta:
-      line: '{kind}-Oberfläche • {sidebar_group} • {navigation_state}'
+      line: "{kind}-Oberfläche • {sidebar_group} • {navigation_state}"
       no_sidebar_group: Keine Seitenleistengruppe
       back_available: Zurück verfügbar
       top_level_route: Hauptroute
@@ -216,11 +216,11 @@ shell:
         detail: Detail
         utility: Hilfsoberfläche
     activities:
-      navigated: 'Zu {target} über {source} navigiert.'
-      opened_utility: 'Hilfsoberfläche {target} geöffnet.'
+      navigated: "Zu {target} über {source} navigiert."
+      opened_utility: "Hilfsoberfläche {target} geöffnet."
       stayed_current: Auf der aktuellen Route geblieben.
-      followed_back_target: 'Shell-Zurück-Ziel zu {target} gefolgt.'
-      returned_home: 'Zu {target} zurückgekehrt.'
+      followed_back_target: "Shell-Zurück-Ziel zu {target} gefolgt."
+      returned_home: "Zu {target} zurückgekehrt."
       sources:
         sidebar: Seitenleiste
         top_bar: obere Leiste
@@ -262,12 +262,12 @@ shell:
         archive_name: Vorgeschlagenes Archiv
         source_file_count: Quelldateien
     lines:
-      active_prompt_lane: 'Das Prompt-Overlay ist aktuell auf die Spur {lane} fokussiert.'
+      active_prompt_lane: "Das Prompt-Overlay ist aktuell auf die Spur {lane} fokussiert."
       launch:
-        runtime: 'Die aktuelle Laufzeit verwendet {java} bei {resolution}.'
-        last_completion: 'Letzte Startbenachrichtigung: {message}'
+        runtime: "Die aktuelle Laufzeit verwendet {java} bei {resolution}."
+        last_completion: "Letzte Startbenachrichtigung: {message}"
       crash:
-        export: 'Der Crash-Export zielt derzeit auf {archive_name} mit {file_count} gesammelten Dateien.'
+        export: "Der Crash-Export zielt derzeit auf {archive_name} mit {file_count} gesammelten Dateien."
     sections:
       overview:
         eyebrow: Überblick
@@ -283,18 +283,18 @@ shell:
         title: Absturz
         summary: Maßnahmen und Diagnosen zur Absturzwiederherstellung.
     inbox:
-      title: 'Prompts für {lane}'
-      empty: 'In der Spur {lane} warten keine Prompts.'
+      title: "Prompts für {lane}"
+      empty: "In der Spur {lane} warten keine Prompts."
     activities:
       failure_default: Vorgang fehlgeschlagen.
       switch_lane:
         title: Prompt-Spur gewechselt
-        body: 'In {lane} warten jetzt {count} Prompt(s).'
+        body: "In {lane} warten jetzt {count} Prompt(s)."
       action:
-        title: 'Prompt-Aktion: {label}'
+        title: "Prompt-Aktion: {label}"
       closed:
         title: Prompt geschlossen
-        body: '{prompt_id} wurde aus der Spur {lane} entfernt.'
+        body: "{prompt_id} wurde aus der Spur {lane} entfernt."
       reject_consent:
         title: Zustimmung abgelehnt
         body: Der aktuelle Prompt hat keinen Zustimmungsstatus gespeichert.
@@ -311,29 +311,29 @@ shell:
         body: Eine Startsitzung läuft bereits.
       launch_blocked:
         title: Start durch Prompt blockiert
-        body: 'Bestätige zuerst die Vorab-Start-Prompts oder passe die aktuellen Instanzeinstellungen an.'
+        body: "Bestätige zuerst die Vorab-Start-Prompts oder passe die aktuellen Instanzeinstellungen an."
       precheck_failed:
         title: Vorabprüfungen fehlgeschlagen
       pending_launch_prompts:
         title: Ausstehende Start-Prompts
-        body: '{instance} hat noch {count} zu bestätigende Prompt(s).'
+        body: "{instance} hat noch {count} zu bestätigende Prompt(s)."
       accept_consent:
         title: Zustimmung erteilt
         body: Der Zustimmungsstatus wurde in die gemeinsame Konfiguration geschrieben.
       continue_launch:
         title: Startablauf fortsetzen
-        body_pending: 'Der Vorab-Start-Prompt wurde bestätigt und der aktuelle Start wird fortgesetzt.'
-        body_ready: 'Der Vorab-Start-Prompt wurde bestätigt und die Startschaltfläche ist wieder verfügbar.'
+        body_pending: "Der Vorab-Start-Prompt wurde bestätigt und der aktuelle Start wird fortgesetzt."
+        body_ready: "Der Vorab-Start-Prompt wurde bestätigt und die Startschaltfläche ist wieder verfügbar."
       continue_flow:
         title: Aktuellen Ablauf fortsetzen
         body: Die vom Prompt angeforderte Fortsetzungsaktion wurde abgeschlossen.
       abort_launch:
         title: Startablauf abgebrochen
-        body: 'Der Prompt hat eine Rückkehr zur weiteren Bearbeitung angefordert, daher wurde der aktuelle Start blockiert.'
+        body: "Der Prompt hat eine Rückkehr zur weiteren Bearbeitung angefordert, daher wurde der aktuelle Start blockiert."
       persist_setting:
         title: Prompt-Einstellung gespeichert
         body_non_ascii_disabled: Die Warnung für Nicht-ASCII-Spielpfade wurde deaktiviert.
-        body_value: 'Gespeicherte Einstellung: {value}'
+        body_value: "Gespeicherte Einstellung: {value}"
       persist_java_override_failed:
         title: Start kann nicht erzwungen werden
         body: Für diese Einstellung gibt es keine beschreibbare Instanz.
@@ -356,10 +356,10 @@ shell:
         java_settings: Der Prompt hat die Shell nach der Laufzeitvorbereitung zu den Java-Einstellungen geleitet.
       open_log:
         title: Protokoll öffnen
-        body: 'Das Absturzprotokoll wurde erstellt. Du kannst es auf der Live-Protokollseite öffnen: {path}'
+        body: "Das Absturzprotokoll wurde erstellt. Du kannst es auf der Live-Protokollseite öffnen: {path}"
       crash_report_exported:
         title: Absturzbericht exportiert
-        body: '{path} • {count} Datei(en) archiviert.'
+        body: "{path} • {count} Datei(en) archiviert."
       java_runtime_prepare_failed:
         title: Java-Laufzeitvorbereitung fehlgeschlagen
         body_missing_plan: Der aktuelle Startzustand hat keinen ausführbaren Java-Downloadplan.
@@ -368,10 +368,10 @@ shell:
         body: Die Java-Laufzeit wird im Hintergrund heruntergeladen und registriert.
       java_runtime_ready:
         title: Java-Laufzeit bereit
-        body: '{path} • {downloaded_count} Datei(en) heruntergeladen, {reused_count} Datei(en) wiederverwendet.'
+        body: "{path} • {downloaded_count} Datei(en) heruntergeladen, {reused_count} Datei(en) wiederverwendet."
       game_process_ended:
         title: Spielprozess beendet
-        body: '{instance} • ExitCode {exit_code}'
+        body: "{instance} • ExitCode {exit_code}"
       monitor_exception:
         title: Ausnahme der Sitzungsüberwachung
       crash_prompt_shown:
@@ -387,12 +387,12 @@ shell:
       continue_flow: Ablauf fortsetzen
       accept_consent: Zustimmung erteilen
       reject_consent: Zustimmung ablehnen
-      open_url: 'URL öffnen ({value})'
+      open_url: "URL öffnen ({value})"
       exit_launcher: Launcher beenden
       abort_launch: Start abbrechen
-      append_launch_argument: 'Startargument anhängen ({value})'
-      persist_setting: 'Einstellung speichern ({value})'
-      download_java_runtime: 'Java herunterladen ({value})'
+      append_launch_argument: "Startargument anhängen ({value})"
+      persist_setting: "Einstellung speichern ({value})"
+      download_java_runtime: "Java herunterladen ({value})"
       persist_java_override: Java-Kompatibilitätsausnahme speichern
       ignore_java_once: Java-Kompatibilität einmal ignorieren
       close_prompt: Prompt schließen
@@ -402,44 +402,44 @@ shell:
     external_open:
       success:
         title: Externes Ziel geöffnet
-        body: '{message} {target}'
+        body: "{message} {target}"
         url: Der vom Prompt angeforderte externe Link wurde geöffnet.
         crash_report_exported: Das Archiv des Absturzberichts wurde exportiert und geöffnet.
       failure:
         title: Externes Ziel konnte nicht geöffnet werden
         missing_target: Es fehlt ein zu öffnendes Ziel.
-        body: '{target} • {error}'
+        body: "{target} • {error}"
         unknown_error: Unbekannter Fehler
     launch_logs:
-      process_exited: 'Spielprozess wurde mit Code {exit_code} beendet.'
-      monitor_exception: 'Ausnahme der Sitzungsüberwachung: {message}'
+      process_exited: "Spielprozess wurde mit Code {exit_code} beendet."
+      monitor_exception: "Ausnahme der Sitzungsüberwachung: {message}"
     crash:
-      details_header: 'Detaillierte Informationen:'
+      details_header: "Detaillierte Informationen:"
       launch_failure:
-        exit_code: 'Der Spielprozess wurde unerwartet mit Code {exit_code} beendet.'
-        raw_output_log: 'Rohausgabeprotokoll: {path}'
+        exit_code: "Der Spielprozess wurde unerwartet mit Code {exit_code} beendet."
+        raw_output_log: "Rohausgabeprotokoll: {path}"
     java:
-      runtime_name: 'Java {version}'
-      component_runtime_name: '{component} (Java {version})'
+      runtime_name: "Java {version}"
+      component_runtime_name: "{component} (Java {version})"
       tags:
         bit64: 64-Bit
         prompt_download: Prompt-Download
-        reused_count: '{count} wiederverwendet'
+        reused_count: "{count} wiederverwendet"
   surface_actions:
     sidebar:
-      title: 'Seitenleistenaktion: {action}'
-      body: '{title} • {command}'
+      title: "Seitenleistenaktion: {action}"
+      body: "{title} • {command}"
   game_log:
     actions:
       clear_cache: Cache leeren
       export: Protokolle exportieren
       open_directory: Protokollordner öffnen
-      open_file: 'Protokolldatei öffnen: {name}'
+      open_file: "Protokolldatei öffnen: {name}"
       refresh: Protokolle aktualisieren
     clear_cache:
       completed: Der Protokollcache der aktuellen Sitzung wurde geleert.
     empty:
-      description: 'Launcher-Protokolle, generierte Startskripte und Rohausgaben erscheinen hier nach dem Spielstart.'
+      description: "Launcher-Protokolle, generierte Startskripte und Rohausgaben erscheinen hier nach dem Spielstart."
       title: Noch keine Protokolle
     export:
       empty_directory: Im aktuellen Protokollordner gibt es keine zu exportierenden Protokolldateien.
@@ -470,27 +470,27 @@ shell:
       help_item: Hilfeeintrag
       inline_default_info: Aktionsinfo
       open_file: Datei öffnen
-      open_help: 'Hilfe öffnen: {name}'
+      open_help: "Hilfe öffnen: {name}"
       open_web: Webseite öffnen
       view_image: Bild ansehen
     activities:
-      open: 'Hilfe öffnen: {title}'
+      open: "Hilfe öffnen: {title}"
     empty:
       description: Einen Hilfeeintrag auswählen, um dessen Inhalt, Quelle und verfügbare Aktionen anzuzeigen.
       title: Kein Hilfeeintrag ausgewählt
     failures:
-      action: '{title} fehlgeschlagen'
+      action: "{title} fehlgeschlagen"
       download_target_missing: Die heruntergeladene Zieldatei fehlt.
-      entry_not_found: 'Hilfeeintrag nicht gefunden: {reference}'
+      entry_not_found: "Hilfeeintrag nicht gefunden: {reference}"
       invalid_download_address: Ungültige Download-Adresse.
       missing_action_target: Diese Aktion hat kein Ziel.
       missing_copy_text: Es gibt keinen zu kopierenden Text.
       missing_target: Das Ziel ist nicht verfügbar.
     generated:
-      example_button: 'Beispielschaltfläche: {title}'
-      example_button_with_summary: 'Beispielschaltfläche: {summary}'
-      example_button_with_title_and_summary: 'Beispielschaltfläche: {title} ({summary})'
-      hint: 'Hinweis: {text}'
+      example_button: "Beispielschaltfläche: {title}"
+      example_button_with_summary: "Beispielschaltfläche: {summary}"
+      example_button_with_title_and_summary: "Beispielschaltfläche: {title} ({summary})"
+      hint: "Hinweis: {text}"
     popup:
       default_button: OK
       missing_content: Dieses Popup enthält keinen anzeigbaren Inhalt.
@@ -510,7 +510,7 @@ shell:
       parse_failed:
         body: Das Hilfedokument konnte nicht korrekt analysiert werden.
         title: Analyse fehlgeschlagen
-      source_line: 'Quelle: {source}'
+      source_line: "Quelle: {source}"
       supplement:
         title: Ergänzung
     source_unresolved: Quelle nicht aufgelöst
@@ -521,23 +521,23 @@ shell:
       refresh_failure: Instanzen aktualisieren fehlgeschlagen
       switch_directory: Instanzordner wechseln
       switch_instance: Startinstanz wechseln
-      switch_instance_detail: 'Die aktuelle Startinstanz wurde zu {name} gewechselt.'
+      switch_instance_detail: "Die aktuelle Startinstanz wurde zu {name} gewechselt."
     delete:
       activity: Instanz löschen
       cancelled: Löschung abgebrochen.
       confirm_action: Löschen
-      confirm_message: 'Instanz {name} löschen? Der Launcher wird zuerst versuchen, sie in den Papierkorb zu verschieben.'
+      confirm_message: "Instanz {name} löschen? Der Launcher wird zuerst versuchen, sie in den Papierkorb zu verschieben."
       confirm_title: Diese Instanz löschen?
       failure: Instanz löschen fehlgeschlagen
-      moved_to_trash: 'Instanz {name} in den Papierkorb verschoben: {path}'
-      permanently_deleted: 'Instanz {name} dauerhaft gelöscht.'
+      moved_to_trash: "Instanz {name} in den Papierkorb verschoben: {path}"
+      permanently_deleted: "Instanz {name} dauerhaft gelöscht."
     detail:
-      last_modified: '{path} • Zuletzt geändert {time}'
+      last_modified: "{path} • Zuletzt geändert {time}"
     empty:
       download: Instanz herunterladen
-      no_match_description: 'Keine Instanzen entsprechen „{query}“. Versuche ein anderes Stichwort oder leere die Suche.'
+      no_match_description: "Keine Instanzen entsprechen „{query}“. Versuche ein anderes Stichwort oder leere die Suche."
       no_match_title: Keine passenden Instanzen
-      none_description: 'Es wurden keine Instanzen gefunden. Lade zuerst eine neue Instanz herunter oder füge links einen vorhandenen Ordner hinzu.'
+      none_description: "Es wurden keine Instanzen gefunden. Lade zuerst eine neue Instanz herunter oder füge links einen vorhandenen Ordner hinzu."
       none_title: Keine Instanzen verfügbar
       open_download_activity: Download-Seite öffnen
     entry:
@@ -557,23 +557,23 @@ shell:
       current_activity: Aktueller Instanzordner
       open_tooltip: Ordner öffnen
       remove_tooltip: Ordner entfernen
-      switched: 'Instanzordner zu {directory} gewechselt.'
+      switched: "Instanzordner zu {directory} gewechselt."
     folder_remove:
       activity: Instanzordner entfernen
       cancelled: Entfernen abgebrochen.
       confirm_action: Entfernen
-      confirm_message: 'Diesen Ordner aus der Liste entfernen?{newline}{newline}{path}'
+      confirm_message: "Diesen Ordner aus der Liste entfernen?{newline}{newline}{path}"
       confirm_title: Diesen Ordner entfernen?
       failure: Instanzordner entfernen fehlgeschlagen
       not_saved: Dieser Ordner wurde nicht gespeichert und kann nicht aus der Liste entfernt werden.
-      removed: '{path} aus der Ordnerliste entfernt.'
-      removed_and_switched: '{removed} entfernt und zu {target} gewechselt.'
-      still_active: '{path} ist weiterhin der aktive Instanzordner.'
+      removed: "{path} aus der Ordnerliste entfernt."
+      removed_and_switched: "{removed} entfernt und zu {target} gewechselt."
+      still_active: "{path} ist weiterhin der aktive Instanzordner."
     groups:
       api_installable: API-installierbar
       error: Fehlerhafte Instanzen
       favorites: Favorites
-      header: '{title} ({count})'
+      header: "{title} ({count})"
       hidden: Ausgeblendet
       loaders:
         cleanroom: Cleanroom
@@ -590,15 +590,15 @@ shell:
       folders: Ordner
       shortcuts: Verknüpfungen
     navigation:
-      launch: 'Startinstanz zu {name} gewechselt und zu Start zurückgekehrt.'
-      overview: 'Übersichtsseite für {name} geöffnet.'
+      launch: "Startinstanz zu {name} gewechselt und zu Start zurückgekehrt."
+      overview: "Übersichtsseite für {name} geöffnet."
     open_folder:
       activity: Ordner öffnen
       failure: Ordner konnte nicht geöffnet werden
       missing_path: Der Ordnerpfad ist nicht verfügbar.
-      not_found: 'Ordner nicht gefunden: {path}'
+      not_found: "Ordner nicht gefunden: {path}"
     results:
-      count: '{count} Instanz(en) angezeigt'
+      count: "{count} Instanz(en) angezeigt"
       filtered_none: Keine Instanzen entsprechen dem aktuellen Filter.
       none: Im aktuellen Startverzeichnis sind keine Instanzen verfügbar.
     route:
@@ -615,12 +615,12 @@ shell:
       watermark: Instanzen suchen
     shortcuts:
       add_folder:
-        added_and_switched: 'Ordner hinzugefügt und zu {path} gewechselt.'
+        added_and_switched: "Ordner hinzugefügt und zu {path} gewechselt."
         cancelled: Vorgang abgebrochen.
         description: Einen vorhandenen Instanzordner zur Launcher-Liste hinzufügen.
         failure: Ordner hinzufügen fehlgeschlagen
         pick_title: Instanzordner auswählen
-        switched: 'Zu {path} gewechselt.'
+        switched: "Zu {path} gewechselt."
         title: Vorhandenen Ordner hinzufügen
       import_pack:
         cancelled: Import abgebrochen.
@@ -630,7 +630,7 @@ shell:
         no_name: Konnte keinen Instanznamen aus dem ausgewählten Archiv bestimmen.
         pick_filter: Modpack Archives
         pick_title: Modpack-Archiv auswählen
-        task_queued: 'Aufgabe in Warteschlange: {task}'
+        task_queued: "Aufgabe in Warteschlange: {task}"
         title: Modpack importieren
       trash:
         description: Den Systempapierkorb öffnen.
@@ -644,29 +644,29 @@ shell:
       hidden: Ausgeblendet
       rarely_used: Selten verwendet
     tasks:
-      install_modpack: 'Modpack-Installation: {name}'
+      install_modpack: "Modpack-Installation: {name}"
   task_manager:
     actions:
       clear_finished: Abgeschlossene Aufgaben löschen
     activity:
-      canceled: 'Nach {duration} abgebrochen'
-      failed: 'Nach {duration} fehlgeschlagen'
-      running: 'Läuft seit {duration} • zuletzt aktualisiert {recent}'
-      success: 'In {duration} abgeschlossen'
-      waiting: 'Wartet seit {duration}'
+      canceled: "Nach {duration} abgebrochen"
+      failed: "Nach {duration} fehlgeschlagen"
+      running: "Läuft seit {duration} • zuletzt aktualisiert {recent}"
+      success: "In {duration} abgeschlossen"
+      waiting: "Wartet seit {duration}"
     duration:
-      hours_minutes: '{hours}h {minutes}m'
-      minutes_seconds: '{minutes}m {seconds}s'
-      seconds: '{seconds}s'
+      hours_minutes: "{hours}h {minutes}m"
+      minutes_seconds: "{minutes}m {seconds}s"
+      seconds: "{seconds}s"
     empty:
       description: Derzeit sind keine Hintergrundaufgaben aktiv.
       title: Keine Hintergrundaufgaben
     entries:
-      children: '{count} Unteraufgabe(n)'
+      children: "{count} Unteraufgabe(n)"
     labels:
-      current_speed: 'Aktuelle Geschwindigkeit: {speed}'
+      current_speed: "Aktuelle Geschwindigkeit: {speed}"
       install_progress: Installationsfortschritt
-      remaining_files: 'Verbleibende Dateien: {count}'
+      remaining_files: "Verbleibende Dateien: {count}"
     left:
       download_speed: Download-Geschwindigkeit
       overall_progress: Gesamtfortschritt
@@ -676,8 +676,8 @@ shell:
       waiting_state_message: Wartet auf Ausführung
     recent:
       just_now: gerade eben
-      minutes_ago: 'vor {minutes} Minute(n)'
-      seconds_ago: 'vor {seconds} Sekunde(n)'
+      minutes_ago: "vor {minutes} Minute(n)"
+      seconds_ago: "vor {seconds} Sekunde(n)"
     route:
       description: Den Status wartender, laufender, abgeschlossener und fehlgeschlagener Hintergrundaufgaben prüfen.
       facts:
@@ -686,10 +686,10 @@ shell:
         running: Läuft
         waiting: Wartend
     stage:
-      canceled: 'Abgebrochen • {duration}'
-      failed: 'Fehlgeschlagen • {duration}'
-      running: 'Läuft • {duration}'
-      success: 'Abgeschlossen • {duration}'
+      canceled: "Abgebrochen • {duration}"
+      failed: "Fehlgeschlagen • {duration}"
+      running: "Läuft • {duration}"
+      success: "Abgeschlossen • {duration}"
       waiting: Wartend
     states:
       canceled: Abgebrochen
@@ -698,12 +698,12 @@ shell:
       success: Abgeschlossen
       waiting: Wartend
     summary:
-      active: '{running} aktiv, {waiting} wartend'
+      active: "{running} aktiv, {waiting} wartend"
       none: Keine Hintergrundaufgaben
   tools:
     common:
       confirm: Bestätigen
-      failure_title: '{title} fehlgeschlagen'
+      failure_title: "{title} fehlgeschlagen"
     help:
       default_group: Allgemein
       search:
@@ -734,7 +734,7 @@ shell:
         toolbox: Werkzeugkasten
       custom_download:
         address: Download-URL
-        description: 'PCLs Mehrfach-Download-Engine verwenden, um beliebige Dateien herunterzuladen. Manche Seiten liefern möglicherweise 403 zurück und können nicht normal heruntergeladen werden.'
+        description: "PCLs Mehrfach-Download-Engine verwenden, um beliebige Dateien herunterzuladen. Manche Seiten liefern möglicherweise 403 zurück und können nicht normal heruntergeladen werden."
         file_name: Dateiname
         invalid_address: Die Download-URL ist ungültig.
         missing_folder: Bitte zuerst einen Zielordner auswählen.
@@ -750,7 +750,7 @@ shell:
         start: Download starten
         start_activity: Benutzerdefinierten Download starten
         start_failure: Benutzerdefinierten Download starten fehlgeschlagen
-        user_agent: 'User-Agent'
+        user_agent: "User-Agent"
       head:
         no_skin_selected: Keine Skin-Datei ausgewählt.
         output_missing: Das Kopfbild wurde nicht erzeugt.
@@ -779,11 +779,11 @@ shell:
         activity: Formularseiten und Werkzeugkasten-Aktionen wurden aus der aktuellen Launcher-Konfiguration neu geladen.
         title: Testwerkzeuge aktualisieren
       server_query:
-        address_watermark: 'Serveradresse oder Host:Port'
+        address_watermark: "Serveradresse oder Host:Port"
         empty_address: Die Serveradresse ist leer und kann nicht abgefragt werden.
-        error: 'Verbindung nicht möglich: {message}'
+        error: "Verbindung nicht möglich: {message}"
         loading: Wird abgefragt...
-        navigation: 'Zur Testseite gewechselt und für die Abfrage von {address} vorbereitet.'
+        navigation: "Zur Testseite gewechselt und für die Abfrage von {address} vorbereitet."
         no_result: Es wurden keine Serverinformationen zurückgegeben.
         open_activity: Serverinspektor öffnen
         query: Abfragen
@@ -794,12 +794,12 @@ shell:
           empty: Die Serveradresse darf nicht leer sein.
           invalid_host: Ungültiger Hostname.
           invalid_ipv6: Ungültiges IPv6-Adressformat.
-          invalid_port: 'Ungültiger Port: {port}'
+          invalid_port: "Ungültiger Port: {port}"
       toolbox:
         actions:
           clear_rubbish:
-            none_removed: 'Es mussten keine Caches, Protokolle oder Absturzberichte bereinigt werden.'
-            removed: '{count} Cache- oder Protokolleintrag/-einträge bereinigt.'
+            none_removed: "Es mussten keine Caches, Protokolle oder Absturzberichte bereinigt werden."
+            removed: "{count} Cache- oder Protokolleintrag/-einträge bereinigt."
             title: Spielreste bereinigen
             tooltip: Zwischengespeicherte Protokolle und Absturzberichte bereinigen.
           crash_test:
@@ -807,12 +807,12 @@ shell:
             tooltip: Den Absturz-Prompt auslösen.
           create_shortcut:
             cancelled: Verknüpfungserstellung abgebrochen.
-            choice_info: 'Ort: {path}'
+            choice_info: "Ort: {path}"
             choose_title: Ort für Verknüpfung wählen
             confirm: Erstellen
-            created_hint: 'Verknüpfung in {target} erstellt.'
+            created_hint: "Verknüpfung in {target} erstellt."
             failure_title: Verknüpfung erstellen fehlgeschlagen
-            location: '{title}-Ort: {path}'
+            location: "{title}-Ort: {path}"
             no_targets: Das aktuelle System stellt keinen verfügbaren Ort für Verknüpfungen bereit.
             summary_warning: Diese Verknüpfung wird nicht automatisch entfernt. Entferne sie manuell, bevor du den Launcher löschst oder verschiebst.
             targets:
@@ -820,26 +820,26 @@ shell:
               start_menu: Startmenü
             title: Verknüpfung erstellen
             tooltip: Eine Launcher-Verknüpfung erstellen.
-            unknown_target: 'Unbekanntes Verknüpfungsziel: {id}'
+            unknown_target: "Unbekanntes Verknüpfungsziel: {id}"
           daily_luck:
-            activity: 'Heutiger Glückswert: {value}'
-            dialog_title: 'Heutiges Glück - {date}'
-            high_message: 'Dein Glückswert heute ist {value}! {rating}'
-            low_message: 'Dein Glückswert heute ist {value}... {rating}'
+            activity: "Heutiger Glückswert: {value}"
+            dialog_title: "Heutiges Glück - {date}"
+            high_message: "Dein Glückswert heute ist {value}! {rating}"
+            low_message: "Dein Glückswert heute ist {value}... {rating}"
             ratings:
-              r0: 'Es ist eine 100-Punkte-Skala.'
+              r0: "Es ist eine 100-Punkte-Skala."
               r10: Auf keinen Fall...
               r30: Autsch...
               r40: Gerade so okay...
               r60: Nicht schlecht.
-              r90: 'Ausgezeichnet!'
+              r90: "Ausgezeichnet!"
               r95: Fast 100...
-              r100: '100! 100! Verstecktes Theme? Moment, der plattformübergreifende Build hat das wahrscheinlich nicht...'
-            title: 'Heutiges Glück'
-            tooltip: 'Heutiges Glück prüfen.'
+              r100: "100! 100! Verstecktes Theme? Moment, der plattformübergreifende Build hat das wahrscheinlich nicht..."
+            title: "Heutiges Glück"
+            tooltip: "Heutiges Glück prüfen."
           launch_count:
             dialog_title: Startanzahl
-            message: 'PCL hat das Spiel bereits {count} Mal für dich gestartet.'
+            message: "PCL hat das Spiel bereits {count} Mal für dich gestartet."
             title: Startanzahl
             tooltip: Anzeigen, wie oft der Launcher das Spiel gestartet hat.
           memory_optimize:
@@ -847,15 +847,15 @@ shell:
             confirm_title: Speicheroptimierung bestätigen?
             continue: Weiter
             prompts:
-              r0: 'Hä...?'
+              r0: "Hä...?"
               r2: Der Speicher ist knapp. Mehr RAM wird empfohlen, um wiederholte Optimierungen und starken Festplattenzugriff zu vermeiden.
               r6: Lass das System nach der Nutzung dieser Funktion etwa eine Minute zur Ruhe kommen.
               r16: Du hast eine ordentliche Menge Speicher. Lass das System den Speicher zuerst selbst verwalten.
               r32: Insgesamt ist reichlich Speicher vorhanden. Schließe lieber unnötige Programme, statt die Speicheroptimierung zu versuchen.
             title: Speicheropt.
             tooltip: Automatisch etwas Speicher freigeben.
-            unsupported_other: 'Diese Plattform bietet keinen Speicheroptimierer, der mit der Standardimplementierung kompatibel ist. Der Bestätigungsablauf bleibt erhalten, es wird jedoch kein externer Editor geöffnet.'
-            unsupported_windows: 'Das Avalonia-Frontend hat den Windows-Speicheroptimierer der Standardimplementierung noch nicht integriert. Der Bestätigungsablauf bleibt erhalten, es wird jedoch kein externer Editor geöffnet.'
+            unsupported_other: "Diese Plattform bietet keinen Speicheroptimierer, der mit der Standardimplementierung kompatibel ist. Der Bestätigungsablauf bleibt erhalten, es wird jedoch kein externer Editor geöffnet."
+            unsupported_windows: "Das Avalonia-Frontend hat den Windows-Speicheroptimierer der Standardimplementierung noch nicht integriert. Der Bestätigungsablauf bleibt erhalten, es wird jedoch kein externer Editor geöffnet."
         unsupported: Diese Werkzeugkasten-Aktion wird im Avalonia-Frontend noch nicht unterstützt.
   startup:
     migration_warnings:
@@ -869,15 +869,15 @@ startup:
     special_build:
       title: Spezieller Build
       debug:
-        message: 'Dieser Launcher-Build wurde zum Debuggen erstellt und kann instabil sein. Setze {hint_env_var}, um diese Erinnerung zu deaktivieren, oder öffne die neueste stabile Veröffentlichung: {latest_release_url}'
+        message: "Dieser Launcher-Build wurde zum Debuggen erstellt und kann instabil sein. Setze {hint_env_var}, um diese Erinnerung zu deaktivieren, oder öffne die neueste stabile Veröffentlichung: {latest_release_url}"
       ci:
-        message: 'Dieser Launcher-Build stammt aus der CI und kann unvollständig sein. Setze {hint_env_var}, um diese Erinnerung zu deaktivieren, oder öffne die neueste stabile Veröffentlichung: {latest_release_url}'
+        message: "Dieser Launcher-Build stammt aus der CI und kann unvollständig sein. Setze {hint_env_var}, um diese Erinnerung zu deaktivieren, oder öffne die neueste stabile Veröffentlichung: {latest_release_url}"
       actions:
         continue: Weiter
         open_release_and_exit: Veröffentlichungsseite öffnen und beenden
     eula:
       title: Lizenzvereinbarung
-      message: 'Du musst die Launcher-Vereinbarung prüfen und akzeptieren, bevor du fortfahren kannst. Referenz: {eula_url}'
+      message: "Du musst die Launcher-Vereinbarung prüfen und akzeptieren, bevor du fortfahren kannst. Referenz: {eula_url}"
       actions:
         accept: Akzeptieren
         reject: Ablehnen und beenden
@@ -893,20 +893,20 @@ launch:
   announcements:
     community_edition_intro:
       title: Hinweis zur Cross-Platform Edition
-      message: 'Du verwendest die plattformübergreifende Ausgabe von PCL. Diese Ausgabe wird unabhängig entwickelt und gepflegt, und ihre Roadmap unterscheidet sich von der offiziellen Veröffentlichung.'
+      message: "Du verwendest die plattformübergreifende Ausgabe von PCL. Diese Ausgabe wird unabhängig entwickelt und gepflegt, und ihre Roadmap unterscheidet sich von der offiziellen Veröffentlichung."
       detail: Dieser Build wird weiterhin aktiv getestet. Feedback und Fehlerberichte sind willkommen.
   notifications:
-    success: '{instance_name} wurde erfolgreich gestartet.'
-    abort_with_hint: 'Start wurde abgebrochen: {hint}'
+    success: "{instance_name} wurde erfolgreich gestartet."
+    abort_with_hint: "Start wurde abgebrochen: {hint}"
     script_export_canceled: Der Export des Startskripts wurde abgeschlossen und der Start wurde gestoppt.
     launch_canceled: Start abgebrochen.
-    none: ''
+    none: ""
   precheck:
     failures:
-      instance_path_reserved_chars: 'Der Instanzpfad darf ! oder ; nicht enthalten ({path}).'
-      instance_indie_path_reserved_chars: 'Der unabhängige Spielpfad darf ! oder ; nicht enthalten ({path}).'
+      instance_path_reserved_chars: "Der Instanzpfad darf ! oder ; nicht enthalten ({path})."
+      instance_indie_path_reserved_chars: "Der unabhängige Spielpfad darf ! oder ; nicht enthalten ({path})."
       instance_not_selected: Es ist derzeit keine Instanz ausgewählt.
-      instance_has_error: 'Die ausgewählte Instanz befindet sich in einem ungültigen Zustand: {detail}'
+      instance_has_error: "Die ausgewählte Instanz befindet sich in einem ungültigen Zustand: {detail}"
       no_profile_selected: Wähle vor dem Start ein Anmeldeprofil aus.
       microsoft_profile_required: Diese Instanz erfordert ein Microsoft-Profil.
       auth_profile_required: Diese Instanz erfordert ein Authlib-Profil.
@@ -916,7 +916,7 @@ launch:
   prompts:
     non_ascii_path:
       title: Warnung vor Nicht-ASCII-Pfad
-      message: '{instance_name} verwendet einen Pfad mit Nicht-ASCII-Zeichen. Einige Java-Laufzeiten oder Mods können in dieser Umgebung fehlschlagen.'
+      message: "{instance_name} verwendet einen Pfad mit Nicht-ASCII-Zeichen. Einige Java-Laufzeiten oder Mods können in dieser Umgebung fehlschlagen."
       actions:
         continue: Trotzdem fortfahren
         abort: Start abbrechen
@@ -924,7 +924,7 @@ launch:
     purchase:
       optional:
         title: Minecraft-Besitz empfohlen
-        message: 'Es ist kein Microsoft-Besitzprofil ausgewählt. Wenn du Minecraft besitzt, melde dich an oder kaufe es hier: {purchase_url}'
+        message: "Es ist kein Microsoft-Besitzprofil ausgewählt. Wenn du Minecraft besitzt, melde dich an oder kaufe es hier: {purchase_url}"
         actions:
           buy: Kaufseite öffnen
           continue: Weiter
@@ -949,19 +949,19 @@ launch:
         confirm: Schließen
       auto_download:
         title: Java-Laufzeit herunterladen
-        message: 'Keine kompatible Laufzeit verfügbar. {version} automatisch herunterladen und registrieren?'
+        message: "Keine kompatible Laufzeit verfügbar. {version} automatisch herunterladen und registrieren?"
         actions:
           download: Herunterladen
           cancel: Abbrechen
     support:
-      title: 'Start-Meilenstein {launch_count}'
-      message: 'Du hast das Spiel {launch_count} Mal gestartet. Wenn PCL-ME hilfreich war, erwäge, das Projekt zu unterstützen.'
+      title: "Start-Meilenstein {launch_count}"
+      message: "Du hast das Spiel {launch_count} Mal gestartet. Wenn PCL-ME hilfreich war, erwäge, das Projekt zu unterstützen."
       actions:
         sponsor: Unterstützen
         continue: Weiter
     java_compatibility:
       title: Java-Kompatibilitätswarnung
-      message: '{runtime_label} erfüllt möglicherweise nicht den erforderlichen Java-Bereich ({minimum_version} - {maximum_version}).'
+      message: "{runtime_label} erfüllt möglicherweise nicht den erforderlichen Java-Bereich ({minimum_version} - {maximum_version})."
       actions:
         force_current: Aktuelles Java verwenden
         use_compatible: Kompatibles Java verwenden
@@ -982,9 +982,9 @@ launch:
       step: Schritt
     stages:
       assets: Assets werden heruntergeladen
-      assets_file: 'Asset wird heruntergeladen: {file_name}'
+      assets_file: "Asset wird heruntergeladen: {file_name}"
       support: Unterstützungsdateien werden repariert
-      support_file: 'Datei wird repariert: {file_name}'
+      support_file: "Datei wird repariert: {file_name}"
       verify_instance: Instanzdateien werden überprüft
     state:
       canceling:
@@ -1002,9 +1002,9 @@ launch:
       parrots_dance: Parrots dance near a jukebox that is currently playing a music disc.
       map_lock: Put a map and a glass pane into a cartography table to lock the map contents.
       baby_turtle_scute: A baby turtle drops a scute the moment it grows up.
-      potion_damage: 'Potion damage ignores armor, so Netherite armor will not save you from harming potions.'
-      dinnerbone: 'In Java Edition, naming a mob Dinnerbone or Grumm turns it upside down.'
-      best_selling: 'Minecraft is one of the best-selling video games of all time.'
+      potion_damage: "Potion damage ignores armor, so Netherite armor will not save you from harming potions."
+      dinnerbone: "In Java Edition, naming a mob Dinnerbone or Grumm turns it upside down."
+      best_selling: "Minecraft is one of the best-selling video games of all time."
   profile:
     actions:
       add_or_login: Hinzufügen oder Anmelden
@@ -1026,16 +1026,16 @@ launch:
     instance_create:
       title: Profil erstellen
       status_default: Der Drittanbieter-Authentifizierungsserver wurde aus den Instanzeinstellungen importiert.
-      status_named: '{auth_name} wurde aus den Instanzeinstellungen importiert.'
+      status_named: "{auth_name} wurde aus den Instanzeinstellungen importiert."
       navigation: Die Startroute aus den Instanzeinstellungen wurde zur Erstellung eines Auth-Profils geöffnet.
-      completed: 'Die Startroute zur Erstellung eines Drittanbieter-Auth-Profils für {instance_name} wurde geöffnet.'
+      completed: "Die Startroute zur Erstellung eines Drittanbieter-Auth-Profils für {instance_name} wurde geöffnet."
     authlib:
       actions:
         login: Anmelden
         use_littleskin: LittleSkin verwenden
       activities:
         use_littleskin: Auth-Server wechseln
-      completed: 'Angemeldet als {profile_name}'
+      completed: "Angemeldet als {profile_name}"
       errors:
         invalid_server: Ungültige Auth-Server-Adresse
         login_failed: Authlib-Anmeldung fehlgeschlagen
@@ -1043,18 +1043,18 @@ launch:
         required_fields: Serveradresse, Benutzername und Passwort eingeben
       password_watermark: Passwort
       server_watermark: Auth-Server-URL
-      title: 'Authlib-Injector'
+      title: "Authlib-Injector"
       user_name_watermark: Benutzername
     chooser:
-      authlib: 'Authlib-Injector'
-      microsoft: 'Microsoft-Konto'
-      offline: 'Offline-Profil'
+      authlib: "Authlib-Injector"
+      microsoft: "Microsoft-Konto"
+      offline: "Offline-Profil"
     delete:
       canceled: Löschen abgebrochen
-      completed: 'Profil {profile_name} gelöscht'
+      completed: "Profil {profile_name} gelöscht"
       confirmation:
         confirm: Löschen
-        message: 'Das ausgewählte Profil löschen? Dies kann nicht rückgängig gemacht werden.'
+        message: "Das ausgewählte Profil löschen? Dies kann nicht rückgängig gemacht werden."
         title: Profil löschen
       list_changed: Die Profilliste hat sich geändert. Bitte versuche es erneut.
     entry:
@@ -1062,8 +1062,8 @@ launch:
     hint:
       selected: Profil bereit
     kinds:
-      authlib: 'Authlib-Injector'
-      authlib_with_server: 'Authlib-Injector ({server_name})'
+      authlib: "Authlib-Injector"
+      authlib_with_server: "Authlib-Injector ({server_name})"
       microsoft: Microsoft-Konto
       offline: Offline-Profil
     microsoft:
@@ -1071,7 +1071,7 @@ launch:
         continue_after_auth: Weiter
         reopen_browser: Browser erneut öffnen
         start: Anmeldung starten
-      completed: 'Angemeldet als {user_name}'
+      completed: "Angemeldet als {user_name}"
       device_code: Gerätecode
       errors:
         authorization_declined: Die Autorisierung wurde abgelehnt.
@@ -1092,7 +1092,7 @@ launch:
     offline:
       actions:
         create: Erstellen
-      completed: 'Offline-Profil {user_name} erstellt'
+      completed: "Offline-Profil {user_name} erstellt"
       custom_uuid_watermark: Benutzerdefinierte UUID (optional)
       errors:
         empty_user_name: Einen Benutzernamen eingeben
@@ -1105,28 +1105,28 @@ launch:
         standard: Standard UUID
     refresh:
       authlib:
-        completed: 'Authlib-Profil {profile_name} aktualisiert'
+        completed: "Authlib-Profil {profile_name} aktualisiert"
         errors:
-          failed: 'Authlib-Aktualisierung fehlgeschlagen: {message}'
+          failed: "Authlib-Aktualisierung fehlgeschlagen: {message}"
           incomplete_session: Die aktuelle Authlib-Sitzung ist unvollständig
           invalid_server: Die gespeicherte Auth-Server-Adresse ist ungültig
           multiple_roles: Es wurden mehrere Rollen zurückgegeben. Bitte melde dich erneut an.
           profile_changed: Das zurückgegebene Profil stimmt nicht mit dem aktuellen Konto überein
           relogin_required: Sitzung abgelaufen. Bitte erneut anmelden.
         reauthenticate: Erneute Authentifizierung...
-        reauthenticated: 'Erneut authentifiziert als {profile_name}'
+        reauthenticated: "Erneut authentifiziert als {profile_name}"
         refresh_session: Sitzung wird aktualisiert...
-        valid: 'Authlib-Sitzung für {profile_name} ist gültig'
+        valid: "Authlib-Sitzung für {profile_name} ist gültig"
         validate_session: Sitzung wird überprüft...
       canceled: Aktualisierung abgebrochen
       errors:
         expired_keyword: abgelaufen
-        request_failed_status: 'Anfrage mit Statuscode {status_code} fehlgeschlagen'
+        request_failed_status: "Anfrage mit Statuscode {status_code} fehlgeschlagen"
       microsoft:
         check_ownership: Spielbesitz wird geprüft...
-        completed: 'Microsoft-Profil {profile_name} aktualisiert'
+        completed: "Microsoft-Profil {profile_name} aktualisiert"
         errors:
-          failed: 'Microsoft-Aktualisierung fehlgeschlagen: {message}'
+          failed: "Microsoft-Aktualisierung fehlgeschlagen: {message}"
           missing_refresh_token: Refresh-Token fehlt. Bitte erneut anmelden.
           relogin_required: Sitzung abgelaufen. Bitte erneut anmelden.
         get_minecraft_access_token: Minecraft-Zugriffstoken wird abgerufen...
@@ -1134,7 +1134,7 @@ launch:
         get_xsts_token: XSTS-Token wird abgerufen...
         refresh_account: Microsoft-Konto wird aktualisiert...
         sync_profile: Profilinformationen werden synchronisiert...
-        valid: 'Microsoft-Sitzung für {profile_name} ist gültig'
+        valid: "Microsoft-Sitzung für {profile_name} ist gültig"
         validate_session: Sitzung wird überprüft...
       not_required: Dieses Profil benötigt keine Aktualisierung
     selection:
@@ -1150,31 +1150,31 @@ launch:
       instance_verification: Instanzüberprüfung
       java_check_ignored: Java-Warnung ignoriert
       prelaunch_account_check: Vorab-Kontoprüfung
-    current_instance: 'Aktuelle Instanz: {instance_name}'
+    current_instance: "Aktuelle Instanz: {instance_name}"
     errors:
-      instance_verification_failed: 'Instanzüberprüfung fehlgeschlagen: {message}'
+      instance_verification_failed: "Instanzüberprüfung fehlgeschlagen: {message}"
       java_missing: Es ist keine Java-Laufzeit ausgewählt
     hints:
       launch_succeeded: Start erfolgreich begonnen
     lines:
-      java: 'Java: {java_label}'
-      java_warning: 'Java-Warnung: {message}'
-      precheck: 'Vorabprüfung: {result}'
-      profile: 'Profil: {profile_label}'
-      prompts: 'Prompts: {prompt_count}, Support-Prompt: {support_prompt}'
-      session: 'Sitzung: {session_state}'
+      java: "Java: {java_label}"
+      java_warning: "Java-Warnung: {message}"
+      precheck: "Vorabprüfung: {result}"
+      profile: "Profil: {profile_label}"
+      prompts: "Prompts: {prompt_count}, Support-Prompt: {support_prompt}"
+      session: "Sitzung: {session_state}"
     logs:
       canceled: Start abgebrochen
-      failed: 'Start fehlgeschlagen: {message}'
+      failed: "Start fehlgeschlagen: {message}"
       task_manager_progress: Der Fortschritt des Aufgabenmanagers wird verfolgt
       verifying_instance_files: Instanzdateien werden überprüft...
     messages:
-      announcement_dismissed: 'Ankündigung ausgeblendet: {title}'
+      announcement_dismissed: "Ankündigung ausgeblendet: {title}"
       canceled: Start abgebrochen
-      game_process_started: '{instance_name} gestartet (PID {pid})'
-      instance_verification_completed: 'Instanzüberprüfung abgeschlossen. {downloaded_count} Dateien heruntergeladen und {reused_count} Dateien wiederverwendet.'
+      game_process_started: "{instance_name} gestartet (PID {pid})"
+      instance_verification_completed: "Instanzüberprüfung abgeschlossen. {downloaded_count} Dateien heruntergeladen und {reused_count} Dateien wiederverwendet."
       returned_to_launch_page: Zurück zur Startseite gewechselt
-    overview_title: '{instance_name} Übersicht'
+    overview_title: "{instance_name} Übersicht"
     steps:
       prepare_arguments: Startargumente werden vorbereitet
       read_configuration: Startkonfiguration wird gelesen
@@ -1183,7 +1183,7 @@ launch:
       canceled_title: Start abgebrochen
       failed_title: Start fehlgeschlagen
     tasks:
-      verify_instance_files: 'Instanzdateien für {instance_name} überprüfen'
+      verify_instance_files: "Instanzdateien für {instance_name} überprüfen"
     title: Startstatus
     values:
       idle: Inaktiv
@@ -1198,18 +1198,18 @@ launch:
       refresh: Aktualisieren
       view_details: Details anzeigen
     activities:
-      loaded_content: 'Startseiteninhalt aus {source_name} geladen'
-      loaded_preset: 'Voreinstellung geladen: {preset_title}'
+      loaded_content: "Startseiteninhalt aus {source_name} geladen"
+      loaded_preset: "Voreinstellung geladen: {preset_title}"
       refresh_failed: Aktualisierung der Startseite fehlgeschlagen
       switched_to_blank: Zu einer leeren Startseite gewechselt
     errors:
       missing_root: Dem Startseiten-Markup fehlt ein Wurzelelement
     examples:
-      button: 'Schaltfläche: {title}'
-      button_with_events: 'Schaltfläche: {title} ({summary})'
-      button_with_events_untitled: 'Schaltfläche mit Ereignissen ({summary})'
+      button: "Schaltfläche: {title}"
+      button_with_events: "Schaltfläche: {title} ({summary})"
+      button_with_events_untitled: "Schaltfläche mit Ereignissen ({summary})"
     hints:
-      prefix: 'Text: {text}'
+      prefix: "Text: {text}"
     official_news:
       author: Offizielle Neuigkeiten
     presets:
@@ -1225,7 +1225,7 @@ launch:
       simple_homepage: Einfache Startseite
       skin_recommendations: Skin-Empfehlungen
       update_summary: Update-Zusammenfassung
-      whats_new: 'Neuigkeiten'
+      whats_new: "Neuigkeiten"
     random_hint:
       actions:
         next: Weiter
@@ -1243,12 +1243,12 @@ launch:
       loading_official_news: Offizielle Neuigkeiten werden geladen...
       loading_remote: Entfernte Startseite wird geladen...
       loading_title: Startseite wird geladen
-      local_file_missing: 'Lokale Datei nicht gefunden: {path}'
+      local_file_missing: "Lokale Datei nicht gefunden: {path}"
       unavailable_title: Startseite nicht verfügbar
 crash:
   prompts:
     output:
-      message: '{message}'
+      message: "{message}"
       launch_failure:
         title: Start fehlgeschlagen
         result_text: Minecraft ist beim Starten oder Ausführen auf einen Fehler gestoßen.
@@ -1261,8 +1261,8 @@ crash:
         export_report: Bericht exportieren
   export:
     heading: Exportplan
-    suggested_archive: '- Vorgeschlagenes Archiv: {archive_name}'
-    source_file_count: '- Anzahl Quelldateien: {file_count}'
+    suggested_archive: "- Vorgeschlagenes Archiv: {archive_name}"
+    source_file_count: "- Anzahl Quelldateien: {file_count}"
 setup:
   launch:
     cards:
@@ -1295,7 +1295,7 @@ setup:
       disable_java_launch_wrapper: Java-Start-Wrapper deaktivieren
       disable_retro_wrapper: RetroWrapper deaktivieren
       require_dedicated_gpu: Dedizierte GPU bevorzugen
-      use_java_executable: '`java` statt `javaw` verwenden'
+      use_java_executable: "`java` statt `javaw` verwenden"
     instance_settings:
       hint: Diese Einstellungen können pro Instanz überschrieben werden.
       button: Instanzeinstellungen öffnen
@@ -1351,7 +1351,7 @@ setup:
       game_resources:
         header: Spielressourcen
       community_resources:
-        header: 'Community-Ressourcen'
+        header: "Community-Ressourcen"
       accessibility:
         header: Barrierefreiheit
     fields:
@@ -1383,15 +1383,15 @@ setup:
         prefer_official: Offiziell bevorzugen
       file_name_format:
         display_name_brackets: Anzeigename (Dateiname)
-        display_name_square_brackets: 'Anzeigename [Dateiname]'
-        display_name_prefix: 'Anzeigename - Dateiname'
-        display_name_suffix: 'Dateiname - Anzeigename'
+        display_name_square_brackets: "Anzeigename [Dateiname]"
+        display_name_prefix: "Anzeigename - Dateiname"
+        display_name_suffix: "Dateiname - Anzeigename"
         file_name_only: Nur Dateiname
       mod_local_name_style:
         title_local_detail_file: Lokalen Namen bevorzugen, dann Beschreibung, dann Dateiname
         title_file_detail_local: Dateinamen bevorzugen, dann Beschreibung, dann lokalen Namen
     labels:
-      download_timeout_value: '{value} Sekunde(n)'
+      download_timeout_value: "{value} Sekunde(n)"
     activities:
       reset: Spielverwaltungseinstellungen zurücksetzen
       reset_completed: Download-, Community-Ressourcen- und Barrierefreiheitseinstellungen wurden auf die aktuellen Launcher-Standards zurückgesetzt.
@@ -1404,7 +1404,7 @@ setup:
         header: Über
       acknowledgements:
         header: Danksagungen
-    version_summary: 'Aktuelle Version: {version}'
+    version_summary: "Aktuelle Version: {version}"
     project:
       original_author:
         title: LTCat
@@ -1413,11 +1413,11 @@ setup:
         command: Seite des ursprünglichen Autors öffnen
       community:
         title: PCL-Community
-        summary: 'Community-getriebene Pflege und Zusammenarbeit für PCL-bezogene Projekte.'
+        summary: "Community-getriebene Pflege und Zusammenarbeit für PCL-bezogene Projekte."
         action: Community-Seite öffnen
         command: Community-Repository öffnen
       repo:
-        title: 'PCL-ME'
+        title: "PCL-ME"
         action: Repository öffnen
         command: Projekt-Repository öffnen
     acknowledgements:
@@ -1432,12 +1432,12 @@ setup:
         action: Webseite öffnen
         command: MC Encyclopedia öffnen
       pysio:
-        title: 'Pysio @ Akaere Network'
+        title: "Pysio @ Akaere Network"
         summary: Mitwirkender und Unterstützer der Community.
         action: Webseite öffnen
         command: Pysio-Webseite öffnen
       yunmoan:
-        title: 'Yunmoan @ Zhiyuan Guanghui'
+        title: "Yunmoan @ Zhiyuan Guanghui"
         summary: Mitwirkender und Projektunterstützer.
         action: Webseite öffnen
         command: Yunmoan-Webseite öffnen
@@ -1455,10 +1455,10 @@ setup:
         summary: Mitwirkender am Launcher-Ökosystem.
       mcbbs:
         title: Minecraft Chinese Forum
-        summary: 'Langjähriges chinesisches Minecraft-Community-Forum.'
+        summary: "Langjähriges chinesisches Minecraft-Community-Forum."
       community:
         title: PCL-Communitymitglieder
-        summary: 'Alle Mitglieder der Community, die Feedback, Tests und Ideen beigetragen haben.'
+        summary: "Alle Mitglieder der Community, die Feedback, Tests und Ideen beigetragen haben."
   log:
     cards:
       actions:
@@ -1478,8 +1478,8 @@ setup:
       directory_missing: Das Protokollverzeichnis existiert nicht. Es gibt nichts zu bereinigen.
       nothing_to_clean: Es gibt keine archivierten Protokolle zum Bereinigen. Das aktuelle Protokoll wurde behalten.
       clean_failed: Es konnten keine archivierten Protokolldateien gelöscht werden.
-      cleaned_count: '{count} archivierte Protokolldatei(en) bereinigt.'
-      open_log: 'Protokoll öffnen: {title}'
+      cleaned_count: "{count} archivierte Protokolldatei(en) bereinigt."
+      open_log: "Protokoll öffnen: {title}"
   feedback:
     cards:
       submit:
@@ -1506,15 +1506,15 @@ setup:
       duplicate: Duplikat
       other: Sonstiges
     actions:
-      open_issue: 'Issue #{number} öffnen'
+      open_issue: "Issue #{number} öffnen"
     summary:
       unknown_author: unbekannt
       unknown_time: unbekannte Zeit
       uncategorized_type: nicht kategorisiert
-      line: '{author} | {created_at} | {type}'
+      line: "{author} | {created_at} | {type}"
     activities:
       refresh: Feedback-Seite aktualisieren
-      refresh_completed: '{count} GitHub-Feedbackeintrag/-einträge synchronisiert.'
+      refresh_completed: "{count} GitHub-Feedbackeintrag/-einträge synchronisiert."
       refresh_failed: Feedback-Seite aktualisieren fehlgeschlagen
   update:
     fields:
@@ -1535,14 +1535,14 @@ setup:
         auto_download_and_prompt: Automatisch herunterladen, dann fragen
         prompt_only: Nur nachfragen
         disabled: Deaktiviert
-    version_name: 'Version {version}'
+    version_name: "Version {version}"
     states:
       checking: Suche nach Updates...
-      available: 'Ein Update ist verfügbar: {version}'
+      available: "Ein Update ist verfügbar: {version}"
       latest: Du verwendest bereits die neueste Version.
-      error: 'Update-Prüfung fehlgeschlagen: {message}'
+      error: "Update-Prüfung fehlgeschlagen: {message}"
     available:
-      publisher: 'Quelle: {source}'
+      publisher: "Quelle: {source}"
       summary_missing: Für diese Veröffentlichung ist keine Zusammenfassung verfügbar.
     errors:
       github_empty_result: GitHub hat keine Veröffentlichungsdaten zurückgegeben.
@@ -1553,17 +1553,17 @@ setup:
       change_channel: Update-Kanal ändern
       change_mode: Automatische Update-Einstellung ändern
       refresh: Update-Seite aktualisieren
-      available: 'Update verfügbar: {version}'
-      latest: '{version} ist bereits die neueste Version.'
+      available: "Update verfügbar: {version}"
+      latest: "{version} ist bereits die neueste Version."
       checking: Suche nach Updates...
       download_install: Update herunterladen und installieren
       no_pending_update: Es gibt kein ausstehendes Update zum Herunterladen.
       no_download_url: Für die aktuelle Update-Quelle ist keine nutzbare Download-URL verfügbar.
       download_install_failed: Herunterladen und Installieren des Updates fehlgeschlagen
-      package_ready: '{version} ist bereit. Der Launcher wird beendet und das Update angewendet.'
+      package_ready: "{version} ist bereit. Der Launcher wird beendet und das Update angewendet."
       package_ready_hint: Das Update-Paket ist bereit. Der Launcher wird geschlossen und automatisch installiert.
       view_detail: Update-Details anzeigen
-      view_detail_title: 'Update-Details: {version}'
+      view_detail_title: "Update-Details: {version}"
       view_detail_failed: Update-Details anzeigen fehlgeschlagen
       detail_unavailable: Derzeit sind keine Update-Details verfügbar.
   ui:
@@ -1582,8 +1582,8 @@ setup:
         open_folder: Hintergrundordner öffnen
         open_folder_failed: Hintergrundordner konnte nicht geöffnet werden
         refresh: Hintergrundinhalt aktualisieren
-        clear_count: '{count} Hintergrunddatei(en) gelöscht.'
-        loaded: 'Hintergrund geladen: {file}'
+        clear_count: "{count} Hintergrunddatei(en) gelöscht."
+        loaded: "Hintergrund geladen: {file}"
       card_header: Hintergrundbilder
       fields:
         blur: Hintergrundunschärfe
@@ -1593,7 +1593,7 @@ setup:
         colorful: Farbigen Hintergrund überlagern
       labels:
         blur_off: Aus
-      card_header_with_count: 'Hintergrundbilder ({count})'
+      card_header_with_count: "Hintergrundbilder ({count})"
     cards:
       basic:
         header: Grundlagen
@@ -1606,7 +1606,7 @@ setup:
       title_bar:
         header: Titelleiste
     fields:
-      custom_theme_hint: 'Unterstützt #RRGGBB, zum Beispiel #159E95'
+      custom_theme_hint: "Unterstützt #RRGGBB, zum Beispiel #159E95"
       custom_theme_refresh_hint: Benutzerdefinierte Akzentfarben aktualisieren die aktuelle UI-Palette und den Kontrast der Titelleiste in Echtzeit.
       dark_custom: Dunkel benutzerdefiniert
       dark_palette: Dunkle Palette
@@ -1657,8 +1657,8 @@ setup:
         tools_help: Hilfe
         tools_test: Werkzeugkasten
       reactions:
-        hidden: '{title} ausgeblendet.'
-        restored: '{title} wiederhergestellt.'
+        hidden: "{title} ausgeblendet."
+        restored: "{title} wiederhergestellt."
     homepage:
       actions:
         generate_tutorial: Tutorialdatei erzeugen
@@ -1673,13 +1673,13 @@ setup:
           1. Klicke auf "Tutorialdatei erzeugen", um PCL/Custom.xaml im Arbeitsverzeichnis zu erstellen.
           2. Bearbeite diese Datei mit einem Texteditor, speichere sie und klicke dann erneut auf "Startseite aktualisieren".
           3. Wenn du eine entfernte Startseite verwendest, stelle sicher, dass die Download-URL auf vertrauenswürdige Inhalte zeigt.
-        tutorial_template_missing: 'Vorlage für das Startseiten-Tutorial nicht gefunden: {path}'
+        tutorial_template_missing: "Vorlage für das Startseiten-Tutorial nicht gefunden: {path}"
       fields:
         preset: Startseiten-Voreinstellung
         url: Download-URL
       notices:
         preset_content: Inhalt bereitgestellt von ModSetup
-        security_warning: 'Vorsicht bei Startseiten aus nicht vertrauenswürdigen Quellen. Bösartiger Code kann Schaden verursachen!'
+        security_warning: "Vorsicht bei Startseiten aus nicht vertrauenswürdigen Quellen. Bösartiger Code kann Schaden verursachen!"
       options:
         blank: Leer
         local_file: Lokale Datei laden
@@ -1697,8 +1697,8 @@ setup:
         open_folder: Musikordner öffnen
         open_folder_failed: Musikordner konnte nicht geöffnet werden
         refresh: Hintergrundmusik aktualisieren
-        clear_count: '{count} Hintergrundmusikdatei(en) gelöscht.'
-        refreshed_count: 'Musikordner erneut gescannt und {count} Datei(en) gefunden.'
+        clear_count: "{count} Hintergrundmusikdatei(en) gelöscht."
+        refreshed_count: "Musikordner erneut gescannt und {count} Datei(en) gefunden."
       fields:
         volume: Lautstärke
       flags:
@@ -1736,7 +1736,7 @@ setup:
         pineapple_yellow: Ananasgelb
     theme_switch:
       unsupported_action: Offiziellen Snapshot-Build holen
-      unsupported_notice: 'Blau, blau und noch mehr blau. Du willst mehr Akzentfarben? Nutze den offiziellen Snapshot-Build.'
+      unsupported_notice: "Blau, blau und noch mehr blau. Du willst mehr Akzentfarben? Nutze den offiziellen Snapshot-Build."
     title_bar:
       actions:
         change_image: Bild ändern
@@ -1787,14 +1787,14 @@ setup:
       refresh_scanning: Java-Laufzeiten werden erneut gescannt.
       select_default: Standard-Java wechseln
       unavailable: Diese Java-Laufzeit ist nicht verfügbar. Aktualisiere die Liste.
-      add_completed: '{path} hinzugefügt und ausgewählt'
-      add_exists: 'Java ist bereits in der Konfigurationsliste vorhanden: {path}'
-      add_unrecognized: 'Die ausgewählte Datei konnte nicht als nutzbare Java-Laufzeit erkannt werden: {path}'
-      open_folder: 'Java-Ordner öffnen: {title}'
-      toggle_result: '{title} • {state}'
-      view_detail: 'Java-Details anzeigen: {title}'
+      add_completed: "{path} hinzugefügt und ausgewählt"
+      add_exists: "Java ist bereits in der Konfigurationsliste vorhanden: {path}"
+      add_unrecognized: "Die ausgewählte Datei konnte nicht als nutzbare Java-Laufzeit erkannt werden: {path}"
+      open_folder: "Java-Ordner öffnen: {title}"
+      toggle_result: "{title} • {state}"
+      view_detail: "Java-Details anzeigen: {title}"
     auto_select:
-      description: 'Die automatische Java-Auswahl verwenden, um anhand der Spielanforderungen eine geeignete Laufzeit zu wählen.'
+      description: "Die automatische Java-Auswahl verwenden, um anhand der Spielanforderungen eine geeignete Laufzeit zu wählen."
       label: Automatische Auswahl
     details:
       available: Verfügbar
@@ -1802,19 +1802,19 @@ setup:
       no: Nein
       unavailable: Nicht verfügbar
       yes: Ja
-      architecture: 'Architektur: {value}'
-      availability: 'Verfügbarkeit: {value}'
-      brand: 'Marke: {value}'
-      default_java: 'Standard-Java: {value}'
-      enabled: 'Aktiviert: {value}'
-      executable: 'Ausführungsdatei: {value}'
-      folder: 'Ordner: {value}'
-      major_version: 'Hauptversion: {value}'
-      path: 'Pfad: {value}'
-      source: 'Quelle: {value}'
-      tags: 'Aktuelle Tags: {value}'
-      type: 'Typ: {value}'
-      version: 'Version: {value}'
+      architecture: "Architektur: {value}"
+      availability: "Verfügbarkeit: {value}"
+      brand: "Marke: {value}"
+      default_java: "Standard-Java: {value}"
+      enabled: "Aktiviert: {value}"
+      executable: "Ausführungsdatei: {value}"
+      folder: "Ordner: {value}"
+      major_version: "Hauptversion: {value}"
+      path: "Pfad: {value}"
+      source: "Quelle: {value}"
+      tags: "Aktuelle Tags: {value}"
+      type: "Typ: {value}"
+      version: "Version: {value}"
     tags:
       auto_installed: Automatisch installiert
       auto_scanned: Automatisch erkannt
@@ -1842,7 +1842,7 @@ setup:
       reset_completed: System-, Netzwerk- und Debug-Einstellungen wurden auf die aktuellen Launcher-Standards zurückgesetzt.
       test_proxy: Proxy-Verbindung testen
       test_proxy_failed: Proxy-Verbindungstest fehlgeschlagen
-      import_settings_completed: 'Gemeinsame Konfiguration importiert: {path}. Einige Systemeinstellungen sollten nach einem Neustart geprüft werden.'
+      import_settings_completed: "Gemeinsame Konfiguration importiert: {path}. Einige Systemeinstellungen sollten nach einem Neustart geprüft werden."
     cards:
       debug:
         header: Debug-Optionen
@@ -1864,7 +1864,7 @@ setup:
       enable_doh: DoH für DNS-Auflösung verwenden
       skip_copy_during_download: Kopieren von Dateien aus anderen Ordnern während Downloads verhindern
     http_proxy:
-      address_watermark: 'e.g. http://127.0.0.1:1080/'
+      address_watermark: "e.g. http://127.0.0.1:1080/"
       password: Passwort
       username: Benutzername
       value_watermark: Optional
@@ -1877,8 +1877,8 @@ setup:
       debug_mode_disabled: Zusätzliche Diagnoseausgabe wurde deaktiviert.
       debug_mode_enabled: Detaillierte Protokolle und Diagnosen sind jetzt aktiviert.
       proxy_invalid_address: Die benutzerdefinierte Proxy-Adresse ist ungültig.
-      proxy_test_started: 'Zugriff auf {host} über {mode}.'
-      proxy_test_succeeded: '{mode}-Verbindung erfolgreich, HTTP {status_code} {reason_phrase}.'
+      proxy_test_started: "Zugriff auf {host} über {mode}."
+      proxy_test_succeeded: "{mode}-Verbindung erfolgreich, HTTP {status_code} {reason_phrase}."
       proxy_test_succeeded_hint: Proxy-Verbindungstest erfolgreich.
     options:
       http_proxy:
@@ -1901,66 +1901,66 @@ common:
     select_all: Alle auswählen
     continue: Weiter
   activities:
-    failed: '{title} fehlgeschlagen'
+    failed: "{title} fehlgeschlagen"
   filters:
     all: Alle
     any: Beliebig
   memory:
     summary:
       allocation_prefix: Spielzuweisung
-      size_gb: '{value} GB'
+      size_gb: "{value} GB"
       usage_header: Verwendeter Speicher / Installierter Speicher
   punctuation:
-    comma: ', '
+    comma: ", "
 download:
   catalog:
     actions:
       save_installer: Installer speichern
     activities:
-      entry_action: 'Katalogaktion: {entry_title}'
-      open_entry: 'Eintrag öffnen: {entry_title}'
-      open_favorite_entry: 'Favoriteneintrag öffnen: {entry_title}'
+      entry_action: "Katalogaktion: {entry_title}"
+      open_entry: "Eintrag öffnen: {entry_title}"
+      open_favorite_entry: "Favoriteneintrag öffnen: {entry_title}"
     download:
       file_type_default: Datei
       hints:
-        completed: 'Download von {file_name} abgeschlossen'
-        started: 'Download von {file_name} wird gestartet'
-      installer_type: '{surface_name}-Installer'
+        completed: "Download von {file_name} abgeschlossen"
+        started: "Download von {file_name} wird gestartet"
+      installer_type: "{surface_name}-Installer"
       missing_url: Derzeit ist keine verfügbare Download-URL vorhanden.
       no_save_path: Es wurde kein Speicherort ausgewählt.
       pick_save_path_title: Speicherort auswählen
-      task_title: '{file_name} herunterladen'
+      task_title: "{file_name} herunterladen"
     errors:
       empty_description: Der entfernte Katalog ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.
       empty_title: Nichts anzuzeigen
-      load_failed_body: 'Der entfernte Katalog konnte nicht geladen werden. Fehler: {error}'
+      load_failed_body: "Der entfernte Katalog konnte nicht geladen werden. Fehler: {error}"
       load_failed_title: Entfernten Katalog laden fehlgeschlagen
       retry_later: Bitte versuche es später erneut.
       section_title: Entfernter Katalog
     remote:
       latest:
-        preview_published: 'Neueste Vorschau, veröffentlicht am {published_at}'
-        release_published: 'Neueste Veröffentlichung, veröffentlicht am {published_at}'
+        preview_published: "Neueste Vorschau, veröffentlicht am {published_at}"
+        release_published: "Neueste Veröffentlichung, veröffentlicht am {published_at}"
       groups:
         snapshot: Snapshots
       labels:
-        forge_compatible: 'Kompatibel mit Forge {forge_version}'
+        forge_compatible: "Kompatibel mit Forge {forge_version}"
         forge_incompatible: Nicht mit Forge kompatibel
         installer: Installer
         latest: Neueste
         no_display_data: Nichts anzuzeigen
-        published_at: 'Veröffentlicht am {published_at}'
+        published_at: "Veröffentlicht am {published_at}"
         recommended: Empfohlen
-        separator: ', '
+        separator: ", "
         unknown_version: Unbekannte Version
-        variant_blue: ' (Blaue Variante)'
-        variant_purple: ' (Lila Variante)'
-        variant_red: ' (Rote Variante)'
+        variant_blue: " (Blaue Variante)"
+        variant_purple: " (Lila Variante)"
+        variant_red: " (Rote Variante)"
       empty:
         cleanroom: Derzeit sind keine entfernten Cleanroom-Einträge verfügbar.
-        forge_version_entries: 'Für {minecraft_version} sind keine Forge-Einträge verfügbar.'
+        forge_version_entries: "Für {minecraft_version} sind keine Forge-Einträge verfügbar."
         forge_versions: Der entfernte Forge-Katalog hat keine Minecraft-Versionen zurückgegeben.
-        group_entries: 'Für {group_name} sind keine Einträge verfügbar.'
+        group_entries: "Für {group_name} sind keine Einträge verfügbar."
         installer_versions: Derzeit sind keine Installerversionen verfügbar.
         labymod_channels: Derzeit sind keine LabyMod-Kanäle verfügbar.
         latest_versions: Das entfernte Versionsmanifest hat keine neuesten Versionen zurückgegeben.
@@ -1971,13 +1971,13 @@ download:
         client_versions_missing: Im Minecraft-Versionsmanifest fehlt das Feld `versions`.
         forge_mirror_parse_failed: Der Forge-Mirror-Build-Katalog konnte nicht analysiert werden.
         forge_versions_missing: Der entfernte Forge-Katalog hat keine Minecraft-Versionen zurückgegeben.
-        lazy_route_unsupported: 'Die aktuelle Seite unterstützt keine verzögert geladenen entfernten Kataloge.'
+        lazy_route_unsupported: "Die aktuelle Seite unterstützt keine verzögert geladenen entfernten Kataloge."
         liteloader_versions_missing: Im LiteLoader-Katalog fehlt das Feld `versions`.
         optifine_format_invalid: Das Format des offiziellen OptiFine-Katalogs ist ungültig.
         optifine_mirror_parse_failed: Der OptiFine-Mirror-Katalog konnte nicht analysiert werden.
     intro:
       cleanroom:
-        body: 'Cleanroom ist ein von Forge abgeleiteter Mod-Loader für Minecraft 1.12.2 und theoretisch mit 99 % der Forge-Mods kompatibel.'
+        body: "Cleanroom ist ein von Forge abgeleiteter Mod-Loader für Minecraft 1.12.2 und theoretisch mit 99 % der Forge-Mods kompatibel."
         title: Cleanroom-Überblick
       fabric:
         body: |-
@@ -1998,7 +1998,7 @@ download:
           Diese Seite stellt den Download des Legacy-Fabric-Installers bereit. Nach dem Herunterladen musst du den Installer immer noch manuell öffnen, um die Einrichtung abzuschließen.
         title: Legacy-Fabric-Überblick
       liteloader:
-        body: 'Ähnlich wie Forge kann LiteLoader verwendet werden, um LiteLoader-Mods für ältere Minecraft-Versionen zu laden.'
+        body: "Ähnlich wie Forge kann LiteLoader verwendet werden, um LiteLoader-Mods für ältere Minecraft-Versionen zu laden."
         title: LiteLoader-Überblick
       neoforge:
         body: |-
@@ -2006,7 +2006,7 @@ download:
           Diese Seite stellt den Download des NeoForge-Installers bereit. Nach dem Herunterladen musst du den Installer immer noch manuell öffnen, um die Einrichtung abzuschließen.
         title: NeoForge-Überblick
       optifine:
-        body: 'OptiFine, auch als HD-Fix bekannt, ermöglicht die Installation von Shadern, hochauflösende Ressourcenpakete und Leistungsverbesserungen, hat aber eine schwächere Mod-Kompatibilität.'
+        body: "OptiFine, auch als HD-Fix bekannt, ermöglicht die Installation von Shadern, hochauflösende Ressourcenpakete und Leistungsverbesserungen, hat aber eine schwächere Mod-Kompatibilität."
         title: OptiFine-Überblick
       quilt:
         body: |-
@@ -2018,7 +2018,7 @@ download:
 
         Die Aktualisierung des entfernten Katalogs ist fehlgeschlagen, daher werden vorerst die zuletzt synchronisierten Ergebnisse beibehalten. Fehler: {error}
     loading:
-      fetch_list: '{surface_name}-Liste wird abgerufen'
+      fetch_list: "{surface_name}-Liste wird abgerufen"
       fetch_versions: Versionsliste wird abgerufen
     sections:
       latest_versions: Neueste Versionen
@@ -2043,47 +2043,47 @@ download:
       share_selected: Ausgewählte Favoriten teilen
       share_selected_failed: Teilen ausgewählter Favoriten fehlgeschlagen
     batch_install:
-      analyzing_activity: '{count} Favoriten für {target_name} werden analysiert'
-      analyzing_hint: '{count} ausgewählte Einträge werden analysiert...'
+      analyzing_activity: "{count} Favoriten für {target_name} werden analysiert"
+      analyzing_hint: "{count} ausgewählte Einträge werden analysiert..."
       canceled: Stapelinstallation abgebrochen
       confirmation:
         confirm: Installation starten
         failed: Bestätigung der Stapelinstallation fehlgeschlagen
         title: Favoriten stapelweise installieren
       empty_selection: Keine Favoriten ausgewählt
-      started_activity: 'Stapelinstallation für {target_name} gestartet'
+      started_activity: "Stapelinstallation für {target_name} gestartet"
       started_hint: Stapelinstallation gestartet
       summary:
-        dependencies: '{count} Abhängigkeiten'
+        dependencies: "{count} Abhängigkeiten"
         none: Keine Aufgaben
-        skipped: '{count} übersprungen'
-        tasks: '{count} Aufgaben'
+        skipped: "{count} übersprungen"
+        tasks: "{count} Aufgaben"
     empty:
       body: Füge Projekte zu den Favoriten hinzu, damit du sie später installieren oder teilen kannst.
       title: Noch keine Favoriten
     favorite_to:
-      already_contains_selected: '{target_name} enthält bereits alle ausgewählten Favoriten'
-      completed: '{count} Favoriten zu {target_name} hinzugefügt'
-      selection_prompt: 'Ziel für {count} ausgewählte Favoriten auswählen'
+      already_contains_selected: "{target_name} enthält bereits alle ausgewählten Favoriten"
+      completed: "{count} Favoriten zu {target_name} hinzugefügt"
+      selection_prompt: "Ziel für {count} ausgewählte Favoriten auswählen"
     remove:
-      completed: '{count} Favoriten aus {target_name} entfernt'
+      completed: "{count} Favoriten aus {target_name} entfernt"
       confirmation:
-        message: '{count} ausgewählte Favoriten aus {target_name} entfernen?'
+        message: "{count} ausgewählte Favoriten aus {target_name} entfernen?"
         title: Favoriten entfernen
-      no_matches: 'Keine passenden Favoriten in {target_name} gefunden'
+      no_matches: "Keine passenden Favoriten in {target_name} gefunden"
     search:
       watermark: Favoriten durchsuchen
     select_all:
-      completed: '{count} sichtbare Favoriten in {target_name} ausgewählt'
-      empty: 'Keine sichtbaren Favoriten in {target_name}'
+      completed: "{count} sichtbare Favoriten in {target_name} ausgewählt"
+      empty: "Keine sichtbaren Favoriten in {target_name}"
     selection:
-      summary: '{count} ausgewählt'
+      summary: "{count} ausgewählt"
     share_selected:
-      completed: '{count} ausgewählte Favoriten-IDs kopiert'
+      completed: "{count} ausgewählte Favoriten-IDs kopiert"
       empty: Keine ausgewählten Favoriten zum Teilen
     meta:
-      downloads: '{value} Downloads'
-      updated: 'Aktualisiert {value}'
+      downloads: "{value} Downloads"
+      updated: "Aktualisiert {value}"
     demo:
       entries:
         sodium:
@@ -2101,13 +2101,13 @@ download:
       empty_share_code: Nichts zu teilen.
       manage:
         title: Ziele verwalten
-        current_target: 'Aktuelles Ziel: {target_name}'
+        current_target: "Aktuelles Ziel: {target_name}"
         failed: Verwalten der Ziele fehlgeschlagen
-        unknown_action: 'Unbekannte Zielaktion: {action_id}'
+        unknown_action: "Unbekannte Zielaktion: {action_id}"
         options:
           share:
             label: Aktuelles Ziel teilen
-            description: 'Den Teilcode des aktuellen Ziels kopieren.'
+            description: "Den Teilcode des aktuellen Ziels kopieren."
           import:
             label: Favoriten importieren
             description: Eine geteilte Favoritenliste in das aktuelle oder ein neues Ziel importieren.
@@ -2122,7 +2122,7 @@ download:
             description: Das aktuelle Favoritenziel löschen.
       share:
         activity: Aktuelles Ziel teilen
-        completed: 'Teilcode für {target_name} kopiert'
+        completed: "Teilcode für {target_name} kopiert"
         failed: Teilen des aktuellen Ziels fehlgeschlagen
       import:
         title: Favoriten importieren
@@ -2130,9 +2130,9 @@ download:
         prompt: Eine geteilte Favoritenliste eingeben.
         watermark: 'Zum Beispiel: ["23333"]'
         failed: Importieren von Favoriten fehlgeschlagen
-        destination_prompt: '{count} Favoriteneintrag/-einträge erkannt. Wohin sollen sie importiert werden?'
-        completed_new: 'In neues Ziel importiert: {target_name}'
-        completed_current: 'In aktuelles Ziel importiert: {target_name}'
+        destination_prompt: "{count} Favoriteneintrag/-einträge erkannt. Wohin sollen sie importiert werden?"
+        completed_new: "In neues Ziel importiert: {target_name}"
+        completed_current: "In aktuelles Ziel importiert: {target_name}"
         options:
           new_target:
             label: Neues Ziel
@@ -2161,12 +2161,12 @@ download:
           Ziel-ID: {target_id}
           Diese Aktion kann nicht rückgängig gemacht werden.
         confirm: Löschen
-        completed: '{target_name} gelöscht.'
+        completed: "{target_name} gelöscht."
         failed: Löschen des aktuellen Ziels fehlgeschlagen
   install:
     refresh:
       title: Refresh Auto Install
-      activity: 'Auto-install options were reloaded.'
+      activity: "Auto-install options were reloaded."
     actions:
       clear_selection: Clear Selection
       start: Start Install
@@ -2180,7 +2180,7 @@ download:
         release: Release
       latest:
         preview: Latest preview
-        published_at: '{label}: {published_at}'
+        published_at: "{label}: {published_at}"
         release: Latest release
       load_failed: Failed to load versions
       loading: Loading versions...
@@ -2189,33 +2189,33 @@ download:
         snapshot: Snapshot
         stable: Stable
       summaries:
-        current_instance_with_time: 'Current instance • {published_at}'
-        installer_with_time: 'Installer • {published_at}'
-        labymod_for_minecraft: 'LabyMod 4 • {minecraft_version}'
-        loader_testing: '{loader_name} testing build'
+        current_instance_with_time: "Current instance • {published_at}"
+        installer_with_time: "Installer • {published_at}"
+        labymod_for_minecraft: "LabyMod 4 • {minecraft_version}"
+        loader_testing: "{loader_name} testing build"
         preview: Preview
         quilt_installer: Quilt Installer
         release: Release
         release_time_unavailable: Release time unavailable
-        release_with_time: 'Release • {published_at}'
+        release_with_time: "Release • {published_at}"
         stable: Stable
-        status_with_time: '{status} • {published_at}'
+        status_with_time: "{status} • {published_at}"
         testing: Testing
-        april_fools_special: 'April Fools special released on {published_at}'
+        april_fools_special: "April Fools special released on {published_at}"
         april_fools:
-          '2013': '2013 | This secret update, planned for two years, took the game to a new level!'
-          2013_blue: '2013 | This secret update, planned for two years, took the game to a new level! (Blue version)'
-          2013_purple: '2013 | This secret update, planned for two years, took the game to a new level! (Purple version)'
-          2013_red: '2013 | This secret update, planned for two years, took the game to a new level! (Red version)'
-          '2015': '2015 | As a game for all ages, we need peace, love, and hugs.'
-          '2016': '2016 | It''s time to bring modern technology into Minecraft!'
-          '2019': '2019 | We found this masterpiece from 1994 in the ruins of a basement!'
-          '2020': '2020 | We added 2 billion new dimensions and turned infinite imagination into reality!'
-          '2022': '2022 | One block at a time! Meet new digging, crafting, and riding gameplay.'
-          '2023': '2023 | Research shows players like making choices, and the more the better!'
-          '2024': '2024 | Poisonous potatoes have always been ignored and underestimated, so we supercharged them!'
-          '2025': '2025 | You can craft anything, including your world itself!'
-          '2026': '2026 | Why do you need an inventory? Let the blocks follow you instead!'
+          "2013": "2013 | This secret update, planned for two years, took the game to a new level!"
+          2013_blue: "2013 | This secret update, planned for two years, took the game to a new level! (Blue version)"
+          2013_purple: "2013 | This secret update, planned for two years, took the game to a new level! (Purple version)"
+          2013_red: "2013 | This secret update, planned for two years, took the game to a new level! (Red version)"
+          "2015": "2015 | As a game for all ages, we need peace, love, and hugs."
+          "2016": "2016 | It's time to bring modern technology into Minecraft!"
+          "2019": "2019 | We found this masterpiece from 1994 in the ruins of a basement!"
+          "2020": "2020 | We added 2 billion new dimensions and turned infinite imagination into reality!"
+          "2022": "2022 | One block at a time! Meet new digging, crafting, and riding gameplay."
+          "2023": "2023 | Research shows players like making choices, and the more the better!"
+          "2024": "2024 | Poisonous potatoes have always been ignored and underestimated, so we supercharged them!"
+          "2025": "2025 | You can craft anything, including your world itself!"
+          "2026": "2026 | Why do you need an inventory? Let the blocks follow you instead!"
     generated_name:
       default: New Version
     options:
@@ -2232,13 +2232,13 @@ download:
         apply_changes_failed: Failed to apply changes
         load_minecraft_failed: Failed to load Minecraft versions
         reset_instance: Reset Instance
-        select_option: 'Select {option_title}'
-        select_option_failed: 'Failed to select {option_title}'
+        select_option: "Select {option_title}"
+        select_option_failed: "Failed to select {option_title}"
         start_failed: Failed to start installation
       dialogs:
         reset_instance:
           confirm: Reset
-          message: 'No changes are selected. Reset this instance to its base state?'
+          message: "No changes are selected. Reset this instance to its base state?"
           title: Reset Instance
         select_minecraft:
           confirm: Select
@@ -2247,13 +2247,13 @@ download:
         select_option:
           confirm: Select
           message: Choose an available option
-          title: 'Select {option_title}'
+          title: "Select {option_title}"
       messages:
         instance_missing: No target instance is selected
         option_not_supported: This option is not supported by the frontend installer
-        queued_in_task_center: 'Queued in Task Center: {task_title}'
+        queued_in_task_center: "Queued in Task Center: {task_title}"
         select_minecraft_first: Select a Minecraft version first
-        unresolved_selections: 'Resolve these selections first: {options}'
+        unresolved_selections: "Resolve these selections first: {options}"
       selection:
         none: None
       stages:
@@ -2271,20 +2271,20 @@ download:
         copy_generated_libraries: Copying generated support libraries...
         copy_optifine_libraries: Copying libraries generated by OptiFine...
         creating_instance_directories: Creating instance directory structure...
-        download_loader_installer: 'Downloading the installer for {loader_title}...'
+        download_loader_installer: "Downloading the installer for {loader_title}..."
         download_optifine_installer: Downloading the OptiFine installer...
         downloading_asset_files: Downloading asset files
         downloading_dependencies: Downloading dependencies
-        download_vanilla_client: 'Downloading the vanilla client for Minecraft {version}...'
-        extract_loader_libraries: 'Extracting bundled libraries from the {loader_title} installer...'
+        download_vanilla_client: "Downloading the vanilla client for Minecraft {version}..."
+        extract_loader_libraries: "Extracting bundled libraries from the {loader_title} installer..."
         fetch_labymod_manifest: Fetching the LabyMod manifest...
-        fetch_loader_manifest: 'Fetching the manifest for {loader_title}...'
-        fetch_vanilla_manifest: 'Fetching the vanilla manifest for Minecraft {version}...'
+        fetch_loader_manifest: "Fetching the manifest for {loader_title}..."
+        fetch_vanilla_manifest: "Fetching the vanilla manifest for Minecraft {version}..."
         finalizing_installation: Organizing the instance directory and finishing installation...
-        files_ready: '{completed_count}/{total_count} files ready'
+        files_ready: "{completed_count}/{total_count} files ready"
         generating_target_manifest: Generating the target install manifest...
         initialize_launcher_profiles: Initializing launcher_profiles.json...
-        inspect_loader_installer: 'Inspecting the installer contents for {loader_title}...'
+        inspect_loader_installer: "Inspecting the installer contents for {loader_title}..."
         manifest_written: Manifest written
         merging_liteloader_manifest: Merging LiteLoader install information...
         no_asset_files_needed: No asset files needed
@@ -2295,20 +2295,20 @@ download:
         prepare_environment: Preparing environment
         preparing_managed_dependencies: Preparing managed dependency files...
         preparing_manifest: Writing the install manifest and preparing the environment...
-        prepare_loader_installer: 'Preparing the installer for {loader_title}...'
-        prepare_vanilla_files: 'Preparing vanilla files for Minecraft {version}...'
+        prepare_loader_installer: "Preparing the installer for {loader_title}..."
+        prepare_vanilla_files: "Preparing vanilla files for Minecraft {version}..."
         processing_optifine_manifest: Processing OptiFine install information...
-        processing_file: 'Processing {file_name}'
-        progress_with_file: '{prefix}: {completed_count}/{total_count} ({file_name})'
-        progress_without_file: '{prefix}: {completed_count}/{total_count}'
+        processing_file: "Processing {file_name}"
+        progress_with_file: "{prefix}: {completed_count}/{total_count} ({file_name})"
+        progress_without_file: "{prefix}: {completed_count}/{total_count}"
         queued: Queued
         read_generated_manifest: Reading the generated installer manifest...
         read_optifine_manifest: Reading the manifest generated by OptiFine...
-        read_vanilla_version_details: 'Reading version details for Minecraft {version}...'
+        read_vanilla_version_details: "Reading version details for Minecraft {version}..."
         repairing_game_files: Completing game core files and support libraries...
-        repair_loader_dependencies: 'Repairing install dependencies for {loader_title}...'
+        repair_loader_dependencies: "Repairing install dependencies for {loader_title}..."
         repairing_support_files: Repairing support files
-        run_loader_installer: 'Running the installation steps for {loader_title}...'
+        run_loader_installer: "Running the installation steps for {loader_title}..."
         run_optifine_installer: Running the OptiFine installer...
         support_files_completed: Support files completed
         support_files_ready: Support files ready
@@ -2316,18 +2316,18 @@ download:
         waiting_execution: Waiting to execute
         waiting_finalize: Waiting to finalize
         waiting_support_files: Waiting for support files
-        write_loader_libraries: 'Writing support libraries for {loader_title}...'
-        writing_manifest_file: 'Writing install manifest file {file_name}...'
+        write_loader_libraries: "Writing support libraries for {loader_title}..."
+        writing_manifest_file: "Writing install manifest file {file_name}..."
         writing_instance_config: Writing instance configuration...
-        write_vanilla_manifest: 'Writing the vanilla manifest for Minecraft {version}...'
+        write_vanilla_manifest: "Writing the vanilla manifest for Minecraft {version}..."
   resource:
     activities:
-      entry_action: 'Resource action: {entry_title}'
+      entry_action: "Resource action: {entry_title}"
       install_pack: Install Pack
       install_pack_failed: Failed to install pack
-      open_page: 'Open resource page: {entry_title}'
+      open_page: "Open resource page: {entry_title}"
       reset_filters: Reset Filters
-      reset_filters_message: 'Filters reset for {surface_title}'
+      reset_filters_message: "Filters reset for {surface_title}"
     current_instance:
       actions:
         switch: Switch
@@ -2345,15 +2345,15 @@ download:
       version: Version
     hints:
       modrinth_unavailable: Modrinth is unavailable for the current source
-      partial_results: 'Showing live results from available sources. Some sources failed: {message}'
-      retry_later: 'Try again later, or adjust the source filter.'
-      search_failed: 'Live community search failed: {message}'
-      unavailable: 'Unable to fetch live community results: {message}'
-      version_fallback: 'No popular {surface_name} results matched Minecraft {version}. Falling back to the general community list.'
+      partial_results: "Showing live results from available sources. Some sources failed: {message}"
+      retry_later: "Try again later, or adjust the source filter."
+      search_failed: "Live community search failed: {message}"
+      unavailable: "Unable to fetch live community results: {message}"
+      version_fallback: "No popular {surface_name} results matched Minecraft {version}. Falling back to the general community list."
     entry:
       count_style: western
       downloads_none: No downloads
-      downloads_with_count: '{count} downloads'
+      downloads_with_count: "{count} downloads"
       updated_unknown: Unknown date
       version_unknown: Unspecified version
     install_pack:
@@ -2363,7 +2363,7 @@ download:
       runtime_state_missing: Download state is unavailable
       target_missing: Install target is missing
     results:
-      summary: 'Showing {shown_count} of {total_count}'
+      summary: "Showing {shown_count} of {total_count}"
     search:
       data_pack: Data packs
       default: Projekte suchen
@@ -2380,9 +2380,9 @@ download:
       relevance: Relevanz
       update: Updated
     surface:
-      empty: 'No {surface_name} found'
-      loading: 'Loading {surface_name}...'
-      title: '{surface_name}'
+      empty: "No {surface_name} found"
+      loading: "Loading {surface_name}..."
+      title: "{surface_name}"
     tag_groups:
       features: Features
       performance: Performance
@@ -2424,7 +2424,7 @@ download:
       locale: Includes Locales
       logistics: Logistics
       magic: Magic
-      map_based: 'Map-Based'
+      map_based: "Map-Based"
       medieval: Medieval
       minigames: Minigames
       mobs: Mobs
@@ -2455,8 +2455,8 @@ download:
       resolution_512x: 512x or higher
       resolution_64x: 64x
       resolution_8x: 8x or lower
-      scifi: 'Sci-Fi'
-      semi_realistic: 'Semi-Realistic'
+      scifi: "Sci-Fi"
+      semi_realistic: "Semi-Realistic"
       simple: Simple
       skyblock: Skyblock
       steampunk: Steampunk
@@ -2480,39 +2480,39 @@ resource_detail:
     translate_description: Translate Description
     view_details: View Details
   activities:
-    download_canceled: 'Canceled download: {entry_title}'
-    download_failed: 'Download failed: {entry_title}'
-    download_file: 'Download file: {entry_title}'
-    download_started: 'Download started: {entry_title}'
+    download_canceled: "Canceled download: {entry_title}"
+    download_failed: "Download failed: {entry_title}"
+    download_file: "Download file: {entry_title}"
+    download_started: "Download started: {entry_title}"
     install_current_instance: Install to current instance
     install_current_instance_failed: Failed to install to current instance
-    navigate_back: 'Back to {target_title}'
-    open_dependency_project: 'Open dependency project: {entry_title}'
+    navigate_back: "Back to {target_title}"
+    open_dependency_project: "Open dependency project: {entry_title}"
     open_detail: Open Details
-    open_detail_for_project: 'Open details for {project_title}'
-    open_file: 'Open file: {entry_title}'
-    open_mc_wiki: 'Open MC Wiki for {project_title}'
-    open_project_content: 'Open content: {entry_title}'
-    open_project_homepage: 'Open homepage for {project_title}'
-    pick_save_path_failed: 'Failed to choose save path for {entry_title}'
-    view_source: 'View source for {project_title}'
+    open_detail_for_project: "Open details for {project_title}"
+    open_file: "Open file: {entry_title}"
+    open_mc_wiki: "Open MC Wiki for {project_title}"
+    open_project_content: "Open content: {entry_title}"
+    open_project_homepage: "Open homepage for {project_title}"
+    pick_save_path_failed: "Failed to choose save path for {entry_title}"
+    view_source: "View source for {project_title}"
   copy:
     messages:
       completed: Copied successfully
-      failed: '{title} failed'
+      failed: "{title} failed"
   copy_link:
     empty: There is no link to copy
   copy_name:
     empty: There is no name to copy
   counts:
-    hundred_million: '{value} hundred million'
-    ten_thousand: '{value} ten thousand'
+    hundred_million: "{value} hundred million"
+    ten_thousand: "{value} ten thousand"
   compatibility:
     no_loaders: No loader information
     no_versions: No Minecraft version list
-    loaders: 'Loaders: {loaders}'
-    summary: '{version_summary} • {loader_summary}'
-    versions: 'Minecraft {versions}'
+    loaders: "Loaders: {loaders}"
+    summary: "{version_summary} • {loader_summary}"
+    versions: "Minecraft {versions}"
   current_instance:
     none_selected: No current instance selected
     summary_none_selected: Select an instance to install this project directly
@@ -2570,7 +2570,7 @@ resource_detail:
       required: Required
       tool: Tool
     title: Dependencies
-    title_for_release: '{release_title} Dependencies'
+    title_for_release: "{release_title} Dependencies"
   download:
     dialogs:
       pick_save_path:
@@ -2579,11 +2579,11 @@ resource_detail:
     errors:
       missing_url: Missing download URL
     hints:
-      completed: 'Downloaded {file_name}'
-      started: 'Started downloading {file_name}'
+      completed: "Downloaded {file_name}"
+      started: "Started downloading {file_name}"
     messages:
       no_save_path: No save path was chosen
-    task_title: 'Download {file_name}'
+    task_title: "Download {file_name}"
   filters:
     loader: Loader
     version: Version
@@ -2596,7 +2596,7 @@ resource_detail:
       confirm_dependencies:
         confirm: Continue
         failed: Failed to confirm dependency install
-        title: 'Install Dependencies Too?'
+        title: "Install Dependencies Too?"
     errors:
       no_filtered_release: No matching release is available
       unknown_resource_type: Unknown resource type
@@ -2604,15 +2604,15 @@ resource_detail:
       analyzing: Analyzing installation plan...
       started: Installation tasks started
     messages:
-      analyzing: 'Analyzing how to install {project_title} into {instance_name}'
+      analyzing: "Analyzing how to install {project_title} into {instance_name}"
       canceled_with_dependencies: Canceled installation with dependencies
       no_tasks: No installation tasks are needed
-      queued_in_task_center: 'Queued in Task Center: {task_title}'
+      queued_in_task_center: "Queued in Task Center: {task_title}"
     summary:
-      completed: 'Installation queued for {instance_name}: {summary}'
-      dependencies: '{count} dependencies'
-      skipped: '{count} skipped'
-      tasks: '{count} tasks'
+      completed: "Installation queued for {instance_name}: {summary}"
+      dependencies: "{count} dependencies"
+      skipped: "{count} skipped"
+      tasks: "{count} tasks"
   instance_selection:
     activities:
       select: Select instance
@@ -2621,7 +2621,7 @@ resource_detail:
       message: Choose an instance to install this project into
       title: Choose Instance
     messages:
-      already_selected: '{instance_name} is already selected'
+      already_selected: "{instance_name} is already selected"
       no_instances: There are no available instances
   links:
     title: Links
@@ -2640,7 +2640,7 @@ resource_detail:
     homepage: Homepage
     issues: Issues
     source: Source Repository
-    support_author: 'Support Author: {platform}'
+    support_author: "Support Author: {platform}"
     wiki: Wiki
   loading:
     releases: Loading releases...
@@ -2655,18 +2655,18 @@ resource_detail:
     world: World
   release_info:
     unavailable: No version information
-    versions: 'Minecraft {versions}'
+    versions: "Minecraft {versions}"
   release_meta:
-    downloads: '{count} downloads'
-    published: 'Published {date}'
-    published_with_downloads: 'Published {date} • {downloads}'
+    downloads: "{count} downloads"
+    published: "Published {date}"
+    published_with_downloads: "Published {date} • {downloads}"
   modpack:
     activities:
-      install_canceled: 'Canceled modpack install: {entry_title}'
+      install_canceled: "Canceled modpack install: {entry_title}"
       install_completed: Modpack installed
-      install_failed: 'Modpack install failed: {entry_title}'
+      install_failed: "Modpack install failed: {entry_title}"
       prompt_instance_name_failed: Failed to ask for an instance name
-    archive_name: 'modpack{extension}'
+    archive_name: "modpack{extension}"
     dialogs:
       instance_name:
         message: Enter a name for the new instance
@@ -2675,12 +2675,12 @@ resource_detail:
         confirm: OK
         title: Invalid Instance Name
     hints:
-      download_and_install_started: 'Started downloading and installing {file_name}'
-      install_completed: '{instance_name} was installed successfully'
+      download_and_install_started: "Started downloading and installing {file_name}"
+      install_completed: "{instance_name} was installed successfully"
     messages:
-      install_completed: 'Installed {instance_name} to {target_directory}'
+      install_completed: "Installed {instance_name} to {target_directory}"
       missing_instance_name: No instance name was provided
-    task_title: 'Install {source_name} as {instance_name}'
+    task_title: "Install {source_name} as {instance_name}"
     task:
       canceling: Canceling modpack installation...
       queued: Added to the task center
@@ -2704,32 +2704,32 @@ resource_detail:
         preparing_install_plan: Preparing instance install plan...
         extracting_overrides: Extracting modpack overrides...
         downloading_bundled_files: Downloading bundled modpack files...
-        processing_file: 'Processing {file_name}...'
+        processing_file: "Processing {file_name}..."
         bundled_files_ready: Bundled modpack files are ready.
-        file_ready: '{file_name} is ready'
+        file_ready: "{file_name} is ready"
         installing_game: Installing game and loaders...
         repairing_game_files: Completing game files...
         finalizing_instance: Finalizing instance directory...
         completed: Modpack installation completed.
       errors:
-        unsupported_package_kind: 'Only PCL Standard, Modrinth, and CurseForge modpacks are supported for automatic installation.'
+        unsupported_package_kind: "Only PCL Standard, Modrinth, and CurseForge modpacks are supported for automatic installation."
         modrinth_missing_minecraft_version: The Modrinth modpack is missing Minecraft version information.
         curseforge_missing_minecraft_version: The CurseForge modpack is missing Minecraft version information.
-        curseforge_recommended_forge_unsupported: 'This CurseForge modpack uses recommended Forge, which is not supported for automatic installation yet.'
-        curseforge_missing_files: 'Some CurseForge files referenced by the modpack no longer exist, so automatic installation cannot continue.'
+        curseforge_recommended_forge_unsupported: "This CurseForge modpack uses recommended Forge, which is not supported for automatic installation yet."
+        curseforge_missing_files: "Some CurseForge files referenced by the modpack no longer exist, so automatic installation cannot continue."
         pcl_missing_addons: This PCL Standard modpack does not include the required game version addon metadata.
         pcl_missing_game_version: This PCL Standard modpack does not include Minecraft version information.
-        missing_critical_file: 'The modpack is missing a required file: {path}'
-        minecraft_choice_missing: 'No available installation plan was found for Minecraft {version}.'
-        loader_choice_missing: 'No installation plan was found for {option_title} {requested_version}.'
-        file_download_failed: 'Failed to download modpack file: {file_name}'
+        missing_critical_file: "The modpack is missing a required file: {path}"
+        minecraft_choice_missing: "No available installation plan was found for Minecraft {version}."
+        loader_choice_missing: "No installation plan was found for {option_title} {requested_version}."
+        file_download_failed: "Failed to download modpack file: {file_name}"
         curseforge_metadata_empty: CurseForge file metadata response was empty.
         curseforge_metadata_missing_data: CurseForge file metadata did not include a data array.
-        file_path_outside_instance: 'The modpack file path escapes the instance directory: {relative_path}'
-        archive_illegal_path: 'The modpack archive contains an invalid path: {entry_path}'
-        rar_unsupported: 'RAR archives are not supported. Extract and recompress the modpack as a ZIP archive, then try again.'
+        file_path_outside_instance: "The modpack file path escapes the instance directory: {relative_path}"
+        archive_illegal_path: "The modpack archive contains an invalid path: {entry_path}"
+        rar_unsupported: "RAR archives are not supported. Extract and recompress the modpack as a ZIP archive, then try again."
         archive_open_failed: Failed to open the modpack archive. The file may be corrupted or use an unsupported archive format.
-        json_parse_failed: 'Failed to parse the JSON file inside the modpack: {entry_path}'
+        json_parse_failed: "Failed to parse the JSON file inside the modpack: {entry_path}"
   releases:
     empty:
       body: No releases match the current filters
@@ -2741,13 +2741,13 @@ resource_detail:
     none_selected_summary: Choose a project to see its details
     none_selected_title: Nothing Selected
     not_loaded: Not loaded yet
-    project_fallback_title: 'Project {project_id}'
+    project_fallback_title: "Project {project_id}"
     unspecified_source: Unspecified source
     waiting: Waiting for selection
   statuses:
     archived: Archived
     draft: Draft
-    fallback: 'Status {status}'
+    fallback: "Status {status}"
     load_failed: Load Failed
     published: Published
     removed: Removed
@@ -2758,7 +2758,7 @@ resource_detail:
   translate_description:
     empty: There is no description to translate
   values:
-    and_more: ' and more'
+    and_more: " and more"
     none: None
     other: Other
     unknown: Unknown
@@ -2766,12 +2766,12 @@ resource_detail:
     legacy: Legacy
     snapshot: Snapshot
   warnings:
-    load_failed: 'Failed to load live project data: {message}'
+    load_failed: "Failed to load live project data: {message}"
   world_archive:
-    extract_failed: 'The world archive was downloaded, but automatic extraction failed: {message}'
+    extract_failed: "The world archive was downloaded, but automatic extraction failed: {message}"
     install_directory_unavailable: The save installation directory is unavailable.
     no_importable_content: The archive does not contain importable world content.
-    unsafe_path: 'The archive contains an unsafe path: {path}'
+    unsafe_path: "The archive contains an unsafe path: {path}"
 instance:
   common:
     independent: Unabhängige Instanz
@@ -2789,7 +2789,7 @@ instance:
     dialogs:
       rename:
         title: Rename Instance
-        message: 'Enter a new instance name. It will be used for the instance folder, core files, and the selected instance config.'
+        message: "Enter a new instance name. It will be used for the instance folder, core files, and the selected instance config."
         confirm: Rename
         input_label: Instance Name
       edit_description:
@@ -2799,18 +2799,18 @@ instance:
         input_label: Instance Description
       reset:
         title: Confirm Instance Reset
-        message: 'Are you sure you want to reset {instance_name}? A core backup will be saved first, then the current core files, libraries, and asset indexes will be redownloaded while reusing validated files whenever possible.'
+        message: "Are you sure you want to reset {instance_name}? A core backup will be saved first, then the current core files, libraries, and asset indexes will be redownloaded while reusing validated files whenever possible."
         confirm: Start Reset
       patch_core:
         title: Patch Core
-        message: 'Are you sure you want to patch the core files for {instance_name}? File validation will be disabled automatically after patching, and a core backup will be saved first.'
+        message: "Are you sure you want to patch the core files for {instance_name}? File validation will be disabled automatically after patching, and a core backup will be saved first."
         confirm: Choose Patch File
         file_title: Choose a file to patch the core
         file_filter: Archive Files
     info:
       launch_count: Launch count
       launch_count_never: Never launched
-      launch_count_value: 'Launched {count} times'
+      launch_count_value: "Launched {count} times"
       modpack_version: Modpack version
       description: Description
     personalization:
@@ -2833,7 +2833,7 @@ instance:
       delete: Instanz löschen
       patch_core: Patch Core
     artifacts:
-      launch_script_name: 'Launch {instance_name}'
+      launch_script_name: "Launch {instance_name}"
     messages:
       select_to_view_details: Select an instance to view details.
       no_instance_selected: No instance is currently selected.
@@ -2843,42 +2843,42 @@ instance:
       rename_empty: Instance name cannot be empty.
       rename_unchanged: The instance name did not change.
       rename_invalid: The instance name contains invalid characters.
-      rename_exists: 'An instance with this name already exists: {name}'
+      rename_exists: "An instance with this name already exists: {name}"
       description_canceled: Description edit canceled.
       description_restored: Restored the default description.
       launch_script_missing: The launch script does not exist.
-      repair_disable_validation_hint: 'Turn off [Instance Settings -> Settings -> Advanced Launch Options -> Disable File Validation] first, then try repairing files again.'
-      repair_completed: 'Repaired {downloaded_count} files and reused {reused_count} files.'
+      repair_disable_validation_hint: "Turn off [Instance Settings -> Settings -> Advanced Launch Options -> Disable File Validation] first, then try repairing files again."
+      repair_completed: "Repaired {downloaded_count} files and reused {reused_count} files."
       repair_canceled_title: Repair Files Canceled
       repair_canceled: The instance repair process was canceled.
       reset_canceled_title: Reset Instance Canceled
       reset_canceled: The instance reset was canceled.
-      reset_completed: 'Reset the core files, downloaded {downloaded_count} files, and reused {reused_count} files.'
-      delete_permanent: 'The instance {instance_name} was permanently deleted.'
-      delete_recycled: 'The instance {instance_name} was moved to the recycle area: {trash_directory}'
+      reset_completed: "Reset the core files, downloaded {downloaded_count} files, and reused {reused_count} files."
+      delete_permanent: "The instance {instance_name} was permanently deleted."
+      delete_recycled: "The instance {instance_name} was moved to the recycle area: {trash_directory}"
       patch_canceled: Patch canceled.
       patch_file_canceled: Patch file selection canceled.
       patched_core_missing: The patched core file does not exist.
-      rename_completed: 'Renamed instance {old_name} to {new_name}.'
-      test_instance_navigated: 'Opened the launch route to test {instance_name}.'
-      repair_task_title: '{action_title}: {instance_name}'
+      rename_completed: "Renamed instance {old_name} to {new_name}."
+      test_instance_navigated: "Opened the launch route to test {instance_name}."
+      repair_task_title: "{action_title}: {instance_name}"
       repair_summary:
-        instance: 'Instance: {instance_name}'
-        instance_directory: 'Instance directory: {path}'
-        core_json: 'Core Json: {status} • {path}'
-        core_jar: 'Core Jar: {status} • {path}'
-        backup_directory: 'Backup directory: {path}'
-        downloaded_count: 'Downloaded files: {count}'
-        reused_count: 'Reused files: {count}'
-        downloaded_item: 'Downloaded: {path}'
-        reused_item: 'Reused: {path}'
+        instance: "Instance: {instance_name}"
+        instance_directory: "Instance directory: {path}"
+        core_json: "Core Json: {status} • {path}"
+        core_jar: "Core Jar: {status} • {path}"
+        backup_directory: "Backup directory: {path}"
+        downloaded_count: "Downloaded files: {count}"
+        reused_count: "Reused files: {count}"
+        downloaded_item: "Downloaded: {path}"
+        reused_item: "Reused: {path}"
         intro: Repair result summary.
         present: Present
         missing: Missing
     categories:
       auto: Auto
       hidden: Hidden instance
-      modable: 'Mod-capable'
+      modable: "Mod-capable"
       hide_from_list: Hide from instance list
       modable_long: Instance that supports mod installation
       regular: Regular instance
@@ -2906,7 +2906,7 @@ instance:
   install:
     minecraft:
       header: Minecraft
-      version: 'Minecraft {version}'
+      version: "Minecraft {version}"
     actions:
       apply_changes: Apply Changes
       reset_to_scanned: Reset to Scanned State
@@ -2915,11 +2915,11 @@ instance:
       can_add: Can add
     hints:
       optifine_mod_compatibility: OptiFine may be incompatible with some mods.
-      fabric_api_required: 'Fabric API is not installed, so most mods will not work.'
-      qsl_required: 'QFAPI / QSL is not installed, so most mods will not work.'
-      optifabric_required: 'OptiFabric is not installed, so OptiFine will not work.'
+      fabric_api_required: "Fabric API is not installed, so most mods will not work."
+      qsl_required: "QFAPI / QSL is not installed, so most mods will not work."
+      optifabric_required: "OptiFabric is not installed, so OptiFine will not work."
     unavailable:
-      incompatible_with: 'Incompatible with {target}'
+      incompatible_with: "Incompatible with {target}"
       no_versions: No compatible versions are available.
       optifabric_origins: This OptiFabric build is only compatible with the Origins branch.
       requires_fabric: Requires Fabric.
@@ -2936,7 +2936,7 @@ instance:
       empty:
         title: No worlds found
         description: Open the saves folder or paste a world file or folder path from the clipboard to import one.
-      summary: 'Created: {created_at} • Modified: {modified_at}'
+      summary: "Created: {created_at} • Modified: {modified_at}"
       actions:
         open_folder: Open Saves Folder
         paste_clipboard: Paste from Clipboard
@@ -2948,7 +2948,7 @@ instance:
       empty:
         title: No screenshots found
         description: Open the screenshot folder and add or capture screenshots for this instance.
-      summary: '{created_at} • {file_size}'
+      summary: "{created_at} • {file_size}"
       actions:
         open_folder: Open Folder
         open_file: Open Screenshot
@@ -2972,26 +2972,26 @@ instance:
         offline: Server offline
         offline_short: Offline
         connecting_short: Connecting
-        connection_failed: 'Unable to connect: {message}'
+        connection_failed: "Unable to connect: {message}"
       motd:
         click_to_refresh: Click refresh to view the server status
         connecting: Connecting...
         offline: Server offline
       messages:
         no_instance_selected: No instance is currently selected.
-        no_saved_servers: 'The current instance was rescanned, but it has no saved servers.'
-        refreshed_count: 'Refreshed {count} servers.'
+        no_saved_servers: "The current instance was rescanned, but it has no saved servers."
+        refreshed_count: "Refreshed {count} servers."
         address_empty: Server address is empty.
         no_server_info: No server information was returned.
-        no_copyable_address: '{entry_title} has no address to copy.'
-        copied_address: '{entry_title} • {address}'
-        no_connectable_address: '{entry_title} has no usable server address.'
-        added: '{name} • {address}'
+        no_copyable_address: "{entry_title} has no address to copy."
+        copied_address: "{entry_title} • {address}"
+        no_connectable_address: "{entry_title} has no usable server address."
+        added: "{name} • {address}"
         address_required: Server address cannot be empty.
         read_list_failed: |-
           Unable to read the current instance server list.
           {error}
-        launch_route_prepared: 'Switched to the launch page and prepared to connect to {entry_title}.'
+        launch_route_prepared: "Switched to the launch page and prepared to connect to {entry_title}."
         update_list_failed: |-
           Unable to update the current instance server list.
           {error}
@@ -2999,11 +2999,11 @@ instance:
       dialogs:
         edit:
           title: Edit Server Info
-          name_prompt: 'Enter a new server name:'
+          name_prompt: "Enter a new server name:"
           name_default: Minecraft Server
-          address_prompt: 'Enter a new server address:'
+          address_prompt: "Enter a new server address:"
     sort:
-      label: 'Sort: {mode}'
+      label: "Sort: {mode}"
       file_name: File Name
       create_time: Created Time
       modify_time: Modified Time
@@ -3013,11 +3013,11 @@ instance:
     resource:
       empty:
         default_title: No resources found
-        default_description: 'Add files to this instance, or download new content to get started.'
+        default_description: "Add files to this instance, or download new content to get started."
         mod_unavailable_title: Mods are unavailable
         mod_unavailable_description: This instance does not support mods. Switch to a compatible instance or open Download to browse installable content.
         schematic_unavailable_title: Schematics require a mod
-        schematic_unavailable_description: 'Install a schematic-compatible mod first, then return here to manage schematic files.'
+        schematic_unavailable_description: "Install a schematic-compatible mod first, then return here to manage schematic files."
       search:
         default: Search resources
         resource_pack: Search resource packs
@@ -3040,15 +3040,15 @@ instance:
         instance_select: Select Compatible Instance
         go_to_download: Go to Download
       activities:
-        open_homepage: 'Open {surface_title} homepage: {entry_title}'
-        view_details: 'View {surface_title} details'
+        open_homepage: "Open {surface_title} homepage: {entry_title}"
+        view_details: "View {surface_title} details"
       filters:
-        all: 'All ({count})'
-        enabled: 'Enabled ({count})'
-        disabled: 'Disabled ({count})'
-        duplicate: 'Duplicates ({count})'
-        search_results: 'Search Results ({count})'
-      selection: '{count} selected'
+        all: "All ({count})"
+        enabled: "Enabled ({count})"
+        disabled: "Disabled ({count})"
+        duplicate: "Duplicates ({count})"
+        search_results: "Search Results ({count})"
+      selection: "{count} selected"
       kind:
         mod: Mod
         resource: Resource
@@ -3060,34 +3060,34 @@ instance:
         folder: Folder
         root_directory: Root directory
       summary:
-        file: '{parent_directory} • {modified_at}'
-        archive: '{modified_at} • {file_size}'
-        folder: '{modified_at} • {folder_kind}'
+        file: "{parent_directory} • {modified_at}"
+        archive: "{modified_at} • {file_size}"
+        folder: "{modified_at} • {folder_kind}"
       messages:
         no_instance_selected: No instance is currently selected.
-        list_empty: '{surface_title} list is empty.'
-        selected_all: '{surface_title} • Selected {count} items.'
+        list_empty: "{surface_title} list is empty."
+        selected_all: "{surface_title} • Selected {count} items."
         no_toggleable_entries: There are no resources that can change state right now.
         no_deletable_entries: There are no resources that can be deleted right now.
         install_from_file_canceled: Resource file selection was canceled.
-        toggle_not_supported: '{surface_title} does not support enable or disable.'
+        toggle_not_supported: "{surface_title} does not support enable or disable."
         no_selected: No resources are selected.
         already_enabled: All selected resources are already enabled.
         already_disabled: All selected resources are already disabled.
-        enabled_completed: 'Enabled {count} items: {titles}'
-        disabled_completed: 'Disabled {count} items: {titles}'
-        enabled_partial: 'Enabled {count} items, and {failed_count} failed.'
-        disabled_partial: 'Disabled {count} items, and {failed_count} failed.'
+        enabled_completed: "Enabled {count} items: {titles}"
+        disabled_completed: "Disabled {count} items: {titles}"
+        enabled_partial: "Enabled {count} items, and {failed_count} failed."
+        disabled_partial: "Disabled {count} items, and {failed_count} failed."
         delete_canceled: Deletion canceled.
-        deleted_completed: 'Moved {count} items to the recycle area.'
+        deleted_completed: "Moved {count} items to the recycle area."
         export_missing: The exported file does not exist.
-        entry_missing: '{surface_title} item does not exist.'
-        details_read_failed: 'Failed to read additional info: {error}'
-        checked_mods_summary: 'Checked {instance_name}: {enabled_count} enabled, {disabled_count} disabled, {duplicate_count} duplicate groups.'
-        open_download_route: '{surface_title} page has been opened in Download.'
+        entry_missing: "{surface_title} item does not exist."
+        details_read_failed: "Failed to read additional info: {error}"
+        checked_mods_summary: "Checked {instance_name}: {enabled_count} enabled, {disabled_count} disabled, {duplicate_count} duplicate groups."
+        open_download_route: "{surface_title} page has been opened in Download."
       dialogs:
         install_from_file:
-          title: 'Select {surface_title} file'
+          title: "Select {surface_title} file"
           file_types:
             mod: Mod File
             resource_pack: Resource Pack File
@@ -3095,9 +3095,9 @@ instance:
             schematic: Schematic File
         delete:
           title: Confirm Resource Deletion
-          message: 'Move these {count} {surface_title} items to the recycle area?'
+          message: "Move these {count} {surface_title} items to the recycle area?"
           confirm: Move to Recycle Area
-          extra_items: '- and {count} more items'
+          extra_items: "- and {count} more items"
       details:
         fields:
           name: Name
@@ -3120,7 +3120,7 @@ instance:
         disabled_mods: Disabled Mods
         duplicate_names: Duplicate Names
         no_duplicates: No duplicate mod filenames were detected.
-        duplicate_group_title: 'Duplicate mod names:'
+        duplicate_group_title: "Duplicate mod names:"
       tooltips:
         open_file_location: Open file location
         details: Details
@@ -3146,7 +3146,7 @@ instance:
     java_options:
       auto_select: Geeignetes Java automatisch auswählen
       launcher_relative: Java im Launcher-Verzeichnis auswählen
-      launcher_relative_selected: 'Java im Launcher-Verzeichnis | {relative_path}'
+      launcher_relative_selected: "Java im Launcher-Verzeichnis | {relative_path}"
     launch:
       isolation: Isolation
       window_title: Fenstertitel
@@ -3202,7 +3202,7 @@ instance:
       system_default: Systemstandard
   export:
     count:
-      items: '{count} Einträge'
+      items: "{count} Einträge"
     activities:
       reset: Exportoptionen zurücksetzen
       import_config: Exportkonfiguration importieren
@@ -3210,7 +3210,7 @@ instance:
       guide: Modpack-Paketierungsleitfaden
       start: Export starten
     warnings:
-      modrinth: 'Der Modrinth-Exportmodus erzeugt einen `.mrpack`-Ablauf und kann launcher-spezifische Extras auslassen.'
+      modrinth: "Der Modrinth-Exportmodus erzeugt einen `.mrpack`-Ablauf und kann launcher-spezifische Extras auslassen."
       include_resources: Das Einbeziehen von Ressourcendateien kann die Größe des Exportpakets deutlich erhöhen.
     sections:
       content: Inhalt
@@ -3244,11 +3244,11 @@ instance:
       archive_missing: Das Exportarchiv existiert nicht.
     guide:
       title: Modpack-Paketierungsleitfaden
-      step_1: '1. Bestätige zuerst auf der Instanz-Exportseite Paketname, Version und ausgewählten Inhalt.'
-      step_2: '2. Wenn du dieselben Exportregeln wiederverwenden möchtest, speichere zuerst die Konfiguration, damit du sie später importieren kannst.'
-      step_3: '3. Das Einbeziehen von Ressourcendateien packt Mods, Ressourcenpakete und Shader-Pakete direkt in das Archiv, was für Offline-Verteilung nützlich ist.'
-      step_4: '4. Der Modrinth-Uploadmodus erzeugt eine `.mrpack`-Datei, die sich besser für weitere Paketierung und Veröffentlichung eignet.'
-      step_5: '5. Prüfe nach dem Export, ob Struktur und Inhalt des erzeugten Archivs zur aktuellen Instanz passen.'
+      step_1: "1. Bestätige zuerst auf der Instanz-Exportseite Paketname, Version und ausgewählten Inhalt."
+      step_2: "2. Wenn du dieselben Exportregeln wiederverwenden möchtest, speichere zuerst die Konfiguration, damit du sie später importieren kannst."
+      step_3: "3. Das Einbeziehen von Ressourcendateien packt Mods, Ressourcenpakete und Shader-Pakete direkt in das Archiv, was für Offline-Verteilung nützlich ist."
+      step_4: "4. Der Modrinth-Uploadmodus erzeugt eine `.mrpack`-Datei, die sich besser für weitere Paketierung und Veröffentlichung eignet."
+      step_5: "5. Prüfe nach dem Export, ob Struktur und Inhalt des erzeugten Archivs zur aktuellen Instanz passen."
     groups:
       game: Spiel
       mods: Mods
@@ -3274,7 +3274,7 @@ instance:
       schematics: Schematiken-Ordner
       replays: Replay-Mod-Aufnahmen
       worlds: Welten / Karten
-      launcher: 'Den plattformübergreifenden PCL-Launcher beilegen, damit Spieler ohne ihn das Modpack installieren können.'
+      launcher: "Den plattformübergreifenden PCL-Launcher beilegen, damit Spieler ohne ihn das Modpack installieren können."
     detected:
       options: options.txt erkannt
       config_missing: Konfigurationsdatei nicht gefunden
@@ -3299,9 +3299,9 @@ instance:
     messages:
       launcher_missing: Das Launcher-Verzeichnis konnte nicht gefunden werden.
       delete_canceled: Löschung abgebrochen.
-      confirm_permanent: 'Möchtest du die Instanz {instance_name} wirklich dauerhaft löschen?'
-      confirm_recycle: 'Möchtest du die Instanz {instance_name} wirklich löschen?'
-      confirm_indie_warning: 'Da diese Instanz Versionsisolierung verwendet, werden beim Löschen auch Spielstände, Ressourcenpakete, Mods und andere instanzspezifische Dateien entfernt.'
+      confirm_permanent: "Möchtest du die Instanz {instance_name} wirklich dauerhaft löschen?"
+      confirm_recycle: "Möchtest du die Instanz {instance_name} wirklich löschen?"
+      confirm_indie_warning: "Da diese Instanz Versionsisolierung verwendet, werden beim Löschen auch Spielstände, Ressourcenpakete, Mods und andere instanzspezifische Dateien entfernt."
       confirm_recycle_note: Die Instanz wird zunächst in den Instanz-Papierkorb verschoben, damit du sie dort manuell bereinigen oder wiederherstellen kannst.
 save_detail:
   actions:
@@ -3364,6 +3364,26 @@ save_detail:
     no_backup_target: Für Sicherungsvorgänge steht kein Spielstand zur Verfügung
     no_selected_save: Es ist derzeit kein Spielstand ausgewählt
     no_empty_backups: Es wurden keine leeren Sicherungsdateien gefunden
-    cleaned_empty_backups: '{count} leere Sicherungsdatei(en) bereinigt'
+    cleaned_empty_backups: "{count} leere Sicherungsdatei(en) bereinigt"
     install_datapack_canceled: Die Auswahl der Datenpaketdatei wurde abgebrochen
     export_missing: Die exportierte Datei existiert nicht
+
+welcome:
+  step_0:
+    title: Sprache auswählen
+    description: Wählen Sie die Anzeigesprache für PCL ME aus.
+  step_1:
+    title: Lizenzvereinbarung
+    description: Bitte lesen und akzeptieren Sie die Endbenutzer-Lizenzvereinbarung (EULA), bevor Sie PCL ME verwenden.
+    eula_summary: PCL ME ist eine kostenlose, quelloffene Software und wird "wie sie ist" bereitgestellt. Durch die Nutzung akzeptieren Sie die Bedingungen der Endbenutzer-Lizenzvereinbarung. Lesen Sie die vollständige EULA für Details zu zulässiger Nutzung und Weitergabe.
+    open_eula: Vollständige EULA öffnen
+    accept_label: Ich habe die EULA gelesen und akzeptiere sie
+    decline: Ablehnen und beenden
+  step_2:
+    title: Design auswählen
+    description: Wählen Sie einen Farbmodus und eine Akzentfarbe. Sie können dies jederzeit in den Einstellungen ändern.
+  step_3:
+    title: Alles bereit!
+    description: PCL ME ist einsatzbereit. Erkunden Sie die folgenden Links.
+    feedback: Feedback senden
+    github: GitHub
