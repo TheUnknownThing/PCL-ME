@@ -69,7 +69,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedLaunchOfflineUuidModeIndex;
         set
         {
-            var clampedValue = Math.Clamp(value, 0, LaunchOfflineUuidModeOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, LaunchOfflineUuidModeOptions.Count, out var clampedValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedLaunchOfflineUuidModeIndex, clampedValue))
             {
                 RaisePropertyChanged(nameof(IsLaunchOfflineCustomUuidVisible));

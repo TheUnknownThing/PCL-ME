@@ -87,7 +87,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceIsolationIndex
     {
         get => _selectedInstanceIsolationIndex;
-        set => SetProperty(ref _selectedInstanceIsolationIndex, Math.Clamp(value, 0, InstanceIsolationOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceIsolationOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceIsolationIndex, normalizedValue);
+            }
+        }
     }
 
     public string InstanceWindowTitleSetting
@@ -111,7 +117,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceJavaIndex
     {
         get => _selectedInstanceJavaIndex;
-        set => SetProperty(ref _selectedInstanceJavaIndex, Math.Clamp(value, 0, Math.Max(InstanceJavaOptions.Count - 1, 0)));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceJavaOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceJavaIndex, normalizedValue);
+            }
+        }
     }
 
     public bool UseGlobalInstanceRamAllocation
@@ -155,7 +167,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceMemoryOptimizeIndex
     {
         get => _selectedInstanceMemoryOptimizeIndex;
-        set => SetProperty(ref _selectedInstanceMemoryOptimizeIndex, Math.Clamp(value, 0, InstanceMemoryOptimizeOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceMemoryOptimizeOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceMemoryOptimizeIndex, normalizedValue);
+            }
+        }
     }
 
     public string InstanceUsedRamLabel => FormatMemorySummarySize(_instanceUsedRamGb);
@@ -183,7 +201,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedInstanceServerLoginRequireIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, InstanceServerLoginRequireOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, InstanceServerLoginRequireOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedInstanceServerLoginRequireIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(ShowInstanceServerAuthFields));
@@ -255,7 +277,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceRendererIndex
     {
         get => _selectedInstanceRendererIndex;
-        set => SetProperty(ref _selectedInstanceRendererIndex, Math.Clamp(value, 0, InstanceRendererOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceRendererOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceRendererIndex, normalizedValue);
+            }
+        }
     }
 
     public string InstanceLaunchJvmArguments
@@ -297,7 +325,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedInstanceForceX11OnWaylandIndex
     {
         get => _selectedInstanceForceX11OnWaylandIndex;
-        set => SetProperty(ref _selectedInstanceForceX11OnWaylandIndex, Math.Clamp(value, 0, InstanceForceX11OnWaylandOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, InstanceForceX11OnWaylandOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedInstanceForceX11OnWaylandIndex, normalizedValue);
+            }
+        }
     }
 
     public bool IgnoreInstanceJavaCompatibilityWarning

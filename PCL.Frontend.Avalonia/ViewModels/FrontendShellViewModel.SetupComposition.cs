@@ -156,7 +156,10 @@ internal sealed partial class FrontendShellViewModel
         "UiDarkColorCustom"
     ];
 
-    private void ApplySetupComposition(FrontendSetupComposition composition, bool initializeAllSurfaces = true)
+    private void ApplySetupComposition(
+        FrontendSetupComposition composition,
+        bool initializeAllSurfaces = true,
+        bool applyAppearance = true)
     {
         _setupComposition = composition;
         _suppressSetupPersistence = true;
@@ -185,14 +188,36 @@ internal sealed partial class FrontendShellViewModel
             _suppressSetupPersistence = false;
         }
 
-        ApplyCurrentAppearanceSettings();
+        if (applyAppearance)
+        {
+            ApplyCurrentAppearanceSettings();
+        }
     }
 
-    private void ReloadSetupComposition(bool initializeAllSurfaces = true)
+    private void ReloadSetupComposition(bool initializeAllSurfaces = true, bool applyAppearance = true)
     {
         ApplySetupComposition(
             FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths, _i18n),
-            initializeAllSurfaces);
+            initializeAllSurfaces,
+            applyAppearance);
+    }
+
+    private void RefreshSetupLocalizationState()
+    {
+        RefreshSetupLocalizationCatalog();
+        _setupComposition = FrontendSetupCompositionService.Compose(_shellActionService.RuntimePaths, _i18n);
+        _suppressSetupPersistence = true;
+        try
+        {
+            InitializeAboutEntries();
+            InitializeLogEntries();
+            InitializeJavaSurface();
+            RefreshUiFeatureToggleGroups();
+        }
+        finally
+        {
+            _suppressSetupPersistence = false;
+        }
     }
 
     private void InitializeActiveSetupSurface()
@@ -269,8 +294,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
                 break;
             case LauncherFrontendSubpageKey.SetupLauncherMisc:
-                RaisePropertyChanged(nameof(LauncherLocaleOptions));
-                RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
                 RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
                 RaisePropertyChanged(nameof(AnimationFpsLimit));
                 RaisePropertyChanged(nameof(AnimationFpsLabel));
@@ -297,6 +320,8 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(IsAutoJavaSelected));
                 break;
             case LauncherFrontendSubpageKey.SetupUI:
+                RaisePropertyChanged(nameof(LauncherLocaleOptions));
+                RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
                 RaisePropertyChanged(nameof(SelectedDarkModeIndex));
                 RaisePropertyChanged(nameof(SelectedLightColorIndex));
                 RaisePropertyChanged(nameof(SelectedDarkColorIndex));

@@ -505,7 +505,7 @@ internal sealed partial class MainWindow : Window
 
     private void ApplyMainBackgroundBrush()
     {
-        if (ActualThemeVariant == ThemeVariant.Dark)
+        if (FrontendAppearanceService.IsDarkTheme(Application.Current))
         {
             var darkBaseColor = FrontendThemeResourceResolver.GetColor("ColorObjectBg0");
             if (_darkMainBackgroundBrush is null || _darkMainBackgroundBaseColor != darkBaseColor)
@@ -523,7 +523,7 @@ internal sealed partial class MainWindow : Window
 
     private void ApplyTitleBarBackgroundBrush()
     {
-        if (ActualThemeVariant == ThemeVariant.Dark)
+        if (FrontendAppearanceService.IsDarkTheme(Application.Current))
         {
             NavBackgroundBorder.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushTitleBarBackground");
             return;
@@ -706,6 +706,7 @@ internal sealed partial class MainWindow : Window
 
     private IBrush CreateDynamicBackgroundOverlayBrush()
     {
+        var isDarkTheme = FrontendAppearanceService.IsDarkTheme(Application.Current);
         var start = FrontendThemeResourceResolver.GetColor("ColorObject7");
         var mid = FrontendThemeResourceResolver.GetColor("ColorObjectBg0");
         var end = FrontendThemeResourceResolver.GetColor("ColorObject6");
@@ -715,9 +716,9 @@ internal sealed partial class MainWindow : Window
             EndPoint = new RelativePoint(0.9, 1, RelativeUnit.Relative),
             GradientStops =
             [
-                new GradientStop(WithAlpha(start, ActualThemeVariant == ThemeVariant.Dark ? (byte)84 : (byte)64), 0),
-                new GradientStop(WithAlpha(mid, ActualThemeVariant == ThemeVariant.Dark ? (byte)52 : (byte)28), 0.45),
-                new GradientStop(WithAlpha(end, ActualThemeVariant == ThemeVariant.Dark ? (byte)70 : (byte)48), 1)
+                new GradientStop(WithAlpha(start, isDarkTheme ? (byte)84 : (byte)64), 0),
+                new GradientStop(WithAlpha(mid, isDarkTheme ? (byte)52 : (byte)28), 0.45),
+                new GradientStop(WithAlpha(end, isDarkTheme ? (byte)70 : (byte)48), 1)
             ]
         };
     }

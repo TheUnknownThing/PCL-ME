@@ -1821,6 +1821,7 @@ setup:
       dark_custom: []
       dark_palette: []
       global_font: []
+      locale: []
       launcher_opacity: []
       light_custom: []
       light_palette: []

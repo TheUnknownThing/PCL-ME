@@ -20,7 +20,7 @@ internal sealed partial class FrontendShellViewModel
         Dispatcher.UIThread.Post(() =>
         {
             _updateStatus = FrontendSetupUpdateStatusService.Relocalize(_updateStatus, _i18n);
-            ReloadSetupComposition(initializeAllSurfaces: true);
+            RefreshSetupLocalizationState();
             RaiseSectionBLocalizedProperties();
             _promptCatalog[AvaloniaPromptLaneKind.Startup] = LauncherFrontendPromptService
                 .BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
@@ -64,6 +64,11 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             RaiseGameLogSurfaceProperties();
             RefreshSectionDI18nSurfaces();
+
+            if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+            {
+                RaiseActiveSetupSurfaceProperties();
+            }
         });
     }
 

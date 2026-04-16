@@ -39,7 +39,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedUpdateChannelIndex;
         set
         {
-            var clampedValue = Math.Clamp(value, 0, UpdateChannelOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, UpdateChannelOptions.Count, out var clampedValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedUpdateChannelIndex, clampedValue))
             {
                 AddActivity(_i18n.T("setup.update.activities.change_channel"), UpdateChannelOptions[clampedValue]);
@@ -56,7 +60,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedUpdateModeIndex;
         set
         {
-            var clampedValue = Math.Clamp(value, 0, UpdateModeOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, UpdateModeOptions.Count, out var clampedValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedUpdateModeIndex, clampedValue))
             {
                 AddActivity(_i18n.T("setup.update.activities.change_mode"), UpdateModeOptions[clampedValue]);
@@ -89,7 +97,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedLaunchIsolationIndex
     {
         get => _selectedLaunchIsolationIndex;
-        set => SetProperty(ref _selectedLaunchIsolationIndex, Math.Clamp(value, 0, LaunchIsolationOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, LaunchIsolationOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedLaunchIsolationIndex, normalizedValue);
+            }
+        }
     }
 
     public string LaunchWindowTitleSetting
@@ -107,13 +121,25 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedLaunchVisibilityIndex
     {
         get => _selectedLaunchVisibilityIndex;
-        set => SetProperty(ref _selectedLaunchVisibilityIndex, Math.Clamp(value, 0, LaunchVisibilityOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, LaunchVisibilityOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedLaunchVisibilityIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedLaunchPriorityIndex
     {
         get => _selectedLaunchPriorityIndex;
-        set => SetProperty(ref _selectedLaunchPriorityIndex, Math.Clamp(value, 0, LaunchPriorityOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, LaunchPriorityOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedLaunchPriorityIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedLaunchWindowTypeIndex
@@ -121,7 +147,12 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedLaunchWindowTypeIndex;
         set
         {
-            if (SetProperty(ref _selectedLaunchWindowTypeIndex, Math.Clamp(value, 0, LaunchWindowTypeOptions.Count - 1)))
+            if (!TryNormalizeSelectionIndex(value, LaunchWindowTypeOptions.Count, out var normalizedValue))
+            {
+                return;
+            }
+
+            if (SetProperty(ref _selectedLaunchWindowTypeIndex, normalizedValue))
             {
                 RaisePropertyChanged(nameof(IsCustomLaunchWindowSizeVisible));
             }
@@ -145,13 +176,25 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedLaunchMicrosoftAuthIndex
     {
         get => _selectedLaunchMicrosoftAuthIndex;
-        set => SetProperty(ref _selectedLaunchMicrosoftAuthIndex, Math.Clamp(value, 0, LaunchMicrosoftAuthOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, LaunchMicrosoftAuthOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedLaunchMicrosoftAuthIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedLaunchPreferredIpStackIndex
     {
         get => _selectedLaunchPreferredIpStackIndex;
-        set => SetProperty(ref _selectedLaunchPreferredIpStackIndex, Math.Clamp(value, 0, LaunchPreferredIpStackOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, LaunchPreferredIpStackOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedLaunchPreferredIpStackIndex, normalizedValue);
+            }
+        }
     }
 
     public bool UseAutomaticRamAllocation
@@ -274,7 +317,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedLaunchRendererIndex
     {
         get => _selectedLaunchRendererIndex;
-        set => SetProperty(ref _selectedLaunchRendererIndex, Math.Clamp(value, 0, LaunchRendererOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, LaunchRendererOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedLaunchRendererIndex, normalizedValue);
+            }
+        }
     }
 
     public string LaunchJvmArguments

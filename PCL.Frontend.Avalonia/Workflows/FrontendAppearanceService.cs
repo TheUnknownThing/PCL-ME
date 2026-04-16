@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using PCL.Core.App.Configuration.Storage;
 
@@ -195,11 +196,7 @@ internal static class FrontendAppearanceService
             _ => ThemeVariant.Default
         };
 
-        var effectiveVariant = application.ActualThemeVariant == ThemeVariant.Dark
-            ? ThemeVariant.Dark
-            : application.RequestedThemeVariant == ThemeVariant.Dark
-                ? ThemeVariant.Dark
-                : ThemeVariant.Light;
+        var effectiveVariant = ResolveEffectiveThemeVariant(application, selection.DarkModeIndex);
         var useDarkPalette = effectiveVariant == ThemeVariant.Dark;
 
         var accent = ResolveAccent(useDarkPalette, selection);
@@ -234,6 +231,21 @@ internal static class FrontendAppearanceService
         {
             _isReapplyingForThemeVariantChange = false;
         }
+    }
+
+    public static ThemeVariant ResolveCurrentThemeVariant(Application? application)
+    {
+        if (application is null)
+        {
+            return ThemeVariant.Light;
+        }
+
+        return ResolveEffectiveThemeVariant(application, _currentSelection.DarkModeIndex);
+    }
+
+    public static bool IsDarkTheme(Application? application)
+    {
+        return ResolveCurrentThemeVariant(application) == ThemeVariant.Dark;
     }
 
     private static FrontendResolvedPalette CreateLightPalette(Color accent)
@@ -579,6 +591,23 @@ internal static class FrontendAppearanceService
     private static void OnApplicationActualThemeVariantChanged(object? sender, EventArgs e)
     {
         ReapplyCurrentAppearance(sender as Application);
+    }
+
+    private static ThemeVariant ResolveEffectiveThemeVariant(Application application, int darkModeIndex)
+    {
+        return darkModeIndex switch
+        {
+            0 => ThemeVariant.Light,
+            1 => ThemeVariant.Dark,
+            _ => application.PlatformSettings?.GetColorValues().ThemeVariant switch
+            {
+                PlatformThemeVariant.Dark => ThemeVariant.Dark,
+                PlatformThemeVariant.Light => ThemeVariant.Light,
+                _ => application.ActualThemeVariant == ThemeVariant.Dark
+                    ? ThemeVariant.Dark
+                    : ThemeVariant.Light
+            }
+        };
     }
 
     private static Color Mix(Color left, Color right, double rightWeight)

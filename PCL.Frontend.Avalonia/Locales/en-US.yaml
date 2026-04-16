@@ -1613,6 +1613,7 @@ setup:
       dark_custom: Dark custom
       dark_palette: Dark palette
       global_font: Global
+      locale: Interface language
       launcher_opacity: Opacity
       light_custom: Light custom
       light_palette: Light palette

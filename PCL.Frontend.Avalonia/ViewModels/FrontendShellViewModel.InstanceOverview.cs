@@ -89,7 +89,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedInstanceOverviewIconIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, InstanceOverviewIconOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, InstanceOverviewIconOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedInstanceOverviewIconIndex, nextValue))
             {
                 RefreshInstanceOverviewSelectionState();
@@ -102,7 +106,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedInstanceOverviewCategoryIndex;
         set
         {
-            var nextValue = Math.Clamp(value, 0, InstanceOverviewCategoryOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, InstanceOverviewCategoryOptions.Count, out var nextValue))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedInstanceOverviewCategoryIndex, nextValue))
             {
                 RaisePropertyChanged(nameof(InstanceOverviewCategoryLabel));

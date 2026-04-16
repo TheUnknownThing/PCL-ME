@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Styling;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -78,7 +78,7 @@ internal static class FrontendThemeResourceResolver
             return false;
         }
 
-        var themeVariant = application.ActualThemeVariant ?? ThemeVariant.Default;
+        var themeVariant = FrontendAppearanceService.ResolveCurrentThemeVariant(application);
         return application.TryGetResource(resourceKey, themeVariant, out resource)
             || application.TryFindResource(resourceKey, out resource);
     }

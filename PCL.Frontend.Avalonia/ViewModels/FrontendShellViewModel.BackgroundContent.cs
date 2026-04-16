@@ -25,7 +25,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedBackgroundSuitIndex
     {
         get => _selectedBackgroundSuitIndex;
-        set => SetProperty(ref _selectedBackgroundSuitIndex, Math.Clamp(value, 0, BackgroundSuitOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, BackgroundSuitOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedBackgroundSuitIndex, normalizedValue);
+            }
+        }
     }
 
     public double BackgroundOpacity

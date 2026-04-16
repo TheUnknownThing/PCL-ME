@@ -9,14 +9,26 @@
       <controls:PclCard Header="{Binding SetupText.Ui.BasicCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto,10,Auto">
               <TextBlock
                   VerticalAlignment="Center"
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
+                  Text="{Binding SetupText.Ui.LocaleLabel}" />
+              <ComboBox
+                  Grid.Column="1"
+                  ItemsSource="{Binding LauncherLocaleOptions}"
+                  SelectedIndex="{Binding SelectedLauncherLocaleIndex}" />
+
+              <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,0,20,0"
                   Text="{Binding SetupText.Ui.LauncherOpacityLabel}" />
-              <Grid Grid.Column="1" ColumnDefinitions="*,60">
+              <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,60">
                 <Slider
                     VerticalAlignment="Center"
                     Minimum="0"
@@ -32,13 +44,13 @@
               </Grid>
 
               <TextBlock
-                  Grid.Row="2"
+                  Grid.Row="4"
                   VerticalAlignment="Center"
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
                   Text="{Binding SetupText.Ui.ThemeLabel}" />
-              <StackPanel Grid.Row="2" Grid.Column="1" Spacing="8">
+              <StackPanel Grid.Row="4" Grid.Column="1" Spacing="8">
                 <Grid ColumnDefinitions="Auto,*,92,Auto,92,Auto">
                   <ComboBox
                       Grid.Column="0"

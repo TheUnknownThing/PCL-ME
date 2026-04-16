@@ -541,7 +541,12 @@ internal sealed partial class FrontendShellViewModel
         _selectedHomepagePresetIndex = Math.Clamp(_setupComposition.Ui.HomepagePresetIndex, 0, HomepagePresetOptions.Count - 1);
         RefreshTitleBarLogoImage();
         RefreshLaunchHomepage(forceRefresh: false);
+        RefreshUiFeatureToggleGroups();
+        RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
+    }
 
+    private void RefreshUiFeatureToggleGroups()
+    {
         ReplaceItems(UiFeatureToggleGroups,
             _setupComposition.Ui.ToggleGroups.Select(group =>
                 new UiFeatureToggleGroupViewModel(
@@ -551,7 +556,6 @@ internal sealed partial class FrontendShellViewModel
                             item.Title,
                             item.IsChecked,
                             isChecked => PersistUiToggle(item.ConfigKey, item.Title, isChecked))).ToArray())));
-        RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
     }
 
     private void RefreshHelpTopics()

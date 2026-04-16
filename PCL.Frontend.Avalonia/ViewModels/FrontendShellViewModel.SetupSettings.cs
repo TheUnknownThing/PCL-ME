@@ -14,13 +14,25 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedDownloadSourceIndex
     {
         get => _selectedDownloadSourceIndex;
-        set => SetProperty(ref _selectedDownloadSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, DownloadSourceOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedDownloadSourceIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedVersionSourceIndex
     {
         get => _selectedVersionSourceIndex;
-        set => SetProperty(ref _selectedVersionSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, DownloadSourceOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedVersionSourceIndex, normalizedValue);
+            }
+        }
     }
 
     public double DownloadThreadLimit
@@ -85,19 +97,37 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedCommunityDownloadSourceIndex
     {
         get => _selectedCommunityDownloadSourceIndex;
-        set => SetProperty(ref _selectedCommunityDownloadSourceIndex, Math.Clamp(value, 0, DownloadSourceOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, DownloadSourceOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedCommunityDownloadSourceIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedFileNameFormatIndex
     {
         get => _selectedFileNameFormatIndex;
-        set => SetProperty(ref _selectedFileNameFormatIndex, Math.Clamp(value, 0, FileNameFormatOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, FileNameFormatOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedFileNameFormatIndex, normalizedValue);
+            }
+        }
     }
 
     public int SelectedModLocalNameStyleIndex
     {
         get => _selectedModLocalNameStyleIndex;
-        set => SetProperty(ref _selectedModLocalNameStyleIndex, Math.Clamp(value, 0, ModLocalNameStyleOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, ModLocalNameStyleOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedModLocalNameStyleIndex, normalizedValue);
+            }
+        }
     }
 
     public bool IgnoreQuiltLoader
@@ -137,7 +167,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedLauncherLocaleIndex;
         set
         {
-            var clamped = Math.Clamp(value, 0, LauncherLocaleOptions.Count - 1);
+            if (!TryNormalizeSelectionIndex(value, LauncherLocaleOptions.Count, out var clamped))
+            {
+                return;
+            }
+
             if (!SetProperty(ref _selectedLauncherLocaleIndex, clamped))
             {
                 return;
@@ -157,7 +191,13 @@ internal sealed partial class FrontendShellViewModel
     public int SelectedSystemActivityIndex
     {
         get => _selectedSystemActivityIndex;
-        set => SetProperty(ref _selectedSystemActivityIndex, Math.Clamp(value, 0, SystemActivityOptions.Count - 1));
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, SystemActivityOptions.Count, out var normalizedValue))
+            {
+                SetProperty(ref _selectedSystemActivityIndex, normalizedValue);
+            }
+        }
     }
 
     public double AnimationFpsLimit
@@ -206,7 +246,11 @@ internal sealed partial class FrontendShellViewModel
         get => _selectedHttpProxyTypeIndex;
         set
         {
-            var clamped = Math.Clamp(value, 0, 2);
+            if (!TryNormalizeSelectionIndex(value, 3, out var clamped))
+            {
+                return;
+            }
+
             if (SetProperty(ref _selectedHttpProxyTypeIndex, clamped))
             {
                 RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));

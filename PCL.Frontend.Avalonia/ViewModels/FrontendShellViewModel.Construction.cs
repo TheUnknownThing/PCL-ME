@@ -29,6 +29,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly FrontendShellActionService _shellActionService;
     private FrontendShellComposition _shellComposition;
     private FrontendSetupComposition _setupComposition;
+    private SetupLocalizationCatalog _setupText;
     private FrontendInstanceComposition _instanceComposition;
     private FrontendInstanceCompositionService.LoadMode _instanceCompositionLoadMode = FrontendInstanceCompositionService.LoadMode.Full;
     private FrontendToolsComposition _toolsComposition = new(
@@ -322,6 +323,7 @@ internal sealed partial class FrontendShellViewModel
     {
         _options = options;
         _i18n = i18nService;
+        _setupText = CreateSetupLocalizationCatalog();
         _launcherLocaleKeys = _i18n.AvailableLocales;
         _launcherLocaleOptions = _launcherLocaleKeys.Select(FormatLauncherLocaleOption).ToArray();
         _shellActionService = shellActionService;

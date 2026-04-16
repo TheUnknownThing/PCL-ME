@@ -4,7 +4,12 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    public SetupLocalizationCatalog SetupText => CreateSetupLocalizationCatalog();
+    public SetupLocalizationCatalog SetupText => _setupText;
+
+    private void RefreshSetupLocalizationCatalog()
+    {
+        _setupText = CreateSetupLocalizationCatalog();
+    }
 
     private SetupLocalizationCatalog CreateSetupLocalizationCatalog()
     {
@@ -97,6 +102,7 @@ internal sealed partial class FrontendShellViewModel
             Ui = new SetupUiLocalization
             {
                 BasicCardHeader = _i18n.T("setup.ui.cards.basic.header"),
+                LocaleLabel = _i18n.T("setup.ui.fields.locale"),
                 LauncherOpacityLabel = _i18n.T("setup.ui.fields.launcher_opacity"),
                 ThemeLabel = _i18n.T("setup.ui.fields.theme"),
                 LightPaletteLabel = _i18n.T("setup.ui.fields.light_palette"),
@@ -290,7 +296,6 @@ internal sealed partial class FrontendShellViewModel
             LauncherMisc = new SetupLauncherMiscLocalization
             {
                 SystemCardHeader = _i18n.T("setup.launcher_misc.cards.system.header"),
-                LocaleLabel = _i18n.T("setup.launcher_misc.fields.locale"),
                 LauncherAnnouncementsLabel = _i18n.T("setup.launcher_misc.fields.announcements"),
                 MaxAnimationFpsLabel = _i18n.T("setup.launcher_misc.fields.max_animation_fps"),
                 RealTimeLogLinesLabel = _i18n.T("setup.launcher_misc.fields.realtime_log_lines"),
@@ -419,6 +424,7 @@ internal sealed class SetupLaunchLocalization
 internal sealed class SetupUiLocalization
 {
     public required string BasicCardHeader { get; init; }
+    public required string LocaleLabel { get; init; }
     public required string LauncherOpacityLabel { get; init; }
     public required string ThemeLabel { get; init; }
     public required string LightPaletteLabel { get; init; }
@@ -562,7 +568,6 @@ internal sealed class SetupJavaLocalization
 internal sealed class SetupLauncherMiscLocalization
 {
     public required string SystemCardHeader { get; init; }
-    public required string LocaleLabel { get; init; }
     public required string LauncherAnnouncementsLabel { get; init; }
     public required string MaxAnimationFpsLabel { get; init; }
     public required string RealTimeLogLinesLabel { get; init; }

@@ -1613,6 +1613,7 @@ setup:
       dark_custom: 深色自定義
       dark_palette: 深色配色
       global_font: 全局
+      locale: 介面語言
       launcher_opacity: 不透明度
       light_custom: 淺色自定義
       light_palette: 淺色配色
