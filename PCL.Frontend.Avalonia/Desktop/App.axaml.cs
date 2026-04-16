@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -61,8 +63,15 @@ internal sealed class App : Application
     {
         try
         {
+            var localeDirectory = Path.Combine(AppContext.BaseDirectory, "Locales");
+            var availableLocales = Directory.EnumerateFiles(localeDirectory, "*.yaml", SearchOption.TopDirectoryOnly)
+                .Select(Path.GetFileNameWithoutExtension)
+                .OfType<string>()
+                .ToArray();
             var settingsManager = new I18nSettingsManager(
-                new FrontendConfigProviderAdapter(runtimePaths.OpenSharedConfigProvider()));
+                new FrontendConfigProviderAdapter(runtimePaths.OpenSharedConfigProvider()),
+                initialLocaleProvider: () => CultureInfo.CurrentUICulture.Name,
+                availableLocales: availableLocales);
             _i18nService = new I18nService(settingsManager);
             var shellActionService = new FrontendShellActionService(
                 runtimePaths,

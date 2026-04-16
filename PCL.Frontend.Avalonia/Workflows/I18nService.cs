@@ -324,10 +324,6 @@ internal sealed class I18nService : II18nService, IDisposable
         var message = _schemaSnapshot.TryGetPlaceholders(key, out var placeholders)
             ? $"Missing translation key '{key}' for locale '{locale}'. Schema defines placeholders [{string.Join(", ", placeholders)}]."
             : $"Missing translation key '{key}' for locale '{locale}'. The key does not exist in schema.";
-        if (!string.IsNullOrWhiteSpace(schemaPreview))
-        {
-            message += $"{Environment.NewLine}Expected schema near '{key}':{Environment.NewLine}{schemaPreview}";
-        }
 
         LogWrapper.Warn("I18n", message);
     }

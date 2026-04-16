@@ -20,6 +20,48 @@ public sealed class I18nSettingsManagerTest
     }
 
     [TestMethod]
+    public void Constructor_UsesInferredLocaleWhenNoStoredValueAndVariantMatchesAvailableLocale()
+    {
+        var provider = new InMemoryConfigProvider();
+
+        var manager = new I18nSettingsManager(
+            provider,
+            initialLocaleProvider: () => "en-GB",
+            availableLocales: ["en-US", "zh-Hans", "zh-Hant"]);
+
+        Assert.AreEqual("en-US", manager.Locale);
+    }
+
+    [TestMethod]
+    public void Constructor_UsesTraditionalChineseLocaleForTraditionalRegion()
+    {
+        var provider = new InMemoryConfigProvider();
+
+        var manager = new I18nSettingsManager(
+            provider,
+            initialLocaleProvider: () => "zh-TW",
+            availableLocales: ["en-US", "zh-Hans", "zh-Hant"]);
+
+        Assert.AreEqual("zh-Hant", manager.Locale);
+    }
+
+    [TestMethod]
+    public void ReloadLocale_RestoresInferredLocaleWhenStoredValueIsRemoved()
+    {
+        var provider = new InMemoryConfigProvider();
+        provider.SetValue("SystemLocale", "zh-Hans");
+        var manager = new I18nSettingsManager(
+            provider,
+            initialLocaleProvider: () => "en-GB",
+            availableLocales: ["en-US", "zh-Hans", "zh-Hant"]);
+
+        provider.Delete("SystemLocale");
+
+        Assert.IsTrue(manager.ReloadLocale());
+        Assert.AreEqual("en-US", manager.Locale);
+    }
+
+    [TestMethod]
     public void SetLocale_NormalizesPersistsAndRaisesOnlyOnEffectiveChange()
     {
         var provider = new InMemoryConfigProvider();
