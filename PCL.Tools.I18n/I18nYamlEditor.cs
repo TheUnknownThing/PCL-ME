@@ -279,6 +279,137 @@ public sealed class I18nYamlEditor
         return new I18nValidationReport(localesToValidate.Distinct(StringComparer.Ordinal).ToArray(), issues);
     }
 
+    public I18nMergeLocaleReport MergeLocaleFiles(string sourceLocaleDirectory, bool force = false)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceLocaleDirectory);
+
+        var sourceDirectory = Path.GetFullPath(sourceLocaleDirectory);
+        if (!Directory.Exists(sourceDirectory))
+        {
+            throw new DirectoryNotFoundException($"The source locale directory '{sourceDirectory}' was not found.");
+        }
+
+        var sourceLocales = Directory.EnumerateFiles(sourceDirectory, "*.yaml", SearchOption.TopDirectoryOnly)
+            .Select(path => new
+            {
+                Locale = I18nLocaleUtility.NormalizeLocale(Path.GetFileNameWithoutExtension(path))
+                         ?? throw new InvalidDataException(
+                             $"Source locale file '{path}' uses an invalid locale name."),
+                Path = path
+            })
+            .OrderBy(entry => entry.Locale, StringComparer.Ordinal)
+            .ToArray();
+
+        if (sourceLocales.Length == 0)
+        {
+            throw new InvalidDataException($"The source locale directory '{sourceDirectory}' does not contain any locale files.");
+        }
+
+        var schemaSourceLocale = sourceLocales
+            .OrderBy(entry => entry.Locale.Equals("zh-Hans", StringComparison.Ordinal) ? 0 : 1)
+            .ThenBy(entry => entry.Locale, StringComparer.Ordinal)
+            .First();
+        var sourceSchema = ReadSchemaFromLocaleFile(schemaSourceLocale.Path);
+
+        foreach (var localeFile in sourceLocales)
+        {
+            var localeSchema = ReadSchemaFromLocaleFile(localeFile.Path);
+            if (SchemaEquals(sourceSchema, localeSchema))
+            {
+                continue;
+            }
+
+            throw new InvalidDataException(
+                $"Source locale '{localeFile.Locale}' does not match the schema derived from locale '{schemaSourceLocale.Locale}'.");
+        }
+
+        var targetSchema = ReadSchema();
+        var schemaAddedCount = 0;
+        var schemaUpdatedCount = 0;
+        var blockedSchemaKeys = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var (key, placeholders) in sourceSchema.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+        {
+            if (!targetSchema.TryGetValue(key, out var existingPlaceholders))
+            {
+                SetSchemaValue(key, placeholders);
+                schemaAddedCount++;
+                continue;
+            }
+
+            if (existingPlaceholders.SequenceEqual(placeholders))
+            {
+                continue;
+            }
+
+            if (force)
+            {
+                SetSchemaValue(key, placeholders);
+                schemaUpdatedCount++;
+                continue;
+            }
+
+            blockedSchemaKeys.Add(key);
+        }
+
+        var localeResults = new List<I18nMergeLocaleResult>();
+        foreach (var sourceLocale in sourceLocales)
+        {
+            var values = ReadLocaleValuesFromPath(sourceLocale.Path);
+            var addedCount = 0;
+            var updatedCount = 0;
+            var skippedCount = 0;
+            var targetValues = File.Exists(GetLocalePath(sourceLocale.Locale))
+                ? ReadLocaleValues(sourceLocale.Locale)
+                : new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var (key, value) in values.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+            {
+                if (blockedSchemaKeys.Contains(key))
+                {
+                    skippedCount++;
+                    continue;
+                }
+
+                if (targetValues.TryGetValue(key, out var existingValue))
+                {
+                    if (string.Equals(existingValue, GetPlaceholderSentinelValue(key), StringComparison.Ordinal))
+                    {
+                        SetLocaleValue(sourceLocale.Locale, key, value);
+                        addedCount++;
+                        continue;
+                    }
+
+                    if (!force)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    if (string.Equals(existingValue, value, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    SetLocaleValue(sourceLocale.Locale, key, value);
+                    updatedCount++;
+                    continue;
+                }
+
+                SetLocaleValue(sourceLocale.Locale, key, value);
+                addedCount++;
+            }
+
+            localeResults.Add(new I18nMergeLocaleResult(sourceLocale.Locale, addedCount, updatedCount, skippedCount));
+        }
+
+        return new I18nMergeLocaleReport(
+            schemaSourceLocale.Locale,
+            schemaAddedCount,
+            schemaUpdatedCount,
+            localeResults);
+    }
+
     private IEnumerable<string> EnumerateLocaleFiles()
     {
         if (!Directory.Exists(_localeDirectory))
@@ -446,6 +577,53 @@ public sealed class I18nYamlEditor
                         $"Locale file '{localePath}' contains a non-scalar leaf for key '{key}'.");
             }
         }
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>> ReadSchemaFromLocaleFile(string localePath)
+    {
+        var root = LoadRequiredMapping(localePath, "locale");
+        var values = ReadLocaleValuesFromPath(localePath);
+        var schema = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+
+        foreach (var (key, value) in values.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+        {
+            schema[key] = ParsePlaceholderNames(key, value, localePath);
+        }
+
+        return schema;
+    }
+
+    private static IReadOnlyDictionary<string, string> ReadLocaleValuesFromPath(string localePath)
+    {
+        var root = LoadRequiredMapping(localePath, "locale");
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        FlattenLocale(root, prefix: null, values, localePath);
+        return values;
+    }
+
+    private static bool SchemaEquals(
+        IReadOnlyDictionary<string, IReadOnlyList<string>> left,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> right)
+    {
+        if (left.Count != right.Count)
+        {
+            return false;
+        }
+
+        foreach (var (key, leftPlaceholders) in left)
+        {
+            if (!right.TryGetValue(key, out var rightPlaceholders))
+            {
+                return false;
+            }
+
+            if (!leftPlaceholders.SequenceEqual(rightPlaceholders))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void ValidatePlaceholderSet(
@@ -937,6 +1115,35 @@ public sealed class I18nValidationReport
     public bool HasWarnings => Warnings.Count > 0;
 
     public bool IsValid => !HasErrors;
+}
+
+public sealed record I18nMergeLocaleResult(
+    string Locale,
+    int AddedCount,
+    int UpdatedCount,
+    int SkippedCount);
+
+public sealed class I18nMergeLocaleReport
+{
+    public I18nMergeLocaleReport(
+        string schemaSourceLocale,
+        int schemaAddedCount,
+        int schemaUpdatedCount,
+        IReadOnlyList<I18nMergeLocaleResult> localeResults)
+    {
+        SchemaSourceLocale = schemaSourceLocale;
+        SchemaAddedCount = schemaAddedCount;
+        SchemaUpdatedCount = schemaUpdatedCount;
+        LocaleResults = localeResults;
+    }
+
+    public string SchemaSourceLocale { get; }
+
+    public int SchemaAddedCount { get; }
+
+    public int SchemaUpdatedCount { get; }
+
+    public IReadOnlyList<I18nMergeLocaleResult> LocaleResults { get; }
 }
 
 public enum I18nValidationSeverity

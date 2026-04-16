@@ -24,11 +24,11 @@ public sealed class FrontendShellLocalizationServiceTest
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch))),
             service);
 
-        Assert.AreEqual("Settings", navigation.CurrentPage.Title);
-        Assert.AreEqual("Launch", navigation.CurrentPage.SidebarItemTitle);
-        Assert.AreEqual(
-            "Launch",
-            navigation.SidebarEntries.Single(entry => entry.IsSelected).Title);
+        CollectionAssert.AreEqual(
+            new[] { "Settings", "Launch" },
+            navigation.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
+        Assert.AreEqual("Launch", FrontendShellLocalizationService.ResolveTitleBarLabel(navigation, service));
+        Assert.AreEqual("Settings workspace", FrontendShellLocalizationService.ResolveSidebarGroupTitle(LauncherFrontendPageKey.Setup, service));
     }
 
     [TestMethod]
@@ -44,12 +44,13 @@ public sealed class FrontendShellLocalizationServiceTest
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupUI))),
             service);
 
-        Assert.AreEqual("Settings", navigation.CurrentPage.Title);
-        Assert.AreEqual("Interface", navigation.CurrentPage.SidebarItemTitle);
-        Assert.AreEqual(
-            "Interface",
-            navigation.SidebarEntries.Single(entry => entry.IsSelected).Title);
-        Assert.AreNotEqual("Settings", navigation.CurrentPage.SidebarItemTitle);
+        CollectionAssert.AreEqual(
+            new[] { "Settings", "Interface" },
+            navigation.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
+        Assert.AreEqual("Interface", FrontendShellLocalizationService.ResolveTitleBarLabel(navigation, service));
+        Assert.AreNotEqual(
+            FrontendShellLocalizationService.ResolvePageTitle(LauncherFrontendPageKey.Setup, service),
+            FrontendShellLocalizationService.ResolveSubpageTitle(LauncherFrontendSubpageKey.SetupUI, service));
     }
 
     private static string BuildNavigationLocaleYaml(string setupUiTitle)

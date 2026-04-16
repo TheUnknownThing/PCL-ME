@@ -12,30 +12,17 @@ public sealed class FrontendUiVisibilityServiceTest
     public void FilterNavigationViewRemovesHiddenTopLevelAndSidebarEntries()
     {
         var preferences = CreatePreferences(("UiHiddenPageTools", true), ("UiHiddenSetupJava", true));
-        var navigation = new LauncherFrontendNavigationView(
+        var navigation = CreateNavigation(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
-            "设置",
-            new LauncherFrontendPageSurface(
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
-                LauncherFrontendPageKind.TopLevel,
-                "设置",
-                string.Empty,
-                "设置分区",
-                "启动",
-                string.Empty,
-                true),
-            [],
-            null,
-            false,
+            LauncherFrontendPageKind.TopLevel,
             [
-                new LauncherFrontendNavigationEntry("launch", "启动", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Launch), false),
-                new LauncherFrontendNavigationEntry("tools", "工具", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Tools), false)
+                new LauncherFrontendNavigationEntry("launch", new LauncherFrontendRoute(LauncherFrontendPageKey.Launch), false),
+                new LauncherFrontendNavigationEntry("tools", new LauncherFrontendRoute(LauncherFrontendPageKey.Tools), false)
             ],
             [
-                new LauncherFrontendNavigationEntry("launch", "启动", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), true),
-                new LauncherFrontendNavigationEntry("java", "Java", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), false)
-            ],
-            []);
+                new LauncherFrontendNavigationEntry("launch", new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), true),
+                new LauncherFrontendNavigationEntry("java", new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava), false)
+            ]);
 
         var result = FrontendUiVisibilityService.FilterNavigationView(navigation, preferences);
 
@@ -88,29 +75,16 @@ public sealed class FrontendUiVisibilityServiceTest
     public void FilterNavigationViewRemovesDownloadQuiltWhenHideQuiltLoaderIsEnabled()
     {
         var preferences = CreatePreferences(forceShowHiddenItems: false, hideQuiltLoader: true);
-        var navigation = new LauncherFrontendNavigationView(
+        var navigation = CreateNavigation(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-            "下载",
-            new LauncherFrontendPageSurface(
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-                LauncherFrontendPageKind.TopLevel,
-                "下载",
-                string.Empty,
-                "下载分区",
-                "自动安装",
-                string.Empty,
-                true),
-            [],
-            null,
-            false,
+            LauncherFrontendPageKind.TopLevel,
             [
-                new LauncherFrontendNavigationEntry("download", "下载", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Download), true)
+                new LauncherFrontendNavigationEntry("download", new LauncherFrontendRoute(LauncherFrontendPageKey.Download), true)
             ],
             [
-                new LauncherFrontendNavigationEntry("install", "自动安装", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall), true),
-                new LauncherFrontendNavigationEntry("quilt", "Quilt", string.Empty, new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadQuilt), false)
-            ],
-            []);
+                new LauncherFrontendNavigationEntry("install", new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall), true),
+                new LauncherFrontendNavigationEntry("quilt", new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadQuilt), false)
+            ]);
 
         var result = FrontendUiVisibilityService.FilterNavigationView(navigation, preferences);
 
@@ -189,5 +163,22 @@ public sealed class FrontendUiVisibilityServiceTest
             ]);
 
         return FrontendUiVisibilityService.BuildPreferences(uiState, forceShowHiddenItems, hideQuiltLoader);
+    }
+
+    private static LauncherFrontendNavigationView CreateNavigation(
+        LauncherFrontendRoute route,
+        LauncherFrontendPageKind kind,
+        IReadOnlyList<LauncherFrontendNavigationEntry> topLevelEntries,
+        IReadOnlyList<LauncherFrontendNavigationEntry> sidebarEntries)
+    {
+        return new LauncherFrontendNavigationView(
+            route,
+            new LauncherFrontendPageSurface(route, kind, sidebarEntries.Count > 0),
+            [],
+            null,
+            false,
+            topLevelEntries,
+            sidebarEntries,
+            []);
     }
 }

@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Essentials;
+using PCL.Core.Testing;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Core.Test.App;
 
@@ -9,147 +11,74 @@ namespace PCL.Core.Test.App;
 public sealed class LauncherFrontendPageContentServiceTest
 {
     [TestMethod]
-    public void BuildLaunchContentIncludesRuntimeFactsAndFiles()
+    public void BuildPageContentIncludesLaunchFactsAndLines()
     {
         var content = BuildContent(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            CreateI18n(),
             includeLaunchData: true);
 
-        Assert.AreEqual("启动页面", content.Eyebrow);
-        Assert.AreEqual("Authlib account", content.Facts.Single(fact => fact.Label == "登录").Value);
+        Assert.AreEqual("Top-level page", content.Eyebrow);
+        Assert.AreEqual("Launch summary", content.Summary);
+        Assert.AreEqual("DemoPlayer", content.Facts.Single(fact => fact.Label == "Identity").Value);
         Assert.AreEqual("Java 8 (Forge-compatible)", content.Facts.Single(fact => fact.Label == "Java").Value);
-        Assert.IsTrue(content.Sections.Any(section =>
-            section.Title == "启动信息" &&
-            section.Lines.Any(line => line.Contains("legacy-forge", StringComparison.Ordinal))));
-        Assert.IsTrue(content.Sections.Any(section =>
-            section.Title == "启动前文件" &&
-            section.Lines.Any(line => line.Contains("options.txt", StringComparison.Ordinal))));
+        Assert.IsTrue(content.Sections.Single().Lines.Any(line =>
+            line.Contains("Runtime Java 8 (Forge-compatible) at 854 x 480", StringComparison.Ordinal)));
+        Assert.IsTrue(content.Sections.Single().Lines.Any(line =>
+            line.Contains("Legacy Forge Demo launched successfully.", StringComparison.Ordinal)));
     }
 
     [TestMethod]
-    public void BuildSetupLaunchContentUsesUserFacingSections()
+    public void BuildPageContentUsesRouteSummaryAndBackTargetFacts()
     {
         var content = BuildContent(
-            new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
-            includeLaunchData: true);
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod),
+            CreateI18n(),
+            parentRoute: new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect));
 
-        Assert.AreEqual("启动页面", content.Eyebrow);
-        Assert.AreEqual("启动", content.Facts.Single(fact => fact.Label == "当前分区").Value);
-        Assert.IsTrue(content.Sections.Any(section =>
-            section.Title == "基础启动参数" &&
-            section.Lines.Any(line => line.Contains("版本隔离", StringComparison.Ordinal))));
-        Assert.IsTrue(content.Sections.Any(section =>
-            section.Title == "高级启动选项" &&
-            section.Lines.Any(line => line.Contains("脚本导出", StringComparison.Ordinal))));
+        Assert.AreEqual("Secondary page", content.Eyebrow);
+        Assert.AreEqual("Manage installed mods.", content.Summary);
+        Assert.AreEqual("Instance settings", content.Facts.Single(fact => fact.Label == "Current page").Value);
+        Assert.AreEqual("Mods", content.Facts.Single(fact => fact.Label == "Current section").Value);
+        Assert.AreEqual("Back to Instance selection", content.Facts.Single(fact => fact.Label == "Back target").Value);
     }
 
     [TestMethod]
-    public void BuildDownloadAndToolsPagesUseConcreteActions()
+    public void BuildPageContentIncludesCrashFactsForGameLog()
     {
-        var installContent = BuildContent(new LauncherFrontendRoute(
-            LauncherFrontendPageKey.Download,
-            LauncherFrontendSubpageKey.DownloadInstall));
-        var helpContent = BuildContent(new LauncherFrontendRoute(
-            LauncherFrontendPageKey.Tools,
-            LauncherFrontendSubpageKey.ToolsLauncherHelp));
-        var testContent = BuildContent(new LauncherFrontendRoute(
-            LauncherFrontendPageKey.Tools,
-            LauncherFrontendSubpageKey.ToolsTest));
+        var content = BuildContent(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog),
+            CreateI18n(),
+            includeCrashData: true);
 
-        Assert.AreEqual("自动安装页面", installContent.Eyebrow);
-        Assert.IsTrue(installContent.Sections.Any(section =>
-            section.Title == "安装流程" &&
-            section.Lines.Any(line => line.Contains("Forge", StringComparison.Ordinal))));
-
-        Assert.AreEqual("帮助页面", helpContent.Eyebrow);
-        Assert.IsTrue(helpContent.Sections.Any(section =>
-            section.Title == "搜索帮助" &&
-            section.Lines.Any(line => line.Contains("搜索结果区", StringComparison.Ordinal))));
-
-        Assert.AreEqual("测试页面", testContent.Eyebrow);
-        Assert.IsTrue(testContent.Sections.Any(section =>
-            section.Title == "下载与皮肤工具" &&
-            section.Lines.Any(line => line.Contains("User-Agent", StringComparison.Ordinal))));
-        Assert.IsTrue(testContent.Sections.Any(section =>
-            section.Title == "服务器工具" &&
-            section.Lines.Any(line => line.Contains("服务器地址输入框", StringComparison.Ordinal))));
+        Assert.AreEqual("Utility page", content.Eyebrow);
+        Assert.AreEqual("Crash log and export history.", content.Summary);
+        Assert.AreEqual("PCL-ME-Crash-20260403.zip", content.Facts.Single(fact => fact.Label == "Archive").Value);
+        Assert.AreEqual("3", content.Facts.Single(fact => fact.Label == "Source files").Value);
+        Assert.IsTrue(content.Sections.Single().Lines.Any(line =>
+            line.Contains("Export PCL-ME-Crash-20260403.zip with 3 files", StringComparison.Ordinal)));
     }
 
-    [TestMethod]
-    public void BuildPageContentDoesNotLeakImplementationTerms()
+    private static LauncherFrontendPageContent BuildContent(
+        LauncherFrontendRoute route,
+        DictionaryI18nService i18n,
+        bool includeLaunchData = false,
+        bool includeCrashData = false,
+        LauncherFrontendRoute? parentRoute = null)
     {
-        var bannedTerms = new[]
-        {
-            "壳层",
-            "前端",
-            "后端",
-            "合同",
-            "迁移",
-            "WPF",
-            "replacement shell"
-        };
-
-        var routes =
-            new[]
-            {
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadClient),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadMod),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadForge),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.CompDetail),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupAbout),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupFeedback),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupGameManage),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLauncherMisc),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLog),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupUI),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupUpdate),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsLauncherHelp),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.HelpDetail),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.GameLog),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionOverall),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionSetup),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionExport),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionInstall),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionServer),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionWorld),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionScreenshot),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.VersionSaves, LauncherFrontendSubpageKey.VersionSavesInfo),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.VersionSaves, LauncherFrontendSubpageKey.VersionSavesBackup),
-                new LauncherFrontendRoute(LauncherFrontendPageKey.VersionSaves, LauncherFrontendSubpageKey.VersionSavesDatapack)
-            };
-
-        foreach (var route in routes)
-        {
-            var content = BuildContent(route, includeLaunchData: true);
-            var text = string.Join(
-                Environment.NewLine,
-                new[] { content.Eyebrow, content.Summary }
-                    .Concat(content.Facts.SelectMany(fact => new[] { fact.Label, fact.Value }))
-                    .Concat(content.Sections.Select(section => section.Eyebrow))
-                    .Concat(content.Sections.Select(section => section.Title))
-                    .Concat(content.Sections.SelectMany(section => section.Lines)));
-
-            foreach (var bannedTerm in bannedTerms)
-            {
-                Assert.IsFalse(text.Contains(bannedTerm, StringComparison.Ordinal), $"Route {route.Page}/{route.Subpage} still contains banned term: {bannedTerm}");
-            }
-        }
-    }
-
-    private static LauncherFrontendPageContent BuildContent(LauncherFrontendRoute route, bool includeLaunchData = false)
-    {
-        return LauncherFrontendPageContentService.Build(new LauncherFrontendPageContentRequest(
-            LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(route)),
+        var navigation = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
+            route,
+            ParentRoute: parentRoute));
+        var shellPlan = new LauncherFrontendShellPlan(
             BuildStartupPlan(),
             BuildConsent(),
+            [],
+            LauncherFrontendNavigationService.GetCatalog(),
+            navigation);
+
+        return FrontendShellLocalizationService.BuildPageContent(
+            shellPlan,
+            navigation,
             BuildPromptLanes(),
             includeLaunchData
                 ? new LauncherFrontendLaunchSurfaceData(
@@ -170,11 +99,14 @@ public sealed class LauncherFrontendPageContentServiceTest
                     "/Users/demo/exports/Launch.bat",
                     "Legacy Forge Demo launched successfully.")
                 : null,
-            new LauncherFrontendCrashSurfaceData(
-                "PCL-ME-Crash-20260403.zip",
-                3,
-                true,
-                "/Users/demo/.pcl/logs/PCL.log")));
+            includeCrashData
+                ? new LauncherFrontendCrashSurfaceData(
+                    "PCL-ME-Crash-20260403.zip",
+                    3,
+                    true,
+                    "/Users/demo/.pcl/logs/PCL.log")
+                : null,
+            i18n);
     }
 
     private static LauncherStartupWorkflowPlan BuildStartupPlan()
@@ -206,5 +138,45 @@ public sealed class LauncherFrontendPageContentServiceTest
             new LauncherFrontendPromptLaneSummary("launch", "Launch", "Launch prompts", 2, true),
             new LauncherFrontendPromptLaneSummary("crash", "Crash", "Crash prompts", 1, false)
         ];
+    }
+
+    private static DictionaryI18nService CreateI18n()
+    {
+        return new DictionaryI18nService(new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["shell.navigation.pages.launch.title"] = "Launch",
+            ["shell.navigation.pages.launch.summary"] = "Launch summary",
+            ["shell.navigation.pages.game_log.title"] = "Game Log",
+            ["shell.navigation.pages.game_log.summary"] = "Crash log and export history.",
+            ["shell.navigation.pages.instance_setup.title"] = "Instance settings",
+            ["shell.navigation.pages.instance_setup.summary"] = "Manage this instance.",
+            ["shell.navigation.pages.instance_select.title"] = "Instance selection",
+            ["shell.navigation.pages.instance_select.summary"] = "Choose an instance to launch.",
+            ["shell.navigation.subpages.version_mod.title"] = "Mods",
+            ["shell.navigation.subpages.version_mod.summary"] = "Manage installed mods.",
+            ["shell.page_content.facts.current_page"] = "Current page",
+            ["shell.page_content.facts.current_section"] = "Current section",
+            ["shell.page_content.facts.prompt_count"] = "Prompt count",
+            ["shell.page_content.facts.active_prompt_lane"] = "Active prompt lane",
+            ["shell.page_content.facts.page_kind"] = "Page kind",
+            ["shell.page_content.facts.back_target"] = "Back target",
+            ["shell.page_content.facts.launch.identity"] = "Identity",
+            ["shell.page_content.facts.launch.java"] = "Java",
+            ["shell.page_content.facts.launch.resolution"] = "Resolution",
+            ["shell.page_content.facts.launch.classpath_count"] = "Classpath entries",
+            ["shell.page_content.facts.crash.archive_name"] = "Archive",
+            ["shell.page_content.facts.crash.source_file_count"] = "Source files",
+            ["shell.page_content.values.none"] = "None",
+            ["shell.page_content.lines.active_prompt_lane"] = "Active prompt lane: {lane}",
+            ["shell.page_content.lines.launch.runtime"] = "Runtime {java} at {resolution}",
+            ["shell.page_content.lines.launch.last_completion"] = "Last launch: {message}",
+            ["shell.page_content.lines.crash.export"] = "Export {archive_name} with {file_count} files",
+            ["shell.page_content.sections.overview.eyebrow"] = "Overview",
+            ["shell.page_content.eyebrows.top_level"] = "Top-level page",
+            ["shell.page_content.eyebrows.secondary"] = "Secondary page",
+            ["shell.page_content.eyebrows.detail"] = "Detail page",
+            ["shell.page_content.eyebrows.utility"] = "Utility page",
+            ["shell.navigation.utilities.back_target"] = "Back to {target}"
+        });
     }
 }

@@ -20,6 +20,6 @@ public sealed class FrontendRealTimeLogSettingsServiceTest
     public void FormatLineLimitLabelMatchesResolvedLimit()
     {
         Assert.AreEqual("500", FrontendRealTimeLogSettingsService.FormatLineLimitLabel(13));
-        Assert.AreEqual("无限制", FrontendRealTimeLogSettingsService.FormatLineLimitLabel(29));
+        Assert.AreEqual("Unlimited", FrontendRealTimeLogSettingsService.FormatLineLimitLabel(29));
     }
 }

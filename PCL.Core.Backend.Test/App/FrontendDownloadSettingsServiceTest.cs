@@ -35,7 +35,7 @@ public sealed class FrontendDownloadSettingsServiceTest
     [DataRow(15d, "2.0 M/s", 2097152L)]
     [DataRow(31d, "10.0 M/s", 10485760L)]
     [DataRow(41d, "20 M/s", 20971520L)]
-    [DataRow(42d, "无限制", null)]
+    [DataRow(42d, "Unlimited", null)]
     public void SpeedLimitMapping_FormatsLabelsAndTransferRate(
         double configuredValue,
         string expectedLabel,

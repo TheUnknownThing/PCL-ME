@@ -122,7 +122,7 @@ public sealed class I18nServiceTest
 
         Assert.AreEqual(1, warnings.Count);
         StringAssert.Contains(warnings[0], "Missing translation key 'launch.profile.kinds.microsoft'");
-        StringAssert.Contains(warnings[0], "Expected schema:");
+        StringAssert.Contains(warnings[0], "Expected schema near");
         StringAssert.Contains(warnings[0], "launch");
         StringAssert.Contains(warnings[0], "microsoft");
         StringAssert.Contains(warnings[0], "authlib []");

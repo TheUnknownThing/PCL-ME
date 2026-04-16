@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.IO.Net.Http.Proxying;
+using PCL.Core.Testing;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Core.Backend.Test.App;
@@ -39,7 +40,8 @@ public sealed class FrontendHttpProxyServiceTest
         var shellActionService = new FrontendShellActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
-            () => { });
+            () => { },
+            new DictionaryI18nService());
 
         shellActionService.PersistSharedValue("SystemHttpProxyType", 2);
         shellActionService.PersistProtectedSharedValue("SystemHttpProxy", "http://proxy.example:8080");
@@ -66,7 +68,8 @@ public sealed class FrontendHttpProxyServiceTest
         var shellActionService = new FrontendShellActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
-            () => { });
+            () => { },
+            new DictionaryI18nService());
 
         shellActionService.PersistSharedValue("SystemHttpProxyType", 2);
         shellActionService.PersistProtectedSharedValue("SystemHttpProxy", "proxy.example:9090");
@@ -119,7 +122,8 @@ public sealed class FrontendHttpProxyServiceTest
         var shellActionService = new FrontendShellActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
-            () => { });
+            () => { },
+            new DictionaryI18nService());
 
         shellActionService.PersistSharedValue("SystemNetEnableDoH", false);
 

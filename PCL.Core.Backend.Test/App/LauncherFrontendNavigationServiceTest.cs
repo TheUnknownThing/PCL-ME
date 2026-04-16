@@ -34,38 +34,33 @@ public sealed class LauncherFrontendNavigationServiceTest
             HasRunningTasks: true,
             HasGameLogs: false));
 
-        Assert.AreEqual("下载", view.CurrentPageTitle);
         Assert.IsFalse(view.ShowsBackButton);
         Assert.AreEqual(LauncherFrontendPageKind.TopLevel, view.CurrentPage.Kind);
-        Assert.AreEqual("下载分区", view.CurrentPage.SidebarGroupTitle);
-        Assert.AreEqual("光影包", view.CurrentPage.SidebarItemTitle);
-        Assert.AreEqual("光影包", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
-        Assert.AreEqual("光影包", LauncherFrontendNavigationService.GetSubpageTitle(view.CurrentRoute));
-        CollectionAssert.AreEqual(new[] { "下载", "光影包" }, view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
+        Assert.AreEqual(view.CurrentRoute, view.CurrentPage.Route);
+        Assert.IsTrue(view.CurrentPage.HasSidebar);
+        Assert.AreEqual(LauncherFrontendSubpageKey.DownloadShader, view.SidebarEntries.Single(entry => entry.IsSelected).Route.Subpage);
+        Assert.AreEqual(2, view.Breadcrumbs.Count);
+        Assert.AreEqual(view.SidebarEntries.Single(entry => entry.IsSelected).Route, view.Breadcrumbs[1].Route);
         Assert.IsNull(view.BackTarget);
         Assert.IsTrue(view.UtilityEntries.Single(entry => entry.Id == "task-manager").IsVisible);
         Assert.IsFalse(view.UtilityEntries.Single(entry => entry.Id == "game-log").IsVisible);
     }
 
     [TestMethod]
-    public void BuildViewUsesOverrideTitleAndShowsBackButtonForDetailPages()
+    public void BuildViewUsesProvidedParentRouteForSecondaryPages()
     {
         var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
             new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionMod),
             BackstackDepth: 2,
-            CurrentPageTitleOverride: "实例设置 - Demo Instance",
             ParentRoute: new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect)));
 
-        Assert.AreEqual("实例设置 - Demo Instance", view.CurrentPageTitle);
         Assert.IsTrue(view.ShowsBackButton);
         Assert.AreEqual(LauncherFrontendPageKind.Secondary, view.CurrentPage.Kind);
-        Assert.AreEqual("实例设置分区", view.CurrentPage.SidebarGroupTitle);
         Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
         Assert.AreEqual(LauncherFrontendPageKey.InstanceSelect, view.BackTarget?.Route?.Page);
-        Assert.AreEqual("Mod", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
-        CollectionAssert.AreEqual(
-            new[] { "实例设置 - Demo Instance", "Mod" },
-            view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
+        Assert.AreEqual(LauncherFrontendSubpageKey.VersionMod, view.SidebarEntries.Single(entry => entry.IsSelected).Route.Subpage);
+        Assert.AreEqual(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup), view.Breadcrumbs[0].Route);
+        Assert.AreEqual(view.SidebarEntries.Single(entry => entry.IsSelected).Route, view.Breadcrumbs[1].Route);
     }
 
     [TestMethod]
@@ -85,7 +80,7 @@ public sealed class LauncherFrontendNavigationServiceTest
         var view = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
             new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup, LauncherFrontendSubpageKey.VersionInstall)));
 
-        Assert.AreEqual("修改", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
+        Assert.AreEqual(LauncherFrontendSubpageKey.VersionInstall, view.SidebarEntries.Single(entry => entry.IsSelected).Route.Subpage);
         CollectionAssert.AreEqual(
             new[]
             {
@@ -107,12 +102,11 @@ public sealed class LauncherFrontendNavigationServiceTest
             new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch),
             BackstackDepth: 1));
 
-        Assert.AreEqual("设置", view.CurrentPageTitle);
         Assert.IsFalse(view.ShowsBackButton);
         Assert.IsNull(view.BackTarget);
         Assert.AreEqual(LauncherFrontendPageKind.TopLevel, view.CurrentPage.Kind);
-        Assert.AreEqual("启动", view.SidebarEntries.Single(entry => entry.IsSelected).Title);
-        CollectionAssert.AreEqual(new[] { "设置", "启动" }, view.Breadcrumbs.Select(crumb => crumb.Title).ToArray());
+        Assert.AreEqual(LauncherFrontendSubpageKey.SetupLaunch, view.SidebarEntries.Single(entry => entry.IsSelected).Route.Subpage);
+        Assert.AreEqual(2, view.Breadcrumbs.Count);
     }
 
     [TestMethod]
@@ -123,7 +117,7 @@ public sealed class LauncherFrontendNavigationServiceTest
             BackstackDepth: 0));
 
         Assert.AreEqual(LauncherFrontendPageKind.Detail, view.CurrentPage.Kind);
-        Assert.AreEqual("下载分区", view.CurrentPage.SidebarGroupTitle);
+        Assert.IsTrue(view.CurrentPage.HasSidebar);
         Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
         Assert.AreEqual(LauncherFrontendPageKey.Download, view.BackTarget?.Route?.Page);
         Assert.IsTrue(view.SidebarEntries.Any());
@@ -141,7 +135,6 @@ public sealed class LauncherFrontendNavigationServiceTest
 
         Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
         Assert.AreEqual(parentRoute, view.BackTarget?.Route);
-        Assert.AreEqual("世界", view.BackTarget?.Label.Replace("返回到 ", ""));
     }
 
     [TestMethod]
@@ -152,7 +145,7 @@ public sealed class LauncherFrontendNavigationServiceTest
             BackstackDepth: 0));
 
         Assert.AreEqual(LauncherFrontendPageKind.Detail, view.CurrentPage.Kind);
-        Assert.AreEqual("工具分区", view.CurrentPage.SidebarGroupTitle);
+        Assert.IsTrue(view.CurrentPage.HasSidebar);
         Assert.AreEqual(LauncherFrontendBackTargetKind.Route, view.BackTarget?.Kind);
         Assert.AreEqual(LauncherFrontendPageKey.Tools, view.BackTarget?.Route?.Page);
         Assert.IsTrue(view.SidebarEntries.Any());
