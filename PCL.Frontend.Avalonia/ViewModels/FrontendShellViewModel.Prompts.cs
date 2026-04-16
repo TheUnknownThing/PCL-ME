@@ -27,10 +27,7 @@ internal sealed partial class FrontendShellViewModel
             _updateStatus = FrontendSetupUpdateStatusService.Relocalize(_updateStatus, _i18n);
             RefreshSetupLocalizationState();
             RaiseSectionBLocalizedProperties();
-            _promptCatalog[AvaloniaPromptLaneKind.Startup] = LauncherFrontendPromptService
-                .BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
-                .Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt))
-                .ToList();
+            EnsureStartupPromptLane();
             EnsureLaunchPromptLane();
             if (hadCrashPrompts)
             {
@@ -53,7 +50,7 @@ internal sealed partial class FrontendShellViewModel
             }
 
             RefreshLaunchProfileEntries();
-            RaiseLaunchProfileSurfaceProperties();
+            RaiseLaunchCompositionProperties();
             RaiseSectionAI18nProperties();
             RaisePropertyChanged(nameof(HomepagePresetOptions));
             RaisePropertyChanged(nameof(MemorySummaryUsageHeaderText));
@@ -86,11 +83,9 @@ internal sealed partial class FrontendShellViewModel
 
     private Dictionary<AvaloniaPromptLaneKind, List<PromptCardViewModel>> BuildPromptCatalog(string scenario)
     {
-        var startupPrompts = LauncherFrontendPromptService.BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent);
-
         return new Dictionary<AvaloniaPromptLaneKind, List<PromptCardViewModel>>
         {
-            [AvaloniaPromptLaneKind.Startup] = startupPrompts.Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt)).ToList(),
+            [AvaloniaPromptLaneKind.Startup] = BuildVisibleStartupPromptCards(),
             [AvaloniaPromptLaneKind.Launch] = [],
             [AvaloniaPromptLaneKind.Crash] = []
         };
@@ -304,6 +299,18 @@ internal sealed partial class FrontendShellViewModel
             await Task.Delay(PclModalMotion.ExitDuration);
         }
 
+        if (option.ClosesPrompt)
+        {
+            if (lane == AvaloniaPromptLaneKind.Startup)
+            {
+                _dismissedStartupPromptIds.Add(promptId);
+            }
+            else if (lane == AvaloniaPromptLaneKind.Launch)
+            {
+                _dismissedLaunchPromptIds.Add(promptId);
+            }
+        }
+
         foreach (var command in option.Commands)
         {
             ExecutePromptCommand(lane, command);
@@ -311,11 +318,6 @@ internal sealed partial class FrontendShellViewModel
 
         if (option.ClosesPrompt)
         {
-            if (lane == AvaloniaPromptLaneKind.Launch)
-            {
-                _dismissedLaunchPromptIds.Add(promptId);
-            }
-
             _promptCatalog[lane].RemoveAll(prompt => prompt.Id == promptId);
             RebuildPromptLanes();
             SyncPromptLaneState();
@@ -864,10 +866,7 @@ internal sealed partial class FrontendShellViewModel
             Consent = updatedConsent
         };
 
-        _promptCatalog[AvaloniaPromptLaneKind.Startup] = LauncherFrontendPromptService
-            .BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
-            .Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt))
-            .ToList();
+        EnsureStartupPromptLane();
         RebuildPromptLanes();
         SyncPromptLaneState();
         SelectPromptLane(_selectedPromptLane, updateActivity: false);
@@ -1300,6 +1299,19 @@ internal sealed partial class FrontendShellViewModel
         return _launchComposition.PrecheckResult.Failure is { } failure
             ? _i18n.T(failure.ToLocalizedText())
             : _i18n.T("launch.precheck.failures.unknown");
+    }
+
+    private void EnsureStartupPromptLane()
+    {
+        _promptCatalog[AvaloniaPromptLaneKind.Startup] = BuildVisibleStartupPromptCards();
+    }
+
+    private List<PromptCardViewModel> BuildVisibleStartupPromptCards()
+    {
+        return LauncherFrontendPromptService.BuildStartupPromptQueue(_startupPlan.StartupPlan, _startupPlan.Consent)
+            .Where(prompt => !_dismissedStartupPromptIds.Contains(prompt.Id))
+            .Select(prompt => CreatePromptCard(AvaloniaPromptLaneKind.Startup, prompt))
+            .ToList();
     }
 
     private void EnsureLaunchPromptLane()

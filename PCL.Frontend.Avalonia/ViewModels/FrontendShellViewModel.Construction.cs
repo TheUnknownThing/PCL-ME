@@ -161,6 +161,7 @@ internal sealed partial class FrontendShellViewModel
     private string? _latestLaunchScriptPath;
     private string? _latestLaunchSessionSummaryPath;
     private string? _latestLaunchRawOutputLogPath;
+    private readonly HashSet<string> _dismissedStartupPromptIds = new(StringComparer.Ordinal);
     private readonly HashSet<string> _dismissedLaunchPromptIds = new(StringComparer.Ordinal);
     private string _launchPromptContextKey = string.Empty;
     private string _helpSearchQuery = string.Empty;
