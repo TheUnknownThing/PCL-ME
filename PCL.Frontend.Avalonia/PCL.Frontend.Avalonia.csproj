@@ -36,6 +36,7 @@
     <EmbeddedMicrosoftClientId Condition="'$(EmbeddedMicrosoftClientId)' == ''">$([System.Environment]::GetEnvironmentVariable('MS_CLIENT_ID'))</EmbeddedMicrosoftClientId>
     <EmbeddedCurseForgeApiKey>$([System.Environment]::GetEnvironmentVariable('PCL_CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
     <EmbeddedCurseForgeApiKey Condition="'$(EmbeddedCurseForgeApiKey)' == ''">$([System.Environment]::GetEnvironmentVariable('CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
+    <I18nToolDllPath>$(MSBuildProjectDirectory)/../PCL.Tools.I18n/bin/$(Configuration)/$(TargetFramework)/PCL.Tools.I18n.dll</I18nToolDllPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,6 +51,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PCL.Core.Backend\PCL.Core.Backend.csproj" />
+    <ProjectReference Include="..\PCL.Tools.I18n\PCL.Tools.I18n.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -77,7 +80,9 @@
   <Target Name="ValidateI18nResources"
           BeforeTargets="BeforeBuild"
           Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipI18nBuildValidation)' != 'true'">
-    <Exec Command='dotnet run -p:NuGetAudit=false --project "$(MSBuildProjectDirectory)/../PCL.Tools.I18n/PCL.Tools.I18n.csproj" -- validate --format msbuild --locales-dir "$(MSBuildProjectDirectory)/Locales"'
+    <Error Text="ERROR|I18N validation tool was not built at $(I18nToolDllPath)."
+           Condition="!Exists('$(I18nToolDllPath)')" />
+    <Exec Command='dotnet "$(I18nToolDllPath)" validate --format msbuild --locales-dir "$(MSBuildProjectDirectory)/Locales"'
           IgnoreExitCode="true"
           ConsoleToMsBuild="true">
       <Output TaskParameter="ConsoleOutput" ItemName="_I18nValidationOutput" />
