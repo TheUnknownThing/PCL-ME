@@ -209,6 +209,8 @@ shell:
         set_gpu_preference: []
         optimize_memory: []
         invalid: []
+        invalid_message:
+          gpu_preference_path_missing: []
     surface_meta:
       line:
       - kind
@@ -1021,6 +1023,16 @@ startup:
       - warnings
       actions:
         acknowledge: []
+    update_log:
+      title:
+      - version_branch
+      - version_base
+      actions:
+        confirm: []
+        full_changelog: []
+    milestone:
+      title: []
+      message: []
 launch:
   announcements:
     community_edition_intro:
@@ -1235,6 +1247,61 @@ launch:
         opened_profile_create_page: []
         opened_related_web: []
         opened_sign_in_page: []
+      prompts:
+        create_profile:
+          actions:
+            cancel: []
+            create_profile: []
+          message: []
+          title: []
+        ownership:
+          actions:
+            buy_minecraft: []
+            cancel: []
+          message: []
+          title: []
+        password_login:
+          actions:
+            cancel: []
+            retry: []
+            set_password: []
+          message: []
+          title: []
+        refresh_network_error:
+          actions:
+            cancel: []
+            continue: []
+          message: []
+          title: []
+        xsts:
+          ban:
+            actions:
+              ok: []
+            message: []
+            title: []
+          region_restricted:
+            actions:
+              ok: []
+            message: []
+            title: []
+          signup:
+            actions:
+              cancel: []
+              register: []
+            message: []
+            title: []
+          underage:
+            actions:
+              i_do_not_know: []
+              over_13: []
+              under_13: []
+            followup:
+              message: []
+              open_page:
+                message: []
+              title: []
+            message: []
+            title: []
       status:
         browser_opened: []
         initial: []
@@ -1303,6 +1370,7 @@ launch:
       empty: []
       hint: []
       hint_empty: []
+      prompt_title: []
   status:
     activities:
       canceled: []

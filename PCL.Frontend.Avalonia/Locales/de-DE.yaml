@@ -205,6 +205,8 @@ shell:
         set_gpu_preference: GPU-Präferenz festlegen
         optimize_memory: Arbeitsspeicher optimieren
         invalid: Ungültig
+        invalid_message:
+          gpu_preference_path_missing: Der für die GPU-Präferenzkonfiguration erforderliche ausführbare Pfad fehlt.
     surface_meta:
       line: '{kind}-Oberfläche • {sidebar_group} • {navigation_state}'
       no_sidebar_group: Keine Seitenleistengruppe
@@ -889,6 +891,17 @@ startup:
         {warnings}
       actions:
         acknowledge: Ich verstehe
+    update_log:
+      title: PCL-ME wurde auf {version_branch} {version_base} aktualisiert
+      actions:
+        confirm: OK
+        full_changelog: Vollständiges Änderungsprotokoll
+    milestone:
+      title: Hinweis
+      message: >-
+        Sie haben die PCL-Cross-Platform-Edition 99 Mal geöffnet. Vielen Dank für Ihre langjährige Unterstützung!
+
+        Das versteckte Hardcore-Fan-Design ist nicht freigeschaltet. Die Cross-Platform-Edition enthält keine versteckten Designs!
 launch:
   announcements:
     community_edition_intro:
@@ -1082,6 +1095,61 @@ launch:
         opened_profile_create_page: Die Microsoft-Konto-Erstellungsseite wurde geöffnet
         opened_related_web: Die zugehörige Webseite wurde geöffnet
         opened_sign_in_page: Die Microsoft-Anmeldeseite wurde geöffnet
+      prompts:
+        create_profile:
+          actions:
+            cancel: Cancel
+            create_profile: Create profile
+          message: Please create a Minecraft profile before signing in again.
+          title: Sign-in failed
+        ownership:
+          actions:
+            buy_minecraft: Buy Minecraft
+            cancel: Cancel
+          message: We could not retrieve this account's information. The account may not own Minecraft Java Edition, or the Xbox Game Pass may have expired.
+          title: Sign-in failed
+        password_login:
+          actions:
+            cancel: Cancel
+            retry: Retry sign-in
+            set_password: Set password
+          message: When signing in, choose “Other sign-in options”, then choose “Use my password”. If that option is unavailable, choose “Set password” and sign in again after setting it.
+          title: Password sign-in required
+        refresh_network_error:
+          actions:
+            cancel: Cancel
+            continue: Continue
+          message: The launcher encountered a network error while refreshing account information. You can cancel, check your network, and try again, or ignore the error and continue, but some servers may not work.
+          title: Account refresh failed
+        xsts:
+          ban:
+            actions:
+              ok: OK
+            message: This Microsoft account appears to be banned and cannot sign in.
+            title: Sign-in failed
+          region_restricted:
+            actions:
+              ok: OK
+            message: Your country or region cannot sign in to Microsoft accounts. Please use a VPN or accelerator and try again.
+            title: Sign-in failed
+          signup:
+            actions:
+              cancel: Cancel
+              register: Register
+            message: You have not registered an Xbox account yet. Please register before signing in.
+            title: Sign-in notice
+          underage:
+            actions:
+              i_do_not_know: I do not know
+              over_13: Over 13
+              under_13: Under 13
+            followup:
+              message: Please update the account birth date on the opened page (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              open_page:
+                message: Please follow the instructions on the opened page and update the account birth date (set it to at least 18 years old). After the change is saved, wait one minute, then return to PCL and sign in normally.
+              title: Sign-in notice
+            message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
+            title: Sign-in notice
       status:
         browser_opened: Browser geöffnet. Schließe die Autorisierung ab und kehre hierher zurück.
         initial: Bereit zur Anmeldung mit Microsoft
@@ -1141,6 +1209,7 @@ launch:
       empty: Kein verfügbares Profil
       hint: Ein Startprofil auswählen
       hint_empty: Kein Startprofil ausgewählt
+      prompt_title: Select a profile
   status:
     activities:
       canceled: Start abgebrochen

@@ -41,11 +41,11 @@ public sealed class MinecraftLaunchWatcherWorkflowServiceTest
                     JstackExecutableExists: true),
                 OutputRealTimeLog: true));
 
-        Assert.IsTrue(result.StartupSummaryLogLines.Any(line => line.Contains("PCL 版本：2.11.0 (2110)")));
+        Assert.IsTrue(result.StartupSummaryLogLines.Any(line => line.Contains("PCL version: 2.11.0 (2110)")));
         Assert.AreEqual("{version}", result.RawWindowTitleTemplate);
         Assert.AreEqual(@"C:\Java\bin/jstack.exe".Replace('/', System.IO.Path.DirectorySeparatorChar), result.JstackExecutablePath.Replace('\\', System.IO.Path.DirectorySeparatorChar));
         Assert.IsTrue(result.ShouldAttachRealtimeLog);
-        Assert.AreEqual("已显示游戏实时日志", result.RealtimeLogAttachedMessage);
+        Assert.AreEqual("Game real-time logs are being shown", result.RealtimeLogAttachedMessage);
     }
 
     [TestMethod]

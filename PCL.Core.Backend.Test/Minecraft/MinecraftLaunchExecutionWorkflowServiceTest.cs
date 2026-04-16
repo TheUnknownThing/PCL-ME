@@ -27,7 +27,7 @@ public sealed class MinecraftLaunchExecutionWorkflowServiceTest
         Assert.IsFalse(result.UseShellExecute);
         Assert.IsTrue(result.CreateNoWindow);
         Assert.IsTrue(result.WaitForExit);
-        Assert.AreEqual("由于取消启动，已强制结束自定义命令 CMD 进程", result.AbortKillLogMessage);
+        Assert.AreEqual("Launch was canceled, so the custom command CMD process was forcefully terminated", result.AbortKillLogMessage);
     }
 
     [TestMethod]
@@ -54,7 +54,7 @@ public sealed class MinecraftLaunchExecutionWorkflowServiceTest
         Assert.AreEqual(OperatingSystem.IsWindows(), result.RedirectStandardError);
         Assert.AreEqual(@"D:\.minecraft", result.AppDataEnvironmentValue);
         Assert.AreEqual(MinecraftLaunchProcessPriorityKind.AboveNormal, result.PriorityKind);
-        Assert.AreEqual(@"已启动游戏进程：C:\Java\bin\javaw.exe", result.StartedLogMessage);
-        Assert.AreEqual("由于取消启动，已强制结束游戏进程", result.AbortKillLogMessage);
+        Assert.AreEqual(@"Started game process: C:\Java\bin\javaw.exe", result.StartedLogMessage);
+        Assert.AreEqual("Launch was canceled, so the game process was forcefully terminated", result.AbortKillLogMessage);
     }
 }

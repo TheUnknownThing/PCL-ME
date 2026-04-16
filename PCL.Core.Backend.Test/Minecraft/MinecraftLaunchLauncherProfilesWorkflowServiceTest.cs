@@ -46,10 +46,10 @@ public sealed class MinecraftLaunchLauncherProfilesWorkflowServiceTest
                 DefaultProfileTimestamp: new DateTime(2026, 4, 2, 9, 8, 7)));
 
         Assert.IsTrue(result.ShouldWrite);
-        Assert.AreEqual("已更新 launcher_profiles.json", result.InitialAttempt!.SuccessLogMessage);
-        Assert.AreEqual("已在删除后更新 launcher_profiles.json", result.RetryAttempt!.SuccessLogMessage);
-        Assert.AreEqual("更新 launcher_profiles.json 失败，将在删除文件后重试", result.RetryLogMessage);
-        Assert.AreEqual("更新 launcher_profiles.json 失败", result.FailureLogMessage);
+        Assert.AreEqual("Updated launcher_profiles.json", result.InitialAttempt!.SuccessLogMessage);
+        Assert.AreEqual("Updated launcher_profiles.json after deletion", result.RetryAttempt!.SuccessLogMessage);
+        Assert.AreEqual("Failed to update launcher_profiles.json; will retry after deleting the file", result.RetryLogMessage);
+        Assert.AreEqual("Failed to update launcher_profiles.json", result.FailureLogMessage);
 
         var retryRoot = JsonNode.Parse(result.RetryAttempt.UpdatedProfilesJson)!.AsObject();
         Assert.AreEqual("PCL", retryRoot["selectedProfile"]!.ToString());

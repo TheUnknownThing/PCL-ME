@@ -64,7 +64,7 @@ public sealed class MinecraftLaunchLoginProfileWorkflowServiceTest
 
         Assert.AreEqual(MinecraftLaunchProfileMutationKind.UpdateExistingDuplicate, result.Kind);
         Assert.AreEqual(0, result.TargetProfileIndex);
-        Assert.AreEqual("你已经添加了这个档案...", result.NoticeMessage);
+        Assert.AreEqual("You have already added this profile...", result.NoticeMessage);
         Assert.AreEqual("new-token", result.UpdateProfile!.AccessToken);
         Assert.IsFalse(result.ShouldClearCreatingProfile);
     }

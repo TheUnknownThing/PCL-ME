@@ -1,4 +1,5 @@
 using System;
+using PCL.Core.App.I18n;
 
 namespace PCL.Core.App.Essentials;
 
@@ -14,9 +15,12 @@ public static class LauncherUpdateLogService
 
         return new LauncherUpdateLogPrompt(
             changelog,
-            $"PCL-ME has been updated to {request.VersionBranchName} {request.VersionBaseName}",
-            "OK",
-            "Full changelog",
+            I18nText.WithArgs(
+                "startup.prompts.update_log.title",
+                I18nTextArgument.String("version_branch", request.VersionBranchName),
+                I18nTextArgument.String("version_base", request.VersionBaseName)),
+            I18nText.Plain("startup.prompts.update_log.actions.confirm"),
+            I18nText.Plain("startup.prompts.update_log.actions.full_changelog"),
             "https://github.com/TheUnknownThing/PCL-ME/releases");
     }
 }
@@ -28,7 +32,7 @@ public sealed record LauncherUpdateLogRequest(
 
 public sealed record LauncherUpdateLogPrompt(
     string MarkdownContent,
-    string Title,
-    string ConfirmLabel,
-    string FullChangelogLabel,
+    I18nText Title,
+    I18nText ConfirmLabel,
+    I18nText FullChangelogLabel,
     string FullChangelogUrl);

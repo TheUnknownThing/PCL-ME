@@ -12,7 +12,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
     {
         var result = MinecraftLaunchAccountWorkflowService.GetPasswordLoginPrompt();
 
-        Assert.AreEqual("需要使用密码登录", result.Title);
+        Assert.AreEqual("Password sign-in required", result.Title);
+        Assert.AreEqual("launch.profile.microsoft.prompts.password_login.title", result.TitleText.Key);
         CollectionAssert.AreEqual(
             new[]
             {
@@ -29,7 +30,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
     {
         var result = MinecraftLaunchAccountWorkflowService.GetMicrosoftRefreshNetworkErrorPrompt("Step 4");
 
-        Assert.AreEqual("账号信息获取失败", result.Title);
+        Assert.AreEqual("Account refresh failed", result.Title);
+        Assert.AreEqual("launch.profile.microsoft.prompts.refresh_network_error.title", result.TitleText.Key);
         CollectionAssert.AreEqual(
             new[]
             {
@@ -46,7 +48,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
         var result = MinecraftLaunchAccountWorkflowService.TryGetMicrosoftXstsErrorPrompt("2148916227");
 
         Assert.IsNotNull(result);
-        Assert.AreEqual("登录失败", result.Title);
+        Assert.AreEqual("Sign-in failed", result.Title);
+        Assert.AreEqual("launch.profile.microsoft.prompts.xsts.ban.title", result.TitleText.Key);
         Assert.AreEqual(MinecraftLaunchAccountDecisionKind.Abort, result.Options.Single().Decision);
         Assert.IsTrue(result.IsWarning);
     }
@@ -67,7 +70,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
         var result = MinecraftLaunchAccountWorkflowService.TryGetMicrosoftXstsErrorPrompt("2148916235");
 
         Assert.IsNotNull(result);
-        StringAssert.Contains(result.Message, "加速器或 VPN");
+        StringAssert.Contains(result.Message, "VPN or accelerator");
+        Assert.AreEqual("launch.profile.microsoft.prompts.xsts.region_restricted.message", result.MessageText.Key);
         Assert.AreEqual(MinecraftLaunchAccountDecisionKind.Abort, result.Options.Single().Decision);
     }
 
@@ -80,7 +84,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
         Assert.AreEqual(3, result.Options.Count);
         Assert.AreEqual("https://account.live.com/editprof.aspx", result.Options[0].Url);
         Assert.IsNotNull(result.Options[0].Followup);
-        StringAssert.Contains(result.Options[2].Followup!.Message, "根据打开的网页的说明");
+        StringAssert.Contains(result.Options[2].Followup!.Message, "opened page");
+        Assert.AreEqual("launch.profile.microsoft.prompts.xsts.underage.followup.open_page.message", result.Options[2].Followup!.MessageText.Key);
     }
 
     [TestMethod]
@@ -96,14 +101,16 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
     {
         var result = MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt();
 
-        Assert.AreEqual("登录失败", result.Title);
+        Assert.AreEqual("Sign-in failed", result.Title);
+        Assert.AreEqual("launch.profile.microsoft.prompts.ownership.title", result.TitleText.Key);
         CollectionAssert.AreEqual(
             new[]
             {
-                "购买 Minecraft",
-                "取消"
+                "Buy Minecraft",
+                "Cancel"
             },
             result.Options.Select(option => option.Label).ToArray());
+        Assert.AreEqual("launch.profile.microsoft.prompts.ownership.actions.buy_minecraft", result.Options[0].LabelText.Key);
     }
 
     [TestMethod]
@@ -113,6 +120,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
 
         Assert.AreEqual("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile", result.Options[0].Url);
         Assert.AreEqual(MinecraftLaunchAccountDecisionKind.OpenUrlAndAbort, result.Options[0].Decision);
+        Assert.AreEqual("Create profile", result.Options[0].Label);
+        Assert.AreEqual("launch.profile.microsoft.prompts.create_profile.actions.create_profile", result.Options[0].LabelText.Key);
     }
 
     [TestMethod]
@@ -126,8 +135,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
                 AvailableProfiles: []));
 
         Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.Fail, result.Kind);
-        Assert.AreEqual("$你还没有创建角色，请在创建角色后再试！", result.FailureMessage);
-        Assert.AreEqual("你还没有创建角色，无法更换！", result.NoticeMessage);
+        Assert.AreEqual("$You have not created a profile yet. Please create one and try again!", result.FailureMessage);
+        Assert.AreEqual("You have not created a profile yet, so it cannot be changed.", result.NoticeMessage);
     }
 
     [TestMethod]
@@ -145,7 +154,7 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
 
         Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.Resolved, result.Kind);
         Assert.AreEqual("solo", result.SelectedProfileId);
-        Assert.AreEqual("你的账户中只有一个角色，无法更换！", result.NoticeMessage);
+        Assert.AreEqual("Your account only has one profile, so it cannot be changed.", result.NoticeMessage);
     }
 
     [TestMethod]
@@ -183,7 +192,8 @@ public sealed class MinecraftLaunchAccountWorkflowServiceTest
 
         Assert.AreEqual(MinecraftLaunchAuthProfileSelectionKind.PromptForSelection, result.Kind);
         Assert.IsTrue(result.NeedsRefresh);
-        Assert.AreEqual("选择使用的角色", result.PromptTitle);
+        Assert.AreEqual("Select a profile", result.PromptTitle);
+        Assert.AreEqual("launch.profile.selection.prompt_title", result.PromptTitleText!.Key);
         Assert.AreEqual(2, result.PromptOptions.Count);
     }
 

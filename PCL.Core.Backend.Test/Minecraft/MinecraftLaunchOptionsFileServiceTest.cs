@@ -21,7 +21,7 @@ public sealed class MinecraftLaunchOptionsFileServiceTest
             LaunchWindowType: 0));
 
         Assert.AreEqual(MinecraftLaunchOptionsFileTargetKind.Yosbr, result.TargetKind);
-        Assert.AreEqual("将修改 Yosbr Mod 中的 options.txt", result.TargetSelectionLogMessage);
+        Assert.AreEqual("Will modify options.txt in the Yosbr mod", result.TargetSelectionLogMessage);
         CollectionAssert.AreEqual(
             new[]
             {
@@ -54,7 +54,7 @@ public sealed class MinecraftLaunchOptionsFileServiceTest
             },
             result.Writes.ToArray());
         CollectionAssert.AreEqual(
-            new[] { "已将语言从 en_us 修改为 zh_CN" },
+            new[] { "Changed language from en_us to zh_CN" },
             result.LogMessages.ToArray());
     }
 
@@ -77,7 +77,7 @@ public sealed class MinecraftLaunchOptionsFileServiceTest
             },
             result.Writes.ToArray());
         CollectionAssert.AreEqual(
-            new[] { "需要的语言为 zh_cn，当前语言为 zh_cn，无需修改" },
+            new[] { "Required language is zh_cn; current language is zh_cn; no change needed" },
             result.LogMessages.ToArray());
     }
 }

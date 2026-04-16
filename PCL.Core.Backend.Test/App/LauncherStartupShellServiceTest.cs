@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Essentials;
 
 namespace PCL.Core.Test.App;
@@ -33,7 +34,8 @@ public sealed class LauncherStartupShellServiceTest
 
         Assert.AreEqual(LauncherStartupImmediateCommandKind.Invalid, result.Kind);
         Assert.IsNull(result.Argument);
-        Assert.AreEqual("缺少需要设置显卡偏好的可执行文件路径。", result.InvalidMessage);
+        Assert.IsNotNull(result.InvalidMessage);
+        Assert.AreEqual("shell.status.commands.invalid_message.gpu_preference_path_missing", result.InvalidMessage.Key);
     }
 
     [TestMethod]

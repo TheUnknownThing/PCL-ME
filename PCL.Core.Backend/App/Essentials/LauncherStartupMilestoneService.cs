@@ -1,3 +1,5 @@
+using PCL.Core.App.I18n;
+
 namespace PCL.Core.App.Essentials;
 
 public static class LauncherStartupMilestoneService
@@ -10,9 +12,8 @@ public static class LauncherStartupMilestoneService
             ShouldAttemptUnlockHiddenTheme: updatedCount >= 99,
             HiddenThemeNotice: updatedCount >= 99
                 ? new LauncherStartupMilestoneNotice(
-                    "Notice",
-                    "You have opened the PCL cross-platform edition 99 times. Thank you for your long-term support!" + System.Environment.NewLine +
-                    "The hidden Hardcore Fan theme is not unlocked. The cross-platform edition does not include hidden themes!")
+                    I18nText.Plain("startup.prompts.milestone.title"),
+                    I18nText.Plain("startup.prompts.milestone.message"))
                 : null);
     }
 }
@@ -23,5 +24,5 @@ public sealed record LauncherStartupMilestoneResult(
     LauncherStartupMilestoneNotice? HiddenThemeNotice);
 
 public sealed record LauncherStartupMilestoneNotice(
-    string Title,
-    string Message);
+    I18nText Title,
+    I18nText Message);

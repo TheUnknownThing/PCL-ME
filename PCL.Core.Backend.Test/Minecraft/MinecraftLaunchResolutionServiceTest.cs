@@ -51,6 +51,6 @@ public sealed class MinecraftLaunchResolutionServiceTest
         Assert.AreEqual(853, result.Width);
         Assert.AreEqual(480, result.Height);
         Assert.IsTrue(result.AppliedLegacyJavaDpiFix);
-        Assert.AreEqual("已应用窗口大小过大修复（271）", result.LogMessage);
+        Assert.AreEqual("Applied legacy oversized-window fix (271)", result.LogMessage);
     }
 }

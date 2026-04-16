@@ -90,7 +90,7 @@ public sealed class MinecraftJavaRuntimeDownloadWorkflowServiceTest
             },
             result.Files[0].RequestUrls.MirrorUrls.ToArray());
         Assert.AreEqual(0, result.Files[1].RequestUrls.MirrorUrls.Count);
-        StringAssert.Contains(result.LogMessage, "需要下载 2 个文件");
+        StringAssert.Contains(result.LogMessage, "Need to download 2 files");
     }
 
     [TestMethod]
@@ -135,8 +135,8 @@ public sealed class MinecraftJavaRuntimeDownloadWorkflowServiceTest
         Assert.AreEqual(1, transferPlan.ReusedFiles.Count);
         Assert.AreEqual("conf/security/policy.json", transferPlan.ReusedFiles[0].RelativePath);
         Assert.AreEqual(123L, transferPlan.DownloadBytes);
-        StringAssert.Contains(transferPlan.LogMessage, "需要下载 1 个文件");
-        StringAssert.Contains(transferPlan.LogMessage, "复用 1 个已存在文件");
+        StringAssert.Contains(transferPlan.LogMessage, "Need to download 1 files");
+        StringAssert.Contains(transferPlan.LogMessage, "reuse 1 existing files");
     }
 
     [TestMethod]

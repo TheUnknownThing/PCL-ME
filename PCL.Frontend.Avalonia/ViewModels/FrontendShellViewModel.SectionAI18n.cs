@@ -1,3 +1,4 @@
+using PCL.Core.App.I18n;
 using System;
 using System.Collections.Generic;
 
@@ -24,6 +25,11 @@ internal sealed partial class FrontendShellViewModel
         }
 
         return _i18n.T(key, values);
+    }
+
+    private string T(I18nText text)
+    {
+        return _i18n.T(text);
     }
 
     public string LaunchHomepageRefreshButtonText => T("launch.homepage.actions.refresh");

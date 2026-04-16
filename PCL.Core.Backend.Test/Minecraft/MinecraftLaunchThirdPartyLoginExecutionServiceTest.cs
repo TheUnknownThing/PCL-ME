@@ -63,7 +63,7 @@ public sealed class MinecraftLaunchThirdPartyLoginExecutionServiceTest
         var result = MinecraftLaunchThirdPartyLoginExecutionService.GetStepAfterRefreshFailure(hasRetriedRefresh: true);
 
         Assert.AreEqual(MinecraftLaunchThirdPartyLoginStepKind.Fail, result.Kind);
-        Assert.AreEqual("二轮刷新登录失败", result.FailureMessage);
+        Assert.AreEqual("Second refresh login failed", result.FailureMessage);
         Assert.IsTrue(result.HasRetriedRefresh);
     }
 }

@@ -80,8 +80,8 @@ public sealed class MinecraftCrashExportServiceTest
 
             Assert.IsFalse(launchScript.Contains(accessToken, StringComparison.Ordinal));
             Assert.IsFalse(rawOutput.Contains(userProfilePath, StringComparison.Ordinal));
-            StringAssert.Contains(environmentReport, "PCL-ME 版本：2.14.5");
-            StringAssert.Contains(environmentReport, "识别码：device-123");
+            StringAssert.Contains(environmentReport, "PCL-ME version: 2.14.5");
+            StringAssert.Contains(environmentReport, "Identifier: device-123");
         }
         finally
         {
@@ -121,7 +121,7 @@ public sealed class MinecraftCrashExportServiceTest
 
             Assert.AreEqual(1, result.WrittenFiles.Count);
             Assert.AreEqual(Path.Combine(reportDirectory, "Environment and Launch Info.txt"), result.WrittenFiles.Single());
-            StringAssert.Contains(File.ReadAllText(result.WrittenFiles.Single(), Encoding.UTF8), "识别码：device-456");
+            StringAssert.Contains(File.ReadAllText(result.WrittenFiles.Single(), Encoding.UTF8), "Identifier: device-456");
         }
         finally
         {

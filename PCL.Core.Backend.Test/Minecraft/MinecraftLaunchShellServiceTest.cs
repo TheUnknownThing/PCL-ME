@@ -22,10 +22,10 @@ public sealed class MinecraftLaunchShellServiceTest
     public void GetCompletionNotificationPrefersAbortHint()
     {
         var result = MinecraftLaunchShellService.GetCompletionNotification(
-            new MinecraftLaunchCompletionRequest("Test Instance", MinecraftLaunchOutcome.Aborted, true, "导出启动脚本成功！"));
+            new MinecraftLaunchCompletionRequest("Test Instance", MinecraftLaunchOutcome.Aborted, true, "Launch script exported successfully!"));
 
         Assert.AreEqual("launch.notifications.abort_with_hint", result.Message.Key);
-        Assert.AreEqual("导出启动脚本成功！", result.Message.Arguments?.Single().StringValue);
+        Assert.AreEqual("Launch script exported successfully!", result.Message.Arguments?.Single().StringValue);
         Assert.AreEqual(MinecraftLaunchNotificationKind.Finish, result.Kind);
     }
 
@@ -44,8 +44,8 @@ public sealed class MinecraftLaunchShellServiceTest
     {
         var result = MinecraftLaunchShellService.GetFailureDisplay(isScriptExport: true);
 
-        Assert.AreEqual("导出启动脚本失败", result.DialogTitle);
-        Assert.AreEqual("导出启动脚本失败", result.LogTitle);
+        Assert.AreEqual("Failed to export launch script", result.DialogTitle);
+        Assert.AreEqual("Failed to export launch script", result.LogTitle);
     }
 
     [TestMethod]
@@ -55,8 +55,8 @@ public sealed class MinecraftLaunchShellServiceTest
             "/tmp/Launch.bat");
 
         Assert.AreEqual("/tmp/Launch.bat", result.TargetPath);
-        Assert.AreEqual("导出启动脚本完成，强制结束启动过程", result.CompletionLogMessage);
-        Assert.AreEqual("导出启动脚本成功！", result.AbortHint);
+        Assert.AreEqual("Launch script export completed; forcing the launch process to end", result.CompletionLogMessage);
+        Assert.AreEqual("Launch script exported successfully!", result.AbortHint);
         Assert.AreEqual("/tmp/Launch.bat", result.RevealInShellPath);
     }
 
@@ -104,7 +104,7 @@ public sealed class MinecraftLaunchShellServiceTest
                 StartMusicInGame: false));
 
         Assert.AreEqual(MinecraftLaunchMusicActionKind.Pause, result.MusicAction.Kind);
-        Assert.AreEqual("[Music] 已根据设置，在启动后暂停音乐播放", result.MusicAction.LogMessage);
+        Assert.AreEqual("[Music] Music will pause after launch because of the current setting", result.MusicAction.LogMessage);
         Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Pause, result.VideoBackgroundAction.Kind);
         Assert.AreEqual(MinecraftLaunchShellActionKind.HideLauncher, result.LauncherAction.Kind);
         Assert.AreEqual(1, result.GlobalLaunchCountIncrement);
@@ -122,7 +122,7 @@ public sealed class MinecraftLaunchShellServiceTest
                 TriggerLauncherShutdown: false));
 
         Assert.AreEqual(MinecraftLaunchMusicActionKind.Pause, result.MusicAction.Kind);
-        Assert.AreEqual("[Music] 已根据设置，在结束后暂停音乐播放", result.MusicAction.LogMessage);
+        Assert.AreEqual("[Music] Music will pause when launch ends because of the current setting", result.MusicAction.LogMessage);
         Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Play, result.VideoBackgroundAction.Kind);
         Assert.AreEqual(MinecraftLaunchShellActionKind.ShowLauncher, result.LauncherAction.Kind);
         Assert.AreEqual(0, result.GlobalLaunchCountIncrement);

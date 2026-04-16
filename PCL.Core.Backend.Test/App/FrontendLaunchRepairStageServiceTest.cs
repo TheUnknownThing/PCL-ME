@@ -31,7 +31,7 @@ public sealed class FrontendLaunchRepairStageServiceTest
 
         var result = FrontendLaunchRepairStageService.ResolveStage(snapshot);
 
-        Assert.AreEqual("校验资源文件 • minecraft/sounds.json", result);
+        Assert.AreEqual("Verifying asset file • minecraft/sounds.json", result);
     }
 
     [TestMethod]
@@ -66,6 +66,6 @@ public sealed class FrontendLaunchRepairStageServiceTest
 
         var result = FrontendLaunchRepairStageService.ResolveStage(snapshot);
 
-        Assert.AreEqual("补全支持文件 • guava.jar", result);
+        Assert.AreEqual("Completing support file • guava.jar", result);
     }
 }

@@ -22,14 +22,14 @@ public sealed class MinecraftLaunchMicrosoftDeviceCodePromptServiceTest
 
         var result = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(json);
 
-        Assert.AreEqual("登录 Minecraft", result.Title);
+        Assert.AreEqual("Sign in to Minecraft", result.Title);
         Assert.AreEqual("ABCD-EFGH", result.UserCode);
         Assert.AreEqual("device-code", result.DeviceCode);
         Assert.AreEqual("https://microsoft.com/devicelogin?otc=ABCD-EFGH", result.OpenBrowserUrl);
         Assert.AreEqual(MinecraftLaunchMicrosoftDeviceCodePromptService.DefaultPollUrl, result.PollUrl);
         Assert.AreEqual(5, result.PollIntervalSeconds);
         Assert.AreEqual(900, result.ExpiresInSeconds);
-        StringAssert.Contains(result.Message, "授权码将自动填充");
+        StringAssert.Contains(result.Message, "code will be filled in automatically");
         StringAssert.Contains(result.LogMessage, result.OpenBrowserUrl);
     }
 
@@ -50,7 +50,7 @@ public sealed class MinecraftLaunchMicrosoftDeviceCodePromptServiceTest
 
         Assert.AreEqual("https://microsoft.com/devicelogin", result.OpenBrowserUrl);
         Assert.AreEqual("https://login.example.invalid/token", result.PollUrl);
-        StringAssert.Contains(result.Message, "输入授权码");
+        StringAssert.Contains(result.Message, "Enter code");
         StringAssert.Contains(result.Message, result.OpenBrowserUrl);
     }
 }

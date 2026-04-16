@@ -52,6 +52,7 @@ public static class MinecraftLaunchAuthlibLoginWorkflowService
             selectionResult.FailureMessage,
             selectionResult.NoticeMessage,
             selectionResult.PromptTitle,
+            selectionResult.PromptTitleText,
             selectionResult.PromptOptions);
     }
 
@@ -153,6 +154,7 @@ public sealed record MinecraftLaunchAuthlibAuthenticatePlan(
     string? FailureMessage,
     string? NoticeMessage,
     string? PromptTitle,
+    PCL.Core.App.I18n.I18nText? PromptTitleText,
     IReadOnlyList<MinecraftLaunchAuthProfileOption> PromptOptions);
 
 public sealed record MinecraftLaunchAuthlibAuthenticateWorkflowRequest(

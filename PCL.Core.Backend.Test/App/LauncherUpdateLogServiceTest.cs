@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.I18n;
 using PCL.Core.App.Essentials;
 
 namespace PCL.Core.Test.App;
@@ -15,9 +16,11 @@ public sealed class LauncherUpdateLogServiceTest
             "2.0"));
 
         Assert.AreEqual("# Changes", result.MarkdownContent);
-        Assert.AreEqual("PCL-ME 已更新至 CE 2.0", result.Title);
-        Assert.AreEqual("确定", result.ConfirmLabel);
-        Assert.AreEqual("完整更新日志", result.FullChangelogLabel);
+        Assert.AreEqual("startup.prompts.update_log.title", result.Title.Key);
+        Assert.AreEqual("CE", result.Title.Arguments![0].StringValue);
+        Assert.AreEqual("2.0", result.Title.Arguments![1].StringValue);
+        Assert.AreEqual("startup.prompts.update_log.actions.confirm", result.ConfirmLabel.Key);
+        Assert.AreEqual("startup.prompts.update_log.actions.full_changelog", result.FullChangelogLabel.Key);
         Assert.AreEqual("https://github.com/TheUnknownThing/PCL-ME/releases", result.FullChangelogUrl);
     }
 
@@ -29,7 +32,7 @@ public sealed class LauncherUpdateLogServiceTest
             "Release",
             "1.2.3"));
 
-        Assert.AreEqual("欢迎使用呀~", result.MarkdownContent);
-        Assert.AreEqual("PCL-ME 已更新至 Release 1.2.3", result.Title);
+        Assert.AreEqual("Welcome.", result.MarkdownContent);
+        Assert.AreEqual("startup.prompts.update_log.title", result.Title.Key);
     }
 }

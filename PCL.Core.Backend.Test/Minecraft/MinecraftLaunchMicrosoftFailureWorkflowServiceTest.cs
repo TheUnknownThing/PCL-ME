@@ -32,7 +32,7 @@ public sealed class MinecraftLaunchMicrosoftFailureWorkflowServiceTest
 
         Assert.AreEqual(MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort, result.Kind);
         Assert.IsNotNull(result.Prompt);
-        Assert.AreEqual("登录提示", result.Prompt.Title);
+        Assert.AreEqual("Sign-in notice", result.Prompt.Title);
     }
 
     [TestMethod]
@@ -41,7 +41,7 @@ public sealed class MinecraftLaunchMicrosoftFailureWorkflowServiceTest
         var result = MinecraftLaunchMicrosoftFailureWorkflowService.ResolveMinecraftAccessTokenFailure(HttpStatusCode.Forbidden);
 
         Assert.AreEqual(MinecraftLaunchMicrosoftFailureResolutionKind.ThrowWrappedException, result.Kind);
-        StringAssert.Contains(result.WrappedExceptionMessage, "VPN 或加速器");
+        StringAssert.Contains(result.WrappedExceptionMessage, "VPN or accelerator");
     }
 
     [TestMethod]
@@ -56,7 +56,7 @@ public sealed class MinecraftLaunchMicrosoftFailureWorkflowServiceTest
         var result = MinecraftLaunchMicrosoftFailureWorkflowService.TryGetOwnershipFailurePrompt(json);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual("登录失败", result.Title);
+        Assert.AreEqual("Sign-in failed", result.Title);
     }
 
     [TestMethod]
@@ -66,7 +66,7 @@ public sealed class MinecraftLaunchMicrosoftFailureWorkflowServiceTest
 
         Assert.AreEqual(MinecraftLaunchMicrosoftFailureResolutionKind.ShowPromptAndAbort, result.Kind);
         Assert.IsNotNull(result.Prompt);
-        Assert.AreEqual("登录失败", result.Prompt.Title);
-        Assert.AreEqual("创建档案", result.Prompt.Options[0].Label);
+        Assert.AreEqual("Sign-in failed", result.Prompt.Title);
+        Assert.AreEqual("Create profile", result.Prompt.Options[0].Label);
     }
 }
