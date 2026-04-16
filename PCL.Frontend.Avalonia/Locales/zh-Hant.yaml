@@ -1830,8 +1830,11 @@ setup:
       apply_proxy: 應用代理信息
       export_settings: 導出設置
       import_settings: 導入設置
+      test_proxy: 測試連線
     activities:
       apply_proxy: 應用代理信息
+      disable_hardware_acceleration: 停用硬件加速
+      enable_hardware_acceleration: 啟用硬件加速
       export_settings: 導出設置
       import_settings: 導入設置
       import_settings_cancelled: 已取消選擇配置文件。
@@ -1841,6 +1844,8 @@ setup:
       proxy_cleared: 已清空自定義 HTTP 代理。
       reset: 重置啓動器雜項設置
       reset_completed: 系統、網絡和調試選項已恢復到當前啓動器的默認配置。
+      test_proxy: 測試代理連線
+      test_proxy_failed: 測試代理連線失敗
       import_settings_completed: 已導入共享配置：{path}。部分系統項仍建議重啓後再驗證。
     cards:
       debug:
@@ -1868,8 +1873,17 @@ setup:
       username: 賬號
       value_watermark: 如有
       warning: 請勿填寫不信任的代理地址
+    hints:
+      disable_hardware_acceleration_restart: 修改後會在下次啟動啓動器時生效。
     labels:
       debug_animation_speed_off: 關閉
+    messages:
+      debug_mode_disabled: 已關閉額外的診斷輸出。
+      debug_mode_enabled: 已啟用更詳細的日誌與診斷資訊。
+      proxy_invalid_address: 自定義代理地址無效。
+      proxy_test_started: 正在通過 {mode} 訪問 {host}。
+      proxy_test_succeeded: '{mode} 連線成功，HTTP {status_code} {reason_phrase}。'
+      proxy_test_succeeded_hint: 代理連線測試成功。
     options:
       http_proxy:
         custom: 自定義代理
@@ -2912,11 +2926,22 @@ instance:
       optifabric_required: 尚未安裝 OptiFabric，OptiFine 將無法使用。
     unavailable:
       incompatible_with: 與 {target} 不相容
+      no_versions: 沒有可用的相容版本。
+      optifabric_origins: 此 OptiFabric 構建僅相容於 Origins 分支。
+      requires_fabric: 需要 Fabric。
+      requires_legacy_fabric: 需要 Legacy Fabric。
+      requires_optifine: 需要 OptiFine。
+      requires_optifine_and_fabric: 同時需要 OptiFine 與 Fabric。
+      requires_quilt: 需要 Quilt。
+      specific_forge_only: 需要特定版本的 Forge。
   content:
     world:
       search: 搜尋存檔
       quick_actions: 快捷操作
       list: 存檔列表
+      empty:
+        title: 沒有存檔
+        description: 開啟存檔資料夾，或從剪貼簿貼上世界檔案或資料夾路徑來匯入存檔。
       summary: '建立時間：{created_at} • 最後修改：{modified_at}'
       actions:
         open_folder: 開啟存檔資料夾
@@ -2926,6 +2951,9 @@ instance:
         no_importable_paths: 剪貼簿中沒有可匯入的檔案或資料夾路徑。
     screenshot:
       quick_actions: 快捷操作
+      empty:
+        title: 沒有截圖
+        description: 開啟截圖資料夾，為目前實例加入或產生截圖。
       summary: '{created_at} • {file_size}'
       actions:
         open_folder: 開啟截圖資料夾
@@ -2934,6 +2962,9 @@ instance:
         missing_file: 目前截圖檔案不存在。
     server:
       quick_actions: 快捷操作
+      empty:
+        title: 沒有已儲存的伺服器
+        description: 重新整理目前列表，或為這個實例新增一個伺服器。
       actions:
         refresh_all: 全部重新整理
         add: 新增伺服器
@@ -2986,6 +3017,13 @@ instance:
       added_time: 新增時間
       file_size: 檔案大小
     resource:
+      empty:
+        default_title: 沒有資源
+        default_description: 為目前實例加入檔案，或下載新的內容來開始使用。
+        mod_unavailable_title: 目前實例不支援 Mod
+        mod_unavailable_description: 這個實例不支援 Mod。請切換到相容實例，或前往下載頁瀏覽可安裝內容。
+        schematic_unavailable_title: 投影需要對應 Mod
+        schematic_unavailable_description: 請先安裝支援投影的 Mod，之後再回到這裡管理投影檔案。
       search:
         default: 搜尋資源
         resource_pack: 搜尋資源包

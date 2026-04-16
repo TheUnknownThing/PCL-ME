@@ -300,6 +300,7 @@ internal sealed partial class FrontendShellViewModel
                 MaxAnimationFpsLabel = _i18n.T("setup.launcher_misc.fields.max_animation_fps"),
                 RealTimeLogLinesLabel = _i18n.T("setup.launcher_misc.fields.realtime_log_lines"),
                 DisableHardwareAccelerationLabel = _i18n.T("setup.launcher_misc.flags.disable_hardware_acceleration"),
+                DisableHardwareAccelerationHint = _i18n.T("setup.launcher_misc.hints.disable_hardware_acceleration_restart"),
                 ExportSettingsButton = _i18n.T("setup.launcher_misc.actions.export_settings"),
                 ImportSettingsButton = _i18n.T("setup.launcher_misc.actions.import_settings"),
                 NetworkCardHeader = _i18n.T("setup.launcher_misc.cards.network.header"),
@@ -313,6 +314,7 @@ internal sealed partial class FrontendShellViewModel
                 HttpProxyUsernameLabel = _i18n.T("setup.launcher_misc.http_proxy.username"),
                 HttpProxyValueWatermark = _i18n.T("setup.launcher_misc.http_proxy.value_watermark"),
                 HttpProxyPasswordLabel = _i18n.T("setup.launcher_misc.http_proxy.password"),
+                TestProxyButton = _i18n.T("setup.launcher_misc.actions.test_proxy"),
                 ApplyProxyButton = _i18n.T("setup.launcher_misc.actions.apply_proxy"),
                 DebugCardHeader = _i18n.T("setup.launcher_misc.cards.debug.header"),
                 DebugAnimationSpeedLabel = _i18n.T("setup.launcher_misc.fields.debug_animation_speed"),
@@ -573,6 +575,7 @@ internal sealed class SetupLauncherMiscLocalization
     public required string MaxAnimationFpsLabel { get; init; }
     public required string RealTimeLogLinesLabel { get; init; }
     public required string DisableHardwareAccelerationLabel { get; init; }
+    public required string DisableHardwareAccelerationHint { get; init; }
     public required string ExportSettingsButton { get; init; }
     public required string ImportSettingsButton { get; init; }
     public required string NetworkCardHeader { get; init; }
@@ -586,6 +589,7 @@ internal sealed class SetupLauncherMiscLocalization
     public required string HttpProxyUsernameLabel { get; init; }
     public required string HttpProxyValueWatermark { get; init; }
     public required string HttpProxyPasswordLabel { get; init; }
+    public required string TestProxyButton { get; init; }
     public required string ApplyProxyButton { get; init; }
     public required string DebugCardHeader { get; init; }
     public required string DebugAnimationSpeedLabel { get; init; }

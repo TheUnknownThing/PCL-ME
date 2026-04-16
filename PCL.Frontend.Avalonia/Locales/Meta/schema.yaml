@@ -2058,8 +2058,11 @@ setup:
       apply_proxy: []
       export_settings: []
       import_settings: []
+      test_proxy: []
     activities:
       apply_proxy: []
+      disable_hardware_acceleration: []
+      enable_hardware_acceleration: []
       export_settings: []
       import_settings: []
       import_settings_cancelled: []
@@ -2069,6 +2072,8 @@ setup:
       proxy_cleared: []
       reset: []
       reset_completed: []
+      test_proxy: []
+      test_proxy_failed: []
       import_settings_completed:
       - path
     cards:
@@ -2097,8 +2102,22 @@ setup:
       username: []
       value_watermark: []
       warning: []
+    hints:
+      disable_hardware_acceleration_restart: []
     labels:
       debug_animation_speed_off: []
+    messages:
+      debug_mode_disabled: []
+      debug_mode_enabled: []
+      proxy_invalid_address: []
+      proxy_test_started:
+      - mode
+      - host
+      proxy_test_succeeded:
+      - mode
+      - status_code
+      - reason_phrase
+      proxy_test_succeeded_hint: []
     options:
       http_proxy:
         custom: []
@@ -3315,11 +3334,22 @@ instance:
     unavailable:
       incompatible_with:
       - target
+      no_versions: []
+      optifabric_origins: []
+      requires_fabric: []
+      requires_legacy_fabric: []
+      requires_optifine: []
+      requires_optifine_and_fabric: []
+      requires_quilt: []
+      specific_forge_only: []
   content:
     world:
       search: []
       quick_actions: []
       list: []
+      empty:
+        title: []
+        description: []
       summary:
       - created_at
       - modified_at
@@ -3331,6 +3361,9 @@ instance:
         no_importable_paths: []
     screenshot:
       quick_actions: []
+      empty:
+        title: []
+        description: []
       summary:
       - created_at
       - file_size
@@ -3341,6 +3374,9 @@ instance:
         missing_file: []
     server:
       quick_actions: []
+      empty:
+        title: []
+        description: []
       actions:
         refresh_all: []
         add: []
@@ -3401,6 +3437,13 @@ instance:
       added_time: []
       file_size: []
     resource:
+      empty:
+        default_title: []
+        default_description: []
+        mod_unavailable_title: []
+        mod_unavailable_description: []
+        schematic_unavailable_title: []
+        schematic_unavailable_description: []
       search:
         default: []
         resource_pack: []

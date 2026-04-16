@@ -1830,8 +1830,11 @@ setup:
       apply_proxy: 应用代理信息
       export_settings: 导出设置
       import_settings: 导入设置
+      test_proxy: 测试连接
     activities:
       apply_proxy: 应用代理信息
+      disable_hardware_acceleration: 禁用硬件加速
+      enable_hardware_acceleration: 启用硬件加速
       export_settings: 导出设置
       import_settings: 导入设置
       import_settings_cancelled: 已取消选择配置文件。
@@ -1841,6 +1844,8 @@ setup:
       proxy_cleared: 已清空自定义 HTTP 代理。
       reset: 重置启动器杂项设置
       reset_completed: 系统、网络和调试选项已恢复到当前启动器的默认配置。
+      test_proxy: 测试代理连接
+      test_proxy_failed: 测试代理连接失败
       import_settings_completed: 已导入共享配置：{path}。部分系统项仍建议重启后再验证。
     cards:
       debug:
@@ -1868,8 +1873,17 @@ setup:
       username: 账号
       value_watermark: 如有
       warning: 请勿填写不信任的代理地址
+    hints:
+      disable_hardware_acceleration_restart: 修改后会在下次启动启动器时生效。
     labels:
       debug_animation_speed_off: 关闭
+    messages:
+      debug_mode_disabled: 已关闭额外的诊断输出。
+      debug_mode_enabled: 已启用更详细的日志与诊断信息。
+      proxy_invalid_address: 自定义代理地址无效。
+      proxy_test_started: 正在通过 {mode} 访问 {host}。
+      proxy_test_succeeded: '{mode} 连接成功，HTTP {status_code} {reason_phrase}。'
+      proxy_test_succeeded_hint: 代理连接测试成功。
     options:
       http_proxy:
         custom: 自定义代理
@@ -2912,11 +2926,22 @@ instance:
       optifabric_required: 尚未安装 OptiFabric，OptiFine 将无法使用。
     unavailable:
       incompatible_with: 与 {target} 不兼容
+      no_versions: 没有可用的兼容版本。
+      optifabric_origins: 此 OptiFabric 构建仅兼容 Origins 分支。
+      requires_fabric: 需要 Fabric。
+      requires_legacy_fabric: 需要 Legacy Fabric。
+      requires_optifine: 需要 OptiFine。
+      requires_optifine_and_fabric: 同时需要 OptiFine 和 Fabric。
+      requires_quilt: 需要 Quilt。
+      specific_forge_only: 需要特定版本的 Forge。
   content:
     world:
       search: 搜索存档
       quick_actions: 快捷操作
       list: 存档列表
+      empty:
+        title: 没有存档
+        description: 打开存档文件夹，或从剪贴板粘贴世界文件或文件夹路径来导入存档。
       summary: '创建时间：{created_at} • 最后修改：{modified_at}'
       actions:
         open_folder: 打开存档文件夹
@@ -2926,6 +2951,9 @@ instance:
         no_importable_paths: 剪贴板中没有可导入的文件或文件夹路径。
     screenshot:
       quick_actions: 快捷操作
+      empty:
+        title: 没有截图
+        description: 打开截图文件夹，为当前实例添加或生成截图。
       summary: '{created_at} • {file_size}'
       actions:
         open_folder: 打开截图文件夹
@@ -2934,6 +2962,9 @@ instance:
         missing_file: 当前截图文件不存在。
     server:
       quick_actions: 快捷操作
+      empty:
+        title: 没有已保存的服务器
+        description: 刷新当前列表，或为这个实例添加一个服务器。
       actions:
         refresh_all: 刷新全部
         add: 添加服务器
@@ -2986,6 +3017,13 @@ instance:
       added_time: 添加时间
       file_size: 文件大小
     resource:
+      empty:
+        default_title: 没有资源
+        default_description: 向当前实例添加文件，或下载新的内容来开始使用。
+        mod_unavailable_title: 当前实例不支持 Mod
+        mod_unavailable_description: 这个实例不支持 Mod。请切换到兼容实例，或前往下载页浏览可安装内容。
+        schematic_unavailable_title: 投影需要对应 Mod
+        schematic_unavailable_description: 请先安装支持投影的 Mod，然后再返回这里管理投影文件。
       search:
         default: 搜索资源
         resource_pack: 搜索资源包

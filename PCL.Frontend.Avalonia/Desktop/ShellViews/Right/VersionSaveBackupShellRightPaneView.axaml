@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    x:Name="Root"
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="0">
@@ -45,7 +46,7 @@
                       Height="35"
                       VerticalAlignment="Center"
                       Command="{Binding Command}"
-                      Text="{Binding DataContext.VersionSaveBackupOpenText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                      Text="{Binding DataContext.VersionSaveBackupOpenText, ElementName=Root}" />
                 </Grid>
               </DataTemplate>
             </ItemsControl.ItemTemplate>

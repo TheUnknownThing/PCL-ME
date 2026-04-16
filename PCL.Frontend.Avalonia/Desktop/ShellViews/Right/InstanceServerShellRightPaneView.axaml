@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    x:Name="Root"
     DataContext="{Binding Shell}">
   <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowInstanceServerContent}">
@@ -124,14 +125,14 @@
                           Height="35"
                           Margin="0,0,10,0"
                           Command="{Binding RefreshCommand}"
-                          Text="{Binding DataContext.InstanceServerRefreshText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                          Text="{Binding DataContext.InstanceServerRefreshText, ElementName=Root}" />
                       <controls:PclButton
                           Grid.Column="1"
                           Width="88"
                           Height="35"
                           Margin="0,0,10,0"
                           Command="{Binding CopyCommand}"
-                          Text="{Binding DataContext.InstanceServerCopyAddressText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                          Text="{Binding DataContext.InstanceServerCopyAddressText, ElementName=Root}" />
                       <controls:PclButton
                           Grid.Column="2"
                           Width="88"
@@ -139,7 +140,7 @@
                           Margin="0,0,10,0"
                           Command="{Binding ConnectCommand}"
                           ColorType="Highlight"
-                          Text="{Binding DataContext.InstanceServerConnectText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                          Text="{Binding DataContext.InstanceServerConnectText, ElementName=Root}" />
                     </Grid>
                   </StackPanel>
                 </controls:PclCard.CardContent>

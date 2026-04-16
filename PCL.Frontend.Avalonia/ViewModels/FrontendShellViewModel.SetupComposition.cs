@@ -572,8 +572,10 @@ internal sealed partial class FrontendShellViewModel
                     FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
                     DisableHardwareAcceleration);
                 AddActivity(
-                    DisableHardwareAcceleration ? "禁用硬件加速" : "启用硬件加速",
-                    "这个设置会在下次启动启动器时生效。");
+                    _i18n.T(DisableHardwareAcceleration
+                        ? "setup.launcher_misc.activities.disable_hardware_acceleration"
+                        : "setup.launcher_misc.activities.enable_hardware_acceleration"),
+                    _i18n.T("setup.launcher_misc.hints.disable_hardware_acceleration_restart"));
                 break;
             case nameof(EnableDoH):
                 _shellActionService.PersistSharedValue("SystemNetEnableDoH", EnableDoH);
@@ -590,7 +592,11 @@ internal sealed partial class FrontendShellViewModel
             case nameof(DebugModeEnabled):
                 _shellActionService.PersistSharedValue("SystemDebugMode", DebugModeEnabled);
                 RefreshDebugModeSurface();
-                AddActivity("调试模式", DebugModeEnabled ? "已启用更详细的日志与诊断信息。" : "已关闭额外的诊断输出。");
+                AddActivity(
+                    _i18n.T("setup.launcher_misc.flags.debug_mode"),
+                    _i18n.T(DebugModeEnabled
+                        ? "setup.launcher_misc.messages.debug_mode_enabled"
+                        : "setup.launcher_misc.messages.debug_mode_disabled"));
                 break;
             case nameof(SelectedDarkModeIndex):
                 _shellActionService.PersistSharedValue("UiDarkMode", SelectedDarkModeIndex);

@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    x:Name="Root"
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,25,25,10" Spacing="15">
@@ -82,11 +83,11 @@
                         <controls:PclOutlineButton
                             Width="72"
                             Command="{Binding OpenCommand}"
-                            Text="{Binding DataContext.SetupText.Java.OpenButton, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            Text="{Binding DataContext.SetupText.Java.OpenButton, ElementName=Root}" />
                         <controls:PclOutlineButton
                             Width="92"
                             Command="{Binding InfoCommand}"
-                            Text="{Binding DataContext.SetupText.Java.DetailsButton, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            Text="{Binding DataContext.SetupText.Java.DetailsButton, ElementName=Root}" />
                         <controls:PclOutlineButton
                             Width="72"
                             Command="{Binding ToggleEnabledCommand}"

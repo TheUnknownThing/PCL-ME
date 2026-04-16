@@ -80,7 +80,7 @@
                   VerticalAlignment="Center"
                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12"
-                  Text="修改后会在下次启动启动器时生效。"
+                  Text="{Binding SetupText.LauncherMisc.DisableHardwareAccelerationHint}"
                   TextWrapping="Wrap" />
             </StackPanel>
 
@@ -146,7 +146,7 @@
                   <TextBlock
                       Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                       FontSize="12.5"
-                      Text="请勿填写不信任的代理地址"
+                      Text="{Binding SetupText.LauncherMisc.CustomProxyWarning}"
                       TextWrapping="Wrap" />
                 </Border>
 
@@ -154,7 +154,7 @@
                     Height="28"
                     Padding="8,4"
                     Text="{Binding HttpProxyAddress}"
-                    Watermark="比如 http://127.0.0.1:1080/" />
+                    Watermark="{Binding SetupText.LauncherMisc.HttpProxyAddressWatermark}" />
 
                 <Grid ColumnDefinitions="Auto,*,Auto,*">
                   <TextBlock
@@ -162,27 +162,27 @@
                       Margin="0,0,8,0"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="13"
-                      Text="账号" />
+                      Text="{Binding SetupText.LauncherMisc.HttpProxyUsernameLabel}" />
                   <TextBox
                       Grid.Column="1"
                       Height="28"
                       Margin="0,0,8,0"
                       Padding="8,4"
                       Text="{Binding HttpProxyUsername}"
-                      Watermark="如有" />
+                      Watermark="{Binding SetupText.LauncherMisc.HttpProxyValueWatermark}" />
                   <TextBlock
                       Grid.Column="2"
                       VerticalAlignment="Center"
                       Margin="0,0,8,0"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="13"
-                      Text="密码" />
+                      Text="{Binding SetupText.LauncherMisc.HttpProxyPasswordLabel}" />
                   <TextBox
                       Grid.Column="3"
                       Height="28"
                       Padding="8,4"
-                  Text="{Binding HttpProxyPassword}"
-                  Watermark="如有" />
+                      Text="{Binding HttpProxyPassword}"
+                      Watermark="{Binding SetupText.LauncherMisc.HttpProxyValueWatermark}" />
                 </Grid>
               </StackPanel>
             </StackPanel>
@@ -198,12 +198,12 @@
                 <controls:PclButton
                     MinWidth="120"
                     Command="{Binding TestProxyConnectionCommand}"
-                    Text="测试连接" />
+                    Text="{Binding SetupText.LauncherMisc.TestProxyButton}" />
                 <controls:PclButton
                     MinWidth="120"
                     IsVisible="{Binding IsCustomHttpProxyEnabled}"
                     Command="{Binding ApplyProxySettingsCommand}"
-                    Text="应用代理信息" />
+                    Text="{Binding SetupText.LauncherMisc.ApplyProxyButton}" />
               </StackPanel>
 
               <Border
@@ -218,7 +218,8 @@
                 <TextBlock
                     Foreground="{DynamicResource ColorBrushSemanticSuccessForeground}"
                     FontSize="12.5"
-                    Text="{Binding SetupText.LauncherMisc.CustomProxyWarning}"
+                    Text="{Binding ProxyTestFeedbackText}"
+                    TextAlignment="Center"
                     TextWrapping="Wrap" />
               </Border>
 
@@ -239,46 +240,6 @@
                     TextWrapping="Wrap" />
               </Border>
 
-              <TextBox
-                  Height="28"
-                  Padding="8,4"
-                  Text="{Binding HttpProxyAddress}"
-                  Watermark="{Binding SetupText.LauncherMisc.HttpProxyAddressWatermark}" />
-
-              <Grid ColumnDefinitions="Auto,*,Auto,*,Auto">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    Margin="0,0,8,0"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13"
-                    Text="{Binding SetupText.LauncherMisc.HttpProxyUsernameLabel}" />
-                <TextBox
-                    Grid.Column="1"
-                    Height="28"
-                    Margin="0,0,8,0"
-                    Padding="8,4"
-                    Text="{Binding HttpProxyUsername}"
-                    Watermark="{Binding SetupText.LauncherMisc.HttpProxyValueWatermark}" />
-                <TextBlock
-                    Grid.Column="2"
-                    VerticalAlignment="Center"
-                    Margin="0,0,8,0"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13"
-                    Text="{Binding SetupText.LauncherMisc.HttpProxyPasswordLabel}" />
-                <TextBox
-                    Grid.Column="3"
-                    Height="28"
-                    Margin="0,0,8,0"
-                    Padding="8,4"
-                    Text="{Binding HttpProxyPassword}"
-                    Watermark="{Binding SetupText.LauncherMisc.HttpProxyValueWatermark}" />
-                <controls:PclButton
-                    Grid.Column="4"
-                    MinWidth="120"
-                    Command="{Binding ApplyProxySettingsCommand}"
-                    Text="{Binding SetupText.LauncherMisc.ApplyProxyButton}" />
-              </Grid>
             </StackPanel>
           </Grid>
         </controls:PclCard.CardContent>
@@ -314,7 +275,7 @@
               </Grid>
             </Grid>
 
-            <Grid ColumnDefinitions="*">
+            <Grid ColumnDefinitions="*,*,*">
               <CheckBox
                   Grid.Column="0"
                   Margin="0,0,14,0"

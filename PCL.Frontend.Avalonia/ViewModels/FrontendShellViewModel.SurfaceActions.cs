@@ -918,14 +918,20 @@ internal sealed partial class FrontendShellViewModel
             HttpProxyPassword);
         if (SelectedHttpProxyTypeIndex == 2 && configuration.CustomProxyAddress is null)
         {
-            SetProxyTestFeedback("自定义代理地址无效。", isSuccess: false);
-            AddFailureActivity("测试代理连接失败", "自定义代理地址无效。");
+            var invalidAddressMessage = LT("setup.launcher_misc.messages.proxy_invalid_address");
+            SetProxyTestFeedback(invalidAddressMessage, isSuccess: false);
+            AddFailureActivity(LT("setup.launcher_misc.activities.test_proxy_failed"), invalidAddressMessage);
             return;
         }
 
         _isTestingProxyConnection = true;
         _testProxyConnectionCommand.NotifyCanExecuteChanged();
-        AddActivity("测试代理连接", $"正在通过{DescribeProxyMode(configuration)}访问 {FrontendHttpProxyService.ProxyConnectivityProbeUri.Host}。");
+        AddActivity(
+            LT("setup.launcher_misc.activities.test_proxy"),
+            LT(
+                "setup.launcher_misc.messages.proxy_test_started",
+                ("mode", DescribeProxyMode(configuration)),
+                ("host", FrontendHttpProxyService.ProxyConnectivityProbeUri.Host)));
 
         try
         {
@@ -939,18 +945,19 @@ internal sealed partial class FrontendShellViewModel
                 HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
-            AddActivity(
-                "测试代理连接",
-                $"{DescribeProxyMode(configuration)}连接成功，HTTP {(int)response.StatusCode} {response.ReasonPhrase}。");
-            SetProxyTestFeedback(
-                $"{DescribeProxyMode(configuration)}连接成功，HTTP {(int)response.StatusCode} {response.ReasonPhrase}。",
-                isSuccess: true);
-            AvaloniaHintBus.Show("代理连接测试成功。", AvaloniaHintTheme.Success);
+            var successMessage = LT(
+                "setup.launcher_misc.messages.proxy_test_succeeded",
+                ("mode", DescribeProxyMode(configuration)),
+                ("status_code", (int)response.StatusCode),
+                ("reason_phrase", response.ReasonPhrase ?? string.Empty));
+            AddActivity(LT("setup.launcher_misc.activities.test_proxy"), successMessage);
+            SetProxyTestFeedback(successMessage, isSuccess: true);
+            AvaloniaHintBus.Show(LT("setup.launcher_misc.messages.proxy_test_succeeded_hint"), AvaloniaHintTheme.Success);
         }
         catch (Exception ex)
         {
             SetProxyTestFeedback(ex.Message, isSuccess: false);
-            AddFailureActivity("测试代理连接失败", ex.Message);
+            AddFailureActivity(LT("setup.launcher_misc.activities.test_proxy_failed"), ex.Message);
         }
         finally
         {
@@ -971,13 +978,13 @@ internal sealed partial class FrontendShellViewModel
         ProxyTestFeedbackText = text;
     }
 
-    private static string DescribeProxyMode(FrontendResolvedProxyConfiguration configuration)
+    private string DescribeProxyMode(FrontendResolvedProxyConfiguration configuration)
     {
         return configuration.Mode switch
         {
-            PCL.Core.IO.Net.Http.Proxying.ProxyMode.CustomProxy => configuration.CustomProxyAddress?.ToString() ?? "自定义代理",
-            PCL.Core.IO.Net.Http.Proxying.ProxyMode.SystemProxy => "系统代理",
-            _ => "直连"
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.CustomProxy => configuration.CustomProxyAddress?.ToString() ?? SetupText.LauncherMisc.CustomProxyLabel,
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.SystemProxy => SetupText.LauncherMisc.SystemProxyLabel,
+            _ => SetupText.LauncherMisc.NoProxyLabel
         };
     }
 
@@ -1240,6 +1247,15 @@ internal sealed partial class FrontendShellViewModel
             return Task.CompletedTask;
         }
 
+        var previewImage = HeadPreviewImage;
+        if (previewImage is null)
+        {
+            AddActivity(
+                LT("shell.tools.test.head.save_activity"),
+                LT("shell.tools.test.head.output_missing"));
+            return Task.CompletedTask;
+        }
+
         try
         {
             var outputDirectory = Path.Combine(_shellActionService.RuntimePaths.FrontendArtifactDirectory, "heads");
@@ -1247,8 +1263,11 @@ internal sealed partial class FrontendShellViewModel
             var outputPath = Path.Combine(
                 outputDirectory,
                 $"{SanitizeFileSegment(Path.GetFileNameWithoutExtension(SelectedHeadSkinPath))}-{HeadSizeOptions[SelectedHeadSizeIndex]}.png");
-            HeadPreviewImage.Save(outputPath);
-            OpenInstanceTarget("保存头像", outputPath, "导出的头像文件不存在。");
+            previewImage.Save(outputPath);
+            OpenInstanceTarget(
+                LT("shell.tools.test.head.save_activity"),
+                outputPath,
+                LT("shell.tools.test.head.output_missing"));
         }
         catch (Exception ex)
         {

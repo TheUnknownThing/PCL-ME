@@ -1830,8 +1830,11 @@ setup:
       apply_proxy: Apply proxy settings
       export_settings: Export settings
       import_settings: Import settings
+      test_proxy: Test connection
     activities:
       apply_proxy: Apply proxy settings
+      disable_hardware_acceleration: Disable hardware acceleration
+      enable_hardware_acceleration: Enable hardware acceleration
       export_settings: Export settings
       import_settings: Import settings
       import_settings_cancelled: Configuration file selection cancelled.
@@ -1841,6 +1844,8 @@ setup:
       proxy_cleared: Cleared the custom HTTP proxy.
       reset: Reset launcher miscellaneous settings
       reset_completed: System, network, and debug settings have been restored to the current launcher defaults.
+      test_proxy: Test proxy connection
+      test_proxy_failed: Test proxy connection failed
       import_settings_completed: 'Imported shared configuration: {path}. Some system settings are still best verified after restarting.'
     cards:
       debug:
@@ -1868,8 +1873,17 @@ setup:
       username: Username
       value_watermark: Optional
       warning: Do not enter an untrusted proxy address
+    hints:
+      disable_hardware_acceleration_restart: Changes take effect the next time the launcher starts.
     labels:
       debug_animation_speed_off: Off
+    messages:
+      debug_mode_disabled: Extra diagnostic output has been turned off.
+      debug_mode_enabled: Detailed logs and diagnostics are now enabled.
+      proxy_invalid_address: The custom proxy address is invalid.
+      proxy_test_started: Accessing {host} via {mode}.
+      proxy_test_succeeded: '{mode} connection succeeded, HTTP {status_code} {reason_phrase}.'
+      proxy_test_succeeded_hint: Proxy connection test succeeded.
     options:
       http_proxy:
         custom: Custom proxy
@@ -2912,11 +2926,22 @@ instance:
       optifabric_required: OptiFabric is not installed, so OptiFine will not work.
     unavailable:
       incompatible_with: Incompatible with {target}
+      no_versions: No compatible versions are available.
+      optifabric_origins: This OptiFabric build is only compatible with the Origins branch.
+      requires_fabric: Requires Fabric.
+      requires_legacy_fabric: Requires Legacy Fabric.
+      requires_optifine: Requires OptiFine.
+      requires_optifine_and_fabric: Requires both OptiFine and Fabric.
+      requires_quilt: Requires Quilt.
+      specific_forge_only: Requires a specific Forge version.
   content:
     world:
       search: Search worlds
       quick_actions: Quick Actions
       list: World List
+      empty:
+        title: No worlds found
+        description: Open the saves folder or paste a world file or folder path from the clipboard to import one.
       summary: 'Created: {created_at} • Modified: {modified_at}'
       actions:
         open_folder: Open Saves Folder
@@ -2926,6 +2951,9 @@ instance:
         no_importable_paths: The clipboard does not contain any importable file or folder paths.
     screenshot:
       quick_actions: Quick Actions
+      empty:
+        title: No screenshots found
+        description: Open the screenshot folder and add or capture screenshots for this instance.
       summary: '{created_at} • {file_size}'
       actions:
         open_folder: Open Folder
@@ -2934,6 +2962,9 @@ instance:
         missing_file: The selected screenshot file does not exist.
     server:
       quick_actions: Quick Actions
+      empty:
+        title: No saved servers
+        description: Refresh the current list or add a server to this instance.
       actions:
         refresh_all: Refresh All
         add: Add Server
@@ -2986,6 +3017,13 @@ instance:
       added_time: Added Time
       file_size: File Size
     resource:
+      empty:
+        default_title: No resources found
+        default_description: Add files to this instance, or download new content to get started.
+        mod_unavailable_title: Mods are unavailable
+        mod_unavailable_description: This instance does not support mods. Switch to a compatible instance or open Download to browse installable content.
+        schematic_unavailable_title: Schematics require a mod
+        schematic_unavailable_description: Install a schematic-compatible mod first, then return here to manage schematic files.
       search:
         default: Search resources
         resource_pack: Search resource packs
