@@ -116,8 +116,11 @@ internal sealed record FrontendInstanceInstallState(
 
 internal sealed record FrontendInstanceInstallOption(
     string Title,
-    string Selection,
-    string IconName);
+    FrontendInstallSelectionState SelectionState,
+    string IconName)
+{
+    public string Selection => SelectionState.DisplayText;
+}
 
 internal sealed record FrontendInstanceContentState(
     IReadOnlyList<FrontendInstanceDirectoryEntry> Entries);

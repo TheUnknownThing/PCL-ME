@@ -17,6 +17,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly Dictionary<string, IReadOnlyList<FrontendInstallChoice>> _instanceInstallOptionChoices = new(StringComparer.Ordinal);
     private readonly HashSet<string> _instanceInstallOptionLoadsInProgress = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _instanceInstallOptionLoadErrors = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _instanceInstallAutoSelectionSuppressedOptions = new(StringComparer.Ordinal);
     private string _instanceInstallSelectionTitle = string.Empty;
     private string _instanceInstallSelectionSummary = string.Empty;
     private string _instanceInstallMinecraftVersion = string.Empty;
@@ -414,7 +415,9 @@ internal sealed partial class FrontendShellViewModel
 
         if (string.Equals(optionTitle, "QFAPI / QSL", StringComparison.Ordinal))
         {
-            if (_instanceInstallAutoSelectedQsl || !HasInstallSelection(isExistingInstance: true, "Quilt"))
+            if (_instanceInstallAutoSelectedQsl
+                || _instanceInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
+                || !HasInstallSelection(isExistingInstance: true, "Quilt"))
             {
                 return;
             }
@@ -431,7 +434,9 @@ internal sealed partial class FrontendShellViewModel
                                    || (HasInstallSelection(isExistingInstance: true, "Quilt")
                                        && hasLoadedQslChoices
                                        && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == SD("instance.install.unavailable.no_versions"));
-            if (_instanceInstallAutoSelectedFabricApi || !shouldAutoSelect)
+            if (_instanceInstallAutoSelectedFabricApi
+                || _instanceInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
+                || !shouldAutoSelect)
             {
                 return;
             }
@@ -448,7 +453,9 @@ internal sealed partial class FrontendShellViewModel
                                    || (HasInstallSelection(isExistingInstance: true, "Quilt")
                                        && hasLoadedQslChoices
                                        && GetInstallOptionUnavailableReason(true, "QFAPI / QSL", minecraftVersion, ResolveCachedInstanceInstallChoices("QFAPI / QSL")) == SD("instance.install.unavailable.no_versions"));
-            if (_instanceInstallAutoSelectedLegacyFabricApi || !shouldAutoSelect)
+            if (_instanceInstallAutoSelectedLegacyFabricApi
+                || _instanceInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
+                || !shouldAutoSelect)
             {
                 return;
             }
@@ -461,6 +468,7 @@ internal sealed partial class FrontendShellViewModel
         if (string.Equals(optionTitle, "OptiFabric", StringComparison.Ordinal))
         {
             if (_instanceInstallAutoSelectedOptiFabric
+                || _instanceInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
                 || !HasInstallSelection(isExistingInstance: true, "Fabric")
                 || !HasInstallSelection(isExistingInstance: true, "OptiFine")
                 || IsOptiFabricOriginsOnlyVersion(minecraftVersion))
@@ -480,6 +488,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void SelectInstanceInstallOption(string optionTitle, FrontendInstallChoice choice)
     {
+        _instanceInstallAutoSelectionSuppressedOptions.Remove(optionTitle);
         _instanceInstallSelections[optionTitle] = new FrontendEditableInstallSelection(choice, false);
 
         if (ManagedPrimaryInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
@@ -535,6 +544,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void ClearInstanceInstallOption(string optionTitle)
     {
+        if (IsAutoSelectableInstallOption(optionTitle))
+        {
+            _instanceInstallAutoSelectionSuppressedOptions.Add(optionTitle);
+        }
+
         _instanceInstallSelections[optionTitle] = FrontendEditableInstallSelection.Cleared;
         if (ManagedPrimaryInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
         {

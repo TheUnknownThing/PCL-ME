@@ -374,12 +374,6 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _debugModeEnabled, value);
     }
 
-    public bool DebugDelayEnabled
-    {
-        get => _debugDelayEnabled;
-        set => SetProperty(ref _debugDelayEnabled, value);
-    }
-
     private int ResolveLauncherLocaleIndex(string locale)
     {
         for (var i = 0; i < _launcherLocaleKeys.Count; i++)

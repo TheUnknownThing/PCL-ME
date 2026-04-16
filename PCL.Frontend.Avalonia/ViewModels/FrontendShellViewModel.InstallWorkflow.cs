@@ -4,6 +4,7 @@ using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -18,13 +19,13 @@ internal sealed partial class FrontendShellViewModel
     private string _downloadInstallMinecraftVersion = "Minecraft";
     private Bitmap? _downloadInstallMinecraftIcon;
     private readonly Dictionary<string, FrontendEditableInstallSelection> _downloadInstallSelections = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _downloadInstallBaselineSelections = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, FrontendInstallSelectionState> _downloadInstallBaselineSelections = new(StringComparer.Ordinal);
     private FrontendInstallChoice? _downloadInstallMinecraftChoice;
     private string _downloadInstallBaselineMinecraftVersion = "Minecraft";
     private string _downloadInstallSeedSignature = string.Empty;
 
     private readonly Dictionary<string, FrontendEditableInstallSelection> _instanceInstallSelections = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _instanceInstallBaselineSelections = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, FrontendInstallSelectionState> _instanceInstallBaselineSelections = new(StringComparer.Ordinal);
     private FrontendInstallChoice? _instanceInstallMinecraftChoice;
     private string _instanceInstallBaselineMinecraftVersion = "Minecraft";
     private string _instanceInstallSeedSignature = string.Empty;
@@ -53,7 +54,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool HasInstanceInstallChanges => ComputeHasInstanceInstallChanges();
 
-    private string InstallNoneSelectionText => T("download.install.workflow.selection.none");
+    private string InstallNotInstalledText => SD("instance.common.not_installed");
 
     private string InstallAvailableSelectionText => T("download.install.options.available");
 
@@ -78,7 +79,7 @@ internal sealed partial class FrontendShellViewModel
         var signature = string.Join(
             "|",
             installState.MinecraftVersion,
-            installState.Options.Select(option => $"{option.Title}:{option.Selection}"));
+            installState.Options.Select(option => $"{option.Title}:{(int)option.SelectionState.Kind}:{option.SelectionState.DisplayText}"));
         if (string.Equals(signature, _downloadInstallSeedSignature, StringComparison.Ordinal))
         {
             return;
@@ -87,10 +88,11 @@ internal sealed partial class FrontendShellViewModel
         _downloadInstallSeedSignature = signature;
         _downloadInstallSelections.Clear();
         _downloadInstallBaselineSelections.Clear();
+        _downloadInstallAutoSelectionSuppressedOptions.Clear();
         foreach (var option in installState.Options)
         {
             _downloadInstallSelections[option.Title] = FrontendEditableInstallSelection.Unchanged;
-            _downloadInstallBaselineSelections[option.Title] = option.Selection;
+            _downloadInstallBaselineSelections[option.Title] = option.SelectionState;
         }
 
         _downloadInstallBaselineMinecraftVersion = installState.MinecraftVersion;
@@ -108,7 +110,7 @@ internal sealed partial class FrontendShellViewModel
             "|",
             _instanceComposition.Selection.InstanceName,
             installState.MinecraftVersion,
-            installState.Options.Select(option => $"{option.Title}:{option.Selection}"));
+            installState.Options.Select(option => $"{option.Title}:{(int)option.SelectionState.Kind}:{option.SelectionState.DisplayText}"));
         if (string.Equals(signature, _instanceInstallSeedSignature, StringComparison.Ordinal))
         {
             return;
@@ -117,10 +119,11 @@ internal sealed partial class FrontendShellViewModel
         _instanceInstallSeedSignature = signature;
         _instanceInstallSelections.Clear();
         _instanceInstallBaselineSelections.Clear();
+        _instanceInstallAutoSelectionSuppressedOptions.Clear();
         foreach (var option in installState.Options)
         {
             _instanceInstallSelections[option.Title] = FrontendEditableInstallSelection.Unchanged;
-            _instanceInstallBaselineSelections[option.Title] = option.Selection;
+            _instanceInstallBaselineSelections[option.Title] = option.SelectionState;
         }
 
         _instanceInstallBaselineMinecraftVersion = installState.MinecraftVersion;
@@ -449,12 +452,21 @@ internal sealed partial class FrontendShellViewModel
 
                         await Dispatcher.UIThread.InvokeAsync(() =>
                         {
+                            var shouldRefreshLaunchState = isExistingInstance || AutoSelectNewInstance;
                             if (isExistingInstance || AutoSelectNewInstance)
                             {
                                 _shellActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
                             }
 
-                            ReloadInstanceComposition();
+                            if (shouldRefreshLaunchState)
+                            {
+                                RefreshLaunchState();
+                            }
+                            else
+                            {
+                                ReloadInstanceComposition();
+                            }
+
                             ReloadDownloadComposition();
                             if (!isExistingInstance)
                             {
@@ -566,20 +578,20 @@ internal sealed partial class FrontendShellViewModel
             return null;
         }
 
-        var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
-        if (string.IsNullOrWhiteSpace(baselineText) || baselineText == InstallNoneSelectionText || baselineText == InstallAvailableSelectionText)
+        var baselineSelection = GetBaselineSelectionState(isExistingInstance, optionTitle);
+        if (!baselineSelection.CanResolveToChoice)
         {
             return null;
         }
 
-        var cachedChoice = ResolveCachedBaselineChoice(isExistingInstance, optionTitle, baselineText);
+        var cachedChoice = ResolveCachedBaselineChoice(isExistingInstance, optionTitle, baselineSelection.DisplayText);
         if (cachedChoice is not null)
         {
             return cachedChoice;
         }
 
         var choices = FrontendInstallWorkflowService.GetSupportedChoices(optionTitle, minecraftVersion, SelectedDownloadSourceIndex, _i18n);
-        return MatchInstallChoice(choices, baselineText);
+        return MatchInstallChoice(choices, baselineSelection.DisplayText);
     }
 
     private FrontendInstallChoice? ResolveCachedEffectiveChoice(bool isExistingInstance, string optionTitle, string minecraftVersion)
@@ -595,13 +607,13 @@ internal sealed partial class FrontendShellViewModel
             return null;
         }
 
-        var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
-        if (string.IsNullOrWhiteSpace(baselineText) || baselineText == InstallNoneSelectionText || baselineText == InstallAvailableSelectionText)
+        var baselineSelection = GetBaselineSelectionState(isExistingInstance, optionTitle);
+        if (!baselineSelection.CanResolveToChoice)
         {
             return null;
         }
 
-        return ResolveCachedBaselineChoice(isExistingInstance, optionTitle, baselineText);
+        return ResolveCachedBaselineChoice(isExistingInstance, optionTitle, baselineSelection.DisplayText);
     }
 
     private FrontendInstallChoice? ResolveCachedBaselineChoice(bool isExistingInstance, string optionTitle, string baselineText)
@@ -625,6 +637,47 @@ internal sealed partial class FrontendShellViewModel
             || baselineText.Contains(choice.Title, StringComparison.OrdinalIgnoreCase));
     }
 
+    private static bool IsAutoSelectableInstallOption(string optionTitle)
+    {
+        return string.Equals(optionTitle, "Fabric API", StringComparison.Ordinal)
+               || string.Equals(optionTitle, "Legacy Fabric API", StringComparison.Ordinal)
+               || string.Equals(optionTitle, "QFAPI / QSL", StringComparison.Ordinal)
+               || string.Equals(optionTitle, "OptiFabric", StringComparison.Ordinal);
+    }
+
+    private FrontendInstallSelectionState CreateNotInstalledSelectionState()
+    {
+        return FrontendInstallSelectionState.NotInstalled(InstallNotInstalledText);
+    }
+
+    private FrontendInstallSelectionState CreateAvailableSelectionState()
+    {
+        return FrontendInstallSelectionState.Available(InstallAvailableSelectionText);
+    }
+
+    private FrontendInstallSelectionState GetDefaultBaselineSelectionState(bool isExistingInstance)
+    {
+        return isExistingInstance
+            ? CreateNotInstalledSelectionState()
+            : CreateAvailableSelectionState();
+    }
+
+    private FrontendInstallSelectionState GetEffectiveSelectionState(bool isExistingInstance, string optionTitle)
+    {
+        var state = GetEditableSelectionState(isExistingInstance, optionTitle);
+        if (state.SelectedChoice is not null)
+        {
+            return FrontendInstallSelectionState.Versioned(state.SelectedChoice.Title);
+        }
+
+        if (state.IsExplicitlyCleared)
+        {
+            return GetDefaultBaselineSelectionState(isExistingInstance);
+        }
+
+        return GetBaselineSelectionState(isExistingInstance, optionTitle);
+    }
+
     private FrontendEditableInstallSelection GetEditableSelectionState(bool isExistingInstance, string optionTitle)
     {
         var selections = isExistingInstance ? _instanceInstallSelections : _downloadInstallSelections;
@@ -643,24 +696,20 @@ internal sealed partial class FrontendShellViewModel
 
     private string GetEffectiveSelectionText(bool isExistingInstance, string optionTitle)
     {
-        var state = GetEditableSelectionState(isExistingInstance, optionTitle);
-        if (state.SelectedChoice is not null)
-        {
-            return state.SelectedChoice.Title;
-        }
+        return GetEffectiveSelectionState(isExistingInstance, optionTitle).DisplayText;
+    }
 
-        if (state.IsExplicitlyCleared)
-        {
-            return InstallNoneSelectionText;
-        }
-
-        return GetBaselineSelection(isExistingInstance, optionTitle);
+    private FrontendInstallSelectionState GetBaselineSelectionState(bool isExistingInstance, string optionTitle)
+    {
+        var selections = isExistingInstance ? _instanceInstallBaselineSelections : _downloadInstallBaselineSelections;
+        return selections.TryGetValue(optionTitle, out var value)
+            ? value
+            : GetDefaultBaselineSelectionState(isExistingInstance);
     }
 
     private string GetBaselineSelection(bool isExistingInstance, string optionTitle)
     {
-        var selections = isExistingInstance ? _instanceInstallBaselineSelections : _downloadInstallBaselineSelections;
-        return selections.TryGetValue(optionTitle, out var value) ? value : InstallNoneSelectionText;
+        return GetBaselineSelectionState(isExistingInstance, optionTitle).DisplayText;
     }
 
     private string GetBaselineMinecraftVersion(bool isExistingInstance)
@@ -706,10 +755,7 @@ internal sealed partial class FrontendShellViewModel
 
     private bool HasBaselineInstallSelection(bool isExistingInstance, string optionTitle)
     {
-        var baselineText = GetBaselineSelection(isExistingInstance, optionTitle);
-        return !string.IsNullOrWhiteSpace(baselineText)
-               && !string.Equals(baselineText, InstallNoneSelectionText, StringComparison.Ordinal)
-               && !string.Equals(baselineText, InstallAvailableSelectionText, StringComparison.Ordinal);
+        return GetBaselineSelectionState(isExistingInstance, optionTitle).HasSelection;
     }
 
     private bool ComputeHasInstanceInstallChanges()

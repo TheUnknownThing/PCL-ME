@@ -8,4 +8,5 @@ internal sealed record FrontendShellComposition(
     LauncherStartupConsentResult StartupConsentResult,
     LauncherFrontendNavigationViewRequest NavigationRequest,
     string EnvironmentLabel,
-    string InputLabel);
+    string InputLabel,
+    bool NeedsOnboarding);

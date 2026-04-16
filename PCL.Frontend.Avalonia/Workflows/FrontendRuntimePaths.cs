@@ -40,12 +40,25 @@ internal sealed record FrontendRuntimePaths(
 
     public static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)
     {
+        return OpenInstanceConfigProvider(instanceDirectory, createDirectoryIfMissing: true);
+    }
+
+    public static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory, bool createDirectoryIfMissing)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
 
         var pclDirectory = Path.Combine(instanceDirectory, "PCL");
         var configPath = Path.Combine(pclDirectory, "config.v1.yml");
-        TryMigrateLegacyInstanceConfig(pclDirectory, configPath);
-        Directory.CreateDirectory(pclDirectory);
+        if (createDirectoryIfMissing)
+        {
+            TryMigrateLegacyInstanceConfig(pclDirectory, configPath);
+            Directory.CreateDirectory(pclDirectory);
+        }
+        else if (Directory.Exists(pclDirectory))
+        {
+            TryMigrateLegacyInstanceConfig(pclDirectory, configPath);
+        }
+
         return new YamlFileProvider(configPath);
     }
 

@@ -32,6 +32,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly Dictionary<string, IReadOnlyList<FrontendInstallChoice>> _downloadInstallOptionChoices = new(StringComparer.Ordinal);
     private readonly HashSet<string> _downloadInstallOptionLoadsInProgress = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _downloadInstallOptionLoadErrors = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _downloadInstallAutoSelectionSuppressedOptions = new(StringComparer.Ordinal);
     private IReadOnlyList<FrontendInstallChoice> _downloadInstallMinecraftCatalogChoices = [];
     private bool _downloadInstallMinecraftCatalogLoaded;
     private bool _isDownloadInstallMinecraftCatalogLoading;
@@ -385,7 +386,7 @@ internal sealed partial class FrontendShellViewModel
         foreach (var (title, _) in DownloadInstallOptionBlueprints)
         {
             _downloadInstallSelections[title] = FrontendEditableInstallSelection.Unchanged;
-            _downloadInstallBaselineSelections[title] = T("download.install.options.available");
+            _downloadInstallBaselineSelections[title] = CreateAvailableSelectionState();
         }
 
         _downloadInstallSeedSignature = $"download-install:{minecraftChoice.Version}";
@@ -397,6 +398,7 @@ internal sealed partial class FrontendShellViewModel
         _downloadInstallAutoSelectedLegacyFabricApi = false;
         _downloadInstallAutoSelectedQsl = false;
         _downloadInstallAutoSelectedOptiFabric = false;
+        _downloadInstallAutoSelectionSuppressedOptions.Clear();
         _downloadInstallIsNameEditedByUser = false;
         UpdateGeneratedDownloadInstallName(force: true);
     }
@@ -611,7 +613,9 @@ internal sealed partial class FrontendShellViewModel
 
         if (string.Equals(optionTitle, "QFAPI / QSL", StringComparison.Ordinal))
         {
-            if (_downloadInstallAutoSelectedQsl || !HasInstallSelection(isExistingInstance: false, "Quilt"))
+            if (_downloadInstallAutoSelectedQsl
+                || _downloadInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
+                || !HasInstallSelection(isExistingInstance: false, "Quilt"))
             {
                 return;
             }
@@ -628,7 +632,9 @@ internal sealed partial class FrontendShellViewModel
                                    || (HasInstallSelection(isExistingInstance: false, "Quilt")
                                        && hasLoadedQslChoices
                                        && GetInstallOptionUnavailableReason(false, "QFAPI / QSL", minecraftVersion, ResolveCachedDownloadInstallChoices("QFAPI / QSL")) == T("download.install.options.unavailable"));
-            if (_downloadInstallAutoSelectedFabricApi || !shouldAutoSelect)
+            if (_downloadInstallAutoSelectedFabricApi
+                || _downloadInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
+                || !shouldAutoSelect)
             {
                 return;
             }
@@ -645,7 +651,9 @@ internal sealed partial class FrontendShellViewModel
                                    || (HasInstallSelection(isExistingInstance: false, "Quilt")
                                        && hasLoadedQslChoices
                                        && GetInstallOptionUnavailableReason(false, "QFAPI / QSL", minecraftVersion, ResolveCachedDownloadInstallChoices("QFAPI / QSL")) == T("download.install.options.unavailable"));
-            if (_downloadInstallAutoSelectedLegacyFabricApi || !shouldAutoSelect)
+            if (_downloadInstallAutoSelectedLegacyFabricApi
+                || _downloadInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
+                || !shouldAutoSelect)
             {
                 return;
             }
@@ -658,6 +666,7 @@ internal sealed partial class FrontendShellViewModel
         if (string.Equals(optionTitle, "OptiFabric", StringComparison.Ordinal))
         {
             if (_downloadInstallAutoSelectedOptiFabric
+                || _downloadInstallAutoSelectionSuppressedOptions.Contains(optionTitle)
                 || !HasInstallSelection(isExistingInstance: false, "Fabric")
                 || !HasInstallSelection(isExistingInstance: false, "OptiFine")
                 || IsOptiFabricOriginsOnlyVersion(minecraftVersion))
@@ -683,6 +692,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        _downloadInstallAutoSelectionSuppressedOptions.Remove(optionTitle);
         _downloadInstallSelections[optionTitle] = new FrontendEditableInstallSelection(choice, false);
 
         if (ManagedPrimaryInstallTitles.Contains(optionTitle, StringComparer.Ordinal))
@@ -741,6 +751,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void ClearDownloadInstallOption(string optionTitle)
     {
+        if (IsAutoSelectableInstallOption(optionTitle))
+        {
+            _downloadInstallAutoSelectionSuppressedOptions.Add(optionTitle);
+        }
+
         ClearInstallOption(isExistingInstance: false, optionTitle);
         switch (optionTitle)
         {

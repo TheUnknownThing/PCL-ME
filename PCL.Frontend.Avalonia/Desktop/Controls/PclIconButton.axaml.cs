@@ -32,6 +32,9 @@ internal sealed partial class PclIconButton : UserControl
     public static readonly StyledProperty<double> IconScaleProperty =
         AvaloniaProperty.Register<PclIconButton, double>(nameof(IconScale), 1.0);
 
+    public static readonly StyledProperty<double> ButtonSizeProperty =
+        AvaloniaProperty.Register<PclIconButton, double>(nameof(ButtonSize), 28d);
+
     private bool _isHovered;
     private bool _isPressed;
     private bool _isAppearanceSubscribed;
@@ -122,6 +125,12 @@ internal sealed partial class PclIconButton : UserControl
         set => SetValue(IconScaleProperty, value);
     }
 
+    public double ButtonSize
+    {
+        get => GetValue(ButtonSizeProperty);
+        set => SetValue(ButtonSizeProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -134,6 +143,7 @@ internal sealed partial class PclIconButton : UserControl
                  change.Property == HoverBackgroundBrushProperty ||
                  change.Property == IdleBackgroundBrushProperty ||
                  change.Property == IconScaleProperty ||
+                 change.Property == ButtonSizeProperty ||
                  change.Property == IsEnabledProperty)
         {
             RefreshVisualState();
@@ -155,7 +165,16 @@ internal sealed partial class PclIconButton : UserControl
             ?? FrontendThemeResourceResolver.GetBrush("ColorBrush8");
         var idleBackgroundBrush = IdleBackgroundBrush
             ?? FrontendThemeResourceResolver.GetBrush("ColorBrushTransparent");
+        var buttonSize = Math.Max(20d, ButtonSize);
+        var iconSize = Math.Max(14d, buttonSize * 0.5d);
 
+        PanBack.Width = buttonSize;
+        PanBack.Height = buttonSize;
+        PanBack.CornerRadius = new CornerRadius(buttonSize / 2d);
+        ButtonHost.Width = buttonSize;
+        ButtonHost.Height = buttonSize;
+        ShapeIcon.Width = iconSize;
+        ShapeIcon.Height = iconSize;
         ShapeIcon.Fill = iconBrush;
         ShapeIcon.RenderTransform = new ScaleTransform(IconScale, IconScale);
         PanBack.Background = IsEnabled && _isHovered ? hoverBackgroundBrush : idleBackgroundBrush;

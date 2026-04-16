@@ -43,7 +43,9 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowPromptOverlayMessage => !string.IsNullOrWhiteSpace(PromptOverlayMessage);
 
-    public bool IsPromptOverlayVisible => HasPromptOverlayInlineDialog || HasActivePrompts && _isPromptOverlayOpen;
+    public bool IsPromptOverlayVisible =>
+        HasPromptOverlayInlineDialog ||
+        !IsWelcomeOverlayVisible && HasActivePrompts && _isPromptOverlayOpen;
 
     public bool IsPromptOverlayWarning => _activePromptOverlayDialog?.IsDanger
         ?? string.Equals(CurrentPrompt?.Severity, "Warning", StringComparison.OrdinalIgnoreCase);

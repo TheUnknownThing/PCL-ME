@@ -916,7 +916,7 @@ internal sealed partial class FrontendShellViewModel
             return null;
         }
 
-        var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(directory);
+        var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(directory, createDirectoryIfMissing: false);
         var manifestPath = Path.Combine(directory, $"{name}.json");
         var manifest = ParseInstanceManifest(manifestPath);
         var tags = new List<string>();

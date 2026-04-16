@@ -197,7 +197,7 @@ shell:
       active_summary: La surface utilitaire est active dans le shell.
       pinned_summary: Surface utilitaire épinglée du shell.
     status:
-      line: 'Commande immédiate : {command} | Écran d''accueil : {splash} | Profondeur de navigation : {depth}'
+      line: "Commande immédiate : {command} | Écran d'accueil : {splash} | Profondeur de navigation : {depth}"
       splash_on: Activé
       splash_off: Désactivé
       commands:
@@ -267,7 +267,7 @@ shell:
       active_prompt_lane: La superposition d'invites se concentre actuellement sur la voie {lane}.
       launch:
         runtime: L'environnement d'exécution actuel utilise {java} en {resolution}.
-        last_completion: 'Dernière notification de lancement : {message}'
+        last_completion: "Dernière notification de lancement : {message}"
       crash:
         export: L'exportation sur incident cible actuellement {archive_name} avec les fichiers collectés {file_count}.
     sections:
@@ -293,7 +293,7 @@ shell:
         title: Voie d'invite commutée
         body: "{lane} a désormais des invites {count} en file d'attente."
       action:
-        title: 'Action rapide : {label}'
+        title: "Action rapide : {label}"
       closed:
         title: Invite fermée
         body: "{prompt_id} a été expulsé de la voie {lane}."
@@ -335,7 +335,7 @@ shell:
       persist_setting:
         title: Paramètre d'invite enregistré
         body_non_ascii_disabled: L'avertissement de chemin de jeu non-ASCII a été désactivé.
-        body_value: 'Paramètre enregistré : {value}'
+        body_value: "Paramètre enregistré : {value}"
       persist_java_override_failed:
         title: Impossible de forcer le lancement
         body: Il n’existe aucune instance accessible en écriture pour ce paramètre.
@@ -358,10 +358,10 @@ shell:
         java_settings: L'invite a acheminé le shell vers les paramètres Java après avoir préparé l'environnement d'exécution.
       open_log:
         title: Ouvrir le journal
-        body: 'Généré le journal des crashs. Vous pouvez l''ouvrir depuis la page du journal en direct : {path}'
+        body: "Généré le journal des crashs. Vous pouvez l'ouvrir depuis la page du journal en direct : {path}"
       crash_report_exported:
         title: Rapport de crash exporté
-        body: '{path} • {count} fichier(s) archivé(s).'
+        body: "{path} • {count} fichier(s) archivé(s)."
       java_runtime_prepare_failed:
         title: Échec de la préparation de l'environnement d'exécution Java
         body_missing_plan: L'état de lancement actuel n'a pas de plan de téléchargement Java exécutable.
@@ -370,7 +370,7 @@ shell:
         body: L'environnement d'exécution Java est en cours de téléchargement et d'enregistrement en arrière-plan.
       java_runtime_ready:
         title: Environnement d'exécution Java prêt
-        body: '{path} • {downloaded_count} fichier(s) téléchargé(s), {reused_count} fichier(s) réutilisé(s).'
+        body: "{path} • {downloaded_count} fichier(s) téléchargé(s), {reused_count} fichier(s) réutilisé(s)."
       game_process_ended:
         title: Processus de jeu terminé
         body: "{instance} • Code de sortie {exit_code}"
@@ -414,14 +414,14 @@ shell:
         unknown_error: Erreur inconnue
     launch_logs:
       process_exited: Processus de jeu terminé avec le code {exit_code}.
-      monitor_exception: 'Exception du moniteur de session : {message}'
+      monitor_exception: "Exception du moniteur de session : {message}"
     crash:
-      details_header: 'Informations détaillées :'
+      details_header: "Informations détaillées :"
       launch_failure:
         exit_code: Le processus de jeu s'est terminé de manière inattendue avec le code {exit_code}.
-        raw_output_log: 'Journal de sortie brute : {path}'
+        raw_output_log: "Journal de sortie brute : {path}"
     java:
-      runtime_name: 'Java {version}'
+      runtime_name: "Java {version}"
       component_runtime_name: "{component} (Java {version})"
       tags:
         bit64: 64 bits
@@ -429,14 +429,14 @@ shell:
         reused_count: "{count} réutilisé"
   surface_actions:
     sidebar:
-      title: 'Action de la barre latérale : {action}'
+      title: "Action de la barre latérale : {action}"
       body: "{title} • {command}"
   game_log:
     actions:
       clear_cache: Vider le cache
       export: Exporter les journaux
       open_directory: Ouvrir le dossier des journaux
-      open_file: 'Fichier journal ouvert : {name}'
+      open_file: "Fichier journal ouvert : {name}"
       refresh: Actualiser les journaux
     clear_cache:
       completed: Effacement du cache du journal de la session actuelle.
@@ -472,27 +472,27 @@ shell:
       help_item: Élément d'aide
       inline_default_info: Informations sur les actions
       open_file: Ouvrir le fichier
-      open_help: 'Ouvrir l''aide : {name}'
+      open_help: "Ouvrir l'aide : {name}"
       open_web: Ouvrir la page Web
       view_image: Voir l'image
     activities:
-      open: 'Ouvrir l''aide : {title}'
+      open: "Ouvrir l'aide : {title}"
     empty:
       description: Sélectionnez une entrée d'aide pour voir son contenu, sa source et les actions disponibles.
       title: Aucune entrée d'aide sélectionnée
     failures:
       action: Échec de {title}
       download_target_missing: Le fichier cible téléchargé est manquant.
-      entry_not_found: 'Entrée d''aide introuvable : {reference}'
+      entry_not_found: "Entrée d'aide introuvable : {reference}"
       invalid_download_address: Adresse de téléchargement invalide.
       missing_action_target: Cette action n'a pas de cible.
       missing_copy_text: Il n'y a aucun texte à copier.
       missing_target: La cible n'est pas disponible.
     generated:
-      example_button: 'Exemple de bouton : {title}'
-      example_button_with_summary: 'Exemple de bouton : {summary}'
-      example_button_with_title_and_summary: 'Exemple de bouton : {title} ({summary})'
-      hint: 'Indice : {text}'
+      example_button: "Exemple de bouton : {title}"
+      example_button_with_summary: "Exemple de bouton : {summary}"
+      example_button_with_title_and_summary: "Exemple de bouton : {title} ({summary})"
+      hint: "Indice : {text}"
     popup:
       default_button: D'accord
       missing_content: Cette fenêtre contextuelle ne contient aucun contenu affichable.
@@ -512,7 +512,7 @@ shell:
       parse_failed:
         body: Le document d'aide n'a pas pu être analysé correctement.
         title: Échec de l'analyse
-      source_line: 'Source : {source}'
+      source_line: "Source : {source}"
       supplement:
         title: Supplément
     source_unresolved: Source non résolue
@@ -531,7 +531,7 @@ shell:
       confirm_message: Supprimer l'instance {name} ? Le lanceur essaiera d’abord de le déplacer vers la corbeille.
       confirm_title: Supprimer cette instance ?
       failure: Échec de la suppression de l'instance
-      moved_to_trash: 'Instance {name} déplacée vers la corbeille : {path}'
+      moved_to_trash: "Instance {name} déplacée vers la corbeille : {path}"
       permanently_deleted: Instance {name} supprimée définitivement.
     detail:
       last_modified: "{path} • Dernière modification {time}"
@@ -598,7 +598,7 @@ shell:
       activity: Ouvrir le dossier
       failure: Échec de l'ouverture du dossier
       missing_path: Le chemin du dossier n'est pas disponible.
-      not_found: 'Dossier introuvable : {path}'
+      not_found: "Dossier introuvable : {path}"
     results:
       count: Affichage de {count} instance(s)
       filtered_none: Aucune instance ne correspond au filtre actuel.
@@ -632,7 +632,7 @@ shell:
         no_name: Impossible de déterminer un nom d'instance à partir de l'archive sélectionnée.
         pick_filter: Archives de modpacks
         pick_title: Sélectionnez l'archive du modpack
-        task_queued: 'Tâche en file d''attente : {task}'
+        task_queued: "Tâche en file d'attente : {task}"
         title: Importer un modpack
       trash:
         description: Ouvrez la corbeille ou la corbeille du système.
@@ -646,7 +646,7 @@ shell:
       hidden: Caché
       rarely_used: Rarement utilisé
     tasks:
-      install_modpack: 'Installation du modpack : {name}'
+      install_modpack: "Installation du modpack : {name}"
   task_manager:
     actions:
       clear_finished: Effacer les tâches terminées
@@ -666,9 +666,9 @@ shell:
     entries:
       children: Tâche(s) enfant(s) {count}
     labels:
-      current_speed: 'Vitesse actuelle : {speed}'
+      current_speed: "Vitesse actuelle : {speed}"
       install_progress: Progression de l'installation
-      remaining_files: 'Fichiers restants : {count}'
+      remaining_files: "Fichiers restants : {count}"
     left:
       download_speed: Vitesse de téléchargement
       overall_progress: Progrès global
@@ -781,9 +781,9 @@ shell:
         activity: Les formulaires de page de test et les actions de la boîte à outils ont été rechargés à partir de la configuration actuelle du lanceur.
         title: Actualiser les outils de test
       server_query:
-        address_watermark: 'Adresse du serveur ou hôte : port'
+        address_watermark: "Adresse du serveur ou hôte : port"
         empty_address: L'adresse du serveur est vide et ne peut pas être interrogée.
-        error: 'Impossible de se connecter : {message}'
+        error: "Impossible de se connecter : {message}"
         loading: Interrogation...
         navigation: Passé à la page de test et prêt à interroger {address}.
         no_result: Aucune information sur le serveur n'a été renvoyée.
@@ -796,7 +796,7 @@ shell:
           empty: L'adresse du serveur ne peut pas être vide.
           invalid_host: Nom d'hôte invalide.
           invalid_ipv6: Format d'adresse IPv6 non valide.
-          invalid_port: 'Port invalide : {port}'
+          invalid_port: "Port invalide : {port}"
       toolbox:
         actions:
           clear_rubbish:
@@ -809,12 +809,12 @@ shell:
             tooltip: Déclenchez l’invite de crash.
           create_shortcut:
             cancelled: Création du raccourci annulée.
-            choice_info: 'Emplacement : {path}'
+            choice_info: "Emplacement : {path}"
             choose_title: Choisir l'emplacement du raccourci
             confirm: Créer
             created_hint: Raccourci créé dans {target}.
             failure_title: Échec de la création du raccourci
-            location: 'Emplacement {title} : {path}'
+            location: "Emplacement {title} : {path}"
             no_targets: Aucun emplacement de raccourci disponible n'est fourni par le système actuel.
             summary_warning: Ce raccourci ne sera pas supprimé automatiquement. Supprimez-le manuellement avant de supprimer ou de déplacer le lanceur.
             targets:
@@ -822,9 +822,9 @@ shell:
               start_menu: Menu Démarrer
             title: Créer un raccourci
             tooltip: Créez un raccourci de lanceur.
-            unknown_target: 'Cible de raccourci inconnue : {id}'
+            unknown_target: "Cible de raccourci inconnue : {id}"
           daily_luck:
-            activity: 'Le score de chance du jour : {value}'
+            activity: "Le score de chance du jour : {value}"
             dialog_title: La chance du jour - {date}
             high_message: Votre score de chance aujourd'hui est {value} ! {rating}
             low_message: Votre score de chance aujourd'hui est {value}... {rating}
@@ -871,15 +871,15 @@ startup:
     special_build:
       title: Construction spéciale
       debug:
-        message: 'Cette version du lanceur a été produite à des fins de débogage et peut être instable. Configurez {hint_env_var} pour désactiver ce rappel ou ouvrez la dernière version stable : {latest_release_url}'
+        message: "Cette version du lanceur a été produite à des fins de débogage et peut être instable. Configurez {hint_env_var} pour désactiver ce rappel ou ouvrez la dernière version stable : {latest_release_url}"
       ci:
-        message: 'Cette version du lanceur provient de CI et peut être incomplète. Configurez {hint_env_var} pour désactiver ce rappel ou ouvrez la dernière version stable : {latest_release_url}'
+        message: "Cette version du lanceur provient de CI et peut être incomplète. Configurez {hint_env_var} pour désactiver ce rappel ou ouvrez la dernière version stable : {latest_release_url}"
       actions:
         continue: Continuer
         open_release_and_exit: Ouvrir la page de version et quitter
     eula:
       title: Accord de licence
-      message: 'Vous devez lire et accepter l''accord du lanceur avant de continuer. Référence : {eula_url}'
+      message: "Vous devez lire et accepter l'accord du lanceur avant de continuer. Référence : {eula_url}"
       actions:
         accept: Accepter
         reject: Refuser et quitter
@@ -910,16 +910,16 @@ launch:
       detail: Cette version est toujours en cours de test actif. Les commentaires et les rapports de bogues sont les bienvenus.
   notifications:
     success: "{instance_name} lancé avec succès."
-    abort_with_hint: 'Le lancement a été annulé : {hint}'
+    abort_with_hint: "Le lancement a été annulé : {hint}"
     script_export_canceled: L'exportation du script de lancement est terminée et le lancement a été arrêté.
     launch_canceled: Lancement annulé.
-    none: ''
+    none: ""
   precheck:
     failures:
       instance_path_reserved_chars: Le chemin de l'instance ne peut pas contenir ! ou ; ({path}).
       instance_indie_path_reserved_chars: Le chemin de jeu indépendant ne peut pas contenir ! ou ; ({path}).
       instance_not_selected: Aucune instance n'est actuellement sélectionnée.
-      instance_has_error: 'L''instance sélectionnée est dans un état non valide : {detail}'
+      instance_has_error: "L'instance sélectionnée est dans un état non valide : {detail}"
       no_profile_selected: Sélectionnez un profil de connexion avant de lancer.
       microsoft_profile_required: Cette instance nécessite un profil Microsoft.
       auth_profile_required: Cette instance nécessite un profil Authlib.
@@ -937,7 +937,7 @@ launch:
     purchase:
       optional:
         title: Propriété Minecraft recommandée
-        message: 'Aucun profil de propriété Microsoft n''est sélectionné. Si vous possédez Minecraft, pensez à vous connecter ou à l''acheter ici : {purchase_url}'
+        message: "Aucun profil de propriété Microsoft n'est sélectionné. Si vous possédez Minecraft, pensez à vous connecter ou à l'acheter ici : {purchase_url}"
         actions:
           buy: Ouvrir la page d'achat
           continue: Continuer
@@ -995,9 +995,9 @@ launch:
       step: Étape
     stages:
       assets: Téléchargement d'éléments
-      assets_file: 'Actif en téléchargement : {file_name}'
+      assets_file: "Actif en téléchargement : {file_name}"
       support: Réparation des fichiers de support
-      support_file: 'Fichier de réparation : {file_name}'
+      support_file: "Fichier de réparation : {file_name}"
       verify_instance: Vérification des fichiers d'instance
     state:
       canceling:
@@ -1175,7 +1175,7 @@ launch:
       authlib:
         completed: Profil Authlib actualisé {profile_name}
         errors:
-          failed: 'Échec de l''actualisation d''Authlib : {message}'
+          failed: "Échec de l'actualisation d'Authlib : {message}"
           incomplete_session: La session Authlib actuelle est incomplète
           invalid_server: L'adresse du serveur d'authentification enregistrée n'est pas valide
           multiple_roles: Plusieurs rôles ont été renvoyés. Veuillez vous reconnecter.
@@ -1194,7 +1194,7 @@ launch:
         check_ownership: Vérification de la propriété du jeu...
         completed: Profil Microsoft actualisé {profile_name}
         errors:
-          failed: 'Échec de l''actualisation Microsoft : {message}'
+          failed: "Échec de l'actualisation Microsoft : {message}"
           missing_refresh_token: Jeton d'actualisation manquant. Connectez-vous à nouveau.
           relogin_required: Session expirée. Connectez-vous à nouveau.
         get_minecraft_access_token: Obtention du jeton d'accès Minecraft...
@@ -1219,26 +1219,26 @@ launch:
       instance_verification: Vérification des instances
       java_check_ignored: Avertissement Java ignoré
       prelaunch_account_check: Vérification du compte avant le lancement
-    current_instance: 'Instance actuelle : {instance_name}'
+    current_instance: "Instance actuelle : {instance_name}"
     errors:
-      instance_verification_failed: 'Échec de la vérification de l''instance : {message}'
+      instance_verification_failed: "Échec de la vérification de l'instance : {message}"
       java_missing: Aucun environnement d'exécution Java n'est sélectionné
     hints:
       launch_succeeded: Le lancement a démarré avec succès
     lines:
-      java: 'Java : {java_label}'
-      java_warning: 'Avertissement Java : {message}'
+      java: "Java : {java_label}"
+      java_warning: "Avertissement Java : {message}"
       precheck: Prévérification : {result}
-      profile: 'Profil : {profile_label}'
-      prompts: 'Invites : {prompt_count}, invite d''assistance : {support_prompt}'
+      profile: "Profil : {profile_label}"
+      prompts: "Invites : {prompt_count}, invite d'assistance : {support_prompt}"
       session: Session : {session_state}
     logs:
       canceled: Lancement annulé
-      failed: 'Échec du lancement : {message}'
+      failed: "Échec du lancement : {message}"
       task_manager_progress: La progression du gestionnaire de tâches est suivie
       verifying_instance_files: Vérification des fichiers d'instance...
     messages:
-      announcement_dismissed: 'Annonce rejetée : {title}'
+      announcement_dismissed: "Annonce rejetée : {title}"
       canceled: Lancement annulé
       game_process_started: "{instance_name} démarré (PID {pid})"
       instance_verification_completed: Vérification de l'instance terminée. Fichiers {downloaded_count} téléchargés et fichiers {reused_count} réutilisés.
@@ -1268,17 +1268,17 @@ launch:
       view_details: Afficher les détails
     activities:
       loaded_content: Contenu de la page d'accueil chargé à partir de {source_name}
-      loaded_preset: 'Préréglage chargé : {preset_title}'
+      loaded_preset: "Préréglage chargé : {preset_title}"
       refresh_failed: Échec de l'actualisation de la page d'accueil
       switched_to_blank: Passé à une page d'accueil vierge
     errors:
       missing_root: Il manque un élément racine dans le balisage de la page d'accueil
     examples:
-      button: 'Bouton : {title}'
-      button_with_events: 'Bouton : {title} ({summary})'
+      button: "Bouton : {title}"
+      button_with_events: "Bouton : {title} ({summary})"
       button_with_events_untitled: Bouton avec événements ({summary})
     hints:
-      prefix: 'Texte : {text}'
+      prefix: "Texte : {text}"
     official_news:
       author: Actualités officielles
     presets:
@@ -1312,7 +1312,7 @@ launch:
       loading_official_news: Chargement des nouvelles officielles...
       loading_remote: Chargement de la page d'accueil distante...
       loading_title: Chargement de la page d'accueil
-      local_file_missing: 'Fichier local introuvable : {path}'
+      local_file_missing: "Fichier local introuvable : {path}"
       unavailable_title: Page d'accueil indisponible
 crash:
   prompts:
@@ -1348,7 +1348,6 @@ setup:
       launcher_visibility: Visibilité du lanceur après le lancement
       process_priority: Priorité du processus de jeu
       window_size: Taille de la fenêtre de jeu
-      microsoft_auth: Méthode de connexion Microsoft
       preferred_ip_stack: Pile IP préférée
       renderer: Moteur de rendu
       jvm_arguments_head: Arguments de la JVM
@@ -1400,9 +1399,6 @@ setup:
         match_launcher: Taille du lanceur de correspondance
         custom: Taille personnalisée
         maximized: Maximisé
-      microsoft_auth:
-        web_account_manager: Gestionnaire de compte Web
-        device_code: Flux de code de périphérique
       preferred_ip_stack:
         ipv4_first: Préférez IPv4
         java_default: Utiliser Java par défaut
@@ -1473,7 +1469,7 @@ setup:
         header: À propos
       acknowledgements:
         header: Remerciements
-    version_summary: 'Version actuelle : {version}'
+    version_summary: "Version actuelle : {version}"
     project:
       original_author:
         title: Chat de longue durée
@@ -1548,7 +1544,7 @@ setup:
       nothing_to_clean: Il n'y a aucun journal archivé à nettoyer. Le journal actuel a été conservé.
       clean_failed: Aucun fichier journal archivé n'a pu être supprimé.
       cleaned_count: Fichier(s) journal(s) archivé(s) {count} nettoyé.
-      open_log: 'Journal ouvert : {title}'
+      open_log: "Journal ouvert : {title}"
   feedback:
     cards:
       submit:
@@ -1575,7 +1571,7 @@ setup:
       duplicate: Dupliquer
       other: Autre
     actions:
-      open_issue: 'Problème ouvert #{number}'
+      open_issue: "Problème ouvert #{number}"
     summary:
       unknown_author: inconnu
       unknown_time: heure inconnue
@@ -1607,11 +1603,11 @@ setup:
     version_name: Version {version}
     states:
       checking: Vérification des mises à jour...
-      available: 'Une mise à jour est disponible : {version}'
+      available: "Une mise à jour est disponible : {version}"
       latest: Vous êtes déjà sur la dernière version.
-      error: 'Échec de la vérification de la mise à jour : {message}'
+      error: "Échec de la vérification de la mise à jour : {message}"
     available:
-      publisher: 'Source : {source}'
+      publisher: "Source : {source}"
       summary_missing: Aucun résumé n'est disponible pour cette version.
     errors:
       github_empty_result: GitHub n'a renvoyé aucune donnée de version.
@@ -1622,7 +1618,7 @@ setup:
       change_channel: Changer de canal de mise à jour
       change_mode: Modifier le paramètre de mise à jour automatique
       refresh: Actualiser la page des mises à jour
-      available: 'Mise à jour disponible : {version}'
+      available: "Mise à jour disponible : {version}"
       latest: "{version} est déjà la dernière version."
       checking: Vérification des mises à jour...
       download_install: Télécharger et installer la mise à jour
@@ -1632,7 +1628,7 @@ setup:
       package_ready: "{version} est prêt. Le lanceur se fermera et appliquera la mise à jour."
       package_ready_hint: Le package de mise à jour est prêt. Le lanceur se fermera et l'installera automatiquement.
       view_detail: Afficher les détails de la mise à jour
-      view_detail_title: 'Détails de la mise à jour : {version}'
+      view_detail_title: "Détails de la mise à jour : {version}"
       view_detail_failed: Échec de l'affichage des détails de la mise à jour
       detail_unavailable: Aucun détail de mise à jour n’est disponible pour le moment.
   ui:
@@ -1652,7 +1648,7 @@ setup:
         open_folder_failed: Échec de l'ouverture du dossier en arrière-plan
         refresh: Actualiser le contenu d'arrière-plan
         clear_count: Fichiers d'arrière-plan {count} effacés.
-        loaded: 'Arrière-plan chargé : {file}'
+        loaded: "Arrière-plan chargé : {file}"
       card_header: Images d'arrière-plan
       fields:
         blur: Flou d'arrière-plan
@@ -1675,7 +1671,7 @@ setup:
       title_bar:
         header: Barre de titre
     fields:
-      custom_theme_hint: 'Prend en charge #RRGGBB, par exemple #159E95'
+      custom_theme_hint: "Prend en charge #RRGGBB, par exemple #159E95"
       custom_theme_refresh_hint: Les couleurs d'accent personnalisées mettent à jour la palette actuelle de l'interface utilisateur et le contraste de la barre de titre en temps réel.
       dark_custom: Personnalisé sombre
       dark_palette: Palette sombre
@@ -1742,7 +1738,7 @@ setup:
           1. Cliquez sur « Générer un fichier de didacticiel » pour créer PCL/Custom.xaml dans le répertoire de travail.
           2. Modifiez ce fichier avec un éditeur de texte, enregistrez-le, puis cliquez à nouveau sur « Actualiser la page d'accueil ».
           3. Si vous utilisez une page d'accueil distante, assurez-vous que l'URL de téléchargement pointe vers un contenu fiable.
-        tutorial_template_missing: 'Modèle de didacticiel de page d''accueil introuvable : {path}'
+        tutorial_template_missing: "Modèle de didacticiel de page d'accueil introuvable : {path}"
       fields:
         preset: Préréglage de la page d'accueil
         url: URL de téléchargement
@@ -1857,11 +1853,11 @@ setup:
       select_default: Changer Java par défaut
       unavailable: Cet environnement d'exécution Java n'est pas disponible. Actualisez la liste.
       add_completed: "{path} ajouté et sélectionné"
-      add_exists: 'Java existe déjà dans la liste de configuration : {path}'
-      add_unrecognized: 'Le fichier sélectionné n''a pas pu être reconnu comme un environnement d''exécution Java utilisable : {path}'
-      open_folder: 'Ouvrir le dossier Java : {title}'
+      add_exists: "Java existe déjà dans la liste de configuration : {path}"
+      add_unrecognized: "Le fichier sélectionné n'a pas pu être reconnu comme un environnement d'exécution Java utilisable : {path}"
+      open_folder: "Ouvrir le dossier Java : {title}"
       toggle_result: "{title} • {state}"
-      view_detail: 'Afficher les détails de Java : {title}'
+      view_detail: "Afficher les détails de Java : {title}"
     auto_select:
       description: Utilisez la sélection Java automatique pour choisir un environnement d'exécution approprié en fonction des besoins du jeu.
       label: Sélection automatique
@@ -1871,19 +1867,19 @@ setup:
       no: Non
       unavailable: Indisponible
       yes: Oui
-      architecture: 'Architecture : {value}'
-      availability: 'Disponibilité : {value}'
-      brand: 'Marque : {value}'
-      default_java: 'Java par défaut : {value}'
-      enabled: 'Activé : {value}'
-      executable: 'Exécutable : {value}'
-      folder: 'Dossier : {value}'
-      major_version: 'Version majeure : {value}'
-      path: 'Chemin : {value}'
-      source: 'Source : {value}'
-      tags: 'Balises actuelles : {value}'
-      type: 'Type : {value}'
-      version: 'Version : {value}'
+      architecture: "Architecture : {value}"
+      availability: "Disponibilité : {value}"
+      brand: "Marque : {value}"
+      default_java: "Java par défaut : {value}"
+      enabled: "Activé : {value}"
+      executable: "Exécutable : {value}"
+      folder: "Dossier : {value}"
+      major_version: "Version majeure : {value}"
+      path: "Chemin : {value}"
+      source: "Source : {value}"
+      tags: "Balises actuelles : {value}"
+      type: "Type : {value}"
+      version: "Version : {value}"
     tags:
       auto_installed: Installé automatiquement
       auto_scanned: Numérisé automatiquement
@@ -1911,7 +1907,7 @@ setup:
       reset_completed: Les paramètres système, réseau et de débogage ont été restaurés aux valeurs par défaut actuelles du lanceur.
       test_proxy: Tester la connexion proxy
       test_proxy_failed: Échec du test de connexion proxy
-      import_settings_completed: 'Configuration partagée importée : {path}. Il est toujours préférable de vérifier certains paramètres système après le redémarrage.'
+      import_settings_completed: "Configuration partagée importée : {path}. Il est toujours préférable de vérifier certains paramètres système après le redémarrage."
     cards:
       debug:
         header: Options de débogage
@@ -1927,11 +1923,9 @@ setup:
       max_animation_fps: FPS d'animation maximum
       realtime_log_lines: Lignes de journalisation en temps réel
     flags:
-      debug_delay: Ajouter un délai
       debug_mode: Mode débogage
       disable_hardware_acceleration: Désactiver l'accélération matérielle
       enable_doh: Utiliser DoH pour la résolution DNS
-      skip_copy_during_download: Empêcher la copie de fichiers à partir d'autres dossiers pendant les téléchargements
     http_proxy:
       address_watermark: par ex. http://127.0.0.1:1080/
       password: Mot de passe
@@ -1992,9 +1986,9 @@ download:
     actions:
       save_installer: Enregistrer le programme d'installation
     activities:
-      entry_action: 'Action de catalogue : {entry_title}'
-      open_entry: 'Entrée ouverte : {entry_title}'
-      open_favorite_entry: 'Ouvrir l''entrée favorite : {entry_title}'
+      entry_action: "Action de catalogue : {entry_title}"
+      open_entry: "Entrée ouverte : {entry_title}"
+      open_favorite_entry: "Ouvrir l'entrée favorite : {entry_title}"
     download:
       file_type_default: Fichier
       hints:
@@ -2008,7 +2002,7 @@ download:
     errors:
       empty_description: Le catalogue distant est temporairement indisponible. Réessayez plus tard.
       empty_title: Rien à afficher
-      load_failed_body: 'Échec du chargement du catalogue distant. Erreur : {error}'
+      load_failed_body: "Échec du chargement du catalogue distant. Erreur : {error}"
       load_failed_title: Échec du chargement du catalogue distant
       retry_later: Veuillez réessayer plus tard.
       section_title: Catalogue distant
@@ -2184,9 +2178,9 @@ download:
       empty_share_code: Rien à partager.
       manage:
         title: Gérer les cibles
-        current_target: 'Cible actuelle : {target_name}'
+        current_target: "Cible actuelle : {target_name}"
         failed: Échec de la gestion des cibles
-        unknown_action: 'Action cible inconnue : {action_id}'
+        unknown_action: "Action cible inconnue : {action_id}"
         options:
           share:
             label: Partager la cible actuelle
@@ -2214,8 +2208,8 @@ download:
         watermark: 'Par exemple : ["23333"]'
         failed: Échec de l'importation des favoris
         destination_prompt: Élément(s) favori(s) {count} détecté(s). Où faut-il les importer ?
-        completed_new: 'Importé dans une nouvelle cible : {target_name}'
-        completed_current: 'Importé dans la cible actuelle : {target_name}'
+        completed_new: "Importé dans une nouvelle cible : {target_name}"
+        completed_current: "Importé dans la cible actuelle : {target_name}"
         options:
           new_target:
             label: Nouvelle cible
@@ -2286,19 +2280,19 @@ download:
         testing: Tests
         april_fools_special: Poisson d'avril spécial sorti sur {published_at}
         april_fools:
-          '2013': 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau !
+          "2013": 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau !
           2013_blue: 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau ! (Version bleue)
           2013_purple: 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau ! (Version violette)
           2013_red: 2013 | Cette mise à jour secrète, prévue depuis deux ans, a propulsé le jeu à un nouveau niveau ! (Version rouge)
-          '2015': 2015 | En tant que jeu pour tous les âges, nous avons besoin de paix, d’amour et de câlins.
-          '2016': 2016 | Il est temps d'introduire la technologie moderne dans Minecraft !
-          '2019': 2019 | Nous avons retrouvé ce chef-d'œuvre de 1994 dans les ruines d'un sous-sol !
-          '2020': 2020 | Nous avons ajouté 2 milliards de nouvelles dimensions et transformé une imagination infinie en réalité !
-          '2022': 2022 | Un bloc à la fois ! Découvrez un nouveau gameplay de creusement, d'artisanat et de conduite.
-          '2023': 2023 | Les recherches montrent que les joueurs aiment faire des choix, et plus c'est mieux !
-          '2024': 2024 | Les pommes de terre vénéneuses ont toujours été ignorées et sous-estimées, nous les avons donc suralimentées !
-          '2025': 2025 | Vous pouvez tout créer, y compris votre monde lui-même !
-          '2026': 2026 | Pourquoi avez-vous besoin d’un inventaire ? Laissez plutôt les blocs vous suivre !
+          "2015": 2015 | En tant que jeu pour tous les âges, nous avons besoin de paix, d’amour et de câlins.
+          "2016": 2016 | Il est temps d'introduire la technologie moderne dans Minecraft !
+          "2019": 2019 | Nous avons retrouvé ce chef-d'œuvre de 1994 dans les ruines d'un sous-sol !
+          "2020": 2020 | Nous avons ajouté 2 milliards de nouvelles dimensions et transformé une imagination infinie en réalité !
+          "2022": 2022 | Un bloc à la fois ! Découvrez un nouveau gameplay de creusement, d'artisanat et de conduite.
+          "2023": 2023 | Les recherches montrent que les joueurs aiment faire des choix, et plus c'est mieux !
+          "2024": 2024 | Les pommes de terre vénéneuses ont toujours été ignorées et sous-estimées, nous les avons donc suralimentées !
+          "2025": 2025 | Vous pouvez tout créer, y compris votre monde lui-même !
+          "2026": 2026 | Pourquoi avez-vous besoin d’un inventaire ? Laissez plutôt les blocs vous suivre !
     generated_name:
       default: Nouvelle version
     options:
@@ -2334,9 +2328,9 @@ download:
       messages:
         instance_missing: Aucune instance cible n'est sélectionnée
         option_not_supported: Cette option n'est pas prise en charge par le programme d'installation frontend
-        queued_in_task_center: 'En file d''attente dans le centre de tâches : {task_title}'
+        queued_in_task_center: "En file d'attente dans le centre de tâches : {task_title}"
         select_minecraft_first: Sélectionnez d'abord une version de Minecraft
-        unresolved_selections: 'Résolvez d''abord ces sélections : {options}'
+        unresolved_selections: "Résolvez d'abord ces sélections : {options}"
       selection:
         none: Aucun
       stages:
@@ -2405,10 +2399,10 @@ download:
         write_vanilla_manifest: Rédaction du manifeste vanille pour Minecraft {version}...
   resource:
     activities:
-      entry_action: 'Action de ressource : {entry_title}'
+      entry_action: "Action de ressource : {entry_title}"
       install_pack: Pack d'installation
       install_pack_failed: Échec de l'installation du pack
-      open_page: 'Ouvrir la page de ressources : {entry_title}'
+      open_page: "Ouvrir la page de ressources : {entry_title}"
       reset_filters: Réinitialiser les filtres
       reset_filters_message: Réinitialisation des filtres pour {surface_title}
     current_instance:
@@ -2448,10 +2442,10 @@ download:
       version: Version
     hints:
       modrinth_unavailable: Modrinth n'est pas disponible pour la source actuelle
-      partial_results: 'Affichage des résultats en direct à partir des sources disponibles. Certaines sources ont échoué : {message}'
+      partial_results: "Affichage des résultats en direct à partir des sources disponibles. Certaines sources ont échoué : {message}"
       retry_later: Réessayez plus tard ou ajustez le filtre source.
-      search_failed: 'Échec de la recherche dans la communauté en direct : {message}'
-      unavailable: 'Impossible de récupérer les résultats de la communauté en direct : {message}'
+      search_failed: "Échec de la recherche dans la communauté en direct : {message}"
+      unavailable: "Impossible de récupérer les résultats de la communauté en direct : {message}"
       version_fallback: Aucun résultat {surface_name} populaire ne correspondait à Minecraft {version}. Revenir à la liste générale de la communauté.
     entry:
       count_style: occidental
@@ -2583,20 +2577,20 @@ resource_detail:
     translate_description: Traduire la description
     view_details: Afficher les détails
   activities:
-    download_canceled: 'Téléchargement annulé : {entry_title}'
-    download_failed: 'Échec du téléchargement : {entry_title}'
-    download_file: 'Télécharger le fichier : {entry_title}'
-    download_started: 'Téléchargement démarré : {entry_title}'
+    download_canceled: "Téléchargement annulé : {entry_title}"
+    download_failed: "Échec du téléchargement : {entry_title}"
+    download_file: "Télécharger le fichier : {entry_title}"
+    download_started: "Téléchargement démarré : {entry_title}"
     install_current_instance: Installer sur l'instance actuelle
     install_current_save: Install to current save
     install_current_instance_failed: Échec de l'installation sur l'instance actuelle
     navigate_back: Retour à {target_title}
-    open_dependency_project: 'Projet de dépendance ouvert : {entry_title}'
+    open_dependency_project: "Projet de dépendance ouvert : {entry_title}"
     open_detail: Ouvrir les détails
     open_detail_for_project: Ouvrir les détails pour {project_title}
-    open_file: 'Ouvrir le fichier : {entry_title}'
+    open_file: "Ouvrir le fichier : {entry_title}"
     open_mc_wiki: Ouvrir le wiki MC pour {project_title}
-    open_project_content: 'Contenu ouvert : {entry_title}'
+    open_project_content: "Contenu ouvert : {entry_title}"
     open_project_homepage: Ouvrir la page d'accueil de {project_title}
     pick_save_path_failed: Échec du choix du chemin de sauvegarde pour {entry_title}
     view_source: Voir la source de {project_title}
@@ -2614,7 +2608,7 @@ resource_detail:
   compatibility:
     no_loaders: Aucune information sur le chargeur
     no_versions: Pas de liste des versions de Minecraft
-    loaders: 'Chargeurs : {loaders}'
+    loaders: "Chargeurs : {loaders}"
     summary: "{version_summary} • {loader_summary}"
     versions: Minecraft {versions}
   current_instance:
@@ -2712,9 +2706,9 @@ resource_detail:
       analyzing: Analyser comment installer {project_title} dans {instance_name}
       canceled_with_dependencies: Installation annulée avec dépendances
       no_tasks: Aucune tâche d'installation n'est nécessaire
-      queued_in_task_center: 'En file d''attente dans le centre de tâches : {task_title}'
+      queued_in_task_center: "En file d'attente dans le centre de tâches : {task_title}"
     summary:
-      completed: 'Installation en file d''attente pour {instance_name} : {summary}'
+      completed: "Installation en file d'attente pour {instance_name} : {summary}"
       dependencies: Dépendances {count}
       skipped: "{count} ignoré"
       tasks: Tâches {count}
@@ -2745,7 +2739,7 @@ resource_detail:
     homepage: Page d'accueil
     issues: Problèmes
     source: Référentiel source
-    support_author: 'Auteur de support : {platform}'
+    support_author: "Auteur de support : {platform}"
     wiki: Wiki
   loading:
     releases: Chargement des versions...
@@ -2767,9 +2761,9 @@ resource_detail:
     published_with_downloads: "{date} publié • {downloads}"
   modpack:
     activities:
-      install_canceled: 'Installation du modpack annulée : {entry_title}'
+      install_canceled: "Installation du modpack annulée : {entry_title}"
       install_completed: Modpack installé.
-      install_failed: 'Échec de l''installation du modpack : {entry_title}'
+      install_failed: "Échec de l'installation du modpack : {entry_title}"
       prompt_instance_name_failed: Échec de la demande de nom d'instance
     archive_name: modpack{extension}
     dialogs:
@@ -2824,17 +2818,17 @@ resource_detail:
         curseforge_missing_files: Certains fichiers CurseForge référencés par le modpack n'existent plus, l'installation automatique ne peut donc pas continuer.
         pcl_missing_addons: Ce modpack PCL Standard n'inclut pas les métadonnées du module complémentaire de version de jeu requises.
         pcl_missing_game_version: Ce modpack PCL Standard n'inclut pas les informations de version de Minecraft.
-        missing_critical_file: 'Il manque un fichier requis dans le modpack : {path}'
+        missing_critical_file: "Il manque un fichier requis dans le modpack : {path}"
         minecraft_choice_missing: Aucun plan d'installation disponible n'a été trouvé pour Minecraft {version}.
         loader_choice_missing: Aucun plan d'installation n'a été trouvé pour {option_title} {requested_version}.
-        file_download_failed: 'Échec du téléchargement du fichier modpack : {file_name}'
+        file_download_failed: "Échec du téléchargement du fichier modpack : {file_name}"
         curseforge_metadata_empty: La réponse aux métadonnées du fichier CurseForge était vide.
         curseforge_metadata_missing_data: Les métadonnées du fichier CurseForge n'incluaient pas de tableau de données.
-        file_path_outside_instance: 'Le chemin du fichier modpack échappe au répertoire d''instance : {relative_path}'
-        archive_illegal_path: 'L''archive du modpack contient un chemin invalide : {entry_path}'
+        file_path_outside_instance: "Le chemin du fichier modpack échappe au répertoire d'instance : {relative_path}"
+        archive_illegal_path: "L'archive du modpack contient un chemin invalide : {entry_path}"
         rar_unsupported: Les archives RAR ne sont pas prises en charge. Extrayez et recompressez le modpack sous forme d'archive ZIP, puis réessayez.
         archive_open_failed: Échec de l'ouverture de l'archive du modpack. Le fichier est peut-être corrompu ou utilise un format d'archive non pris en charge.
-        json_parse_failed: 'Échec de l''analyse du fichier JSON dans le modpack : {entry_path}'
+        json_parse_failed: "Échec de l'analyse du fichier JSON dans le modpack : {entry_path}"
   releases:
     empty:
       body: Aucune version ne correspond aux filtres actuels
@@ -2872,12 +2866,12 @@ resource_detail:
     legacy: Héritage
     snapshot: Instantané
   warnings:
-    load_failed: 'Échec du chargement des données de projet en direct : {message}'
+    load_failed: "Échec du chargement des données de projet en direct : {message}"
   world_archive:
-    extract_failed: 'L''archive mondiale a été téléchargée, mais l''extraction automatique a échoué : {message}'
+    extract_failed: "L'archive mondiale a été téléchargée, mais l'extraction automatique a échoué : {message}"
     install_directory_unavailable: Le répertoire d'installation de sauvegarde n'est pas disponible.
     no_importable_content: L'archive ne contient pas de contenu mondial importable.
-    unsafe_path: 'L''archive contient un chemin dangereux : {path}'
+    unsafe_path: "L'archive contient un chemin dangereux : {path}"
 instance:
   common:
     independent: Instance indépendante
@@ -2949,7 +2943,7 @@ instance:
       rename_empty: Le nom de l'instance ne peut pas être vide.
       rename_unchanged: Le nom de l'instance n'a pas changé.
       rename_invalid: Le nom de l'instance contient des caractères non valides.
-      rename_exists: 'Une instance portant ce nom existe déjà : {name}'
+      rename_exists: "Une instance portant ce nom existe déjà : {name}"
       description_canceled: Modification de la description annulée.
       description_restored: Restauration de la description par défaut.
       launch_script_missing: Le script de lancement n'existe pas.
@@ -2961,7 +2955,7 @@ instance:
       reset_canceled: La réinitialisation de l'instance a été annulée.
       reset_completed: Réinitialisez les fichiers principaux, téléchargez les fichiers {downloaded_count} et réutilisez les fichiers {reused_count}.
       delete_permanent: L'instance {instance_name} a été définitivement supprimée.
-      delete_recycled: 'L''instance {instance_name} a été déplacée vers la corbeille : {trash_directory}'
+      delete_recycled: "L'instance {instance_name} a été déplacée vers la corbeille : {trash_directory}"
       patch_canceled: Patch annulé.
       patch_file_canceled: Sélection du fichier de correctif annulée.
       patched_core_missing: Le fichier principal corrigé n'existe pas.
@@ -2969,15 +2963,15 @@ instance:
       test_instance_navigated: Ouverture de la route de lancement pour tester {instance_name}.
       repair_task_title: "{action_title} : {instance_name}"
       repair_summary:
-        instance: 'Instance : {instance_name}'
-        instance_directory: 'Répertoire d''instance : {path}'
-        core_json: 'Noyau Json : {status} • {path}'
-        core_jar: 'Pot de base : {status} • {path}'
-        backup_directory: 'Répertoire de sauvegarde : {path}'
-        downloaded_count: 'Fichiers téléchargés : {count}'
-        reused_count: 'Fichiers réutilisés : {count}'
-        downloaded_item: 'Téléchargé : {path}'
-        reused_item: 'Réutilisé : {path}'
+        instance: "Instance : {instance_name}"
+        instance_directory: "Répertoire d'instance : {path}"
+        core_json: "Noyau Json : {status} • {path}"
+        core_jar: "Pot de base : {status} • {path}"
+        backup_directory: "Répertoire de sauvegarde : {path}"
+        downloaded_count: "Fichiers téléchargés : {count}"
+        reused_count: "Fichiers réutilisés : {count}"
+        downloaded_item: "Téléchargé : {path}"
+        reused_item: "Réutilisé : {path}"
         intro: Résumé des résultats de la réparation.
         present: Présent
         missing: Manquant
@@ -3042,7 +3036,7 @@ instance:
       empty:
         title: Aucun monde trouvé
         description: Ouvrez le dossier de sauvegarde ou collez un chemin de fichier ou de dossier mondial à partir du presse-papiers pour en importer un.
-      summary: 'Créé : {created_at} • Modifié : {modified_at}'
+      summary: "Créé : {created_at} • Modifié : {modified_at}"
       actions:
         open_folder: Ouvrir le dossier de sauvegarde
         paste_clipboard: Coller depuis le Presse-papiers
@@ -3078,7 +3072,7 @@ instance:
         offline: Serveur hors ligne
         offline_short: Hors ligne
         connecting_short: Connexion
-        connection_failed: 'Impossible de se connecter : {message}'
+        connection_failed: "Impossible de se connecter : {message}"
       motd:
         click_to_refresh: Cliquez sur Actualiser pour afficher l'état du serveur
         connecting: Connexion...
@@ -3105,11 +3099,11 @@ instance:
       dialogs:
         edit:
           title: Modifier les informations sur le serveur
-          name_prompt: 'Entrez un nouveau nom de serveur :'
+          name_prompt: "Entrez un nouveau nom de serveur :"
           name_default: Serveur Minecraft
-          address_prompt: 'Saisissez une nouvelle adresse de serveur :'
+          address_prompt: "Saisissez une nouvelle adresse de serveur :"
     sort:
-      label: 'Trier : {mode}'
+      label: "Trier : {mode}"
       file_name: Nom du fichier
       create_time: Temps de création
       modify_time: Heure modifiée
@@ -3146,7 +3140,7 @@ instance:
         instance_select: Sélectionner une instance compatible
         go_to_download: Aller au téléchargement
       activities:
-        open_homepage: 'Ouvrir la page d''accueil de {surface_title} : {entry_title}'
+        open_homepage: "Ouvrir la page d'accueil de {surface_title} : {entry_title}"
         view_details: Voir les détails de {surface_title}
       filters:
         all: Tous ({count})
@@ -3172,7 +3166,7 @@ instance:
       messages:
         no_instance_selected: Aucune instance n'est actuellement sélectionnée.
         list_empty: La liste {surface_title} est vide.
-        selected_all: '{surface_title} • {count} élément(s) sélectionné(s).'
+        selected_all: "{surface_title} • {count} élément(s) sélectionné(s)."
         no_toggleable_entries: Aucune ressource ne peut changer d’état pour le moment.
         no_deletable_entries: Aucune ressource ne peut être supprimée pour le moment.
         install_from_file_canceled: La sélection du fichier de ressources a été annulée.
@@ -3180,15 +3174,15 @@ instance:
         no_selected: Aucune ressource n'est sélectionnée.
         already_enabled: Toutes les ressources sélectionnées sont déjà activées.
         already_disabled: Toutes les ressources sélectionnées sont déjà désactivées.
-        enabled_completed: 'Éléments {count} activés : {titles}'
-        disabled_completed: 'Éléments {count} désactivés : {titles}'
-        enabled_partial: '{count} élément(s) activé(s), {failed_count} échec(s).'
-        disabled_partial: '{count} élément(s) désactivé(s), {failed_count} échec(s).'
+        enabled_completed: "Éléments {count} activés : {titles}"
+        disabled_completed: "Éléments {count} désactivés : {titles}"
+        enabled_partial: "{count} élément(s) activé(s), {failed_count} échec(s)."
+        disabled_partial: "{count} élément(s) désactivé(s), {failed_count} échec(s)."
         delete_canceled: Suppression annulée.
-        deleted_completed: '{count} élément(s) déplacé(s) vers la corbeille.'
+        deleted_completed: "{count} élément(s) déplacé(s) vers la corbeille."
         export_missing: Le fichier exporté n'existe pas.
         entry_missing: L'élément {surface_title} n'existe pas.
-        details_read_failed: 'Échec de la lecture des informations supplémentaires : {error}'
+        details_read_failed: "Échec de la lecture des informations supplémentaires : {error}"
         checked_mods_summary: "{instance_name} vérifié : {enabled_count} activé, {disabled_count} désactivé, groupes en double {duplicate_count}."
         open_download_route: La page {surface_title} a été ouverte dans Téléchargement.
       dialogs:
@@ -3203,7 +3197,7 @@ instance:
           title: Confirmer la suppression de la ressource
           message: Déplacer ces {count} élément(s) {surface_title} vers la corbeille ?
           confirm: Déplacer vers la corbeille
-          extra_items: '- et {count} élément(s) supplémentaire(s)'
+          extra_items: "- et {count} élément(s) supplémentaire(s)"
       details:
         fields:
           name: Nom
@@ -3226,7 +3220,7 @@ instance:
         disabled_mods: Mods désactivés
         duplicate_names: Noms en double
         no_duplicates: Aucun nom de fichier de mod en double n'a été détecté.
-        duplicate_group_title: 'Noms de mods en double :'
+        duplicate_group_title: "Noms de mods en double :"
       tooltips:
         open_file_location: Emplacement du fichier ouvert
         details: Détails
@@ -3473,3 +3467,23 @@ save_detail:
     cleaned_empty_backups: Fichiers de sauvegarde vides {count} nettoyés
     install_datapack_canceled: La sélection du fichier Datapack a été annulée
     export_missing: Le fichier exporté n'existe pas
+
+welcome:
+  step_0:
+    title: Choisir la langue
+    description: Sélectionnez la langue d'affichage pour PCL ME.
+  step_1:
+    title: Accord de licence
+    description: Veuillez lire et accepter le Contrat de Licence Utilisateur Final (CLUF) avant d'utiliser PCL ME.
+    eula_summary: PCL ME est un logiciel libre et open source fourni "tel quel". En continuant, vous acceptez les termes du Contrat de Licence Utilisateur Final (CLUF). Lisez le CLUF complet pour en savoir plus sur l'utilisation autorisée et la redistribution.
+    open_eula: Ouvrir le CLUF complet
+    accept_label: J'ai lu et j'accepte le CLUF
+    decline: Refuser et quitter
+  step_2:
+    title: Choisir le thème
+    description: Choisissez un mode de couleur et une palette d'accentuation. Vous pouvez le modifier à tout moment dans les Paramètres.
+  step_3:
+    title: Tout est prêt !
+    description: PCL ME est prêt à l'emploi. Découvrez ces liens pour commencer.
+    feedback: Envoyer des commentaires
+    github: GitHub

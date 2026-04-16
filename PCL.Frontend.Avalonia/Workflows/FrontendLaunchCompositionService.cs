@@ -39,14 +39,15 @@ internal static class FrontendLaunchCompositionService
             runtimePaths);
         var downloadProvider = FrontendDownloadProvider.FromPreference(ReadValue(sharedConfig, "ToolDownloadSource", 1));
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty);
-        var instancePath = string.IsNullOrWhiteSpace(selectedInstanceName)
-            ? Path.Combine(launcherFolder, "versions")
-            : Path.Combine(launcherFolder, "versions", selectedInstanceName);
-        var instanceConfig = Directory.Exists(instancePath)
+        var hasSelectedInstance = !string.IsNullOrWhiteSpace(selectedInstanceName);
+        var instancePath = hasSelectedInstance
+            ? Path.Combine(launcherFolder, "versions", selectedInstanceName)
+            : launcherFolder;
+        var instanceConfig = hasSelectedInstance && Directory.Exists(instancePath)
             ? FrontendRuntimePaths.OpenInstanceConfigProvider(instancePath)
             : null;
         var manifestSummary = ReadManifestSummary(launcherFolder, selectedInstanceName, instanceConfig);
-        var indieDirectory = ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary)
+        var indieDirectory = hasSelectedInstance && ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary)
             ? instancePath
             : launcherFolder;
         var selectedProfile = ReadSelectedProfile(runtimePaths);

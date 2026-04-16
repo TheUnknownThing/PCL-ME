@@ -688,6 +688,9 @@
                 </Grid>
               </Border>
             </Border>
+
+            <controls:WelcomeOnboardingOverlay ZIndex="60" />
+
           </Grid>
         </Grid>
       </Border>

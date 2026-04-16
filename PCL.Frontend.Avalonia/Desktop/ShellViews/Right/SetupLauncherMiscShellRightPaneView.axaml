@@ -275,24 +275,12 @@
               </Grid>
             </Grid>
 
-            <Grid ColumnDefinitions="*,*,*">
+            <Grid ColumnDefinitions="*">
               <CheckBox
                   Grid.Column="0"
-                  Margin="0,0,14,0"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.LauncherMisc.SkipCopyDuringDownloadLabel}"
-                  IsChecked="{Binding SkipCopyDuringDownload}" />
-              <CheckBox
-                  Grid.Column="1"
-                  Margin="0,0,14,0"
                   Foreground="{DynamicResource ColorBrush1}"
                   Content="{Binding SetupText.LauncherMisc.DebugModeLabel}"
                   IsChecked="{Binding DebugModeEnabled}" />
-              <CheckBox
-                  Grid.Column="2"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.LauncherMisc.DebugDelayLabel}"
-                  IsChecked="{Binding DebugDelayEnabled}" />
             </Grid>
           </StackPanel>
         </controls:PclCard.CardContent>

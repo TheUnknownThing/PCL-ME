@@ -75,6 +75,25 @@ public sealed class FrontendRuntimePathsTest
     }
 
     [TestMethod]
+    public void OpenInstanceConfigProvider_WithoutCreatingDirectory_DoesNotCreatePclDirectory()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var instanceDirectory = Path.Combine(root, "instance");
+            Directory.CreateDirectory(instanceDirectory);
+
+            _ = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory, createDirectoryIfMissing: false);
+
+            Assert.IsFalse(Directory.Exists(Path.Combine(instanceDirectory, "PCL")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void ResolveCurrentLauncherLogFilePath_PrefersMostRecentLauncherLog()
     {
         using var environment = new FrontendRuntimePathTestEnvironment();
