@@ -93,7 +93,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadToolsComposition()
     {
-        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths, _i18n.Locale));
+        ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths, _i18n));
     }
 
     private void ReloadHelpState()

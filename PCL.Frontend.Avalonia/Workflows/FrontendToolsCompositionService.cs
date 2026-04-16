@@ -12,12 +12,14 @@ internal static class FrontendToolsCompositionService
     private const string EnglishFallbackLocale = "en-US";
     private const string ChineseFallbackLocale = "zh-Hans";
 
-    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths, string locale)
+    public static FrontendToolsComposition Compose(FrontendRuntimePaths runtimePaths, II18nService i18n)
     {
+        ArgumentNullException.ThrowIfNull(i18n);
+
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         return new FrontendToolsComposition(
-            LoadHelpState(runtimePaths, locale),
-            BuildTestState(sharedConfig, runtimePaths, locale));
+            LoadHelpState(runtimePaths, i18n.Locale),
+            BuildTestState(sharedConfig, runtimePaths, i18n));
     }
 
     public static FrontendToolsHelpState LoadHelpState(FrontendRuntimePaths runtimePaths, string locale)
@@ -25,12 +27,13 @@ internal static class FrontendToolsCompositionService
         return BuildHelpState(runtimePaths, locale);
     }
 
-    private static FrontendToolsTestState BuildTestState(JsonFileProvider sharedConfig, FrontendRuntimePaths runtimePaths, string locale)
+    private static FrontendToolsTestState BuildTestState(JsonFileProvider sharedConfig, FrontendRuntimePaths runtimePaths, II18nService i18n)
     {
         var configuredFolder = ReadValue(sharedConfig, "CacheDownloadFolder", string.Empty).Trim();
         var downloadFolder = string.IsNullOrWhiteSpace(configuredFolder)
             ? Path.Combine(runtimePaths.DataDirectory, "MyDownload")
             : configuredFolder;
+        var locale = i18n.Locale;
 
         return new FrontendToolsTestState(
             ToolboxActions:
@@ -67,12 +70,8 @@ internal static class FrontendToolsCompositionService
                     false),
                 new FrontendToolboxActionDefinition(
                     "crash-test",
-                    LocalizeToolboxTitle(locale, "Crash Test", "Crash test", "Crash test"),
-                    LocalizeToolboxTooltip(
-                        locale,
-                        "Pressing this button will crash the launcher immediately. Don't use it unless you really mean to, and any resulting issues will be closed.",
-                        "Pressing this button will crash the launcher immediately. Don't use it unless you really mean to, and any resulting issues will be closed.",
-                        "Pressing this button will crash the launcher immediately. Don't use it unless you really mean to, and any resulting issues will be closed."),
+                    i18n.T("shell.tools.test.toolbox.actions.crash_test.title"),
+                    i18n.T("shell.tools.test.toolbox.actions.crash_test.tooltip"),
                     100,
                     true),
                 new FrontendToolboxActionDefinition(
