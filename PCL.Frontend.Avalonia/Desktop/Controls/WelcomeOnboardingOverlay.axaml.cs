@@ -46,7 +46,7 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         WelcomeNextButton.IconScale = FrontendIconCatalog.Back.Scale;
 
         WelcomeDoneButton.IconData = FrontendIconCatalog.EnableCircle.Data;
-        WelcomeDoneButton.IconScale = 1.05 * FrontendIconCatalog.EnableCircle.Scale;
+        WelcomeDoneButton.IconScale = 1.1 * FrontendIconCatalog.EnableCircle.Scale;
 
         var feedbackIcon = FrontendIconCatalog.GetSidebarIcon("feedback");
         WelcomeFeedbackButton.IconData = feedbackIcon.Data;

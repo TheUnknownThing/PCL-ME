@@ -256,10 +256,10 @@
                     x:Name="WelcomeDoneButton"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    ButtonSize="54"
-                    IdleBackgroundBrush="{DynamicResource ColorBrush2}"
-                    HoverBackgroundBrush="{DynamicResource ColorBrush3}"
-                    IconBrush="#FFFFFFFF"
+                    ButtonSize="60"
+                    IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+                    HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                    IconBrush="{DynamicResource ColorBrush2}"
                     Command="{Binding WelcomeNextStepCommand}"
                     ToolTip.Tip="{Binding WelcomeDoneButtonToolTip}" />
                 <StackPanel
