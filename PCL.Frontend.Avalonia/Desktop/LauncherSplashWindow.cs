@@ -21,7 +21,7 @@ internal sealed class LauncherSplashWindow : Window
         SystemDecorations = SystemDecorations.None;
         Background = Brushes.Transparent;
         TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
-        Icon = new WindowIcon(AssetLoader.Open(request.WindowIconAssetUri));
+        FrontendWindowIdentity.Apply(this);
         Content = BuildContent(request);
     }
 

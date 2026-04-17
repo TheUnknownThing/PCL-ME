@@ -8,7 +8,6 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendStartupSplashPresentationService
 {
-    private static readonly Uri WindowIconAssetUri = new("avares://PCL.Frontend.Avalonia/Assets/icon.ico");
     private static readonly Uri SplashImageAssetUri = new("avares://PCL.Frontend.Avalonia/Assets/icon.png");
     private static readonly TimeSpan MinimumVisibleDuration = TimeSpan.FromMilliseconds(240);
 
@@ -35,14 +34,12 @@ internal static class FrontendStartupSplashPresentationService
         }
 
         return new FrontendStartupSplashRequest(
-            WindowIconAssetUri,
             SplashImageAssetUri,
             MinimumVisibleDuration);
     }
 }
 
 internal sealed record FrontendStartupSplashRequest(
-    Uri WindowIconAssetUri,
     Uri SplashImageAssetUri,
     TimeSpan MinimumVisibleDuration);
 

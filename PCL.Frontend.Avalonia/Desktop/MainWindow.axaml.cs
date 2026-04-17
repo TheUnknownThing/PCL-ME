@@ -52,6 +52,7 @@ internal sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        FrontendWindowIdentity.Apply(this);
         _defaultMainBackgroundBrush = MainBorder.Background ?? Brushes.Transparent;
         _defaultTitleBarBackgroundBrush = NavBackgroundBorder.Background ?? Brushes.Transparent;
         ConfigureShellDividerTransitions();

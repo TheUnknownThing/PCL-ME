@@ -7,7 +7,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private const string LauncherShortcutDisplayName = "PCL Community Edition";
+    private const string LauncherShortcutDisplayName = FrontendApplicationIdentity.DisplayName;
     private const string ShortcutDesktopOptionId = "desktop";
     private const string ShortcutStartMenuOptionId = "start-menu";
 

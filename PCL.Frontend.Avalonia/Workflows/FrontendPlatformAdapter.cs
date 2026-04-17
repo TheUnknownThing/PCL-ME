@@ -205,13 +205,10 @@ internal sealed class FrontendPlatformAdapter
         else
         {
             shortcutPath = Path.Combine(desktopDirectory, $"{displayName}.desktop");
-            shortcutContent = $"""
-                [Desktop Entry]
-                Type=Application
-                Name={displayName}
-                Exec="{executablePath}"
-                Terminal=false
-                """;
+            shortcutContent = FrontendLinuxDesktopEntryService.BuildDesktopEntry(
+                displayName,
+                executablePath,
+                FrontendLinuxDesktopEntryService.ResolveIconPath(executablePath));
         }
 
         File.WriteAllText(shortcutPath, shortcutContent, new UTF8Encoding(false));

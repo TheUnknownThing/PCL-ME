@@ -16,9 +16,6 @@ public sealed class FrontendStartupSplashPresentationServiceTest
         var result = FrontendStartupSplashPresentationService.CreateRequest(visualPlan);
 
         Assert.IsNotNull(result);
-        Assert.AreEqual("avares", result.WindowIconAssetUri.Scheme);
-        Assert.AreEqual("pcl.frontend.avalonia", result.WindowIconAssetUri.Host);
-        Assert.AreEqual("/Assets/icon.ico", result.WindowIconAssetUri.AbsolutePath);
         Assert.AreEqual("avares", result.SplashImageAssetUri.Scheme);
         Assert.AreEqual("pcl.frontend.avalonia", result.SplashImageAssetUri.Host);
         Assert.AreEqual("/Assets/icon.png", result.SplashImageAssetUri.AbsolutePath);

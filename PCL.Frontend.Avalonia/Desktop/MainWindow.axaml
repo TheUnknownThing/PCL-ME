@@ -6,7 +6,6 @@
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     Title="PCL-ME"
-    Icon="/Assets/icon.ico"
     Width="900"
     Height="540"
     MinWidth="810"

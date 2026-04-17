@@ -4,6 +4,7 @@ Name=__APP_NAME__
 Comment=PCL-ME frontend
 Exec=sh -lc 'cd "$(dirname "$1")" && ./__LAUNCHER_SCRIPT__' dummy %k
 Icon=./icon.png
+StartupWMClass=org.pcl.me.frontend
 Terminal=false
 Categories=Game;
 StartupNotify=true
