@@ -142,8 +142,6 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand SetLittleSkinCommand => _setLittleSkinCommand;
 
-    public ActionCommand LockInstanceLoginCommand => _lockInstanceLoginCommand;
-
     public ActionCommand CreateInstanceProfileCommand => _createInstanceProfileCommand;
 
     public ActionCommand OpenGlobalLaunchSettingsCommand => _openGlobalLaunchSettingsCommand;

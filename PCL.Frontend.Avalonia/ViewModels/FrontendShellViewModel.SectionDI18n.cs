@@ -76,14 +76,10 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceSetupDisableRetroWrapperText => SD("instance.settings.advanced.disable_retro_wrapper");
     public string InstanceSetupUseDebugLog4jText => SD("instance.settings.advanced.use_debug_log4j");
     public string InstanceSetupServerHeaderText => SD("instance.settings.sections.server");
-    public string InstanceSetupServerLockedWarningText => SD("instance.settings.server.locked_warning");
     public string InstanceSetupServerLoginRequirementLabelText => SD("instance.settings.server.login_requirement");
     public string InstanceSetupServerAuthServerLabelText => SD("instance.settings.server.auth_server");
-    public string InstanceSetupServerAuthRegisterLabelText => SD("instance.settings.server.auth_register");
-    public string InstanceSetupServerAuthNameLabelText => SD("instance.settings.server.auth_name");
     public string InstanceSetupServerAutoJoinLabelText => SD("instance.settings.server.auto_join");
     public string InstanceSetupServerSetLittleSkinText => SD("instance.settings.server.set_littleskin");
-    public string InstanceSetupServerLockLoginText => SD("instance.settings.server.lock_login");
     public string InstanceSetupServerCreateProfileText => SD("instance.settings.server.create_profile");
 
     public string InstanceInstallMinecraftHeaderText => SD("instance.install.minecraft.header");

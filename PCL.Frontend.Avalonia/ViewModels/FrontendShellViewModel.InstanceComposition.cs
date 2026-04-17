@@ -9,6 +9,13 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private static readonly string[] DeprecatedInstanceSpecifiedServerConfigKeys =
+    [
+        "VersionServerAuthRegister",
+        "VersionServerAuthName",
+        "VersionServerLoginLock"
+    ];
+
     private static readonly HashSet<string> RevealOnlyArtifactExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".bat",
@@ -79,6 +86,7 @@ internal sealed partial class FrontendShellViewModel
     private void ApplyInstanceComposition(FrontendInstanceComposition composition, bool initializeAllSurfaces = true)
     {
         _instanceComposition = composition;
+        RemoveDeprecatedInstanceSpecifiedServerConfigKeys();
         _suppressInstancePersistence = true;
         try
         {
@@ -257,12 +265,6 @@ internal sealed partial class FrontendShellViewModel
             case nameof(InstanceServerAuthServer):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionServerAuthServer", InstanceServerAuthServer);
                 break;
-            case nameof(InstanceServerAuthRegister):
-                _shellActionService.PersistInstanceValue(instanceDirectory, "VersionServerAuthRegister", InstanceServerAuthRegister);
-                break;
-            case nameof(InstanceServerAuthName):
-                _shellActionService.PersistInstanceValue(instanceDirectory, "VersionServerAuthName", InstanceServerAuthName);
-                break;
             case nameof(InstanceServerAutoJoin):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionServerEnter", InstanceServerAutoJoin);
                 break;
@@ -317,9 +319,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(UseInstanceDebugLog4jConfig):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionUseDebugLog4j2Config", UseInstanceDebugLog4jConfig);
-                break;
-            case nameof(IsInstanceServerLoginLocked):
-                _shellActionService.PersistInstanceValue(instanceDirectory, "VersionServerLoginLock", IsInstanceServerLoginLocked);
                 break;
         }
     }
@@ -392,25 +391,6 @@ internal sealed partial class FrontendShellViewModel
         return !neverRevealInShell;
     }
 
-    private void LockInstanceLogin()
-    {
-        if (!_instanceComposition.Selection.HasSelection)
-        {
-            AddActivity("Lock authentication mode", "No instance is currently selected.");
-            return;
-        }
-
-        if (IsInstanceServerLoginLocked)
-        {
-            AddActivity("Lock authentication mode", "The current instance authentication mode is already locked.");
-            return;
-        }
-
-        IsInstanceServerLoginLocked = true;
-        AddActivity("Lock authentication mode", _instanceComposition.Selection.InstanceName);
-        ReloadInstanceComposition();
-    }
-
     private void PersistInstanceOverviewIconSelection(string instanceDirectory, int selectedIndex)
     {
         if (selectedIndex <= 0 || selectedIndex >= InstanceOverviewIconFiles.Length)
@@ -424,6 +404,17 @@ internal sealed partial class FrontendShellViewModel
             instanceDirectory,
             "Logo",
             $"pack://application:,,,/images/Blocks/{InstanceOverviewIconFiles[selectedIndex]}");
+    }
+
+    private void RemoveDeprecatedInstanceSpecifiedServerConfigKeys()
+    {
+        var instanceDirectory = _instanceComposition.Selection.InstanceDirectory;
+        if (string.IsNullOrWhiteSpace(instanceDirectory))
+        {
+            return;
+        }
+
+        _shellActionService.RemoveInstanceValues(instanceDirectory, DeprecatedInstanceSpecifiedServerConfigKeys);
     }
 
     private string BuildStoredInstanceJavaSelection()

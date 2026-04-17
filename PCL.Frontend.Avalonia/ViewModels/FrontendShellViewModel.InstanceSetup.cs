@@ -20,10 +20,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _showInstanceRamAllocationWarning;
     private bool _showInstance32BitJavaWarning;
     private int _selectedInstanceServerLoginRequireIndex;
-    private bool _isInstanceServerLoginLocked;
     private string _instanceServerAuthServer = "https://littleskin.cn/api/yggdrasil";
-    private string _instanceServerAuthRegister = "https://littleskin.cn/auth/register";
-    private string _instanceServerAuthName = "LittleSkin";
     private string _instanceServerAutoJoin = string.Empty;
     private int _selectedInstanceJavaIndex;
     private string _instanceClasspathHead = string.Empty;
@@ -191,10 +188,6 @@ internal sealed partial class FrontendShellViewModel
             {
                 RaisePropertyChanged(nameof(ShowInstanceServerAuthFields));
                 RaisePropertyChanged(nameof(ShowInstanceServerProfileActions));
-                RaisePropertyChanged(nameof(ShowInstanceServerLockAction));
-                RaisePropertyChanged(nameof(IsInstanceServerLoginEditable));
-                RaisePropertyChanged(nameof(IsInstanceServerAuthEditable));
-                RaisePropertyChanged(nameof(CanLockInstanceLogin));
                 RaisePropertyChanged(nameof(CanCreateInstanceProfile));
             }
         }
@@ -204,49 +197,12 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowInstanceServerProfileActions => ShowInstanceServerAuthFields;
 
-    public bool ShowInstanceServerLockAction => SelectedInstanceServerLoginRequireIndex >= 2;
-
-    public bool ShowInstanceServerLoginLockedWarning => IsInstanceServerLoginLocked;
-
-    public bool IsInstanceServerLoginEditable => !IsInstanceServerLoginLocked;
-
-    public bool IsInstanceServerAuthEditable => !IsInstanceServerLoginLocked;
-
-    public bool CanLockInstanceLogin => !IsInstanceServerLoginLocked && SelectedInstanceServerLoginRequireIndex > 0;
-
     public bool CanCreateInstanceProfile => ShowInstanceServerProfileActions;
-
-    public bool IsInstanceServerLoginLocked
-    {
-        get => _isInstanceServerLoginLocked;
-        set
-        {
-            if (SetProperty(ref _isInstanceServerLoginLocked, value))
-            {
-                RaisePropertyChanged(nameof(ShowInstanceServerLoginLockedWarning));
-                RaisePropertyChanged(nameof(IsInstanceServerLoginEditable));
-                RaisePropertyChanged(nameof(IsInstanceServerAuthEditable));
-                RaisePropertyChanged(nameof(CanLockInstanceLogin));
-            }
-        }
-    }
 
     public string InstanceServerAuthServer
     {
         get => _instanceServerAuthServer;
         set => SetProperty(ref _instanceServerAuthServer, value);
-    }
-
-    public string InstanceServerAuthRegister
-    {
-        get => _instanceServerAuthRegister;
-        set => SetProperty(ref _instanceServerAuthRegister, value);
-    }
-
-    public string InstanceServerAuthName
-    {
-        get => _instanceServerAuthName;
-        set => SetProperty(ref _instanceServerAuthName, value);
     }
 
     public string InstanceServerAutoJoin
@@ -375,10 +331,7 @@ internal sealed partial class FrontendShellViewModel
         _showInstanceRamAllocationWarning = setup.ShowMemoryWarning;
         _showInstance32BitJavaWarning = setup.Show32BitJavaWarning;
         _selectedInstanceServerLoginRequireIndex = Math.Clamp(setup.ServerLoginRequirementIndex, 0, InstanceServerLoginRequireOptions.Count - 1);
-        _isInstanceServerLoginLocked = setup.IsServerLoginLocked;
         _instanceServerAuthServer = setup.AuthServer;
-        _instanceServerAuthRegister = setup.AuthRegister;
-        _instanceServerAuthName = setup.AuthName;
         _instanceServerAutoJoin = setup.AutoJoinServer;
         _selectedInstanceRendererIndex = Math.Clamp(setup.RendererIndex, 0, InstanceRendererOptions.Count - 1);
         _instanceLaunchWrapperCommand = setup.WrapperCommand;
@@ -427,16 +380,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowInstance32BitJavaWarning));
         RaisePropertyChanged(nameof(SelectedInstanceServerLoginRequireIndex));
         RaisePropertyChanged(nameof(ShowInstanceServerAuthFields));
-        RaisePropertyChanged(nameof(ShowInstanceServerLoginLockedWarning));
         RaisePropertyChanged(nameof(ShowInstanceServerProfileActions));
-        RaisePropertyChanged(nameof(ShowInstanceServerLockAction));
-        RaisePropertyChanged(nameof(IsInstanceServerLoginEditable));
-        RaisePropertyChanged(nameof(IsInstanceServerAuthEditable));
-        RaisePropertyChanged(nameof(CanLockInstanceLogin));
         RaisePropertyChanged(nameof(CanCreateInstanceProfile));
         RaisePropertyChanged(nameof(InstanceServerAuthServer));
-        RaisePropertyChanged(nameof(InstanceServerAuthRegister));
-        RaisePropertyChanged(nameof(InstanceServerAuthName));
         RaisePropertyChanged(nameof(InstanceServerAutoJoin));
         RaisePropertyChanged(nameof(InstanceRendererOptions));
         RaisePropertyChanged(nameof(SelectedInstanceRendererIndex));

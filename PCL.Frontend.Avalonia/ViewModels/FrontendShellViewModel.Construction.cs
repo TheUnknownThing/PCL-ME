@@ -113,7 +113,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _openInstanceExportGuideCommand;
     private readonly ActionCommand _startInstanceExportCommand;
     private readonly ActionCommand _setLittleSkinCommand;
-    private readonly ActionCommand _lockInstanceLoginCommand;
     private readonly ActionCommand _createInstanceProfileCommand;
     private readonly ActionCommand _openGlobalLaunchSettingsCommand;
     private readonly ActionCommand _refreshInstanceSelectionCommand;
@@ -430,11 +429,8 @@ internal sealed partial class FrontendShellViewModel
         {
             SelectedInstanceServerLoginRequireIndex = 2;
             InstanceServerAuthServer = "https://littleskin.cn/api/yggdrasil";
-            InstanceServerAuthRegister = "https://littleskin.cn/auth/register";
-            InstanceServerAuthName = "LittleSkin";
             AddActivity(T("launch.profile.authlib.activities.use_littleskin"), InstanceServerAuthServer);
         });
-        _lockInstanceLoginCommand = new ActionCommand(LockInstanceLogin);
         _createInstanceProfileCommand = new ActionCommand(() => _ = CreateInstanceProfileAsync());
         _openGlobalLaunchSettingsCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLaunch), "Opened the shared launch settings from instance settings."));
         _refreshInstanceSelectionCommand = new ActionCommand(RefreshInstanceSelectionSurface);

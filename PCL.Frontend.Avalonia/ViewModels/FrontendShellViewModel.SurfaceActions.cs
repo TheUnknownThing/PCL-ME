@@ -129,9 +129,7 @@ internal sealed partial class FrontendShellViewModel
             : InstanceServerAuthServer.Trim();
         LaunchAuthlibLoginName = string.Empty;
         LaunchAuthlibPassword = string.Empty;
-        LaunchAuthlibStatusText = string.IsNullOrWhiteSpace(InstanceServerAuthName)
-            ? T("launch.profile.instance_create.status_default")
-            : T("launch.profile.instance_create.status_named", ("auth_name", InstanceServerAuthName));
+        LaunchAuthlibStatusText = T("launch.profile.instance_create.status_default");
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
             T("launch.profile.instance_create.navigation"));

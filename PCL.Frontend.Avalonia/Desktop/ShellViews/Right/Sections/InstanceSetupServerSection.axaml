@@ -6,19 +6,6 @@
   <controls:PclCard Header="{Binding InstanceSetupServerHeaderText}" ContentMargin="20,40,20,18">
     <controls:PclCard.CardContent>
       <StackPanel Spacing="12">
-        <Border
-            Padding="12,10"
-            Background="{DynamicResource ColorBrushSemanticDangerBackground}"
-            BorderBrush="{DynamicResource ColorBrushSemanticDangerBorder}"
-            BorderThickness="1"
-            CornerRadius="4"
-            IsVisible="{Binding ShowInstanceServerLoginLockedWarning}">
-          <TextBlock
-              Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
-              FontSize="12.5"
-              Text="{Binding InstanceSetupServerLockedWarningText}"
-              TextWrapping="Wrap" />
-        </Border>
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,Auto,9,28">
           <TextBlock
               Grid.Row="0"
@@ -30,7 +17,6 @@
           <ComboBox
               Grid.Row="0"
               Grid.Column="1"
-              IsEnabled="{Binding IsInstanceServerLoginEditable}"
               ItemsSource="{Binding InstanceServerLoginRequireOptions}"
               SelectedIndex="{Binding SelectedInstanceServerLoginRequireIndex}" />
 
@@ -40,7 +26,7 @@
               Margin="0,8,0,0"
               IsVisible="{Binding ShowInstanceServerAuthFields}"
               ColumnDefinitions="Auto,*"
-              RowDefinitions="28,9,28,9,28">
+              RowDefinitions="28">
             <TextBlock
                 Margin="0,0,25,0"
                 VerticalAlignment="Center"
@@ -49,34 +35,7 @@
                 Text="{Binding InstanceSetupServerAuthServerLabelText}" />
             <TextBox
                 Grid.Column="1"
-                IsEnabled="{Binding IsInstanceServerAuthEditable}"
                 Text="{Binding InstanceServerAuthServer}" />
-
-            <TextBlock
-                Grid.Row="2"
-                Margin="0,0,25,0"
-                VerticalAlignment="Center"
-                Foreground="{DynamicResource ColorBrush1}"
-                FontSize="13"
-                Text="{Binding InstanceSetupServerAuthRegisterLabelText}" />
-            <TextBox
-                Grid.Row="2"
-                Grid.Column="1"
-                IsEnabled="{Binding IsInstanceServerAuthEditable}"
-                Text="{Binding InstanceServerAuthRegister}" />
-
-            <TextBlock
-                Grid.Row="4"
-                Margin="0,0,25,0"
-                VerticalAlignment="Center"
-                Foreground="{DynamicResource ColorBrush1}"
-                FontSize="13"
-                Text="{Binding InstanceSetupServerAuthNameLabelText}" />
-            <TextBox
-                Grid.Row="4"
-                Grid.Column="1"
-                IsEnabled="{Binding IsInstanceServerAuthEditable}"
-                Text="{Binding InstanceServerAuthName}" />
           </Grid>
 
           <TextBlock
@@ -99,18 +58,9 @@
               Margin="0,0,20,0"
               ColorType="Highlight"
               Command="{Binding SetLittleSkinCommand}"
-              IsEnabled="{Binding IsInstanceServerAuthEditable}"
               Text="{Binding InstanceSetupServerSetLittleSkinText}" />
           <controls:PclButton
               Grid.Column="1"
-              MinWidth="150"
-              Margin="0,0,20,0"
-              Command="{Binding LockInstanceLoginCommand}"
-              IsEnabled="{Binding CanLockInstanceLogin}"
-              IsVisible="{Binding ShowInstanceServerLockAction}"
-              Text="{Binding InstanceSetupServerLockLoginText}" />
-          <controls:PclButton
-              Grid.Column="2"
               MinWidth="150"
               Command="{Binding CreateInstanceProfileCommand}"
               IsEnabled="{Binding CanCreateInstanceProfile}"
