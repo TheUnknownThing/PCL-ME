@@ -1,0 +1,263 @@
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Runtime.InteropServices;
+using PCL.Core.App;
+using PCL.Core.App.Configuration.Storage;
+using PCL.Core.App.Essentials;
+using PCL.Core.App.I18n;
+using PCL.Core.Logging;
+using PCL.Core.Minecraft;
+using PCL.Core.Minecraft.Java;
+using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils;
+using PCL.Frontend.Avalonia.Cli;
+using PCL.Frontend.Avalonia.Models;
+
+namespace PCL.Frontend.Avalonia.Workflows;
+
+internal static partial class FrontendLaunchCompositionService
+{
+    private static readonly HttpClient JavaRuntimeHttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(100));
+    private static readonly object HostJavaProbeLock = new();
+    private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedHostJavaRuntimes;
+    private static bool IsHostJavaProbeCached;
+    public static FrontendLaunchComposition Compose(
+        AvaloniaCommandOptions options,
+        FrontendRuntimePaths runtimePaths,
+        bool ignoreJavaCompatibilityWarningOnce = false,
+        II18nService? i18n = null)
+    {
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
+
+        var launcherFolder = FrontendLauncherPathService.ResolveLauncherFolder(
+            ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
+            runtimePaths);
+        var downloadProvider = FrontendDownloadProvider.FromPreference(ReadValue(sharedConfig, "ToolDownloadSource", 1));
+        var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty);
+        var hasSelectedInstance = !string.IsNullOrWhiteSpace(selectedInstanceName);
+        var instancePath = hasSelectedInstance
+            ? Path.Combine(launcherFolder, "versions", selectedInstanceName)
+            : launcherFolder;
+        var instanceConfig = hasSelectedInstance && Directory.Exists(instancePath)
+            ? FrontendRuntimePaths.OpenInstanceConfigProvider(instancePath)
+            : null;
+        var manifestSummary = ReadManifestSummary(launcherFolder, selectedInstanceName, instanceConfig);
+        var indieDirectory = hasSelectedInstance && ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary)
+            ? instancePath
+            : launcherFolder;
+        var selectedProfile = ReadSelectedProfile(runtimePaths);
+        var javaWorkflowRequest = BuildJavaWorkflowRequest(CreateRuntimeJavaWorkflowFallback(manifestSummary), manifestSummary);
+        var javaWorkflow = MinecraftLaunchJavaWorkflowService.BuildPlan(javaWorkflowRequest);
+        var javaSelection = ResolveJavaRuntime(
+            sharedConfig,
+            localConfig,
+            instanceConfig,
+            launcherFolder,
+            manifestSummary,
+            javaWorkflow,
+            ignoreJavaCompatibilityWarningOnce);
+        var selectedJavaRuntime = javaSelection.Runtime;
+        var retroWrapperOptions = ResolveRetroWrapperOptions(
+            launcherFolder,
+            manifestSummary,
+            sharedConfig,
+            instanceConfig);
+        var requiredArtifacts = BuildRequiredArtifacts(
+            launcherFolder,
+            selectedInstanceName,
+            manifestSummary,
+            selectedJavaRuntime);
+        var resolvedInstanceName = ResolveSelectedInstanceName(selectedInstanceName, i18n);
+        var resolutionPlan = MinecraftLaunchResolutionService.BuildPlan(BuildResolutionRequest(
+            localConfig,
+            CreateRuntimeResolutionFallback(),
+            manifestSummary,
+            selectedJavaRuntime,
+            javaWorkflow));
+        var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(BuildClasspathRequest(
+            launcherFolder,
+            selectedInstanceName,
+            manifestSummary,
+            selectedJavaRuntime,
+            instanceConfig,
+            retroWrapperOptions));
+        var nativesDirectory = MinecraftLaunchNativesDirectoryService.ResolvePath(new MinecraftLaunchNativesDirectoryRequest(
+            PreferredInstanceDirectory: Path.Combine(instancePath, $"{selectedInstanceName}-natives"),
+            PreferInstanceDirectory: false,
+            AppDataNativesDirectory: Path.Combine(launcherFolder, "bin", "natives"),
+            FinalFallbackDirectory: Path.Combine(runtimePaths.TempDirectory, "PCL", "natives")));
+        var nativePathPlan = BuildNativePathPlan(
+            launcherFolder,
+            selectedInstanceName,
+            manifestSummary,
+            selectedJavaRuntime,
+            nativesDirectory);
+        var nativeSyncRequest = BuildNativeSyncRequest(
+            launcherFolder,
+            selectedInstanceName,
+            nativePathPlan.ExtractionDirectory,
+            manifestSummary,
+            selectedJavaRuntime);
+        var versionType = ResolveVersionType(localConfig, instanceConfig, manifestSummary);
+        var replacementPlan = MinecraftLaunchReplacementValueService.BuildPlan(new MinecraftLaunchReplacementValueRequest(
+            ClasspathSeparator: GetClasspathSeparator(),
+            NativesDirectory: nativePathPlan.SearchPath,
+            LibraryDirectory: Path.Combine(launcherFolder, "libraries"),
+            LibrariesDirectory: Path.Combine(launcherFolder, "libraries"),
+            LauncherName: "PCLME",
+            LauncherVersion: "frontend-avalonia",
+            VersionName: resolvedInstanceName,
+            VersionType: versionType,
+            GameDirectory: indieDirectory,
+            AssetsRoot: Path.Combine(launcherFolder, "assets"),
+            UserProperties: "{}",
+            AuthPlayerName: selectedProfile.UserName,
+            AuthUuid: ResolveProfileUuid(selectedProfile),
+            AccessToken: ResolveAccessToken(selectedProfile),
+            UserType: GetUserType(selectedProfile.Kind),
+            ResolutionWidth: resolutionPlan.Width,
+            ResolutionHeight: resolutionPlan.Height,
+            GameAssetsDirectory: Path.Combine(launcherFolder, "assets", "virtual", "legacy"),
+            AssetsIndexName: manifestSummary.AssetsIndexName ?? "legacy",
+            Classpath: classpathPlan.JoinedClasspath));
+        var prerunPlan = MinecraftLaunchPrerunWorkflowService.BuildPlan(new MinecraftLaunchPrerunWorkflowRequest(
+            LauncherProfilesPath: Path.Combine(launcherFolder, "launcher_profiles.json"),
+            IsMicrosoftLogin: selectedProfile.Kind == MinecraftLaunchProfileKind.Microsoft,
+            ExistingLauncherProfilesJson: ReadFileOrDefault(Path.Combine(launcherFolder, "launcher_profiles.json"), "{}"),
+            UserName: selectedProfile.UserName,
+            ClientToken: selectedProfile.ClientToken ?? "frontend-avalonia",
+            LauncherProfilesDefaultTimestamp: DateTime.Now,
+            PrimaryOptionsFilePath: Path.Combine(indieDirectory, "options.txt"),
+            PrimaryOptionsFileExists: File.Exists(Path.Combine(indieDirectory, "options.txt")),
+            PrimaryCurrentLanguage: ReadOptionValue(Path.Combine(indieDirectory, "options.txt"), "lang"),
+            YosbrOptionsFilePath: Path.Combine(indieDirectory, "config", "yosbr", "options.txt"),
+            YosbrOptionsFileExists: File.Exists(Path.Combine(indieDirectory, "config", "yosbr", "options.txt")),
+            HasExistingSaves: Directory.Exists(Path.Combine(indieDirectory, "saves")) &&
+                              Directory.EnumerateFileSystemEntries(Path.Combine(indieDirectory, "saves")).Any(),
+            ReleaseTime: manifestSummary.ReleaseTime ?? javaWorkflowRequest.ReleaseTime,
+            LaunchWindowType: ReadValue(localConfig, "LaunchArgumentWindowType", (int)GameWindowSizeMode.Default),
+            AutoChangeLanguage: ReadValue(sharedConfig, "ToolHelpChinese", true)));
+        var argumentPlan = BuildArgumentPlan(
+            runtimePaths,
+            launcherFolder,
+            selectedInstanceName,
+            indieDirectory,
+            manifestSummary,
+            selectedProfile,
+            selectedJavaRuntime,
+            localConfig,
+            sharedConfig,
+            instanceConfig,
+            retroWrapperOptions,
+            replacementPlan);
+        var sessionStartPlan = BuildSessionStartPlan(
+            launcherFolder,
+            selectedInstanceName,
+            resolvedInstanceName,
+            instancePath,
+            indieDirectory,
+            nativesDirectory,
+            nativePathPlan.SearchPath,
+            nativePathPlan.ExtractionDirectory,
+            nativePathPlan.AliasDirectory,
+            nativeSyncRequest?.NativeArchives.Count ?? 0,
+            manifestSummary,
+            selectedProfile,
+            selectedJavaRuntime,
+            localConfig,
+            sharedConfig,
+            instanceConfig,
+            argumentPlan);
+        var postLaunchShell = MinecraftLaunchShellService.GetPostLaunchShellPlan(
+            new MinecraftLaunchPostLaunchShellRequest(
+                ReadValue(sharedConfig, "LaunchArgumentVisible", LauncherVisibility.DoNothing),
+                ReadValue(localConfig, "UiMusicStop", false),
+                ReadValue(localConfig, "UiMusicStart", false)));
+        var launchCount = LauncherFrontendRuntimeStateService.ReadProtectedInt(
+            runtimePaths.SharedConfigDirectory,
+            runtimePaths.SharedConfigPath,
+            "SystemLaunchCount");
+        var supportPrompt = MinecraftLaunchShellService.GetSupportPrompt(launchCount);
+        var loginRequirement = ResolveLoginRequirement(instanceConfig);
+        var requiredAuthServer = loginRequirement is MinecraftLaunchLoginRequirement.Auth or MinecraftLaunchLoginRequirement.MicrosoftOrAuth
+            ? instanceConfig is null
+                ? null
+                : NullIfWhiteSpace(ReadValue(instanceConfig, "VersionServerAuthServer", string.Empty))
+            : null;
+        var precheckRequest = new MinecraftLaunchPrecheckRequest(
+            InstanceName: resolvedInstanceName,
+            InstancePathIndie: indieDirectory,
+            InstancePath: launcherFolder,
+            IsInstanceSelected: !string.IsNullOrWhiteSpace(selectedInstanceName),
+            IsInstanceError: false,
+            InstanceErrorDescription: null,
+            IsUtf8CodePage: true,
+            IsNonAsciiPathWarningDisabled: ReadValue(sharedConfig, "HintDisableGamePathCheckTip", false),
+            IsInstancePathAscii: IsAscii(indieDirectory),
+            ProfileValidationMessage: string.Empty,
+            SelectedProfileKind: selectedProfile.Kind,
+            HasLabyMod: manifestSummary.HasLabyMod,
+            LoginRequirement: loginRequirement,
+            RequiredAuthServer: requiredAuthServer,
+            SelectedAuthServer: selectedProfile.AuthServer,
+            HasMicrosoftProfile: selectedProfile.HasMicrosoftProfile,
+            IsRestrictedFeatureAllowed: true);
+        var precheckResult = MinecraftLaunchPrecheckService.Evaluate(precheckRequest);
+        var javaRuntimeInstallPlan = BuildJavaRuntimeInstallPlan(
+            javaWorkflow,
+            manifestSummary,
+            selectedJavaRuntime,
+            launcherFolder,
+            downloadProvider);
+
+        return new FrontendLaunchComposition(
+            options.Scenario,
+            resolvedInstanceName,
+            instancePath,
+            requiredArtifacts,
+            selectedProfile,
+            selectedJavaRuntime,
+            javaSelection.WarningMessage,
+            javaSelection.CompatibilityPrompt,
+            launchCount,
+            precheckRequest,
+            precheckResult,
+            supportPrompt,
+            javaWorkflow,
+            javaRuntimeInstallPlan,
+            resolutionPlan,
+            classpathPlan,
+            nativesDirectory,
+            nativePathPlan.AliasDirectory,
+            nativeSyncRequest,
+            replacementPlan,
+            prerunPlan,
+            argumentPlan,
+            sessionStartPlan,
+            postLaunchShell,
+            MinecraftLaunchShellService.GetCompletionNotification(new MinecraftLaunchCompletionRequest(
+                InstanceName: resolvedInstanceName,
+                Outcome: MinecraftLaunchOutcome.Succeeded,
+                IsScriptExport: false,
+                AbortHint: null)));
+    }
+
+    private static string ResolveSelectedInstanceName(string? selectedInstanceName, II18nService? i18n)
+    {
+        return string.IsNullOrWhiteSpace(selectedInstanceName)
+            ? Text(i18n, "instance.common.no_selection", "No instance selected")
+            : selectedInstanceName;
+    }
+
+    private static string Text(II18nService? i18n, string key, string fallback)
+    {
+        return i18n?.T(key) ?? fallback;
+    }
+
+}

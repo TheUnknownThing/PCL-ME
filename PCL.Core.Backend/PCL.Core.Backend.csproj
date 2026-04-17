@@ -135,7 +135,13 @@
     <Compile Include="Minecraft/Launch/MinecraftLaunchThirdPartyLoginExecutionService.cs" />
     <Compile Include="Minecraft/Launch/MinecraftLaunchThirdPartyLoginWorkflowService.cs" />
     <Compile Include="Minecraft/Launch/MinecraftLaunchWatcherWorkflowService.cs" />
-    <Compile Include="Minecraft/MinecraftCrashAnalysisService.cs" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.Collection.cs" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.Entry.cs" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.Models.cs" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.PriorityOne.cs" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.PriorityThree.cs" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.PriorityTwo.cs" />
+    <Compile Include="Minecraft/MinecraftCrashAnalysisService.TextHelpers.cs" />
     <Compile Include="Minecraft/MinecraftCrashEnvironmentReportRequest.cs" />
     <Compile Include="Minecraft/MinecraftCrashExportArchiveService.cs" />
     <Compile Include="Minecraft/MinecraftCrashExportFile.cs" />
