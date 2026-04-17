@@ -300,7 +300,8 @@ internal sealed partial class FrontendShellViewModel
                 ExportSettingsButton = _i18n.T("setup.launcher_misc.actions.export_settings"),
                 ImportSettingsButton = _i18n.T("setup.launcher_misc.actions.import_settings"),
                 NetworkCardHeader = _i18n.T("setup.launcher_misc.cards.network.header"),
-                EnableDoHLabel = _i18n.T("setup.launcher_misc.flags.enable_doh"),
+                SecureDnsModeLabel = _i18n.T("setup.launcher_misc.fields.secure_dns_mode"),
+                SecureDnsProviderLabel = _i18n.T("setup.launcher_misc.fields.secure_dns_provider"),
                 HttpProxyLabel = _i18n.T("setup.launcher_misc.fields.http_proxy"),
                 NoProxyLabel = _i18n.T("setup.launcher_misc.options.http_proxy.none"),
                 SystemProxyLabel = _i18n.T("setup.launcher_misc.options.http_proxy.system"),
@@ -315,6 +316,19 @@ internal sealed partial class FrontendShellViewModel
                 DebugCardHeader = _i18n.T("setup.launcher_misc.cards.debug.header"),
                 DebugAnimationSpeedLabel = _i18n.T("setup.launcher_misc.fields.debug_animation_speed"),
                 DebugModeLabel = _i18n.T("setup.launcher_misc.flags.debug_mode"),
+                SecureDnsModeOptions =
+                [
+                    _i18n.T("setup.launcher_misc.options.secure_dns_mode.system"),
+                    _i18n.T("setup.launcher_misc.options.secure_dns_mode.doh"),
+                    _i18n.T("setup.launcher_misc.options.secure_dns_mode.dot")
+                ],
+                SecureDnsProviderOptions =
+                [
+                    _i18n.T("setup.launcher_misc.options.secure_dns_provider.auto"),
+                    _i18n.T("setup.launcher_misc.options.secure_dns_provider.dnspod"),
+                    _i18n.T("setup.launcher_misc.options.secure_dns_provider.cloudflare"),
+                    _i18n.T("setup.launcher_misc.options.secure_dns_provider.google")
+                ],
                 SystemActivityOptions =
                 [
                     _i18n.T("setup.launcher_misc.options.system_activity.all"),
@@ -345,6 +359,8 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(FileNameFormatOptions));
         RaisePropertyChanged(nameof(ModLocalNameStyleOptions));
         RaisePropertyChanged(nameof(SystemActivityOptions));
+        RaisePropertyChanged(nameof(SecureDnsModeOptions));
+        RaisePropertyChanged(nameof(SecureDnsProviderOptions));
         RaisePropertyChanged(nameof(BackgroundSuitOptions));
         RaisePropertyChanged(nameof(DownloadTimeoutLabel));
         RaisePropertyChanged(nameof(DebugAnimationSpeedLabel));
@@ -574,7 +590,8 @@ internal sealed class SetupLauncherMiscLocalization
     public required string ExportSettingsButton { get; init; }
     public required string ImportSettingsButton { get; init; }
     public required string NetworkCardHeader { get; init; }
-    public required string EnableDoHLabel { get; init; }
+    public required string SecureDnsModeLabel { get; init; }
+    public required string SecureDnsProviderLabel { get; init; }
     public required string HttpProxyLabel { get; init; }
     public required string NoProxyLabel { get; init; }
     public required string SystemProxyLabel { get; init; }
@@ -589,5 +606,7 @@ internal sealed class SetupLauncherMiscLocalization
     public required string DebugCardHeader { get; init; }
     public required string DebugAnimationSpeedLabel { get; init; }
     public required string DebugModeLabel { get; init; }
+    public required IReadOnlyList<string> SecureDnsModeOptions { get; init; }
+    public required IReadOnlyList<string> SecureDnsProviderOptions { get; init; }
     public required IReadOnlyList<string> SystemActivityOptions { get; init; }
 }

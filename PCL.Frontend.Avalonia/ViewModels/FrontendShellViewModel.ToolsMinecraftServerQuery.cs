@@ -675,7 +675,7 @@ internal sealed partial class FrontendShellViewModel
 
     private static async Task<List<FrontendDnsSrvRecord>> QueryMinecraftServerSrvOrderedAsync(string domain, CancellationToken cancellationToken)
     {
-        var records = await FrontendHttpProxyService.QuerySrvRecordsOverHttpsAsync(
+        var records = await FrontendHttpProxyService.QuerySrvRecordsAsync(
             TrimMinecraftServerQueryTrailingDot(domain),
             cancellationToken).ConfigureAwait(false);
         return records.ToList();

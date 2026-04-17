@@ -3,6 +3,7 @@ using System.Net.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.IO.Net.Http.Proxying;
 using PCL.Core.Testing;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Core.Backend.Test.App;
@@ -12,13 +13,13 @@ namespace PCL.Core.Backend.Test.App;
 public sealed class FrontendHttpProxyServiceTest
 {
     private IWebProxy? _originalDefaultProxy;
-    private bool _originalDnsOverHttpsEnabled;
+    private FrontendSecureDnsConfiguration _originalSecureDnsConfiguration;
 
     [TestInitialize]
     public void CaptureDefaultProxy()
     {
         _originalDefaultProxy = HttpClient.DefaultProxy;
-        _originalDnsOverHttpsEnabled = FrontendHttpProxyService.IsDnsOverHttpsEnabled;
+        _originalSecureDnsConfiguration = FrontendHttpProxyService.CurrentSecureDnsConfiguration;
     }
 
     [TestCleanup]
@@ -29,7 +30,7 @@ public sealed class FrontendHttpProxyServiceTest
             HttpClient.DefaultProxy = _originalDefaultProxy;
         }
 
-        FrontendHttpProxyService.ApplyDnsOverHttpsSetting(_originalDnsOverHttpsEnabled);
+        FrontendHttpProxyService.ApplySecureDnsConfiguration(_originalSecureDnsConfiguration);
     }
 
     [TestMethod]
@@ -130,6 +131,46 @@ public sealed class FrontendHttpProxyServiceTest
         FrontendHttpProxyService.ApplyStoredDnsSettings(runtimePaths);
 
         Assert.IsFalse(FrontendHttpProxyService.IsDnsOverHttpsEnabled);
+    }
+
+    [TestMethod]
+    public void ReadConfiguredSecureDnsConfiguration_UsesNewKeys()
+    {
+        using var environment = new FrontendRuntimePathTestEnvironment();
+        var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
+        var shellActionService = new FrontendShellActionService(
+            runtimePaths,
+            new FrontendPlatformAdapter(),
+            () => { },
+            new DictionaryI18nService());
+
+        shellActionService.PersistSharedValue("SystemNetDnsMode", (int)FrontendSecureDnsMode.DnsOverTls);
+        shellActionService.PersistSharedValue("SystemNetDnsProvider", (int)FrontendSecureDnsProvider.Cloudflare);
+
+        var configuration = FrontendHttpProxyService.ReadConfiguredSecureDnsConfiguration(runtimePaths);
+
+        Assert.AreEqual(FrontendSecureDnsMode.DnsOverTls, configuration.Mode);
+        Assert.AreEqual(FrontendSecureDnsProvider.Cloudflare, configuration.Provider);
+    }
+
+    [TestMethod]
+    public void ApplyStoredDnsSettings_UsesPersistedModeAndProvider()
+    {
+        using var environment = new FrontendRuntimePathTestEnvironment();
+        var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
+        var shellActionService = new FrontendShellActionService(
+            runtimePaths,
+            new FrontendPlatformAdapter(),
+            () => { },
+            new DictionaryI18nService());
+
+        shellActionService.PersistSharedValue("SystemNetDnsMode", (int)FrontendSecureDnsMode.DnsOverTls);
+        shellActionService.PersistSharedValue("SystemNetDnsProvider", (int)FrontendSecureDnsProvider.Google);
+
+        FrontendHttpProxyService.ApplyStoredDnsSettings(runtimePaths);
+
+        Assert.AreEqual(FrontendSecureDnsMode.DnsOverTls, FrontendHttpProxyService.CurrentSecureDnsConfiguration.Mode);
+        Assert.AreEqual(FrontendSecureDnsProvider.Google, FrontendHttpProxyService.CurrentSecureDnsConfiguration.Provider);
     }
 
     [TestMethod]

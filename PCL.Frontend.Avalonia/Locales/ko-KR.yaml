@@ -1937,6 +1937,8 @@ setup:
       http_proxy: HTTP 프록시
       max_animation_fps: 최대 애니메이션 FPS
       realtime_log_lines: 실시간 로그 라인
+      secure_dns_mode: 보안 DNS 모드
+      secure_dns_provider: 보안 DNS 공급자
     flags:
       debug_mode: 디버그 모드
       disable_hardware_acceleration: 하드웨어 가속 비활성화
@@ -1965,6 +1967,15 @@ setup:
       proxy_test_succeeded: "{mode} 연결이 성공했습니다. HTTP {status_code} {reason_phrase}."
       proxy_test_succeeded_hint: 프록시 연결 테스트에 성공했습니다.
     options:
+      secure_dns_mode:
+        system: 시스템 DNS
+        doh: DNS over HTTPS (DoH)
+        dot: DNS over TLS (DoT)
+      secure_dns_provider:
+        auto: 자동
+        dnspod: DNSPod
+        cloudflare: Cloudflare
+        google: Google
       http_proxy:
         custom: 맞춤 프록시
         none: 프록시 없음

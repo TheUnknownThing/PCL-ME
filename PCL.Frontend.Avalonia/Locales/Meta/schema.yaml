@@ -2167,6 +2167,8 @@ setup:
       http_proxy: []
       max_animation_fps: []
       realtime_log_lines: []
+      secure_dns_mode: []
+      secure_dns_provider: []
     flags:
       debug_mode: []
       disable_hardware_acceleration: []
@@ -2200,6 +2202,15 @@ setup:
         - reason_phrase
       proxy_test_succeeded_hint: []
     options:
+      secure_dns_mode:
+        system: []
+        doh: []
+        dot: []
+      secure_dns_provider:
+        auto: []
+        dnspod: []
+        cloudflare: []
+        google: []
       http_proxy:
         custom: []
         none: []

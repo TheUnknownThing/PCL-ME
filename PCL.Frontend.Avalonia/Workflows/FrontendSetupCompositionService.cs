@@ -212,6 +212,7 @@ internal static class FrontendSetupCompositionService
         JsonFileProvider sharedConfig,
         YamlFileProvider localConfig)
     {
+        var secureDnsConfiguration = FrontendHttpProxyService.ReadConfiguredSecureDnsConfiguration(paths);
         var renderingConfiguration = FrontendStartupRenderingService.Resolve(
             paths,
             new FrontendPlatformAdapter().GetDesktopPlatformKind());
@@ -222,7 +223,8 @@ internal static class FrontendSetupCompositionService
             MaxRealTimeLogValue: ReadValue(sharedConfig, "SystemMaxLog", 13),
             IsHardwareAccelerationToggleAvailable: renderingConfiguration.IsHardwareAccelerationToggleAvailable,
             DisableHardwareAcceleration: renderingConfiguration.DisableHardwareAcceleration,
-            EnableDoH: ReadValue(sharedConfig, "SystemNetEnableDoH", true),
+            SecureDnsModeIndex: (int)secureDnsConfiguration.Mode,
+            SecureDnsProviderIndex: (int)secureDnsConfiguration.Provider,
             HttpProxyTypeIndex: ReadValue(sharedConfig, "SystemHttpProxyType", 1),
             HttpProxyAddress: FrontendHttpProxyService.ReadConfiguredProxyAddress(paths),
             HttpProxyUsername: FrontendHttpProxyService.ReadConfiguredProxyUsername(paths),

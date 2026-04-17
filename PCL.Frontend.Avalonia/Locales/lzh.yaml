@@ -1937,6 +1937,8 @@ setup:
       http_proxy: HTTP 代理
       max_animation_fps: 最高動畫幀率
       realtime_log_lines: 實時日誌行數
+      secure_dns_mode: 安全 DNS 式
+      secure_dns_provider: 安全 DNS 供者
     flags:
       debug_mode: 調試模式
       disable_hardware_acceleration: 禁硬體加速
@@ -1965,6 +1967,15 @@ setup:
       proxy_test_succeeded: "{mode} 連線既成，HTTP {status_code} {reason_phrase}。"
       proxy_test_succeeded_hint: 代理連線試已成。
     options:
+      secure_dns_mode:
+        system: 系統 DNS
+        doh: DNS over HTTPS (DoH)
+        dot: DNS over TLS (DoT)
+      secure_dns_provider:
+        auto: 自動
+        dnspod: DNSPod
+        cloudflare: Cloudflare
+        google: Google
       http_proxy:
         custom: 自定代理
         none: 不用代理

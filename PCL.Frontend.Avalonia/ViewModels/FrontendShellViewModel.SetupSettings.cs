@@ -1,4 +1,5 @@
 using System.Globalization;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -231,11 +232,40 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _disableHardwareAcceleration, value);
     }
 
-    public bool EnableDoH
+    public IReadOnlyList<string> SecureDnsModeOptions => SetupText.LauncherMisc.SecureDnsModeOptions;
+
+    public IReadOnlyList<string> SecureDnsProviderOptions => SetupText.LauncherMisc.SecureDnsProviderOptions;
+
+    public int SelectedSecureDnsModeIndex
     {
-        get => _enableDoH;
-        set => SetProperty(ref _enableDoH, value);
+        get => _selectedSecureDnsModeIndex;
+        set
+        {
+            if (!TryNormalizeSelectionIndex(value, SecureDnsModeOptions.Count, out var clamped))
+            {
+                return;
+            }
+
+            if (SetProperty(ref _selectedSecureDnsModeIndex, clamped))
+            {
+                RaisePropertyChanged(nameof(IsSecureDnsProviderSelectionEnabled));
+            }
+        }
     }
+
+    public int SelectedSecureDnsProviderIndex
+    {
+        get => _selectedSecureDnsProviderIndex;
+        set
+        {
+            if (TryNormalizeSelectionIndex(value, SecureDnsProviderOptions.Count, out var clamped))
+            {
+                SetProperty(ref _selectedSecureDnsProviderIndex, clamped);
+            }
+        }
+    }
+
+    public bool IsSecureDnsProviderSelectionEnabled => SelectedSecureDnsModeIndex != (int)FrontendSecureDnsMode.System;
 
     public int SelectedHttpProxyTypeIndex
     {

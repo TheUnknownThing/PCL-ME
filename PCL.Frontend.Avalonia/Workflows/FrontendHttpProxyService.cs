@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Buffers.Binary;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
@@ -8,6 +11,7 @@ using Ae.Dns.Protocol.Records;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.IO.Net.Http.Proxying;
+using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -17,19 +21,22 @@ internal static class FrontendHttpProxyService
     private const string ProxyAddressKey = "SystemHttpProxy";
     private const string ProxyUsernameKey = "SystemHttpProxyCustomUsername";
     private const string ProxyPasswordKey = "SystemHttpProxyCustomPassword";
-    private const string DnsOverHttpsKey = "SystemNetEnableDoH";
+    private const string LegacyDnsOverHttpsKey = "SystemNetEnableDoH";
+    private const string SecureDnsModeKey = "SystemNetDnsMode";
+    private const string SecureDnsProviderKey = "SystemNetDnsProvider";
 
     private static readonly ProxyManager LauncherProxyManager = new();
-    private static readonly Uri[] DnsOverHttpsEndpoints =
+    private static readonly FrontendSecureDnsProfile[] AutoSecureDnsProfiles =
     [
-        new("https://doh.pub/"),
-        new("https://doh.pysio.online/"),
-        new("https://cloudflare-dns.com/")
+        new(FrontendSecureDnsProvider.DnsPod, new Uri("https://doh.pub/"), "dot.pub", 853),
+        new(FrontendSecureDnsProvider.Cloudflare, new Uri("https://cloudflare-dns.com/"), "one.one.one.one", 853),
+        new(FrontendSecureDnsProvider.Google, new Uri("https://dns.google/"), "dns.google", 853)
     ];
-    private static readonly TimeSpan DnsOverHttpsTimeout = TimeSpan.FromSeconds(5);
-    private static volatile bool _isDnsOverHttpsEnabled = true;
+    private static readonly TimeSpan SecureDnsTimeout = TimeSpan.FromSeconds(5);
+    private static FrontendSecureDnsConfiguration _secureDnsConfiguration = FrontendSecureDnsConfiguration.Default;
     public static Uri ProxyConnectivityProbeUri { get; } = new("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
-    public static bool IsDnsOverHttpsEnabled => _isDnsOverHttpsEnabled;
+    public static bool IsDnsOverHttpsEnabled => _secureDnsConfiguration.Mode == FrontendSecureDnsMode.DnsOverHttps;
+    internal static FrontendSecureDnsConfiguration CurrentSecureDnsConfiguration => _secureDnsConfiguration;
 
     static FrontendHttpProxyService()
     {
@@ -48,7 +55,7 @@ internal static class FrontendHttpProxyService
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
 
-        ApplyDnsOverHttpsSetting(ReadConfiguredDnsOverHttpsEnabled(runtimePaths));
+        ApplySecureDnsConfiguration(ReadConfiguredSecureDnsConfiguration(runtimePaths));
     }
 
     public static string ReadConfiguredProxyAddress(FrontendRuntimePaths runtimePaths)
@@ -76,17 +83,54 @@ internal static class FrontendHttpProxyService
 
     public static bool ReadConfiguredDnsOverHttpsEnabled(FrontendRuntimePaths runtimePaths)
     {
-        ArgumentNullException.ThrowIfNull(runtimePaths);
-
-        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
-        return sharedConfig.Exists(DnsOverHttpsKey)
-            ? sharedConfig.Get<bool>(DnsOverHttpsKey)
-            : true;
+        return ReadConfiguredSecureDnsMode(runtimePaths) == FrontendSecureDnsMode.DnsOverHttps;
     }
 
     public static void ApplyDnsOverHttpsSetting(bool isEnabled)
     {
-        _isDnsOverHttpsEnabled = isEnabled;
+        ApplySecureDnsConfiguration(new FrontendSecureDnsConfiguration(
+            isEnabled
+                ? FrontendSecureDnsMode.DnsOverHttps
+                : FrontendSecureDnsMode.System,
+            FrontendSecureDnsProvider.Auto));
+    }
+
+    public static FrontendSecureDnsConfiguration ReadConfiguredSecureDnsConfiguration(FrontendRuntimePaths runtimePaths)
+    {
+        ArgumentNullException.ThrowIfNull(runtimePaths);
+
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        return new FrontendSecureDnsConfiguration(
+            ReadConfiguredSecureDnsMode(sharedConfig),
+            ReadConfiguredSecureDnsProvider(sharedConfig));
+    }
+
+    public static FrontendSecureDnsMode ReadConfiguredSecureDnsMode(FrontendRuntimePaths runtimePaths)
+    {
+        ArgumentNullException.ThrowIfNull(runtimePaths);
+
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        return ReadConfiguredSecureDnsMode(sharedConfig);
+    }
+
+    public static FrontendSecureDnsProvider ReadConfiguredSecureDnsProvider(FrontendRuntimePaths runtimePaths)
+    {
+        ArgumentNullException.ThrowIfNull(runtimePaths);
+
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        return ReadConfiguredSecureDnsProvider(sharedConfig);
+    }
+
+    public static FrontendSecureDnsConfiguration BuildSecureDnsConfiguration(int modeIndex, int providerIndex)
+    {
+        return new FrontendSecureDnsConfiguration(
+            NormalizeSecureDnsMode(modeIndex),
+            NormalizeSecureDnsProvider(providerIndex));
+    }
+
+    public static void ApplySecureDnsConfiguration(FrontendSecureDnsConfiguration configuration)
+    {
+        _secureDnsConfiguration = configuration;
     }
 
     internal static FrontendResolvedProxyConfiguration ResolveConfiguration(FrontendRuntimePaths runtimePaths)
@@ -245,9 +289,13 @@ internal static class FrontendHttpProxyService
             return [addressLiteral];
         }
 
-        if (_isDnsOverHttpsEnabled)
+        var secureDnsConfiguration = _secureDnsConfiguration;
+        if (secureDnsConfiguration.IsSecureTransportEnabled)
         {
-            var addresses = await QueryHostAddressesOverHttpsAsync(normalizedHost, cancellationToken).ConfigureAwait(false);
+            var addresses = await QueryHostAddressesSecureAsync(
+                normalizedHost,
+                secureDnsConfiguration,
+                cancellationToken).ConfigureAwait(false);
             if (addresses.Length > 0)
             {
                 return addresses;
@@ -257,23 +305,32 @@ internal static class FrontendHttpProxyService
         return await Dns.GetHostAddressesAsync(normalizedHost, cancellationToken).ConfigureAwait(false);
     }
 
-    public static async Task<IReadOnlyList<FrontendDnsSrvRecord>> QuerySrvRecordsOverHttpsAsync(string domain, CancellationToken cancellationToken = default)
+    public static Task<IReadOnlyList<FrontendDnsSrvRecord>> QuerySrvRecordsOverHttpsAsync(
+        string domain,
+        CancellationToken cancellationToken = default)
+    {
+        return QuerySrvRecordsAsync(domain, cancellationToken);
+    }
+
+    public static async Task<IReadOnlyList<FrontendDnsSrvRecord>> QuerySrvRecordsAsync(
+        string domain,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(domain);
 
         var name = $"_minecraft._tcp.{domain.Trim().TrimEnd('.')}";
-        foreach (var endpoint in DnsOverHttpsEndpoints)
+        var secureDnsConfiguration = _secureDnsConfiguration.IsSecureTransportEnabled
+            ? _secureDnsConfiguration
+            : FrontendSecureDnsConfiguration.Default;
+        foreach (var profile in GetSecureDnsProfiles(secureDnsConfiguration.Provider))
         {
             try
             {
-                using var httpClient = CreateLauncherHttpClient(
-                    DnsOverHttpsTimeout,
-                    automaticDecompression: DecompressionMethods.None,
-                    useDnsOverHttps: false);
-                httpClient.BaseAddress = endpoint;
-                using var dnsClient = new DnsHttpClient(httpClient);
-                var response = await dnsClient.Query(
-                    DnsQueryFactory.CreateQuery(name, DnsQueryType.SRV),
+                var response = await QueryDnsMessageAsync(
+                    profile,
+                    secureDnsConfiguration.Mode,
+                    name,
+                    DnsQueryType.SRV,
                     cancellationToken).ConfigureAwait(false);
                 if (response.Answers.Count == 0)
                 {
@@ -323,7 +380,7 @@ internal static class FrontendHttpProxyService
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                // Endpoint-local timeout/cancellation should not abort all DoH fallback attempts.
+                // Endpoint-local timeout/cancellation should not abort all secure-DNS fallback attempts.
                 continue;
             }
             catch (OperationCanceledException)
@@ -332,7 +389,7 @@ internal static class FrontendHttpProxyService
             }
             catch
             {
-                // Try the next DoH endpoint.
+                // Try the next secure DNS endpoint.
             }
         }
 
@@ -378,6 +435,51 @@ internal static class FrontendHttpProxyService
             0 => ProxyMode.NoProxy,
             2 => ProxyMode.CustomProxy,
             _ => ProxyMode.SystemProxy
+        };
+    }
+
+    private static FrontendSecureDnsMode ReadConfiguredSecureDnsMode(JsonFileProvider sharedConfig)
+    {
+        if (sharedConfig.Exists(SecureDnsModeKey))
+        {
+            return NormalizeSecureDnsMode(sharedConfig.Get<int>(SecureDnsModeKey));
+        }
+
+        if (!sharedConfig.Exists(LegacyDnsOverHttpsKey))
+        {
+            return FrontendSecureDnsMode.DnsOverHttps;
+        }
+
+        return sharedConfig.Get<bool>(LegacyDnsOverHttpsKey)
+            ? FrontendSecureDnsMode.DnsOverHttps
+            : FrontendSecureDnsMode.System;
+    }
+
+    private static FrontendSecureDnsProvider ReadConfiguredSecureDnsProvider(JsonFileProvider sharedConfig)
+    {
+        return sharedConfig.Exists(SecureDnsProviderKey)
+            ? NormalizeSecureDnsProvider(sharedConfig.Get<int>(SecureDnsProviderKey))
+            : FrontendSecureDnsProvider.Auto;
+    }
+
+    private static FrontendSecureDnsMode NormalizeSecureDnsMode(int value)
+    {
+        return value switch
+        {
+            (int)FrontendSecureDnsMode.System => FrontendSecureDnsMode.System,
+            (int)FrontendSecureDnsMode.DnsOverTls => FrontendSecureDnsMode.DnsOverTls,
+            _ => FrontendSecureDnsMode.DnsOverHttps
+        };
+    }
+
+    private static FrontendSecureDnsProvider NormalizeSecureDnsProvider(int value)
+    {
+        return value switch
+        {
+            (int)FrontendSecureDnsProvider.DnsPod => FrontendSecureDnsProvider.DnsPod,
+            (int)FrontendSecureDnsProvider.Cloudflare => FrontendSecureDnsProvider.Cloudflare,
+            (int)FrontendSecureDnsProvider.Google => FrontendSecureDnsProvider.Google,
+            _ => FrontendSecureDnsProvider.Auto
         };
     }
 
@@ -461,21 +563,30 @@ internal static class FrontendHttpProxyService
         throw lastError ?? new SocketException((int)SocketError.NotConnected);
     }
 
-    private static async Task<IPAddress[]> QueryHostAddressesOverHttpsAsync(string host, CancellationToken cancellationToken)
+    private static async Task<IPAddress[]> QueryHostAddressesSecureAsync(
+        string host,
+        FrontendSecureDnsConfiguration configuration,
+        CancellationToken cancellationToken)
     {
-        foreach (var endpoint in DnsOverHttpsEndpoints)
+        foreach (var profile in GetSecureDnsProfiles(configuration.Provider))
         {
             try
             {
-                using var httpClient = CreateLauncherHttpClient(
-                    DnsOverHttpsTimeout,
-                    automaticDecompression: DecompressionMethods.None,
-                    useDnsOverHttps: false);
-                httpClient.BaseAddress = endpoint;
-                using var dnsClient = new DnsHttpClient(httpClient);
                 var addresses = new List<IPAddress>();
-                await AppendQueryAddressesAsync(dnsClient, host, DnsQueryType.AAAA, addresses, cancellationToken).ConfigureAwait(false);
-                await AppendQueryAddressesAsync(dnsClient, host, DnsQueryType.A, addresses, cancellationToken).ConfigureAwait(false);
+                await AppendQueryAddressesAsync(
+                    profile,
+                    configuration.Mode,
+                    host,
+                    DnsQueryType.AAAA,
+                    addresses,
+                    cancellationToken).ConfigureAwait(false);
+                await AppendQueryAddressesAsync(
+                    profile,
+                    configuration.Mode,
+                    host,
+                    DnsQueryType.A,
+                    addresses,
+                    cancellationToken).ConfigureAwait(false);
                 if (addresses.Count > 0)
                 {
                     return addresses
@@ -485,7 +596,7 @@ internal static class FrontendHttpProxyService
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                // Endpoint-local timeout/cancellation should not abort all DoH fallback attempts.
+                // Endpoint-local timeout/cancellation should not abort all secure-DNS fallback attempts.
                 continue;
             }
             catch (OperationCanceledException)
@@ -494,7 +605,7 @@ internal static class FrontendHttpProxyService
             }
             catch
             {
-                // Try the next DoH endpoint.
+                // Try the next secure DNS endpoint.
             }
         }
 
@@ -502,14 +613,18 @@ internal static class FrontendHttpProxyService
     }
 
     private static async Task AppendQueryAddressesAsync(
-        DnsHttpClient dnsClient,
+        FrontendSecureDnsProfile profile,
+        FrontendSecureDnsMode mode,
         string host,
         DnsQueryType queryType,
         ICollection<IPAddress> addresses,
         CancellationToken cancellationToken)
     {
-        var response = await dnsClient.Query(
-            DnsQueryFactory.CreateQuery(host, queryType),
+        var response = await QueryDnsMessageAsync(
+            profile,
+            mode,
+            host,
+            queryType,
             cancellationToken).ConfigureAwait(false);
         foreach (var answer in response.Answers)
         {
@@ -524,6 +639,109 @@ internal static class FrontendHttpProxyService
                 addresses.Add(address);
             }
         }
+    }
+
+    private static IReadOnlyList<FrontendSecureDnsProfile> GetSecureDnsProfiles(FrontendSecureDnsProvider provider)
+    {
+        return provider switch
+        {
+            FrontendSecureDnsProvider.DnsPod => [AutoSecureDnsProfiles[0]],
+            FrontendSecureDnsProvider.Cloudflare => [AutoSecureDnsProfiles[1]],
+            FrontendSecureDnsProvider.Google => [AutoSecureDnsProfiles[2]],
+            _ => AutoSecureDnsProfiles
+        };
+    }
+
+    private static Task<DnsMessage> QueryDnsMessageAsync(
+        FrontendSecureDnsProfile profile,
+        FrontendSecureDnsMode mode,
+        string host,
+        DnsQueryType queryType,
+        CancellationToken cancellationToken)
+    {
+        var query = DnsQueryFactory.CreateQuery(host, queryType);
+        return mode switch
+        {
+            FrontendSecureDnsMode.DnsOverTls => QueryDnsMessageOverTlsAsync(profile, query, cancellationToken),
+            _ => QueryDnsMessageOverHttpsAsync(profile, query, cancellationToken)
+        };
+    }
+
+    private static async Task<DnsMessage> QueryDnsMessageOverHttpsAsync(
+        FrontendSecureDnsProfile profile,
+        DnsMessage query,
+        CancellationToken cancellationToken)
+    {
+        using var httpClient = CreateLauncherHttpClient(
+            SecureDnsTimeout,
+            automaticDecompression: DecompressionMethods.None,
+            useDnsOverHttps: false);
+        httpClient.BaseAddress = profile.DnsOverHttpsEndpoint;
+        using var dnsClient = new DnsHttpClient(httpClient);
+        return await dnsClient.Query(query, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<DnsMessage> QueryDnsMessageOverTlsAsync(
+        FrontendSecureDnsProfile profile,
+        DnsMessage query,
+        CancellationToken cancellationToken)
+    {
+        var queryBytes = SerializeDnsMessage(query);
+        var packet = new byte[queryBytes.Length + sizeof(ushort)];
+        BinaryPrimitives.WriteUInt16BigEndian(packet, checked((ushort)queryBytes.Length));
+        queryBytes.CopyTo(packet.AsSpan(sizeof(ushort)));
+
+        Exception? lastError = null;
+        var addresses = await Dns.GetHostAddressesAsync(profile.DnsOverTlsServerName, cancellationToken).ConfigureAwait(false);
+        foreach (var address in OrderAddresses(addresses))
+        {
+            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            try
+            {
+                await socket.ConnectAsync(address, profile.DnsOverTlsPort, cancellationToken).ConfigureAwait(false);
+                await using var networkStream = new NetworkStream(socket, ownsSocket: true);
+                using var sslStream = new SslStream(networkStream, leaveInnerStreamOpen: false);
+                await sslStream.AuthenticateAsClientAsync(
+                    new SslClientAuthenticationOptions
+                    {
+                        TargetHost = profile.DnsOverTlsServerName,
+                        EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13
+                    },
+                    cancellationToken).ConfigureAwait(false);
+                await sslStream.WriteAsync(packet, cancellationToken).ConfigureAwait(false);
+                await sslStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+                var lengthBuffer = new byte[sizeof(ushort)];
+                await sslStream.ReadExactlyAsync(lengthBuffer, cancellationToken).ConfigureAwait(false);
+                var responseLength = BinaryPrimitives.ReadUInt16BigEndian(lengthBuffer);
+                var responseBuffer = new byte[responseLength];
+                await sslStream.ReadExactlyAsync(responseBuffer, cancellationToken).ConfigureAwait(false);
+                return DeserializeDnsMessage(responseBuffer);
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+                socket.Dispose();
+            }
+        }
+
+        throw lastError ?? new SocketException((int)SocketError.HostNotFound);
+    }
+
+    private static byte[] SerializeDnsMessage(DnsMessage message)
+    {
+        var buffer = new byte[2048];
+        var offset = 0;
+        message.WriteBytes(buffer, ref offset);
+        return buffer[..offset];
+    }
+
+    private static DnsMessage DeserializeDnsMessage(byte[] bytes)
+    {
+        var message = new DnsMessage();
+        var offset = 0;
+        message.ReadBytes(bytes, ref offset);
+        return message;
     }
 
     private static IPAddress? TryParseAddress(DnsQueryType queryType, byte[] bytes)
@@ -611,6 +829,12 @@ internal sealed record FrontendDnsSrvRecord(
     int Weight,
     int Port,
     string Target);
+
+internal sealed record FrontendSecureDnsProfile(
+    FrontendSecureDnsProvider Provider,
+    Uri DnsOverHttpsEndpoint,
+    string DnsOverTlsServerName,
+    int DnsOverTlsPort);
 
 internal sealed class FrontendDnsSrvResource
 {

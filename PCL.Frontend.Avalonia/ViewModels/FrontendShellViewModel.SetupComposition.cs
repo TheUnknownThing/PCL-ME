@@ -68,6 +68,8 @@ internal sealed partial class FrontendShellViewModel
         "UiAniFPS",
         "SystemMaxLog",
         FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
+        "SystemNetDnsMode",
+        "SystemNetDnsProvider",
         "SystemNetEnableDoH",
         "SystemHttpProxyType",
         "SystemDebugAnim",
@@ -300,7 +302,11 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
                 RaisePropertyChanged(nameof(IsHardwareAccelerationToggleVisible));
                 RaisePropertyChanged(nameof(DisableHardwareAcceleration));
-                RaisePropertyChanged(nameof(EnableDoH));
+                RaisePropertyChanged(nameof(SecureDnsModeOptions));
+                RaisePropertyChanged(nameof(SecureDnsProviderOptions));
+                RaisePropertyChanged(nameof(SelectedSecureDnsModeIndex));
+                RaisePropertyChanged(nameof(SelectedSecureDnsProviderIndex));
+                RaisePropertyChanged(nameof(IsSecureDnsProviderSelectionEnabled));
                 RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
                 RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
                 RaisePropertyChanged(nameof(IsNoHttpProxySelected));
@@ -578,9 +584,22 @@ internal sealed partial class FrontendShellViewModel
                         : "setup.launcher_misc.activities.enable_hardware_acceleration"),
                     _i18n.T("setup.launcher_misc.hints.disable_hardware_acceleration_restart"));
                 break;
-            case nameof(EnableDoH):
-                _shellActionService.PersistSharedValue("SystemNetEnableDoH", EnableDoH);
-                FrontendHttpProxyService.ApplyDnsOverHttpsSetting(EnableDoH);
+            case nameof(SelectedSecureDnsModeIndex):
+                _shellActionService.PersistSharedValue("SystemNetDnsMode", SelectedSecureDnsModeIndex);
+                _shellActionService.PersistSharedValue(
+                    "SystemNetEnableDoH",
+                    SelectedSecureDnsModeIndex == (int)FrontendSecureDnsMode.DnsOverHttps);
+                FrontendHttpProxyService.ApplySecureDnsConfiguration(
+                    FrontendHttpProxyService.BuildSecureDnsConfiguration(
+                        SelectedSecureDnsModeIndex,
+                        SelectedSecureDnsProviderIndex));
+                break;
+            case nameof(SelectedSecureDnsProviderIndex):
+                _shellActionService.PersistSharedValue("SystemNetDnsProvider", SelectedSecureDnsProviderIndex);
+                FrontendHttpProxyService.ApplySecureDnsConfiguration(
+                    FrontendHttpProxyService.BuildSecureDnsConfiguration(
+                        SelectedSecureDnsModeIndex,
+                        SelectedSecureDnsProviderIndex));
                 break;
             case nameof(SelectedHttpProxyTypeIndex):
                 _shellActionService.PersistSharedValue("SystemHttpProxyType", SelectedHttpProxyTypeIndex);
@@ -818,7 +837,11 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(MaxRealTimeLogValue));
         RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
         RaisePropertyChanged(nameof(DisableHardwareAcceleration));
-        RaisePropertyChanged(nameof(EnableDoH));
+        RaisePropertyChanged(nameof(SecureDnsModeOptions));
+        RaisePropertyChanged(nameof(SecureDnsProviderOptions));
+        RaisePropertyChanged(nameof(SelectedSecureDnsModeIndex));
+        RaisePropertyChanged(nameof(SelectedSecureDnsProviderIndex));
+        RaisePropertyChanged(nameof(IsSecureDnsProviderSelectionEnabled));
         RaisePropertyChanged(nameof(SelectedHttpProxyTypeIndex));
         RaisePropertyChanged(nameof(IsCustomHttpProxyEnabled));
         RaisePropertyChanged(nameof(IsNoHttpProxySelected));

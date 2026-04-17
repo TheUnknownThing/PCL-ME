@@ -1941,6 +1941,8 @@ setup:
       http_proxy: HTTP proxy
       max_animation_fps: Max animation FPS
       realtime_log_lines: Real-time log lines
+      secure_dns_mode: Secure DNS mode
+      secure_dns_provider: Secure DNS provider
     flags:
       debug_mode: Debug mode
       disable_hardware_acceleration: Disable hardware acceleration
@@ -1969,6 +1971,15 @@ setup:
       proxy_test_succeeded: "{mode} connection succeeded, HTTP {status_code} {reason_phrase}."
       proxy_test_succeeded_hint: Proxy connection test succeeded.
     options:
+      secure_dns_mode:
+        system: System DNS
+        doh: DNS over HTTPS (DoH)
+        dot: DNS over TLS (DoT)
+      secure_dns_provider:
+        auto: Auto
+        dnspod: DNSPod
+        cloudflare: Cloudflare
+        google: Google
       http_proxy:
         custom: Custom proxy
         none: No proxy
