@@ -37,7 +37,10 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                     WorkingDirectory: @"D:\Instances\Demo",
                     LaunchArguments: "--demo",
                     WrapperCommand: null,
-                    EnvironmentVariables: new Dictionary<string, string>(),
+                    EnvironmentVariables: new Dictionary<string, string>
+                    {
+                        ["DEMO_ENV"] = "enabled"
+                    },
                     PrioritySetting: 0),
                 new MinecraftLaunchWatcherWorkflowRequest(
                     new MinecraftLaunchSessionLogRequest(
@@ -75,6 +78,26 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
         Assert.AreEqual(@"C:\Java\bin\javaw.exe", result.ProcessShellPlan.FileName);
         Assert.AreEqual("{version}", result.WatcherWorkflowPlan.RawWindowTitleTemplate);
         Assert.IsTrue(result.WatcherWorkflowPlan.ShouldAttachRealtimeLog);
+        if (OperatingSystem.IsWindows())
+        {
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "cd /D \"D:\\Minecraft\"");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "start \"\" /b \"cmd.exe\" /c \"echo instance\"");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "cd /D \"D:\\Instances\\Demo\"");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "set \"Path=C:\\Windows");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "set \"appdata=D:\\Minecraft\\.minecraft\"");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "set \"DEMO_ENV=enabled\"");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "\"C:\\Java\\bin\\javaw.exe\" --demo");
+        }
+        else
+        {
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "cd 'D:\\Minecraft' || exit 1");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "'/bin/sh' -lc \"echo instance\" &");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "cd 'D:\\Instances\\Demo' || exit 1");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "export Path='C:\\Windows");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "export appdata='D:\\Minecraft\\.minecraft'");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "export DEMO_ENV='enabled'");
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "'C:\\Java\\bin\\javaw.exe' --demo");
+        }
     }
 
     [TestMethod]
@@ -206,6 +229,13 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
 
         Assert.AreEqual("prime-run", result.ProcessShellPlan.FileName);
         Assert.AreEqual("\"/usr/bin/java\" --demo", result.ProcessShellPlan.Arguments);
-        StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "prime-run \"/usr/bin/java\" --demo");
+        if (OperatingSystem.IsWindows())
+        {
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "\"prime-run\" \"/usr/bin/java\" --demo");
+        }
+        else
+        {
+            StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "'prime-run' \"/usr/bin/java\" --demo");
+        }
     }
 }

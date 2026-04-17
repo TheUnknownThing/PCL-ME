@@ -431,6 +431,7 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
+            RefreshLaunchState();
             var extension = _shellActionService.GetCommandScriptExtension();
             var scriptDirectory = GetInstanceOverviewArtifactDirectory("launch-scripts");
             Directory.CreateDirectory(scriptDirectory);
