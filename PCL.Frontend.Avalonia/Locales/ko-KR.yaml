@@ -1428,14 +1428,11 @@ setup:
       community_download_source: 커뮤니티 다운로드 소스
       file_name_format: 리소스 파일 이름 형식
       mod_local_name_style: Mod 로컬 이름 스타일
-      game_update_notifications: 게임 업데이트 알림
       game_language: 게임 언어
     flags:
       auto_select_new_instance: 설치 후 새 인스턴스를 자동으로 선택
       upgrade_partial_authlib: 부분 authlib 지원을 자동으로 업그레이드
       hide_quilt_loader: 버전 목록에서 Quilt Loader 숨기기
-      release_update_notifications: 릴리스 알림
-      snapshot_update_notifications: 스냅샷 알림
       auto_switch_game_language: 게임 언어 자동 전환
       detect_clipboard_links: 클립보드에서 리소스 링크 감지
     options:

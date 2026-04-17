@@ -1430,14 +1430,11 @@ setup:
       community_download_source: Community download source
       file_name_format: Resource filename format
       mod_local_name_style: Mod local name style
-      game_update_notifications: Game update notifications
       game_language: Game language
     flags:
       auto_select_new_instance: Automatically select the new instance after installation
       upgrade_partial_authlib: Upgrade partial authlib support automatically
       hide_quilt_loader: Hide Quilt loader in version lists
-      release_update_notifications: Notify for releases
-      snapshot_update_notifications: Notify for snapshots
       auto_switch_game_language: Switch game language automatically
       detect_clipboard_links: Detect resource links from the clipboard
     options:

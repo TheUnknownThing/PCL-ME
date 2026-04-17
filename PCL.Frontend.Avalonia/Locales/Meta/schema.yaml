@@ -1615,14 +1615,11 @@ setup:
       community_download_source: []
       file_name_format: []
       mod_local_name_style: []
-      game_update_notifications: []
       game_language: []
     flags:
       auto_select_new_instance: []
       upgrade_partial_authlib: []
       hide_quilt_loader: []
-      release_update_notifications: []
-      snapshot_update_notifications: []
       auto_switch_game_language: []
       detect_clipboard_links: []
     options:

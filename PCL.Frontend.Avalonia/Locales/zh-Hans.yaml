@@ -1430,14 +1430,11 @@ setup:
       community_download_source: 社区资源下载源
       file_name_format: 资源文件名格式
       mod_local_name_style: Mod 本地名显示样式
-      game_update_notifications: 游戏更新提醒
       game_language: 游戏语言
     flags:
       auto_select_new_instance: 安装后自动选中新实例
       upgrade_partial_authlib: 自动升级部分 authlib 支持
       hide_quilt_loader: 在版本列表中隐藏 Quilt
-      release_update_notifications: 提醒正式版更新
-      snapshot_update_notifications: 提醒快照更新
       auto_switch_game_language: 自动切换游戏语言
       detect_clipboard_links: 检测剪贴板中的资源链接
     options:

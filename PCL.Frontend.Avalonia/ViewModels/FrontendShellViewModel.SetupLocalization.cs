@@ -198,9 +198,6 @@ internal sealed partial class FrontendShellViewModel
                 ModLocalNameStyleLabel = _i18n.T("setup.game_manage.fields.mod_local_name_style"),
                 HideQuiltLoaderLabel = _i18n.T("setup.game_manage.flags.hide_quilt_loader"),
                 AccessibilityCardHeader = _i18n.T("setup.game_manage.cards.accessibility.header"),
-                GameUpdateNotificationsLabel = _i18n.T("setup.game_manage.fields.game_update_notifications"),
-                ReleaseUpdateNotificationsLabel = _i18n.T("setup.game_manage.flags.release_update_notifications"),
-                SnapshotUpdateNotificationsLabel = _i18n.T("setup.game_manage.flags.snapshot_update_notifications"),
                 GameLanguageLabel = _i18n.T("setup.game_manage.fields.game_language"),
                 AutoSwitchGameLanguageLabel = _i18n.T("setup.game_manage.flags.auto_switch_game_language"),
                 DetectClipboardLinksLabel = _i18n.T("setup.game_manage.flags.detect_clipboard_links"),
@@ -499,9 +496,6 @@ internal sealed class SetupGameManageLocalization
     public required string ModLocalNameStyleLabel { get; init; }
     public required string HideQuiltLoaderLabel { get; init; }
     public required string AccessibilityCardHeader { get; init; }
-    public required string GameUpdateNotificationsLabel { get; init; }
-    public required string ReleaseUpdateNotificationsLabel { get; init; }
-    public required string SnapshotUpdateNotificationsLabel { get; init; }
     public required string GameLanguageLabel { get; init; }
     public required string AutoSwitchGameLanguageLabel { get; init; }
     public required string DetectClipboardLinksLabel { get; init; }

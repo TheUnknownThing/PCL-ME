@@ -1428,14 +1428,11 @@ setup:
       community_download_source: Source de téléchargement de la communauté
       file_name_format: Format du nom de fichier de ressource
       mod_local_name_style: Style de nom local du module
-      game_update_notifications: Notifications de mise à jour du jeu
       game_language: Langage du jeu
     flags:
       auto_select_new_instance: Sélectionnez automatiquement la nouvelle instance après l'installation
       upgrade_partial_authlib: Mettre à niveau automatiquement la prise en charge partielle d'authlib
       hide_quilt_loader: Masquer le chargeur Quilt dans les listes de versions
-      release_update_notifications: Notifier les versions
-      snapshot_update_notifications: Notifier les instantanés
       auto_switch_game_language: Changer automatiquement la langue du jeu
       detect_clipboard_links: Détecter les liens de ressources du presse-papiers
     options:

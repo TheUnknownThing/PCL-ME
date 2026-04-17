@@ -1433,14 +1433,11 @@ setup:
       community_download_source: Fuente de descarga de la comunidad
       file_name_format: Formato de nombre de archivo de recurso
       mod_local_name_style: Mod estilo de nombre local
-      game_update_notifications: Notificaciones de actualización del juego
       game_language: Idioma del juego
     flags:
       auto_select_new_instance: Seleccionar automáticamente la nueva instancia después de la instalación
       upgrade_partial_authlib: Actualizar automáticamente el soporte de authlib parcial
       hide_quilt_loader: Ocultar cargador de edredones en listas de versiones
-      release_update_notifications: Notificar para lanzamientos
-      snapshot_update_notifications: Notificar para instantáneas
       auto_switch_game_language: Cambia el idioma del juego automáticamente
       detect_clipboard_links: Detectar enlaces de recursos desde el portapapeles
     options:

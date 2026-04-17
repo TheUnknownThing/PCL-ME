@@ -475,8 +475,6 @@ internal sealed partial class FrontendShellViewModel
         _selectedFileNameFormatIndex = _setupComposition.GameManage.FileNameFormatIndex;
         _selectedModLocalNameStyleIndex = _setupComposition.GameManage.ModLocalNameStyleIndex;
         _ignoreQuiltLoader = _setupComposition.GameManage.IgnoreQuiltLoader;
-        _notifyReleaseUpdates = _setupComposition.GameManage.NotifyReleaseUpdates;
-        _notifySnapshotUpdates = _setupComposition.GameManage.NotifySnapshotUpdates;
         _autoSwitchGameLanguageToChinese = _setupComposition.GameManage.AutoSwitchGameLanguageToChinese;
         _detectClipboardResourceLinks = _setupComposition.GameManage.DetectClipboardResourceLinks;
     }

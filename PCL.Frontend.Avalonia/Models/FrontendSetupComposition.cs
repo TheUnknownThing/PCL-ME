@@ -61,8 +61,6 @@ internal sealed record FrontendSetupGameManageState(
     int FileNameFormatIndex,
     int ModLocalNameStyleIndex,
     bool IgnoreQuiltLoader,
-    bool NotifyReleaseUpdates,
-    bool NotifySnapshotUpdates,
     bool AutoSwitchGameLanguageToChinese,
     bool DetectClipboardResourceLinks);
 

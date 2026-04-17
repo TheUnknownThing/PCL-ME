@@ -52,9 +52,7 @@ internal sealed partial class FrontendShellViewModel
         "ToolModLocalNameStyle",
         "ToolDownloadIgnoreQuilt",
         "ToolDownloadClipboard",
-        "ToolHelpChinese",
-        "ToolUpdateRelease",
-        "ToolUpdateSnapshot"
+        "ToolHelpChinese"
     ];
 
     private static readonly string[] LauncherMiscLocalResetKeys =
@@ -297,8 +295,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
                 RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
                 RaisePropertyChanged(nameof(IgnoreQuiltLoader));
-                RaisePropertyChanged(nameof(NotifyReleaseUpdates));
-                RaisePropertyChanged(nameof(NotifySnapshotUpdates));
                 RaisePropertyChanged(nameof(AutoSwitchGameLanguageToChinese));
                 RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
                 break;
@@ -552,12 +548,6 @@ internal sealed partial class FrontendShellViewModel
             case nameof(IgnoreQuiltLoader):
                 _shellActionService.PersistSharedValue("ToolDownloadIgnoreQuilt", IgnoreQuiltLoader);
                 break;
-            case nameof(NotifyReleaseUpdates):
-                _shellActionService.PersistSharedValue("ToolUpdateRelease", NotifyReleaseUpdates);
-                break;
-            case nameof(NotifySnapshotUpdates):
-                _shellActionService.PersistSharedValue("ToolUpdateSnapshot", NotifySnapshotUpdates);
-                break;
             case nameof(AutoSwitchGameLanguageToChinese):
                 _shellActionService.PersistSharedValue("ToolHelpChinese", AutoSwitchGameLanguageToChinese);
                 break;
@@ -808,8 +798,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(SelectedFileNameFormatIndex));
         RaisePropertyChanged(nameof(SelectedModLocalNameStyleIndex));
         RaisePropertyChanged(nameof(IgnoreQuiltLoader));
-        RaisePropertyChanged(nameof(NotifyReleaseUpdates));
-        RaisePropertyChanged(nameof(NotifySnapshotUpdates));
         RaisePropertyChanged(nameof(AutoSwitchGameLanguageToChinese));
         RaisePropertyChanged(nameof(DetectClipboardResourceLinks));
         RaisePropertyChanged(nameof(LauncherLocaleOptions));

@@ -251,8 +251,6 @@ internal static class FrontendSetupCompositionService
             FileNameFormatIndex: ReadValue(sharedConfig, "ToolDownloadTranslateV2", 1),
             ModLocalNameStyleIndex: ReadValue(sharedConfig, "ToolModLocalNameStyle", 0),
             IgnoreQuiltLoader: ReadValue(sharedConfig, "ToolDownloadIgnoreQuilt", false),
-            NotifyReleaseUpdates: ReadValue(sharedConfig, "ToolUpdateRelease", false),
-            NotifySnapshotUpdates: ReadValue(sharedConfig, "ToolUpdateSnapshot", false),
             AutoSwitchGameLanguageToChinese: ReadValue(sharedConfig, "ToolHelpChinese", true),
             DetectClipboardResourceLinks: ReadValue(sharedConfig, "ToolDownloadClipboard", false));
     }

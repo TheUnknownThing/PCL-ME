@@ -131,18 +131,6 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _ignoreQuiltLoader, value);
     }
 
-    public bool NotifyReleaseUpdates
-    {
-        get => _notifyReleaseUpdates;
-        set => SetProperty(ref _notifyReleaseUpdates, value);
-    }
-
-    public bool NotifySnapshotUpdates
-    {
-        get => _notifySnapshotUpdates;
-        set => SetProperty(ref _notifySnapshotUpdates, value);
-    }
-
     public bool AutoSwitchGameLanguageToChinese
     {
         get => _autoSwitchGameLanguageToChinese;

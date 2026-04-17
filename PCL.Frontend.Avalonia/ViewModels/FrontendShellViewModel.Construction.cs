@@ -251,8 +251,6 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedFileNameFormatIndex = 1;
     private int _selectedModLocalNameStyleIndex;
     private bool _ignoreQuiltLoader;
-    private bool _notifyReleaseUpdates = true;
-    private bool _notifySnapshotUpdates;
     private bool _autoSwitchGameLanguageToChinese = true;
     private bool _detectClipboardResourceLinks = true;
     private int _selectedLauncherLocaleIndex;

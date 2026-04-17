@@ -194,33 +194,14 @@
 
       <controls:PclCard Header="{Binding SetupText.GameManage.AccessibilityCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="Auto,160,Auto" RowDefinitions="22,8,22,8,22">
+          <Grid ColumnDefinitions="Auto,160,Auto" RowDefinitions="22,8,22">
             <TextBlock
-                VerticalAlignment="Center"
-                Foreground="{DynamicResource ColorBrush1}"
-                FontSize="13.5"
-                Margin="0,0,25,0"
-                Text="{Binding SetupText.GameManage.GameUpdateNotificationsLabel}" />
-            <CheckBox
-                Grid.Column="1"
-                Foreground="{DynamicResource ColorBrush1}"
-                Content="{Binding SetupText.GameManage.ReleaseUpdateNotificationsLabel}"
-                IsChecked="{Binding NotifyReleaseUpdates}" />
-            <CheckBox
-                Grid.Column="2"
-                Foreground="{DynamicResource ColorBrush1}"
-                Content="{Binding SetupText.GameManage.SnapshotUpdateNotificationsLabel}"
-                IsChecked="{Binding NotifySnapshotUpdates}" />
-
-            <TextBlock
-                Grid.Row="2"
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="{Binding SetupText.GameManage.GameLanguageLabel}" />
             <CheckBox
-                Grid.Row="2"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
                 Foreground="{DynamicResource ColorBrush1}"
@@ -228,7 +209,7 @@
                 IsChecked="{Binding AutoSwitchGameLanguageToChinese}" />
 
             <CheckBox
-                Grid.Row="4"
+                Grid.Row="2"
                 Grid.ColumnSpan="3"
                 Foreground="{DynamicResource ColorBrush1}"
                 Content="{Binding SetupText.GameManage.DetectClipboardLinksLabel}"
