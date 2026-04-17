@@ -1865,6 +1865,7 @@ setup:
       apply_proxy: Proxy-Einstellungen anwenden
       export_settings: Einstellungen exportieren
       import_settings: Einstellungen importieren
+      open_settings_folder: Einstellungsordner öffnen
       test_proxy: Verbindung testen
     activities:
       apply_proxy: Proxy-Einstellungen anwenden
@@ -1872,16 +1873,18 @@ setup:
       enable_hardware_acceleration: Hardwarebeschleunigung aktivieren
       export_settings: Einstellungen exportieren
       import_settings: Einstellungen importieren
-      import_settings_cancelled: Auswahl der Konfigurationsdatei abgebrochen.
+      import_settings_cancelled: Auswahl des exportierten Einstellungsordners abgebrochen.
       import_settings_failed: Einstellungen importieren fehlgeschlagen
       import_settings_pick_filter: PCL configuration files
-      import_settings_pick_title: Konfigurationsdatei auswählen
+      import_settings_pick_title: Exportierten Einstellungsordner auswählen
+      open_settings_folder: Einstellungsordner öffnen
+      open_settings_folder_failed: Einstellungsordner konnte nicht geöffnet werden
       proxy_cleared: Der benutzerdefinierte HTTP-Proxy wurde gelöscht.
       reset: Sonstige Launcher-Einstellungen zurücksetzen
       reset_completed: System-, Netzwerk- und Debug-Einstellungen wurden auf die aktuellen Launcher-Standards zurückgesetzt.
       test_proxy: Proxy-Verbindung testen
       test_proxy_failed: Proxy-Verbindungstest fehlgeschlagen
-      import_settings_completed: "Gemeinsame Konfiguration importiert: {path}. Einige Systemeinstellungen sollten nach einem Neustart geprüft werden."
+      import_settings_completed: "Gemeinsame und lokale Konfiguration wiederhergestellt aus: {path}. Einige Systemeinstellungen sollten nach einem Neustart geprüft werden."
     cards:
       debug:
         header: Debug-Optionen

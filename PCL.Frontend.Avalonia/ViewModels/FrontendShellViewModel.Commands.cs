@@ -78,6 +78,8 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand ImportSettingsCommand => _importSettingsCommand;
 
+    public ActionCommand OpenSettingsFolderCommand => _openSettingsFolderCommand;
+
     public ActionCommand ApplyProxySettingsCommand => _applyProxySettingsCommand;
 
     public ActionCommand TestProxyConnectionCommand => _testProxyConnectionCommand;

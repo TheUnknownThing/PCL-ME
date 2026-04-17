@@ -1869,6 +1869,7 @@ setup:
       apply_proxy: Apply proxy settings
       export_settings: Export settings
       import_settings: Import settings
+      open_settings_folder: Open settings folder
       test_proxy: Test connection
     activities:
       apply_proxy: Apply proxy settings
@@ -1876,16 +1877,18 @@ setup:
       enable_hardware_acceleration: Enable hardware acceleration
       export_settings: Export settings
       import_settings: Import settings
-      import_settings_cancelled: Configuration file selection cancelled.
+      import_settings_cancelled: Settings export folder selection cancelled.
       import_settings_failed: Failed to import settings
       import_settings_pick_filter: PCL configuration files
-      import_settings_pick_title: Select configuration file
+      import_settings_pick_title: Select exported settings folder
+      open_settings_folder: Open settings folder
+      open_settings_folder_failed: Failed to open settings folder
       proxy_cleared: Cleared the custom HTTP proxy.
       reset: Reset launcher miscellaneous settings
       reset_completed: System, network, and debug settings have been restored to the current launcher defaults.
       test_proxy: Test proxy connection
       test_proxy_failed: Test proxy connection failed
-      import_settings_completed: "Imported shared configuration: {path}. Some system settings are still best verified after restarting."
+      import_settings_completed: "Restored shared and local settings from: {path}. Some system settings are still best verified after restarting."
     cards:
       debug:
         header: Debug Options

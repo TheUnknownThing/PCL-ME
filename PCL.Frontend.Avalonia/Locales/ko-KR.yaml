@@ -1865,6 +1865,7 @@ setup:
       apply_proxy: 프록시 설정 적용
       export_settings: 설정 내보내기
       import_settings: 가져오기 설정
+      open_settings_folder: 설정 폴더 열기
       test_proxy: 연결 테스트
     activities:
       apply_proxy: 프록시 설정 적용
@@ -1872,16 +1873,18 @@ setup:
       enable_hardware_acceleration: 하드웨어 가속 활성화
       export_settings: 설정 내보내기
       import_settings: 가져오기 설정
-      import_settings_cancelled: 구성 파일 선택이 취소되었습니다.
+      import_settings_cancelled: 설정 내보내기 폴더 선택이 취소되었습니다.
       import_settings_failed: 설정을 가져오지 못했습니다.
       import_settings_pick_filter: PCL 구성 파일
-      import_settings_pick_title: 구성 파일 선택
+      import_settings_pick_title: 내보낸 설정 폴더 선택
+      open_settings_folder: 설정 폴더 열기
+      open_settings_folder_failed: 설정 폴더를 열지 못했습니다
       proxy_cleared: 사용자 정의 HTTP 프록시를 지웠습니다.
       reset: 런처 기타 설정 재설정
       reset_completed: 시스템, 네트워크 및 디버그 설정이 현재 실행기 기본값으로 복원되었습니다.
       test_proxy: 프록시 연결 테스트
       test_proxy_failed: 테스트 프록시 연결 실패
-      import_settings_completed: "가져온 공유 구성: {path}. 일부 시스템 설정은 다시 시작한 후에도 여전히 가장 잘 확인됩니다."
+      import_settings_completed: "다음 위치에서 공유 및 로컬 구성을 복원했습니다: {path}. 일부 시스템 설정은 다시 시작한 후 확인하는 것이 좋습니다."
     cards:
       debug:
         header: 디버그 옵션

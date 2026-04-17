@@ -1865,6 +1865,7 @@ setup:
       apply_proxy: 施代理訊
       export_settings: 匯出設
       import_settings: 匯入設
+      open_settings_folder: 啟設檔夾
       test_proxy: 測試連線
     activities:
       apply_proxy: 施代理訊
@@ -1872,16 +1873,18 @@ setup:
       enable_hardware_acceleration: 啟硬體加速
       export_settings: 匯出設
       import_settings: 匯入設
-      import_settings_cancelled: 已取消擇配置檔。
+      import_settings_cancelled: 已取消擇設匯出目錄。
       import_settings_failed: 匯入設失敗
       import_settings_pick_filter: PCL 配置檔
-      import_settings_pick_title: 擇配置檔
+      import_settings_pick_title: 擇已匯出之設目錄
+      open_settings_folder: 啟設檔夾
+      open_settings_folder_failed: 啟設檔夾失敗
       proxy_cleared: 已清空自定義 HTTP 代理。
       reset: 重置啓動器雜項設
       reset_completed: 系統、網絡與調試諸選項已復於今啓動器默設。
       test_proxy: 測試代理連線
       test_proxy_failed: 測試代理連線失敗
-      import_settings_completed: 已匯共享配置：{path}。部分系統項仍宜重啓後再驗之。
+      import_settings_completed: 已自此處復共享及本地配置：{path}。部分系統項仍宜重啓後再驗之。
     cards:
       debug:
         header: 調試選項

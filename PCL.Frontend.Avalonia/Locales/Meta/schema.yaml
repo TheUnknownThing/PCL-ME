@@ -2092,6 +2092,7 @@ setup:
       apply_proxy: []
       export_settings: []
       import_settings: []
+      open_settings_folder: []
       test_proxy: []
     activities:
       apply_proxy: []
@@ -2103,6 +2104,8 @@ setup:
       import_settings_failed: []
       import_settings_pick_filter: []
       import_settings_pick_title: []
+      open_settings_folder: []
+      open_settings_folder_failed: []
       proxy_cleared: []
       reset: []
       reset_completed: []

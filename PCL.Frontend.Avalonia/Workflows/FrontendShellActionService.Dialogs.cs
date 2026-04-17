@@ -48,14 +48,18 @@ internal sealed partial class FrontendShellActionService
         return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }
 
-    public async Task<string?> PickFolderAsync(string title)
+    public async Task<string?> PickFolderAsync(string title, string? suggestedStartFolder = null)
     {
         var storageProvider = TryGetStorageProvider(out var error)
             ?? throw new InvalidOperationException(error ?? "The current environment does not support folder pickers.");
+        var startLocation = string.IsNullOrWhiteSpace(suggestedStartFolder)
+            ? null
+            : await storageProvider.TryGetFolderFromPathAsync(suggestedStartFolder);
         var result = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = title,
-            AllowMultiple = false
+            AllowMultiple = false,
+            SuggestedStartLocation = startLocation
         });
         return result.Count == 0 ? null : result[0].TryGetLocalPath();
     }

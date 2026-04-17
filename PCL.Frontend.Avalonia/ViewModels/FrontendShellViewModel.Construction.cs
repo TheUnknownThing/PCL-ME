@@ -79,6 +79,7 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _resetLauncherMiscSettingsCommand;
     private readonly ActionCommand _exportSettingsCommand;
     private readonly ActionCommand _importSettingsCommand;
+    private readonly ActionCommand _openSettingsFolderCommand;
     private readonly ActionCommand _applyProxySettingsCommand;
     private readonly ActionCommand _testProxyConnectionCommand;
     private readonly ActionCommand _addJavaRuntimeCommand;
@@ -388,6 +389,7 @@ internal sealed partial class FrontendShellViewModel
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);
         _exportSettingsCommand = new ActionCommand(ExportSettingsSnapshot);
         _importSettingsCommand = new ActionCommand(() => _ = ImportSettingsAsync());
+        _openSettingsFolderCommand = new ActionCommand(OpenSettingsSnapshotFolder);
         _applyProxySettingsCommand = new ActionCommand(ApplyProxySettings);
         _testProxyConnectionCommand = new ActionCommand(() => _ = TestProxyConnectionAsync(), () => !_isTestingProxyConnection);
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());

@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -102,30 +103,31 @@ internal sealed partial class FrontendShellViewModel
 
     private void ExportSettingsSnapshot()
     {
-        var exportDirectory = Path.Combine(
-            _shellActionService.RuntimePaths.FrontendArtifactDirectory,
-            "config-exports",
-            DateTime.Now.ToString("yyyyMMdd-HHmmss"));
-        Directory.CreateDirectory(exportDirectory);
-
-        var sharedTarget = Path.Combine(exportDirectory, Path.GetFileName(_shellActionService.RuntimePaths.SharedConfigPath));
-        var localTarget = Path.Combine(exportDirectory, Path.GetFileName(_shellActionService.RuntimePaths.LocalConfigPath));
-        File.Copy(_shellActionService.RuntimePaths.SharedConfigPath, sharedTarget, true);
-        File.Copy(_shellActionService.RuntimePaths.LocalConfigPath, localTarget, true);
-
-        AddActivity(LT("setup.launcher_misc.activities.export_settings"), exportDirectory);
+        try
+        {
+            var exportDirectory = FrontendSettingsSnapshotWorkflowService.CreateSnapshot(_shellActionService.RuntimePaths);
+            AddActivity(LT("setup.launcher_misc.activities.export_settings"), exportDirectory);
+            if (!_shellActionService.TryOpenExternalTarget(exportDirectory, out var error))
+            {
+                AddFailureActivity(LT("setup.launcher_misc.activities.export_settings"), error ?? exportDirectory);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity(LT("setup.launcher_misc.activities.export_settings"), ex.Message);
+        }
     }
 
     private async Task ImportSettingsAsync()
     {
-        string? sourcePath;
+        string? sourceDirectory;
+        var settingsDirectory = GetSettingsSnapshotRootDirectory();
 
         try
         {
-            sourcePath = await _shellActionService.PickOpenFileAsync(
+            sourceDirectory = await _shellActionService.PickFolderAsync(
                 LT("setup.launcher_misc.activities.import_settings_pick_title"),
-                LT("setup.launcher_misc.activities.import_settings_pick_filter"),
-                "*.json");
+                settingsDirectory);
         }
         catch (Exception ex)
         {
@@ -133,7 +135,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(sourcePath))
+        if (string.IsNullOrWhiteSpace(sourceDirectory))
         {
             AddActivity(
                 LT("setup.launcher_misc.activities.import_settings"),
@@ -141,16 +143,41 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        Directory.CreateDirectory(_shellActionService.RuntimePaths.SharedConfigDirectory);
-        File.Copy(sourcePath, _shellActionService.RuntimePaths.SharedConfigPath, true);
-        if (!_i18n.ReloadLocaleFromSettings())
+        try
         {
-            ReloadSetupComposition();
+            FrontendSettingsSnapshotWorkflowService.RestoreSnapshot(_shellActionService.RuntimePaths, sourceDirectory);
         }
+        catch (Exception ex)
+        {
+            AddFailureActivity(LT("setup.launcher_misc.activities.import_settings_failed"), ex.Message);
+            return;
+        }
+
+        _ = _i18n.ReloadLocaleFromSettings();
+        ReloadSetupComposition();
 
         AddActivity(
             LT("setup.launcher_misc.activities.import_settings"),
-            LT("setup.launcher_misc.activities.import_settings_completed", ("path", sourcePath)));
+            LT("setup.launcher_misc.activities.import_settings_completed", ("path", sourceDirectory)));
+    }
+
+    private void OpenSettingsSnapshotFolder()
+    {
+        var settingsDirectory = GetSettingsSnapshotRootDirectory();
+        Directory.CreateDirectory(settingsDirectory);
+        if (_shellActionService.TryOpenExternalTarget(settingsDirectory, out var error))
+        {
+            AddActivity(LT("setup.launcher_misc.activities.open_settings_folder"), settingsDirectory);
+        }
+        else
+        {
+            AddFailureActivity(LT("setup.launcher_misc.activities.open_settings_folder_failed"), error ?? settingsDirectory);
+        }
+    }
+
+    private string GetSettingsSnapshotRootDirectory()
+    {
+        return FrontendSettingsSnapshotWorkflowService.GetSnapshotRootDirectory(_shellActionService.RuntimePaths);
     }
 
     private static string GetUniqueArchivePath(string filePath)

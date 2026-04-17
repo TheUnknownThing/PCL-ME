@@ -1869,6 +1869,7 @@ setup:
       apply_proxy: 应用代理信息
       export_settings: 导出设置
       import_settings: 导入设置
+      open_settings_folder: 打开设置文件夹
       test_proxy: 测试连接
     activities:
       apply_proxy: 应用代理信息
@@ -1876,16 +1877,18 @@ setup:
       enable_hardware_acceleration: 启用硬件加速
       export_settings: 导出设置
       import_settings: 导入设置
-      import_settings_cancelled: 已取消选择配置文件。
+      import_settings_cancelled: 已取消选择设置导出文件夹。
       import_settings_failed: 导入设置失败
       import_settings_pick_filter: PCL 配置文件
-      import_settings_pick_title: 选择配置文件
+      import_settings_pick_title: 选择已导出的设置文件夹
+      open_settings_folder: 打开设置文件夹
+      open_settings_folder_failed: 打开设置文件夹失败
       proxy_cleared: 已清空自定义 HTTP 代理。
       reset: 重置启动器杂项设置
       reset_completed: 系统、网络和调试选项已恢复到当前启动器的默认配置。
       test_proxy: 测试代理连接
       test_proxy_failed: 测试代理连接失败
-      import_settings_completed: 已导入共享配置：{path}。部分系统项仍建议重启后再验证。
+      import_settings_completed: 已从以下位置恢复共享和本地配置：{path}。部分系统项仍建议重启后再验证。
     cards:
       debug:
         header: 调试选项

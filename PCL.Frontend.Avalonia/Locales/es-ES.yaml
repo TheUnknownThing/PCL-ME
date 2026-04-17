@@ -1872,6 +1872,7 @@ setup:
       apply_proxy: Aplicar configuración de proxy
       export_settings: Exportar configuración
       import_settings: Importar configuración
+      open_settings_folder: Abrir carpeta de configuración
       test_proxy: Conexión de prueba
     activities:
       apply_proxy: Aplicar configuración de proxy
@@ -1879,16 +1880,18 @@ setup:
       enable_hardware_acceleration: Habilitar aceleración de hardware
       export_settings: Exportar configuración
       import_settings: Importar configuración
-      import_settings_cancelled: Selección del archivo de configuración cancelada.
+      import_settings_cancelled: Se canceló la selección de la carpeta de configuración exportada.
       import_settings_failed: No se pudo importar la configuración
       import_settings_pick_filter: Archivos de configuración PCL
-      import_settings_pick_title: Seleccionar archivo de configuración
+      import_settings_pick_title: Seleccionar carpeta de configuración exportada
+      open_settings_folder: Abrir carpeta de configuración
+      open_settings_folder_failed: No se pudo abrir la carpeta de configuración
       proxy_cleared: Se borró el proxy HTTP personalizado.
       reset: Restablecer configuraciones varias del iniciador
       reset_completed: La configuración del sistema, la red y la depuración se han restaurado a los valores predeterminados actuales del iniciador.
       test_proxy: Probar conexión proxy
       test_proxy_failed: Error en la conexión del proxy de prueba
-      import_settings_completed: "Configuración compartida importada: {path}. Algunas configuraciones del sistema aún se verifican mejor después de reiniciar."
+      import_settings_completed: "Se restauró la configuración compartida y local desde: {path}. Algunas configuraciones del sistema aún se verifican mejor después de reiniciar."
     cards:
       debug:
         header: Opciones de depuración

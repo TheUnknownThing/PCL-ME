@@ -288,6 +288,7 @@ internal sealed partial class FrontendShellViewModel
                 DisableHardwareAccelerationHint = _i18n.T("setup.launcher_misc.hints.disable_hardware_acceleration_restart"),
                 ExportSettingsButton = _i18n.T("setup.launcher_misc.actions.export_settings"),
                 ImportSettingsButton = _i18n.T("setup.launcher_misc.actions.import_settings"),
+                OpenSettingsFolderButton = _i18n.T("setup.launcher_misc.actions.open_settings_folder"),
                 NetworkCardHeader = _i18n.T("setup.launcher_misc.cards.network.header"),
                 SecureDnsModeLabel = _i18n.T("setup.launcher_misc.fields.secure_dns_mode"),
                 SecureDnsProviderLabel = _i18n.T("setup.launcher_misc.fields.secure_dns_provider"),
@@ -568,6 +569,7 @@ internal sealed class SetupLauncherMiscLocalization
     public required string DisableHardwareAccelerationHint { get; init; }
     public required string ExportSettingsButton { get; init; }
     public required string ImportSettingsButton { get; init; }
+    public required string OpenSettingsFolderButton { get; init; }
     public required string NetworkCardHeader { get; init; }
     public required string SecureDnsModeLabel { get; init; }
     public required string SecureDnsProviderLabel { get; init; }

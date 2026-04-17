@@ -1865,6 +1865,7 @@ setup:
       apply_proxy: Appliquer les paramètres de proxy
       export_settings: Paramètres d'exportation
       import_settings: Paramètres d'importation
+      open_settings_folder: Ouvrir le dossier des paramètres
       test_proxy: Tester la connexion
     activities:
       apply_proxy: Appliquer les paramètres de proxy
@@ -1872,16 +1873,18 @@ setup:
       enable_hardware_acceleration: Activer l'accélération matérielle
       export_settings: Paramètres d'exportation
       import_settings: Paramètres d'importation
-      import_settings_cancelled: Sélection du fichier de configuration annulée.
+      import_settings_cancelled: Sélection du dossier d’exportation des paramètres annulée.
       import_settings_failed: Échec de l'importation des paramètres
       import_settings_pick_filter: Fichiers de configuration PCL
-      import_settings_pick_title: Sélectionnez le fichier de configuration
+      import_settings_pick_title: Sélectionnez le dossier des paramètres exportés
+      open_settings_folder: Ouvrir le dossier des paramètres
+      open_settings_folder_failed: Impossible d’ouvrir le dossier des paramètres
       proxy_cleared: Effacement du proxy HTTP personnalisé.
       reset: Réinitialiser les paramètres divers du lanceur
       reset_completed: Les paramètres système, réseau et de débogage ont été restaurés aux valeurs par défaut actuelles du lanceur.
       test_proxy: Tester la connexion proxy
       test_proxy_failed: Échec du test de connexion proxy
-      import_settings_completed: "Configuration partagée importée : {path}. Il est toujours préférable de vérifier certains paramètres système après le redémarrage."
+      import_settings_completed: "Configuration partagée et locale restaurée depuis : {path}. Il est toujours préférable de vérifier certains paramètres système après le redémarrage."
     cards:
       debug:
         header: Options de débogage
