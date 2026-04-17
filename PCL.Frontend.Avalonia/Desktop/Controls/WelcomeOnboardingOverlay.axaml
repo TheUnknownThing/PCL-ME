@@ -120,39 +120,155 @@
 
             <StackPanel
                 IsVisible="{Binding IsWelcomeDoneStep}"
-                Spacing="16">
-              <Border
-                  Padding="18,16"
-                  Background="{DynamicResource ColorBrushEntrySelectedBackground}"
-                  BorderBrush="{DynamicResource ColorBrush4}"
-                  BorderThickness="1"
-                  CornerRadius="10">
-                <TextBlock
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="13.5"
-                    LineHeight="22"
-                    Text="{Binding WelcomeStepDescription}"
-                    TextWrapping="Wrap" />
-              </Border>
+                Margin="0,12,0,0"
+                Spacing="0">
+              <StackPanel
+                  HorizontalAlignment="Center"
+                  Orientation="Horizontal"
+                  Spacing="24">
+                <Button
+                    Classes="nochrome"
+                    Command="{Binding WelcomeOpenSourceCommand}"
+                    Cursor="Hand"
+                    FocusAdorner="{x:Null}"
+                    HorizontalContentAlignment="Center"
+                    Padding="10"
+                    Width="120">
+                  <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <Grid Width="32" Height="32">
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M9.4,16.6L4.8,12l4.6-4.6L8,6l-6,6l6,6L9.4,16.6z"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M14.6,16.6l4.6-4.6l-4.6-4.6L16,6l6,6l-6,6L14.6,16.6z"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                    </Grid>
+                    <TextBlock
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="13"
+                        FontWeight="Medium"
+                        Text="{Binding WelcomeSourceLinkText}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                  </StackPanel>
+                </Button>
 
-              <WrapPanel HorizontalAlignment="Left" ItemWidth="170" ItemHeight="40" Orientation="Horizontal">
-                <controls:PclButton
-                    Margin="0,0,12,12"
-                    MinWidth="158"
-                    ColorType="Highlight"
-                    Command="{Binding WelcomeOpenTutorialCommand}"
-                    Text="{Binding WelcomeTutorialButtonText}" />
-                <controls:PclButton
-                    Margin="0,0,12,12"
-                    MinWidth="158"
-                    Command="{Binding WelcomeOpenGitHubCommand}"
-                    Text="{Binding WelcomeGitHubButtonText}" />
-                <controls:PclButton
-                    Margin="0,0,12,12"
-                    MinWidth="158"
-                    Command="{Binding WelcomeOpenFeedbackCommand}"
-                    Text="{Binding WelcomeFeedbackButtonText}" />
-              </WrapPanel>
+                <Button
+                    Classes="nochrome"
+                    Command="{Binding WelcomeOpenWikiCommand}"
+                    Cursor="Hand"
+                    FocusAdorner="{x:Null}"
+                    HorizontalContentAlignment="Center"
+                    Padding="10"
+                    Width="120">
+                  <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <Grid Width="32" Height="32">
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M14,2H6C4.89,2,4,2.89,4,4v16c0,1.11,.89,2,2,2h12c1.11,0,2-.89,2-2V8l-6-6z"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M14,3.5V9h5.5"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M8,13h8 M8,17h8 M8,9h3"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                    </Grid>
+                    <TextBlock
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="13"
+                        FontWeight="Medium"
+                        Text="{Binding WelcomeWikiLinkText}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                  </StackPanel>
+                </Button>
+
+                <Button
+                    Classes="nochrome"
+                    Command="{Binding WelcomeImportExistingDirectoryCommand}"
+                    Cursor="Hand"
+                    FocusAdorner="{x:Null}"
+                    HorizontalContentAlignment="Center"
+                    Padding="10"
+                    Width="120">
+                  <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <Grid Width="32" Height="32">
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M20,6h-8l-2-2H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,.89,2,2,2h16c1.11,0,2-.89,2-2V8C22,6.89,21.11,6,20,6z"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M15,10v8"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                      <Path
+                          Width="24"
+                          Height="24"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Data="M11,14h8"
+                          Fill="Transparent"
+                          Stroke="{DynamicResource ColorBrush3}"
+                          StrokeLineCap="Round"
+                          StrokeThickness="1.8" />
+                    </Grid>
+                    <TextBlock
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="13"
+                        FontWeight="Medium"
+                        Text="{Binding WelcomeImportExistingDirectoryLinkText}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
             </StackPanel>
           </Grid>
         </ScrollViewer>

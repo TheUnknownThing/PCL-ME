@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Avalonia.Threading;
+using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -8,9 +9,8 @@ internal sealed partial class FrontendShellViewModel
 {
     private const string WelcomeEulaUrl = "https://shimo.im/docs/rGrd8pY8xWkt6ryW";
     private const string WelcomeReadmeUrl = "https://github.com/TheUnknownThing/PCL-ME#readme";
-    private const string WelcomeTutorialFallbackUrl = "https://github.com/TheUnknownThing/PCL-ME#readme";
-    private const string WelcomeFeedbackUrl = "https://github.com/TheUnknownThing/PCL-ME/issues";
     private const string WelcomeGitHubUrl = "https://github.com/TheUnknownThing/PCL-ME";
+    private const string WelcomeWikiUrl = "https://theunknownthing.github.io/PCL-ME/";
     private const int WelcomeTotalSteps = 3;
 
     private bool _welcomeOverlayDismissed;
@@ -20,10 +20,10 @@ internal sealed partial class FrontendShellViewModel
     private ActionCommand? _welcomePreviousStepCommandBacking;
     private ActionCommand? _welcomeOpenEulaCommandBacking;
     private ActionCommand? _welcomeOpenReadmeCommandBacking;
-    private ActionCommand? _welcomeOpenTutorialCommandBacking;
     private ActionCommand? _welcomeDeclineCommandBacking;
-    private ActionCommand? _welcomeOpenFeedbackCommandBacking;
     private ActionCommand? _welcomeOpenGitHubCommandBacking;
+    private ActionCommand? _welcomeOpenWikiCommandBacking;
+    private ActionCommand? _welcomeImportExistingDirectoryCommandBacking;
 
     // ── Overlay visibility ───────────────────────────────────────────────────
 
@@ -70,9 +70,9 @@ internal sealed partial class FrontendShellViewModel
 
     // Step 2 – Done
 
-    public string WelcomeTutorialButtonText => _i18n.T("welcome.step_2.tutorial");
-    public string WelcomeFeedbackButtonText => _i18n.T("welcome.step_2.feedback");
-    public string WelcomeGitHubButtonText => _i18n.T("welcome.step_2.github");
+    public string WelcomeSourceLinkText => _i18n.T("resource_detail.link_titles.source");
+    public string WelcomeWikiLinkText => _i18n.T("resource_detail.link_titles.wiki");
+    public string WelcomeImportExistingDirectoryLinkText => _i18n.T("shell.instance_select.shortcuts.add_folder.title");
     public string WelcomeBackButtonText => _i18n.T("common.actions.back");
     public string WelcomePrimaryActionText => _welcomeCurrentStep switch
     {
@@ -113,21 +113,23 @@ internal sealed partial class FrontendShellViewModel
         _welcomeOpenReadmeCommandBacking ??=
             new ActionCommand(OpenWelcomeReadmeUrl);
 
-    public ActionCommand WelcomeOpenTutorialCommand =>
-        _welcomeOpenTutorialCommandBacking ??=
-            new ActionCommand(OpenWelcomeTutorial);
-
     public ActionCommand WelcomeDeclineCommand =>
         _welcomeDeclineCommandBacking ??=
             new ActionCommand(DeclineOnboarding);
 
-    public ActionCommand WelcomeOpenFeedbackCommand =>
-        _welcomeOpenFeedbackCommandBacking ??=
-            new ActionCommand(OpenWelcomeFeedbackUrl);
-
     public ActionCommand WelcomeOpenGitHubCommand =>
         _welcomeOpenGitHubCommandBacking ??=
             new ActionCommand(OpenWelcomeGitHubUrl);
+
+    public ActionCommand WelcomeOpenSourceCommand => WelcomeOpenGitHubCommand;
+
+    public ActionCommand WelcomeOpenWikiCommand =>
+        _welcomeOpenWikiCommandBacking ??=
+            new ActionCommand(OpenWelcomeWikiUrl);
+
+    public ActionCommand WelcomeImportExistingDirectoryCommand =>
+        _welcomeImportExistingDirectoryCommandBacking ??=
+            new ActionCommand(OpenWelcomeImportExistingDirectory);
 
     // ── Private logic ────────────────────────────────────────────────────────
 
@@ -196,26 +198,22 @@ internal sealed partial class FrontendShellViewModel
         OpenExternalTarget(WelcomeReadmeUrl, "Opened README URL from the welcome overlay.");
     }
 
-    private void OpenWelcomeTutorial()
-    {
-        CompleteOnboarding();
-        if (TryResolveHelpEntry("新手教程.json", out var helpEntry))
-        {
-            ShowHelpDetail(helpEntry, addActivity: true);
-            return;
-        }
-
-        OpenExternalTarget(WelcomeTutorialFallbackUrl, "Opened the onboarding tutorial fallback URL.");
-    }
-
-    private void OpenWelcomeFeedbackUrl()
-    {
-        OpenExternalTarget(WelcomeFeedbackUrl, "Opened feedback URL from the welcome overlay.");
-    }
-
     private void OpenWelcomeGitHubUrl()
     {
         OpenExternalTarget(WelcomeGitHubUrl, "Opened GitHub URL from the welcome overlay.");
+    }
+
+    private void OpenWelcomeWikiUrl()
+    {
+        OpenExternalTarget(WelcomeWikiUrl, "Opened wiki URL from the welcome overlay.");
+    }
+
+    private void OpenWelcomeImportExistingDirectory()
+    {
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect),
+            "Opened instance selection from the welcome overlay.");
+        _ = AddInstanceSelectionFolderAsync();
     }
 
     // Called from RaiseSectionBLocalizedProperties so titles/descriptions
@@ -232,9 +230,9 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(WelcomeReadmeLinkText));
         RaisePropertyChanged(nameof(WelcomeTermsBodySuffix));
         RaisePropertyChanged(nameof(WelcomeAcceptAndContinueButtonText));
-        RaisePropertyChanged(nameof(WelcomeTutorialButtonText));
-        RaisePropertyChanged(nameof(WelcomeFeedbackButtonText));
-        RaisePropertyChanged(nameof(WelcomeGitHubButtonText));
+        RaisePropertyChanged(nameof(WelcomeSourceLinkText));
+        RaisePropertyChanged(nameof(WelcomeWikiLinkText));
+        RaisePropertyChanged(nameof(WelcomeImportExistingDirectoryLinkText));
         RaisePropertyChanged(nameof(WelcomeBackButtonText));
         RaisePropertyChanged(nameof(WelcomePrimaryActionText));
     }

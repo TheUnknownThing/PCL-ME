@@ -621,7 +621,7 @@ shell:
         failure: 增夾失敗
         pick_title: 擇實例夾
         switched: 已易至 {path}。
-        title: 增既有夾
+        title: 匯入遊戲夾
       import_pack:
         cancelled: 已取消匯入整合包。
         description: 以整合包壓縮檔匯入今啟動器目錄。

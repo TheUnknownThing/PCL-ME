@@ -621,7 +621,7 @@ shell:
         failure: 폴더 추가 실패
         pick_title: 인스턴스 폴더 선택
         switched: "{path}로 전환되었습니다."
-        title: 기존 폴더 추가
+        title: 게임 폴더 가져오기
       import_pack:
         cancelled: 가져오기가 취소되었습니다.
         description: Modpack 아카이브를 현재 실행기 디렉터리로 가져옵니다.

@@ -621,7 +621,7 @@ shell:
         failure: 新增資料夾失敗
         pick_title: 選擇實例資料夾
         switched: 已切換到 {path}。
-        title: 新增既有資料夾
+        title: 匯入遊戲資料夾
       import_pack:
         cancelled: 已取消匯入整合包。
         description: 將整合包壓縮檔匯入到目前啟動器目錄。

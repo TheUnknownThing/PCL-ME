@@ -621,7 +621,7 @@ shell:
         failure: Ordner hinzufügen fehlgeschlagen
         pick_title: Instanzordner auswählen
         switched: "Zu {path} gewechselt."
-        title: Vorhandenen Ordner hinzufügen
+        title: Spielordner importieren
       import_pack:
         cancelled: Import abgebrochen.
         description: Ein Modpack-Archiv in das aktuelle Launcher-Verzeichnis importieren.

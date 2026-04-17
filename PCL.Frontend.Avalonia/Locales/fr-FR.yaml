@@ -621,7 +621,7 @@ shell:
         failure: Échec de l'ajout d'un dossier
         pick_title: Sélectionner un dossier d'instance
         switched: Passé à {path}.
-        title: Ajouter un dossier existant
+        title: Importer le dossier du jeu
       import_pack:
         cancelled: Importation annulée.
         description: Importez une archive modpack dans le répertoire du lanceur actuel.

@@ -621,7 +621,7 @@ shell:
         failure: Add Folder Failed
         pick_title: Select Instance Folder
         switched: Switched to {path}.
-        title: Add Existing Folder
+        title: Import Game Folder
       import_pack:
         cancelled: Import canceled.
         description: Import a modpack archive into the current launcher directory.

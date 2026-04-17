@@ -621,7 +621,7 @@ shell:
         failure: Error al agregar carpeta
         pick_title: Seleccionar carpeta de instancia
         switched: Cambió a {path}.
-        title: Agregar carpeta existente
+        title: Importar carpeta del juego
       import_pack:
         cancelled: Importación cancelada.
         description: Importe un archivo modpack al directorio del iniciador actual.
