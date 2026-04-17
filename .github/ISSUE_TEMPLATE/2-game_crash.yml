@@ -1,6 +1,5 @@
 name: "Minecraft 崩溃"
 description: "PCL-ME 提示 “Minecraft 出现错误”，或游戏崩溃"
-type: "崩溃"
 body:
 - type: checkboxes
   id: "yml-1"
@@ -16,6 +15,8 @@ body:
       required: false
     - label: "我确认正在使用当前更新分支的最新版 PCL-ME，若不是，此 Issue 可能会被直接关闭（更新方式：启动器 `设置-关于-软件更新` 检查更新，或在 [Releases](https://github.com/TheUnknownThing/PCL-ME/releases) 页面下载）"
       required: true
+    - label: "我确认会提供可复现的错误环境与 PCL-ME / 游戏运行日志；如果缺少这些信息，此 Issue 可能会被直接关闭"
+      required: true
     - label: "我确认会详细描述我所遇到的问题，并附上日志和截图，而不是随便填点东西敷衍了事。"
       required: true
 - type: textarea
@@ -28,15 +29,32 @@ body:
 - type: textarea
   id: "yml-3"
   attributes:
-    label: PCL-ME 错误报告、日志与附件
-    description: "上传 PCL-ME 提供的错误报告（在崩溃时选择导出错误报告）。如果没有，请在游戏崩溃后不要关掉启动器，使用 `设置-查看日志-导出日志` 得到日志压缩包并上传。"
+    label: 复现环境
+    description: "请填写可以帮助维护者判断和复现问题的环境信息。"
     placeholder: |
-      先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。
-      如果缺少相关错误报告或日志用于分析问题，此 Issue 可能会被直接关闭。
+      例如：
+      - 操作系统与版本：
+      - CPU 架构：
+      - PCL-ME 版本：
+      - .NET 版本：
+      - Minecraft 版本：
+      - 模组加载器与版本：
+      - Java 版本：
+      - 模组列表 / 整合包名称 / 其他关键设置：
   validations:
     required: true
 - type: textarea
   id: "yml-4"
+  attributes:
+    label: PCL-ME 错误报告、日志与附件
+    description: "上传 PCL-ME 提供的错误报告（在崩溃时选择导出错误报告）。如果没有，请在游戏崩溃后不要关掉启动器，使用 `设置-查看日志-导出日志` 得到日志压缩包并上传。请尽量同时提供 PCL-ME 与游戏侧的运行日志。"
+    placeholder: |
+      先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。
+      如果缺少可复现环境、相关错误报告或运行日志用于分析问题，此 Issue 可能会被直接关闭。
+  validations:
+    required: true
+- type: textarea
+  id: "yml-5"
   attributes:
     label: HMCL 启动脚本
     description: "在 HMCL 中进入实例列表，点击版本右侧的三个点，选择“生成启动脚本”。"

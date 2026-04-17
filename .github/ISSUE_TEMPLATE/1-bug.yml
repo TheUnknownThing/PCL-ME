@@ -1,6 +1,5 @@
 name: "综合 Bug 反馈"
 description: "遇见了与启动器功能相关的 Bug"
-type: "Bug"
 body:
 - type: checkboxes
   id: "yml-1"
@@ -14,6 +13,8 @@ body:
       required: false
     - label: "我确认正在使用当前更新分支的最新版 PCL-ME，若不是，此 Issue 可能会被直接关闭（更新方式：启动器 `设置-关于-软件更新` 检查更新，或在 [Releases](https://github.com/TheUnknownThing/PCL-ME/releases) 页面下载）"
       required: true
+    - label: "我确认会提供可复现的错误环境信息与运行日志；如果缺少这些信息，此 Issue 可能会被直接关闭"
+      required: true
     - label: "我确认会详细描述我所遇到的问题，并附上日志和截图，而不是随便填点东西敷衍了事。"
       required: true
 - type: textarea
@@ -26,6 +27,21 @@ body:
 - type: textarea
   id: "yml-3"
   attributes:
+    label: 复现环境
+    description: "请填写可以帮助维护者稳定复现问题的环境信息。"
+    placeholder: |
+      例如：
+      - 操作系统与版本：
+      - CPU 架构：
+      - PCL-ME 版本：
+      - .NET 版本：
+      - 游戏版本 / 模组加载器 / 相关组件版本：
+      - 其他会影响复现的设置：
+  validations:
+    required: true
+- type: textarea
+  id: "yml-4"
+  attributes:
     label: 重现步骤
     description: "详细描述要怎么操作才能再次触发这个 Bug。"
     placeholder: |
@@ -35,14 +51,14 @@ body:
   validations:
     required: true
 - type: textarea
-  id: "yml-4"
+  id: "yml-5"
   attributes:
     label: 日志与附件
-    description: "在问题发生后立即使用 `设置-查看日志-导出日志` 并上传导出的压缩包。**若手动关掉了启动器或启动器直接崩溃，请重启之后使用 `导出全部日志` 而不是 `导出日志`，否则导出的日志可能不包含故障关键信息。**"
+    description: "在问题发生后立即使用 `设置-查看日志-导出日志` 并上传导出的压缩包。**若手动关掉了启动器或启动器直接崩溃，请重启之后使用 `导出全部日志` 而不是 `导出日志`，否则导出的日志可能不包含故障关键信息。请附上运行日志，不要只写一句“报错了”。**"
     placeholder: |
       先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。
       如果有相关截图或文件，也请一并上传。
       请勿自行判断是否需要日志，日志文件并不仅仅包含发生错误的信息，还可能包含其它关键信息。
-      如果缺少相关日志用于分析问题，此 Issue 可能会被直接关闭。
+      如果缺少可复现环境或相关运行日志用于分析问题，此 Issue 可能会被直接关闭。
   validations:
     required: true
