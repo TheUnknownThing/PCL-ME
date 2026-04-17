@@ -550,6 +550,7 @@ internal sealed partial class FrontendShellViewModel
         try
         {
             var outcome = await DeleteInstanceDirectoryAsync(
+                activityTitle,
                 _instanceComposition.Selection.InstanceName,
                 _instanceComposition.Selection.InstanceDirectory,
                 _instanceComposition.Selection.LauncherDirectory,
@@ -559,8 +560,10 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
-            ReloadInstanceComposition();
+            HandleDeletedInstance(
+                outcome.InstanceName,
+                _instanceComposition.Selection.InstanceDirectory,
+                activityTitle);
 
             if (outcome.IsPermanentDelete)
             {

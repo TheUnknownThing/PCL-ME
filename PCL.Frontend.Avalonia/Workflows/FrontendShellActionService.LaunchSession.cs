@@ -293,9 +293,9 @@ internal sealed partial class FrontendShellActionService
             "SystemLaunchCount",
             (currentLaunchCount + shellPlan.GlobalLaunchCountIncrement).ToString());
 
-        if (!string.IsNullOrWhiteSpace(instanceDirectory))
+        if (FrontendRuntimePaths.IsRecognizedInstanceDirectory(instanceDirectory ?? string.Empty))
         {
-            var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
+            var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory!);
             var currentInstanceLaunchCount = provider.Exists("VersionLaunchCount")
                 ? provider.Get<int>("VersionLaunchCount")
                 : 0;

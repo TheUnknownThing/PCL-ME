@@ -130,6 +130,10 @@ internal sealed partial class FrontendShellActionService
     public void PersistInstanceValue<T>(string instanceDirectory, string key, T value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
+        if (!FrontendRuntimePaths.IsRecognizedInstanceDirectory(instanceDirectory))
+        {
+            return;
+        }
 
         var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
         provider.Set(key, value);
@@ -139,6 +143,10 @@ internal sealed partial class FrontendShellActionService
     public void RemoveInstanceValues(string instanceDirectory, IEnumerable<string> keys)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
+        if (!FrontendRuntimePaths.IsRecognizedInstanceDirectory(instanceDirectory))
+        {
+            return;
+        }
 
         var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
         foreach (var key in keys)

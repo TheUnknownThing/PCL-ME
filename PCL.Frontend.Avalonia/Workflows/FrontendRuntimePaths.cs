@@ -62,6 +62,29 @@ internal sealed record FrontendRuntimePaths(
         return new YamlFileProvider(configPath);
     }
 
+    public static bool IsRecognizedInstanceDirectory(string instanceDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(instanceDirectory) || !Directory.Exists(instanceDirectory))
+        {
+            return false;
+        }
+
+        var normalizedDirectory = instanceDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var instanceName = Path.GetFileName(normalizedDirectory);
+        if (string.IsNullOrWhiteSpace(instanceName) || string.Equals(instanceName, "versions", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return File.Exists(Path.Combine(normalizedDirectory, $"{instanceName}.json"))
+               || File.Exists(Path.Combine(normalizedDirectory, $"{instanceName}.jar"))
+               || File.Exists(Path.Combine(normalizedDirectory, "PCL", "config.v1.yml"))
+               || File.Exists(Path.Combine(normalizedDirectory, "PCL", "setup.ini"))
+               || File.Exists(Path.Combine(normalizedDirectory, "PCL", "Setup.ini"))
+               || Directory.Exists(Path.Combine(normalizedDirectory, "mods"))
+               || Directory.Exists(Path.Combine(normalizedDirectory, "saves"));
+    }
+
     public string? ResolveCurrentLauncherLogFilePath()
     {
         return EnumerateLauncherLogFilePaths(LauncherLogDirectory).FirstOrDefault();

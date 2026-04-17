@@ -346,23 +346,14 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DeleteInstanceSelectionEntryAsync(InstanceSelectionSnapshot entry)
     {
-        var confirmed = await _shellActionService.ConfirmAsync(
-            LT("shell.instance_select.delete.confirm_title"),
-            LT("shell.instance_select.delete.confirm_message", ("name", entry.Name)),
-            LT("shell.instance_select.delete.confirm_action"),
-            isDanger: true);
-        if (!confirmed)
-        {
-            AddActivity(LT("shell.instance_select.delete.activity"), LT("shell.instance_select.delete.cancelled"));
-            return;
-        }
-
+        var activityTitle = LT("shell.instance_select.delete.activity");
         try
         {
             var showIndieWarning = _instanceComposition.Selection.HasSelection
                 && string.Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory, GetPathComparison())
                 && _instanceComposition.Selection.IsIndie;
             var outcome = await DeleteInstanceDirectoryAsync(
+                activityTitle,
                 entry.Name,
                 entry.Directory,
                 _instanceSelectionLauncherDirectory,
@@ -372,25 +363,20 @@ internal sealed partial class FrontendShellViewModel
                 return;
             }
 
-            if (_instanceComposition.Selection.HasSelection
-                && (string.Equals(_instanceComposition.Selection.InstanceDirectory, entry.Directory, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(_instanceComposition.Selection.InstanceName, entry.Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
-                RefreshLaunchState();
-            }
-
-            RefreshInstanceSelectionSurface();
+            HandleDeletedInstance(
+                outcome.InstanceName,
+                entry.Directory,
+                activityTitle);
             if (outcome.IsPermanentDelete)
             {
                 AddActivity(
-                    LT("shell.instance_select.delete.activity"),
+                    activityTitle,
                     LT("shell.instance_select.delete.permanently_deleted", ("name", outcome.InstanceName)));
                 return;
             }
 
             AddActivity(
-                LT("shell.instance_select.delete.activity"),
+                activityTitle,
                 LT("shell.instance_select.delete.moved_to_trash", ("name", outcome.InstanceName), ("path", outcome.TrashDirectory)));
         }
         catch (Exception ex)
@@ -401,6 +387,11 @@ internal sealed partial class FrontendShellViewModel
 
     private InstanceSelectionSnapshot? BuildInstanceSelectionSnapshot(string directory, string selectedInstance)
     {
+        if (!FrontendRuntimePaths.IsRecognizedInstanceDirectory(directory))
+        {
+            return null;
+        }
+
         var name = Path.GetFileName(directory);
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -869,4 +860,3 @@ internal sealed partial class FrontendShellViewModel
     }
 
 }
-

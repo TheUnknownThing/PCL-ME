@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using Avalonia.Input;
+using PCL.Core.App.Essentials;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -39,6 +40,7 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private async Task<InstanceDeleteOutcome?> DeleteInstanceDirectoryAsync(
+        string activityTitle,
         string instanceName,
         string instanceDirectory,
         string launcherDirectory,
@@ -54,7 +56,7 @@ internal sealed partial class FrontendShellViewModel
             isDanger: showIndieWarning || isPermanentDelete);
         if (!confirmed)
         {
-            AddActivity(SD("instance.overview.advanced.delete"), T("instance.trash.messages.delete_canceled"));
+            AddActivity(activityTitle, T("instance.trash.messages.delete_canceled"));
             return null;
         }
 
@@ -83,6 +85,33 @@ internal sealed partial class FrontendShellViewModel
             new UTF8Encoding(false));
 
         return new InstanceDeleteOutcome(instanceName, false, trashDirectory);
+    }
+
+    private void HandleDeletedInstance(
+        string deletedInstanceName,
+        string deletedInstanceDirectory,
+        string activityTitle)
+    {
+        var deletedSelectedInstance = _instanceComposition.Selection.HasSelection
+            && (string.Equals(_instanceComposition.Selection.InstanceDirectory, deletedInstanceDirectory, GetPathComparison())
+                || string.Equals(_instanceComposition.Selection.InstanceName, deletedInstanceName, StringComparison.OrdinalIgnoreCase));
+
+        if (deletedSelectedInstance)
+        {
+            _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
+        }
+
+        RefreshLaunchState();
+        RefreshInstanceSelectionSurface();
+        RefreshInstanceSelectionRouteMetadata();
+
+        if (deletedSelectedInstance && _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup)
+        {
+            NavigateTo(
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+                activityTitle,
+                RouteNavigationBehavior.Reset);
+        }
     }
 
     private string BuildInstanceDeleteConfirmationMessage(

@@ -53,9 +53,9 @@ internal static partial class FrontendInstanceCompositionService
         }
 
         var instanceDirectory = Path.Combine(launcherDirectory, "versions", resolvedInstanceName);
-        if (!Directory.Exists(instanceDirectory))
+        if (!FrontendRuntimePaths.IsRecognizedInstanceDirectory(instanceDirectory))
         {
-            return CreateEmptyComposition(launcherDirectory, resolvedInstanceName, i18n);
+            return CreateEmptyComposition(launcherDirectory, i18n: i18n);
         }
 
         var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);

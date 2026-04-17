@@ -40,9 +40,12 @@ internal static partial class FrontendLaunchCompositionService
             runtimePaths);
         var downloadProvider = FrontendDownloadProvider.FromPreference(ReadValue(sharedConfig, "ToolDownloadSource", 1));
         var selectedInstanceName = ReadValue(localConfig, "LaunchInstanceSelect", string.Empty);
-        var hasSelectedInstance = !string.IsNullOrWhiteSpace(selectedInstanceName);
+        var candidateInstancePath = string.IsNullOrWhiteSpace(selectedInstanceName)
+            ? string.Empty
+            : Path.Combine(launcherFolder, "versions", selectedInstanceName);
+        var hasSelectedInstance = FrontendRuntimePaths.IsRecognizedInstanceDirectory(candidateInstancePath);
         var instancePath = hasSelectedInstance
-            ? Path.Combine(launcherFolder, "versions", selectedInstanceName)
+            ? candidateInstancePath
             : launcherFolder;
         var instanceConfig = hasSelectedInstance && Directory.Exists(instancePath)
             ? FrontendRuntimePaths.OpenInstanceConfigProvider(instancePath)
