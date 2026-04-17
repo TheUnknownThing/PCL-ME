@@ -1702,6 +1702,8 @@ setup:
       show_launcher_logo: 打开启动器时显示 PCL 图标
       show_launching_hint: 在启动游戏时显示“你知道吗”
     hidden_features:
+      header: 功能隐藏
+      header_temporary: 功能隐藏（已临时禁用，按 F12 可重新启用）
       groups:
         features: 特定功能
         instance_subpages: 子页面 实例设置

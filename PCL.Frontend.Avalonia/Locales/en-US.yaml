@@ -1702,6 +1702,8 @@ setup:
       show_launcher_logo: Show the PCL logo when opening the launcher
       show_launching_hint: Show "Did you know?" while launching the game
     hidden_features:
+      header: Features hidden
+      header_temporary: Features hidden (temporarily disabled, press F12 to re-enable)
       groups:
         features: Specific features
         instance_subpages: Instance subpages

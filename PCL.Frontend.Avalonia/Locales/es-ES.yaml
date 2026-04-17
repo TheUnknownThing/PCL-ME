@@ -1705,6 +1705,8 @@ setup:
       show_launcher_logo: Mostrar el logotipo de PCL al abrir el iniciador
       show_launching_hint: Mostrar "¿Sabías que?" al iniciar el juego
     hidden_features:
+      header: Funciones ocultas
+      header_temporary: Funciones ocultas (temporalmente desactivadas, presione F12 para volver a activarlas)
       groups:
         features: Características específicas
         instance_subpages: Subpáginas de instancia

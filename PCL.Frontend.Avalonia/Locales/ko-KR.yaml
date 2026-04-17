@@ -1700,6 +1700,8 @@ setup:
       show_launcher_logo: 런처를 열 때 PCL 로고 표시
       show_launching_hint: '"알고 계셨나요?"를 보여주세요. 게임을 시작하는 동안'
     hidden_features:
+      header: 숨겨진 기능
+      header_temporary: 숨겨진 기능(일시적으로 비활성화됨, 다시 활성화하려면 F12를 누르세요)
       groups:
         features: 특정 기능
         instance_subpages: 인스턴스 하위 페이지

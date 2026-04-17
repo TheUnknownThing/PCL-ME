@@ -1700,6 +1700,8 @@ setup:
       show_launcher_logo: 啟啟動器時顯 PCL 圖標
       show_launching_hint: 啟遊戲時顯「汝知否」
     hidden_features:
+      header: 功能隱藏
+      header_temporary: 功能隱藏（暫停用，按 F12 可復啓）
       groups:
         features: 特定功能
         instance_subpages: 子頁 實例設

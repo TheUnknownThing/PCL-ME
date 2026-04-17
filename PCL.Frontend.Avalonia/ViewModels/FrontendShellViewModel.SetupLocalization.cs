@@ -151,6 +151,8 @@ internal sealed partial class FrontendShellViewModel
                 HomepageViewTutorialButton = _i18n.T("setup.ui.homepage.actions.view_tutorial"),
                 HomepageUrlLabel = _i18n.T("setup.ui.homepage.fields.url"),
                 HomepagePresetLabel = _i18n.T("setup.ui.homepage.fields.preset"),
+                HiddenFeaturesCardHeader = _i18n.T("setup.ui.hidden_features.header"),
+                HiddenFeaturesCardHeaderTemporary = _i18n.T("setup.ui.hidden_features.header_temporary"),
                 HiddenFeaturesHint = _i18n.T("setup.ui.hidden_features.hint"),
                 DarkModeOptions =
                 [
@@ -326,6 +328,7 @@ internal sealed partial class FrontendShellViewModel
     private void RaiseSectionBLocalizedProperties()
     {
         RaisePropertyChanged(nameof(SetupText));
+        RaisePropertyChanged(nameof(UiFeatureHiddenCardHeader));
         RaisePropertyChanged(nameof(LaunchIsolationOptions));
         RaisePropertyChanged(nameof(LaunchVisibilityOptions));
         RaisePropertyChanged(nameof(LaunchPriorityOptions));
@@ -472,6 +475,8 @@ internal sealed class SetupUiLocalization
     public required string HomepageViewTutorialButton { get; init; }
     public required string HomepageUrlLabel { get; init; }
     public required string HomepagePresetLabel { get; init; }
+    public required string HiddenFeaturesCardHeader { get; init; }
+    public required string HiddenFeaturesCardHeaderTemporary { get; init; }
     public required string HiddenFeaturesHint { get; init; }
     public required IReadOnlyList<string> DarkModeOptions { get; init; }
     public required IReadOnlyList<string> ThemeColorOptions { get; init; }

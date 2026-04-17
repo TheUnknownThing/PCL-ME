@@ -1700,6 +1700,8 @@ setup:
       show_launcher_logo: PCL-Logo beim Öffnen des Launchers anzeigen
       show_launching_hint: '"Schon gewusst?" beim Starten des Spiels anzeigen'
     hidden_features:
+      header: Funktionen ausgeblendet
+      header_temporary: Funktionen ausgeblendet (vorübergehend deaktiviert, zum erneuten Aktivieren F12 drücken)
       groups:
         features: Bestimmte Funktionen
         instance_subpages: Instanz-Unterseiten

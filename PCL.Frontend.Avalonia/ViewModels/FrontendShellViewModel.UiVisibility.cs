@@ -7,8 +7,8 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowUiFeatureHiddenCard => FrontendUiVisibilityService.ShouldShowFunctionHiddenCard(GetUiVisibilityPreferences());
 
     public string UiFeatureHiddenCardHeader => _showHiddenItemsOverride
-        ? "Features hidden (temporarily disabled, press F12 to re-enable)"
-        : "Features hidden";
+        ? SetupText.Ui.HiddenFeaturesCardHeaderTemporary
+        : SetupText.Ui.HiddenFeaturesCardHeader;
 
     public bool ShowLaunchInstanceManagementButtons => FrontendUiVisibilityService.ShouldShowLaunchInstanceManagement(GetUiVisibilityPreferences());
 

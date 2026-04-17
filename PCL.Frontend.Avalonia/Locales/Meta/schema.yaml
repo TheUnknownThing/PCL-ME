@@ -1907,6 +1907,8 @@ setup:
       show_launcher_logo: []
       show_launching_hint: []
     hidden_features:
+      header: []
+      header_temporary: []
       groups:
         features: []
         instance_subpages: []

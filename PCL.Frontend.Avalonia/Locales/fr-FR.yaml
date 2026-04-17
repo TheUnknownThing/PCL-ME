@@ -1700,6 +1700,8 @@ setup:
       show_launcher_logo: Afficher le logo PCL lors de l'ouverture du lanceur
       show_launching_hint: Afficher « Le saviez-vous ? » en lançant le jeu
     hidden_features:
+      header: Fonctionnalités masquées
+      header_temporary: Fonctionnalités masquées (temporairement désactivées, appuyez sur F12 pour les réactiver)
       groups:
         features: Fonctionnalités spécifiques
         instance_subpages: Sous-pages d'instance
