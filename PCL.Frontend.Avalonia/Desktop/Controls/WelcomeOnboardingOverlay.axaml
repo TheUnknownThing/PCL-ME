@@ -24,7 +24,7 @@
         ZIndex="1">
       <Grid RowDefinitions="Auto,*,Auto">
         <Border
-            Padding="36,30,36,24"
+            Padding="36,30,36,16"
             BorderBrush="{DynamicResource ColorBrushTransparent}"
             BorderThickness="0">
           <StackPanel x:Name="WelcomeStepHeader" Spacing="0">
@@ -44,7 +44,7 @@
             Grid.Row="1"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">
-          <Grid Margin="36,28,36,20">
+          <Grid Margin="36,18,36,20">
             <StackPanel
                 IsVisible="{Binding IsWelcomeLanguageStep}"
                 Margin="12,8,12,8"
@@ -98,61 +98,24 @@
 
             <StackPanel
                 IsVisible="{Binding IsWelcomeLicenseStep}"
+                Margin="12,8,12,36"
                 Spacing="16">
-              <Border
-                  Padding="18,16"
-                  Background="{DynamicResource ColorBrushSemanticWarningBackground}"
-                  BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
-                  BorderThickness="1"
-                  CornerRadius="10">
+              <Border x:Name="WelcomeLicenseBodyHost" Background="Transparent">
                 <TextBlock
-                    Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
-                    FontSize="13.5"
-                    LineHeight="22"
-                    Text="{Binding WelcomeCommunityNotice}"
-                    TextWrapping="Wrap" />
+                    x:Name="WelcomeLicenseBodyText"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="15.5"
+                    LineHeight="26"
+                    TextWrapping="Wrap">
+                  <TextBlock.Inlines>
+                    <Run Text="{Binding WelcomeTermsBodyPrefix}" />
+                    <Run Foreground="{DynamicResource ColorBrush2}" Text="{Binding WelcomeTermsLinkText}" />
+                    <Run Text="{Binding WelcomeTermsBodyMiddle}" />
+                    <Run Foreground="{DynamicResource ColorBrush2}" Text="{Binding WelcomeReadmeLinkText}" />
+                    <Run Text="{Binding WelcomeTermsBodySuffix}" />
+                  </TextBlock.Inlines>
+                </TextBlock>
               </Border>
-
-              <Border
-                  Padding="18,16"
-                  Background="{DynamicResource ColorBrushBg1}"
-                  BorderBrush="{DynamicResource ColorBrush6}"
-                  BorderThickness="1"
-                  CornerRadius="10">
-                <StackPanel Spacing="14">
-                  <TextBlock
-                      Foreground="{DynamicResource ColorBrush1}"
-                      FontSize="13.5"
-                      LineHeight="22"
-                      Text="{Binding WelcomeEulaSummary}"
-                      TextWrapping="Wrap" />
-
-                  <controls:PclButton
-                      MinWidth="150"
-                      HorizontalAlignment="Left"
-                      Command="{Binding WelcomeOpenEulaCommand}"
-                      Text="{Binding WelcomeOpenEulaButtonText}" />
-                </StackPanel>
-              </Border>
-
-              <CheckBox
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Content="{Binding WelcomeCommunityAcknowledgeLabel}"
-                  IsChecked="{Binding WelcomeCommunityBuildAcknowledged, Mode=TwoWay}" />
-
-              <CheckBox
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Content="{Binding WelcomeEulaAcceptLabel}"
-                  IsChecked="{Binding WelcomeEulaAccepted, Mode=TwoWay}" />
-
-              <controls:PclButton
-                  MinWidth="150"
-                  HorizontalAlignment="Left"
-                  ColorType="Red"
-                  Command="{Binding WelcomeDeclineCommand}"
-                  Text="{Binding WelcomeDeclineButtonText}" />
             </StackPanel>
 
             <StackPanel

@@ -1607,7 +1607,7 @@ setup:
       dark_custom: Dunkel benutzerdefiniert
       dark_palette: Dunkle Palette
       global_font: Global
-      locale: Oberflächensprache
+      locale: Sprache
       launcher_opacity: Deckkraft
       light_custom: Hell benutzerdefiniert
       light_palette: Helle Palette
@@ -1847,7 +1847,7 @@ setup:
       system:
         header: System
     fields:
-      locale: Oberflächensprache
+      locale: Sprache
       announcements: Launcher-Ankündigungen
       debug_animation_speed: Animationsgeschwindigkeit
       http_proxy: HTTP proxy
@@ -3369,13 +3369,16 @@ welcome:
     language_hint: Wechseln Sie die Launcher-Sprache jetzt. Der Text dieses Onboardings wird sofort aktualisiert.
     theme_hint: Wählen Sie den Darstellungsmodus, den PCL-ME beim ersten Start verwenden soll.
   step_1:
-    title: EULA akzeptieren
-    description: Dies ist eine Community-Build-Version von PCL-ME. Bestätigen Sie dies bitte und akzeptieren Sie anschließend die Endbenutzer-Lizenzvereinbarung (EULA).
-    community_notice: Dieser Launcher wird von Community-Mitwirkenden gepflegt und ist keine offizielle Veröffentlichung. Funktionsumfang, Update-Rhythmus und Support können sich von anderen Distributionen unterscheiden.
-    community_ack_label: Ich verstehe, dass dies eine Community-Build-Version von PCL-ME ist.
-    eula_summary: PCL ME ist eine kostenlose, quelloffene Software und wird "wie sie ist" bereitgestellt. Durch die Nutzung akzeptieren Sie die Bedingungen der Endbenutzer-Lizenzvereinbarung. Lesen Sie die vollständige EULA für Details zu zulässiger Nutzung und Weitergabe.
-    open_eula: Vollständige EULA öffnen
-    accept_label: Ich habe die EULA gelesen und akzeptiere sie
+    title: Nutzungsbedingungen
+    description: Sie verwenden PCL-ME. Dies ist eine von der Community erstellte plattformübergreifende Edition auf Basis von PCL, deren Quellcode auf GitHub vollständig offengelegt ist. Bitte beachten Sie bei der Nutzung dieser Software die Gesetze und Vorschriften Ihres Landes oder Ihrer Region und respektieren Sie die Nutzungsbedingungen und den Haftungsausschluss des ursprünglichen PCL-Autors. Wenn Sie Software auf Basis von PCL-ME entwickeln oder verbreiten möchten, lesen Sie bitte zuerst in unserem README den Abschnitt zur Lizenz.
+    community_notice: "Sie verwenden PCL-ME. Dies ist eine von der Community erstellte plattformübergreifende Edition auf Basis von PCL, deren Quellcode auf GitHub vollständig offengelegt ist. Bitte beachten Sie bei der Nutzung dieser Software die Gesetze und Vorschriften Ihres Landes oder Ihrer Region und respektieren Sie die "
+    community_ack_label: Ich verstehe, dass dies eine von der Community erstellte plattformübergreifende Edition von PCL ist.
+    eula_summary: " des ursprünglichen PCL-Autors. Wenn Sie Software auf Basis von PCL-ME entwickeln oder verbreiten möchten, lesen Sie bitte zuerst in unserem "
+    open_eula: Nutzungsbedingungen und Haftungsausschluss
+    open_readme: README
+    readme_summary: den Abschnitt zur Lizenz.
+    accept_and_continue: Akzeptieren und fortfahren
+    accept_label: Ich habe die Nutzungsbedingungen gelesen und akzeptiere sie
     decline: Ablehnen und beenden
   step_2:
     title: Alles bereit!

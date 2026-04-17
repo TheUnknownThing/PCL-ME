@@ -1609,7 +1609,7 @@ setup:
       dark_custom: 深色自定義
       dark_palette: 深色配色
       global_font: 全局
-      locale: 介面語言
+      locale: 語言
       launcher_opacity: 不透明度
       light_custom: 淺色自定義
       light_palette: 淺色配色
@@ -1851,7 +1851,7 @@ setup:
       system:
         header: 系統
     fields:
-      locale: 介面語言
+      locale: 語言
       announcements: 啓動器公告
       debug_animation_speed: 動畫速度
       http_proxy: HTTP 代理
@@ -3379,13 +3379,16 @@ welcome:
     language_hint: 現在即可切換啟動器語言，當前引導頁文字會立即刷新。
     theme_hint: 選擇 PCL-ME 首次啟動時要使用的外觀模式。
   step_1:
-    title: 接受 EULA
-    description: 這是 PCL-ME 的社群構建版本。繼續之前，請先確認此事並接受最終用戶許可協議（EULA）。
-    community_notice: 目前發行版由社群貢獻者維護，並非官方版本。功能、更新節奏與支援方式可能與其他發行版本不同。
-    community_ack_label: 我已了解這是 PCL-ME 的社群構建版本。
-    eula_summary: PCL ME 是一款免費開源軟體，以「現狀」提供。繼續使用即表示您接受最終用戶許可協議的條款。請閱讀完整 EULA，以了解允許的使用方式及再發行規定。
-    open_eula: 查看完整 EULA
-    accept_label: 我已閱讀並接受 EULA
+    title: 使用條款
+    description: 您正在使用 PCL-ME。這是基於 PCL 的社群跨平台版本，原始碼已在 GitHub 上完全開放。使用本軟體時，請遵守您所在國家或地區的法律法規，並尊重 PCL 原作者的使用者協議與免責聲明。若您想開發、散布基於 PCL-ME 的軟體，請先閱讀我們的 README 中關於授權條款的說明。
+    community_notice: 您正在使用 PCL-ME。這是基於 PCL 的社群跨平台版本，原始碼已在 GitHub 上完全開放。使用本軟體時，請遵守您所在國家或地區的法律法規，並尊重 PCL 原作者的
+    community_ack_label: 我已了解這是 PCL 的社群構建跨平台版本。
+    eula_summary: 。若您想開發、散布基於 PCL-ME 的軟體，請先閱讀我們的
+    open_eula: 使用者協議與免責聲明
+    open_readme: README
+    readme_summary: 中關於授權條款的說明。
+    accept_and_continue: 同意並繼續
+    accept_label: 我已閱讀並同意使用條款
     decline: 拒絕並退出
   step_2:
     title: 一切就緒

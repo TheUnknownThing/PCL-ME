@@ -3849,6 +3849,9 @@ welcome:
     community_ack_label: []
     eula_summary: []
     open_eula: []
+    open_readme: []
+    readme_summary: []
+    accept_and_continue: []
     accept_label: []
     decline: []
   step_2:

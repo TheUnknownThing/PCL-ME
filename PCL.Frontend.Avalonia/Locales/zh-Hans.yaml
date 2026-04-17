@@ -1851,7 +1851,7 @@ setup:
       system:
         header: 系统
     fields:
-      locale: 界面语言
+      locale: 语言
       announcements: 启动器公告
       debug_animation_speed: 动画速度
       http_proxy: HTTP 代理
@@ -3379,13 +3379,16 @@ welcome:
     language_hint: 现在即可切换启动器语言，当前引导页文本会立刻刷新。
     theme_hint: 选择 PCL-ME 首次启动时使用的外观模式。
   step_1:
-    title: 接受 EULA
-    description: 这是 PCL-ME 的社区构建版本。在继续之前，请先确认这一点并接受最终用户许可协议（EULA）。
-    community_notice: 当前发行版由社区贡献者维护，并非官方发行版本。功能、更新节奏与支持方式可能与其他分发版本不同。
-    community_ack_label: 我已了解这是 PCL-ME 的社区构建版本。
-    eula_summary: PCL ME 是一款免费开源软件，按"现状"提供。继续使用即表示您接受最终用户许可协议的条款。请阅读完整 EULA，以了解允许的使用方式和再发行规定。
-    open_eula: 查看完整 EULA
-    accept_label: 我已阅读并接受 EULA
+    title: 使用条款
+    description: 您正在使用 PCL-ME。这是基于 PCL 的社区跨平台版本，源码在 GitHub 上完全开放。在使用该软件的时候，请遵守您所在国家/地区的法律法规，尊重 PCL 原作者的用户协议与免责声明。如果您想开发、分发基于 PCL-ME 的软件，请先阅读我们的 README 中关于许可证的说明。
+    community_notice: 您正在使用 PCL-ME。这是基于 PCL 的社区跨平台版本，源码在 GitHub 上完全开放。在使用该软件的时候，请遵守您所在国家/地区的法律法规，尊重 PCL 原作者的
+    community_ack_label: 我已了解这是 PCL 的社区构建跨平台版本。
+    eula_summary: 。如果您想开发、分发基于 PCL-ME 的软件，请先阅读我们的
+    open_eula: 用户协议与免责声明
+    open_readme: README
+    readme_summary: 中关于许可证的说明。
+    accept_and_continue: 同意并继续
+    accept_label: 我已阅读并同意使用条款
     decline: 拒绝并退出
   step_2:
     title: 一切就绪

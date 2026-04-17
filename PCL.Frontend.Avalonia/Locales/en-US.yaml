@@ -1609,7 +1609,7 @@ setup:
       dark_custom: Dark custom
       dark_palette: Dark palette
       global_font: Global
-      locale: Interface language
+      locale: Language
       launcher_opacity: Opacity
       light_custom: Light custom
       light_palette: Light palette
@@ -1851,7 +1851,7 @@ setup:
       system:
         header: System
     fields:
-      locale: Interface language
+      locale: Language
       announcements: Launcher announcements
       debug_animation_speed: Animation speed
       http_proxy: HTTP proxy
@@ -3379,13 +3379,16 @@ welcome:
     language_hint: Switch the launcher language now. The onboarding text updates as soon as you change it.
     theme_hint: Pick the appearance mode you want PCL-ME to use on first launch.
   step_1:
-    title: Accepting EULA
-    description: This is a community-built version of PCL-ME. Please acknowledge that and accept the End User License Agreement before continuing.
-    community_notice: This launcher is maintained by community contributors and is not an official release. Features, update cadence, and support may differ from other distributions.
-    community_ack_label: I understand this is a community-built release of PCL-ME.
-    eula_summary: PCL ME is free, open-source software provided as-is. By proceeding, you accept the terms of the End User License Agreement (EULA). Read the full EULA for details about permitted use and redistribution.
-    open_eula: Open Full EULA
-    accept_label: I have read and accept the EULA
+    title: Terms of Use
+    description: You are using PCL-ME. This is a community-built cross-platform edition based on PCL, with its source code fully available on GitHub. When using this software, please comply with the laws and regulations of your country or region and respect the original PCL author's Terms of Use and Disclaimer. If you want to develop or distribute software based on PCL-ME, please first read the section in our README about licensing.
+    community_notice: "You are using PCL-ME. This is a community-built cross-platform edition based on PCL, with its source code fully available on GitHub. When using this software, please comply with the laws and regulations of your country or region and respect the original PCL author's "
+    community_ack_label: I understand this is a community-built multi-platform edition of PCL.
+    eula_summary: ". If you want to develop or distribute software based on PCL-ME, please first read the section in our "
+    open_eula: Terms of Use and Disclaimer
+    open_readme: README
+    readme_summary: about licensing.
+    accept_and_continue: Accept and Continue
+    accept_label: I have read and accept the terms of use
     decline: Decline & Exit
   step_2:
     title: You're All Set!

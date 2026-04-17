@@ -7,6 +7,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class FrontendShellViewModel
 {
     private const string WelcomeEulaUrl = "https://shimo.im/docs/rGrd8pY8xWkt6ryW";
+    private const string WelcomeReadmeUrl = "https://github.com/TheUnknownThing/PCL-ME#readme";
     private const string WelcomeTutorialFallbackUrl = "https://github.com/TheUnknownThing/PCL-ME#readme";
     private const string WelcomeFeedbackUrl = "https://github.com/TheUnknownThing/PCL-ME/issues";
     private const string WelcomeGitHubUrl = "https://github.com/TheUnknownThing/PCL-ME";
@@ -14,12 +15,11 @@ internal sealed partial class FrontendShellViewModel
 
     private bool _welcomeOverlayDismissed;
     private int _welcomeCurrentStep;
-    private bool _welcomeEulaAccepted;
-    private bool _welcomeCommunityBuildAcknowledged;
 
     private ActionCommand? _welcomeNextStepCommandBacking;
     private ActionCommand? _welcomePreviousStepCommandBacking;
     private ActionCommand? _welcomeOpenEulaCommandBacking;
+    private ActionCommand? _welcomeOpenReadmeCommandBacking;
     private ActionCommand? _welcomeOpenTutorialCommandBacking;
     private ActionCommand? _welcomeDeclineCommandBacking;
     private ActionCommand? _welcomeOpenFeedbackCommandBacking;
@@ -61,12 +61,12 @@ internal sealed partial class FrontendShellViewModel
 
     // Step 1 – License
 
-    public string WelcomeCommunityNotice => _i18n.T("welcome.step_1.community_notice");
-    public string WelcomeCommunityAcknowledgeLabel => _i18n.T("welcome.step_1.community_ack_label");
-    public string WelcomeEulaSummary => _i18n.T("welcome.step_1.eula_summary");
-    public string WelcomeOpenEulaButtonText => _i18n.T("welcome.step_1.open_eula");
-    public string WelcomeDeclineButtonText => _i18n.T("welcome.step_1.decline");
-    public string WelcomeEulaAcceptLabel => _i18n.T("welcome.step_1.accept_label");
+    public string WelcomeTermsBodyPrefix => _i18n.T("welcome.step_1.community_notice");
+    public string WelcomeTermsLinkText => _i18n.T("welcome.step_1.open_eula");
+    public string WelcomeTermsBodyMiddle => _i18n.T("welcome.step_1.eula_summary");
+    public string WelcomeReadmeLinkText => _i18n.T("welcome.step_1.open_readme");
+    public string WelcomeTermsBodySuffix => _i18n.T("welcome.step_1.readme_summary");
+    public string WelcomeAcceptAndContinueButtonText => _i18n.T("welcome.step_1.accept_and_continue");
 
     // Step 2 – Done
 
@@ -74,47 +74,18 @@ internal sealed partial class FrontendShellViewModel
     public string WelcomeFeedbackButtonText => _i18n.T("welcome.step_2.feedback");
     public string WelcomeGitHubButtonText => _i18n.T("welcome.step_2.github");
     public string WelcomeBackButtonText => _i18n.T("common.actions.back");
-    public string WelcomePrimaryActionText => _welcomeCurrentStep == WelcomeTotalSteps - 1
-        ? _i18n.T("common.actions.confirm")
-        : _i18n.T("common.actions.continue");
-
-    // ── EULA checkbox ────────────────────────────────────────────────────────
-
-    public bool WelcomeCommunityBuildAcknowledged
+    public string WelcomePrimaryActionText => _welcomeCurrentStep switch
     {
-        get => _welcomeCommunityBuildAcknowledged;
-        set
-        {
-            if (SetProperty(ref _welcomeCommunityBuildAcknowledged, value))
-            {
-                RaisePropertyChanged(nameof(CanGoToNextWelcomeStep));
-                WelcomeNextStepCommand.NotifyCanExecuteChanged();
-            }
-        }
-    }
-
-    public bool WelcomeEulaAccepted
-    {
-        get => _welcomeEulaAccepted;
-        set
-        {
-            if (SetProperty(ref _welcomeEulaAccepted, value))
-            {
-                RaisePropertyChanged(nameof(CanGoToNextWelcomeStep));
-                WelcomeNextStepCommand.NotifyCanExecuteChanged();
-            }
-        }
-    }
+        1 => WelcomeAcceptAndContinueButtonText,
+        WelcomeTotalSteps - 1 => _i18n.T("common.actions.confirm"),
+        _ => _i18n.T("common.actions.continue")
+    };
 
     // ── Navigation ───────────────────────────────────────────────────────────
 
     public bool CanGoToPreviousWelcomeStep => _welcomeCurrentStep > 0;
 
-    /// <summary>
-    /// Next is always enabled except on the License step when required confirmations are unchecked.
-    /// </summary>
-    public bool CanGoToNextWelcomeStep =>
-        _welcomeCurrentStep != 1 || (_welcomeEulaAccepted && _welcomeCommunityBuildAcknowledged);
+    public bool CanGoToNextWelcomeStep => true;
 
     // ── Dot indicator brushes ────────────────────────────────────────────────
 
@@ -135,6 +106,12 @@ internal sealed partial class FrontendShellViewModel
     public ActionCommand WelcomeOpenEulaCommand =>
         _welcomeOpenEulaCommandBacking ??=
             new ActionCommand(OpenWelcomeEulaUrl);
+
+    public ActionCommand WelcomeOpenTermsCommand => WelcomeOpenEulaCommand;
+
+    public ActionCommand WelcomeOpenReadmeCommand =>
+        _welcomeOpenReadmeCommandBacking ??=
+            new ActionCommand(OpenWelcomeReadmeUrl);
 
     public ActionCommand WelcomeOpenTutorialCommand =>
         _welcomeOpenTutorialCommandBacking ??=
@@ -160,6 +137,12 @@ internal sealed partial class FrontendShellViewModel
         {
             CompleteOnboarding();
             return;
+        }
+
+        if (_welcomeCurrentStep == 1)
+        {
+            _shellActionService.AcceptLauncherEula();
+            UpdateStartupConsentRequest(request => request with { HasAcceptedEula = true });
         }
 
         _welcomeCurrentStep++;
@@ -208,6 +191,11 @@ internal sealed partial class FrontendShellViewModel
         OpenExternalTarget(WelcomeEulaUrl, "Opened EULA URL from the welcome overlay.");
     }
 
+    private void OpenWelcomeReadmeUrl()
+    {
+        OpenExternalTarget(WelcomeReadmeUrl, "Opened README URL from the welcome overlay.");
+    }
+
     private void OpenWelcomeTutorial()
     {
         CompleteOnboarding();
@@ -238,12 +226,12 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(WelcomeStepDescription));
         RaisePropertyChanged(nameof(WelcomeLanguageEntryDescription));
         RaisePropertyChanged(nameof(WelcomeThemeEntryDescription));
-        RaisePropertyChanged(nameof(WelcomeCommunityNotice));
-        RaisePropertyChanged(nameof(WelcomeCommunityAcknowledgeLabel));
-        RaisePropertyChanged(nameof(WelcomeEulaSummary));
-        RaisePropertyChanged(nameof(WelcomeOpenEulaButtonText));
-        RaisePropertyChanged(nameof(WelcomeDeclineButtonText));
-        RaisePropertyChanged(nameof(WelcomeEulaAcceptLabel));
+        RaisePropertyChanged(nameof(WelcomeTermsBodyPrefix));
+        RaisePropertyChanged(nameof(WelcomeTermsLinkText));
+        RaisePropertyChanged(nameof(WelcomeTermsBodyMiddle));
+        RaisePropertyChanged(nameof(WelcomeReadmeLinkText));
+        RaisePropertyChanged(nameof(WelcomeTermsBodySuffix));
+        RaisePropertyChanged(nameof(WelcomeAcceptAndContinueButtonText));
         RaisePropertyChanged(nameof(WelcomeTutorialButtonText));
         RaisePropertyChanged(nameof(WelcomeFeedbackButtonText));
         RaisePropertyChanged(nameof(WelcomeGitHubButtonText));

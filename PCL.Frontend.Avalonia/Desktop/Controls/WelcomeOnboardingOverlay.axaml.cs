@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
@@ -17,6 +18,8 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 {
     private static readonly Easing StepOpacityEasing = new CubicEaseOut();
     private static readonly Easing StepTranslateEasing = new BackEaseOut();
+    private const string TermsLinkKind = "terms";
+    private const string ReadmeLinkKind = "readme";
 
     private FrontendShellViewModel? _shell;
     private bool _isRenderedOpen;
@@ -30,6 +33,9 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         OverlayRoot.IsVisible = false;
         OverlayRoot.IsHitTestVisible = false;
         PclModalMotion.ResetToClosedState(WelcomeBackdrop, WelcomeCard);
+        WelcomeLicenseBodyHost.PointerPressed += OnWelcomeLicenseBodyPointerPressed;
+        WelcomeLicenseBodyHost.PointerMoved += OnWelcomeLicenseBodyPointerMoved;
+        WelcomeLicenseBodyHost.PointerExited += OnWelcomeLicenseBodyPointerExited;
         DataContextChanged += OnDataContextChanged;
         AttachedToVisualTree += (_, _) => QueueOverlaySync();
         DetachedFromVisualTree += (_, _) => ObserveShell(null);
@@ -209,5 +215,86 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         target.Opacity = 1d;
         transform.X = 0d;
         transform.Y = 0d;
+    }
+
+    private void OnWelcomeLicenseBodyPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_shell is null || !e.GetCurrentPoint(WelcomeLicenseBodyHost).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        var point = e.GetPosition(WelcomeLicenseBodyText);
+        var linkKind = HitTestWelcomeLicenseLink(point);
+        if (linkKind is null)
+        {
+            return;
+        }
+
+        if (linkKind == TermsLinkKind)
+        {
+            _shell.WelcomeOpenTermsCommand.Execute(null);
+        }
+        else if (linkKind == ReadmeLinkKind)
+        {
+            _shell.WelcomeOpenReadmeCommand.Execute(null);
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnWelcomeLicenseBodyPointerMoved(object? sender, PointerEventArgs e)
+    {
+        WelcomeLicenseBodyHost.Cursor = HitTestWelcomeLicenseLink(e.GetPosition(WelcomeLicenseBodyText)) is null
+            ? new Cursor(StandardCursorType.Arrow)
+            : new Cursor(StandardCursorType.Hand);
+    }
+
+    private void OnWelcomeLicenseBodyPointerExited(object? sender, PointerEventArgs e)
+    {
+        WelcomeLicenseBodyHost.Cursor = new Cursor(StandardCursorType.Arrow);
+    }
+
+    private string? HitTestWelcomeLicenseLink(Point point)
+    {
+        if (_shell is null || WelcomeLicenseBodyText.Bounds.Width <= 0)
+        {
+            return null;
+        }
+
+        var layout = WelcomeLicenseBodyText.TextLayout;
+        if (layout is null)
+        {
+            return null;
+        }
+
+        var prefix = _shell.WelcomeTermsBodyPrefix;
+        var terms = _shell.WelcomeTermsLinkText;
+        var middle = _shell.WelcomeTermsBodyMiddle;
+        var readme = _shell.WelcomeReadmeLinkText;
+
+        var termsStart = prefix.Length;
+        if (ContainsPoint(layout.HitTestTextRange(termsStart, terms.Length), point))
+        {
+            return TermsLinkKind;
+        }
+
+        var readmeStart = termsStart + terms.Length + middle.Length;
+        return ContainsPoint(layout.HitTestTextRange(readmeStart, readme.Length), point)
+            ? ReadmeLinkKind
+            : null;
+    }
+
+    private static bool ContainsPoint(IEnumerable<Rect> rects, Point point)
+    {
+        foreach (var rect in rects)
+        {
+            if (rect.Contains(point))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
