@@ -27,10 +27,8 @@ internal sealed partial class FrontendShellViewModel
         string activityMessage)
     {
         _shellActionService.PersistLocalValue("LaunchFolderSelect", storedFolderPath);
-
-        var localConfig = _shellActionService.RuntimePaths.OpenLocalConfigProvider();
-        var selectedInstanceName = ReadRememberedLaunchInstanceName(localConfig);
-        SetOptimisticLaunchInstanceName(selectedInstanceName);
+        _shellActionService.PersistLocalValue("LaunchInstanceSelect", string.Empty);
+        SetOptimisticLaunchInstanceName(null);
         RefreshInstanceSelectionSurface();
         RefreshInstanceSelectionRouteMetadata();
 
@@ -78,14 +76,19 @@ internal sealed partial class FrontendShellViewModel
 
     private void SetOptimisticLaunchInstanceName(string? instanceName, bool raiseProperties = true)
     {
+        var hasSelectedInstance = !string.IsNullOrWhiteSpace(instanceName);
         var normalizedInstanceName = string.IsNullOrWhiteSpace(instanceName)
             ? LT("shell.instance_select.route.values.none_selected")
             : instanceName.Trim();
         var previousDisplayName = GetDisplayedLaunchInstanceName();
+        var previousHasSelection = HasSelectedInstance;
         _optimisticLaunchInstanceName = normalizedInstanceName;
         _hasOptimisticLaunchInstanceName = true;
+        _optimisticHasSelectedInstance = hasSelectedInstance;
 
-        if (raiseProperties && !string.Equals(previousDisplayName, GetDisplayedLaunchInstanceName(), StringComparison.Ordinal))
+        if (raiseProperties
+            && (!string.Equals(previousDisplayName, GetDisplayedLaunchInstanceName(), StringComparison.Ordinal)
+                || previousHasSelection != HasSelectedInstance))
         {
             RaiseLaunchInstanceDisplayProperties();
         }
@@ -99,10 +102,14 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var previousDisplayName = GetDisplayedLaunchInstanceName();
+        var previousHasSelection = HasSelectedInstance;
         _optimisticLaunchInstanceName = string.Empty;
         _hasOptimisticLaunchInstanceName = false;
+        _optimisticHasSelectedInstance = false;
 
-        if (raiseProperties && !string.Equals(previousDisplayName, GetDisplayedLaunchInstanceName(), StringComparison.Ordinal))
+        if (raiseProperties
+            && (!string.Equals(previousDisplayName, GetDisplayedLaunchInstanceName(), StringComparison.Ordinal)
+                || previousHasSelection != HasSelectedInstance))
         {
             RaiseLaunchInstanceDisplayProperties();
         }
@@ -117,6 +124,9 @@ internal sealed partial class FrontendShellViewModel
 
     private void RaiseLaunchInstanceDisplayProperties()
     {
+        RaisePropertyChanged(nameof(HasSelectedInstance));
+        RaisePropertyChanged(nameof(ShowLaunchVersionSetupButton));
+        RaisePropertyChanged(nameof(LaunchVersionSelectButtonColumnSpan));
         RaisePropertyChanged(nameof(LaunchVersionSubtitle));
         RaisePropertyChanged(nameof(LaunchWelcomeBanner));
         RaisePropertyChanged(nameof(LaunchNewsTitle));

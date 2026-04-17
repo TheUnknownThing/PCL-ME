@@ -387,7 +387,8 @@
           Background="Transparent"
           BorderBrush="Transparent"
           BorderThickness="0"
-          Command="{Binding VersionSetupCommand}">
+          Command="{Binding VersionSetupCommand}"
+          IsVisible="{Binding ShowLaunchVersionSetupButton}">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <TextBlock
               Foreground="{DynamicResource ColorBrush3}"

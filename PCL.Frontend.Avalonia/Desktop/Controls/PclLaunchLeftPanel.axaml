@@ -362,6 +362,7 @@
           IsVisible="{Binding ShowLaunchInstanceManagementButtons}">
         <controls:PclButton
             Grid.Column="0"
+            Grid.ColumnSpan="{Binding LaunchVersionSelectButtonColumnSpan}"
             Height="35"
             Command="{Binding VersionSelectCommand}"
             Text="{Binding LaunchVersionSelectButtonText}" />
@@ -370,6 +371,7 @@
             Grid.Column="2"
             Height="35"
             Command="{Binding VersionSetupCommand}"
+            IsVisible="{Binding ShowLaunchVersionSetupButton}"
             Text="{Binding LaunchVersionSetupButtonText}" />
       </Grid>
     </Grid>

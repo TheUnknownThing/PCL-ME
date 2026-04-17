@@ -334,6 +334,9 @@ internal sealed partial class FrontendShellViewModel
         RefreshInstanceExportSurface();
         RefreshInstanceInstallSurface();
         RefreshInstanceContentSurfaces();
+        RaisePropertyChanged(nameof(HasSelectedInstance));
+        RaisePropertyChanged(nameof(ShowLaunchVersionSetupButton));
+        RaisePropertyChanged(nameof(LaunchVersionSelectButtonColumnSpan));
     }
 
     private void OpenInstanceTarget(string activity, string? target, string emptyState)

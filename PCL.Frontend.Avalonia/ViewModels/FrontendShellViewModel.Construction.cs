@@ -303,6 +303,7 @@ internal sealed partial class FrontendShellViewModel
     private Task _selectedInstanceRefreshTask = Task.CompletedTask;
     private bool _hasOptimisticLaunchInstanceName;
     private string _optimisticLaunchInstanceName = string.Empty;
+    private bool _optimisticHasSelectedInstance;
 
     public static FrontendShellViewModel CreateBootstrap(
         AvaloniaCommandOptions options,
@@ -359,9 +360,7 @@ internal sealed partial class FrontendShellViewModel
         _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
         _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
-        _versionSetupCommand = new ActionCommand(() => NavigateTo(
-            new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSetup),
-            "Opened instance settings from the launch pane."));
+        _versionSetupCommand = new ActionCommand(OpenSelectedInstanceSetup);
         _toggleLaunchMigrationCommand = new ActionCommand(ToggleLaunchMigrationCard);
         _toggleLaunchNewsCommand = new ActionCommand(ToggleLaunchNewsCard);
         _dismissLaunchCommunityHintCommand = new ActionCommand(DismissCurrentLaunchAnnouncement);
