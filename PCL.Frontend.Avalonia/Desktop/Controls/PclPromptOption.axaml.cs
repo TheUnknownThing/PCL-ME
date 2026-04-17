@@ -75,9 +75,6 @@ internal sealed partial class PclPromptOption : UserControl
         OptionBorder.Background = _isHovered
             ? FrontendThemeResourceResolver.GetBrush("ColorBrush8")
             : FrontendThemeResourceResolver.GetBrush("ColorBrushSemiWhite");
-        OptionBorder.BorderBrush = _isHovered
-            ? FrontendThemeResourceResolver.GetBrush("ColorBrush6")
-            : FrontendThemeResourceResolver.GetBrush("ColorBrush6");
         OptionBorder.Opacity = _isPressed ? 0.9 : 1.0;
         OptionBorder.RenderTransform = _isPressed
             ? new ScaleTransform(0.985, 0.985)

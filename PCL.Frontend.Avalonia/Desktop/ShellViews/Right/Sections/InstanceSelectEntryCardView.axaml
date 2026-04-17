@@ -14,7 +14,6 @@
 
     <Border
         x:Name="BackgroundSurface"
-        Background="Transparent"
         CornerRadius="6"
         Opacity="0">
       <Border.Transitions>

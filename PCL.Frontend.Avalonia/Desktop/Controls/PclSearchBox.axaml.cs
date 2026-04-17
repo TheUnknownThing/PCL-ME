@@ -205,9 +205,6 @@ internal sealed partial class PclSearchBox : UserControl
         SearchRowBorder.Background = isActive
             ? FrontendThemeResourceResolver.GetBrush("ColorBrush8")
             : FrontendThemeResourceResolver.GetBrush("ColorBrushHalfWhite");
-        SearchRowBorder.BorderBrush = isActive
-            ? FrontendThemeResourceResolver.GetBrush("ColorBrush6")
-            : FrontendThemeResourceResolver.GetBrush("ColorBrush6");
     }
 
     private void QueueRefreshChrome()

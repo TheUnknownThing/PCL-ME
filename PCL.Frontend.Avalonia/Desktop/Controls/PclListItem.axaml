@@ -33,8 +33,6 @@
         x:Name="RectBack"
         Grid.ColumnSpan="7"
         Margin="0"
-        Background="{DynamicResource ColorBrushEntrySelectedBackground}"
-        BorderBrush="{DynamicResource ColorBrush6}"
         BorderThickness="1"
         CornerRadius="4"
         Opacity="0">
@@ -66,7 +64,6 @@
         Height="16"
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
-        Fill="{DynamicResource ColorBrushGray2}"
         Stretch="Uniform"
         IsVisible="False" />
 
@@ -105,7 +102,6 @@
             Grid.Column="0"
             HorizontalAlignment="Left"
             FontSize="14"
-            Foreground="{DynamicResource ColorBrushGray1}"
             TextAlignment="Left"
             TextTrimming="CharacterEllipsis" />
         <TextBlock
@@ -127,7 +123,6 @@
             Grid.ColumnSpan="2"
             HorizontalAlignment="Left"
             FontSize="12"
-            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             IsVisible="False"
             TextAlignment="Left"
             TextTrimming="CharacterEllipsis"
@@ -160,7 +155,6 @@
             x:Name="SecondaryAccessoryPath"
             Width="12"
             Height="12"
-            Fill="{DynamicResource ColorBrush5}"
             Stretch="Uniform" />
       </Button>
 
@@ -180,7 +174,6 @@
             x:Name="AccessoryPath"
             Width="12"
             Height="12"
-            Fill="{DynamicResource ColorBrush5}"
             Stretch="Uniform" />
       </Button>
     </StackPanel>

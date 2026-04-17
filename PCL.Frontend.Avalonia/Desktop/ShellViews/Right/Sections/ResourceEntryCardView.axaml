@@ -26,8 +26,6 @@
         x:Name="HoverBackground"
         Grid.RowSpan="4"
         Grid.ColumnSpan="7"
-        Background="{DynamicResource ColorBrushEntrySelectedBackground}"
-        BorderBrush="{DynamicResource ColorBrush6}"
         BorderThickness="1"
         CornerRadius="4"
         Opacity="0">

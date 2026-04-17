@@ -22,9 +22,7 @@
           CornerRadius="3"
           BorderThickness="1"
           RenderTransformOrigin="0.5,0.5"
-          RenderTransform="scale(1)"
-          Background="{DynamicResource ColorBrushHalfWhite}"
-          BorderBrush="{DynamicResource ColorBrush3}">
+          RenderTransform="scale(1)">
         <Border.Transitions>
           <Transitions>
             <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
