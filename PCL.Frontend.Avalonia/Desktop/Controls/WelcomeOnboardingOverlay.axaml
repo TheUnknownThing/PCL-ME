@@ -65,6 +65,7 @@
                     FontWeight="SemiBold"
                     Text="{Binding SetupText.Ui.LocaleLabel}" />
                 <ComboBox
+                    x:Name="WelcomeLauncherLocaleComboBox"
                     Grid.Column="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Center"
@@ -88,6 +89,7 @@
                     FontWeight="SemiBold"
                     Text="{Binding SetupText.Ui.ThemeLabel}" />
                 <ComboBox
+                    x:Name="WelcomeThemeModeComboBox"
                     Grid.Column="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Center"

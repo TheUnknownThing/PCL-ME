@@ -21,6 +21,8 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
     private const string TermsLinkKind = "terms";
     private const string ReadmeLinkKind = "readme";
 
+    private readonly ComboBox _launcherLocaleComboBox;
+    private readonly ComboBox _themeModeComboBox;
     private FrontendShellViewModel? _shell;
     private bool _isRenderedOpen;
     private int _overlayAnimationVersion;
@@ -30,6 +32,10 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
     public WelcomeOnboardingOverlay()
     {
         InitializeComponent();
+        _launcherLocaleComboBox = this.FindControl<ComboBox>("WelcomeLauncherLocaleComboBox")
+            ?? throw new InvalidOperationException("The welcome overlay did not contain the launcher locale combo box.");
+        _themeModeComboBox = this.FindControl<ComboBox>("WelcomeThemeModeComboBox")
+            ?? throw new InvalidOperationException("The welcome overlay did not contain the theme mode combo box.");
         OverlayRoot.IsVisible = false;
         OverlayRoot.IsHitTestVisible = false;
         PclModalMotion.ResetToClosedState(WelcomeBackdrop, WelcomeCard);
@@ -39,12 +45,14 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         DataContextChanged += OnDataContextChanged;
         AttachedToVisualTree += (_, _) => QueueOverlaySync();
         DetachedFromVisualTree += (_, _) => ObserveShell(null);
+        ScheduleSelectionRestore();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         ObserveShell(DataContext as FrontendShellViewModel);
         QueueOverlaySync();
+        ScheduleSelectionRestore();
     }
 
     private void ObserveShell(FrontendShellViewModel? shell)
@@ -79,7 +87,42 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         if (e.PropertyName == nameof(FrontendShellViewModel.WelcomeCurrentStep))
         {
             QueueStepTransition();
+            return;
         }
+
+        if (e.PropertyName is nameof(FrontendShellViewModel.LauncherLocaleOptions)
+            or nameof(FrontendShellViewModel.SelectedLauncherLocaleIndex)
+            or nameof(FrontendShellViewModel.DarkModeOptions)
+            or nameof(FrontendShellViewModel.SelectedDarkModeIndex))
+        {
+            ScheduleSelectionRestore();
+        }
+    }
+
+    private void ScheduleSelectionRestore()
+    {
+        Dispatcher.UIThread.Post(RestoreSelections, DispatcherPriority.Background);
+    }
+
+    private void RestoreSelections()
+    {
+        if (_shell is null)
+        {
+            return;
+        }
+
+        ApplySelectedIndex(_launcherLocaleComboBox, _shell.SelectedLauncherLocaleIndex);
+        ApplySelectedIndex(_themeModeComboBox, _shell.SelectedDarkModeIndex);
+    }
+
+    private static void ApplySelectedIndex(ComboBox comboBox, int selectedIndex)
+    {
+        if (selectedIndex < 0 || comboBox.SelectedIndex == selectedIndex)
+        {
+            return;
+        }
+
+        comboBox.SelectedIndex = selectedIndex;
     }
 
     private void QueueOverlaySync()
