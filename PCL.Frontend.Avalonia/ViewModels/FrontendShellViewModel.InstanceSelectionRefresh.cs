@@ -56,6 +56,7 @@ internal sealed partial class FrontendShellViewModel
         int refreshVersion,
         bool suppressInstanceSelectionSurfaceRefresh = false)
     {
+        SetInstanceResourceLoading(ShouldShowInstanceResourceLoadingForRoute(_currentRoute));
         _selectedInstanceRefreshTask = RefreshSelectedInstanceStateAsync(
             refreshVersion,
             suppressInstanceSelectionSurfaceRefresh);
@@ -151,6 +152,7 @@ internal sealed partial class FrontendShellViewModel
 
                 _instanceComposition = refreshedState.InstanceComposition;
                 _instanceCompositionLoadMode = loadMode;
+                SetInstanceResourceLoading(false);
                 ReloadToolsComposition();
                 ReloadVersionSavesComposition();
                 ReloadDownloadComposition(includeRemoteState: _downloadCompositionHasRemoteState);
@@ -192,7 +194,10 @@ internal sealed partial class FrontendShellViewModel
             }
 
             await Dispatcher.UIThread.InvokeAsync(() =>
-                AddFailureActivity(LT("shell.instance_select.activities.refresh_failure"), ex.Message));
+            {
+                SetInstanceResourceLoading(false);
+                AddFailureActivity(LT("shell.instance_select.activities.refresh_failure"), ex.Message);
+            });
         }
     }
 

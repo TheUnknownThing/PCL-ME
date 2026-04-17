@@ -1,5 +1,6 @@
 using System.IO;
 using System.Collections.ObjectModel;
+using System.Threading;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
@@ -740,6 +741,11 @@ internal sealed partial class FrontendShellViewModel
 
     private void ReloadRouteCompositions(LauncherFrontendRoute previousRoute, LauncherFrontendRoute route)
     {
+        if (route.Page != LauncherFrontendPageKey.InstanceSetup || !IsInstanceResourceSubpage(route.Subpage))
+        {
+            SetInstanceResourceLoading(false);
+        }
+
         if (route.Page == LauncherFrontendPageKey.Setup)
         {
             ReloadSetupComposition(initializeAllSurfaces: false);
@@ -754,10 +760,17 @@ internal sealed partial class FrontendShellViewModel
             if (previousRoute.Page != LauncherFrontendPageKey.InstanceSetup
                 || !HasSufficientInstanceCompositionLoadMode(requiredLoadMode))
             {
-                ReloadInstanceComposition(
-                    requiredLoadMode,
-                    reloadDependentCompositions: false,
-                    initializeAllSurfaces: false);
+                if (ShouldShowInstanceResourceLoadingForRoute(route))
+                {
+                    QueueSelectedInstanceStateRefresh(Interlocked.Increment(ref _instanceSelectionRefreshVersion));
+                }
+                else
+                {
+                    ReloadInstanceComposition(
+                        requiredLoadMode,
+                        reloadDependentCompositions: false,
+                        initializeAllSurfaces: false);
+                }
             }
         }
         else if (route.Page == LauncherFrontendPageKey.VersionSaves)

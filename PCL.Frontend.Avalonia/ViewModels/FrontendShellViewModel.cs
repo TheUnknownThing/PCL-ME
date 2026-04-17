@@ -74,7 +74,7 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public ObservableCollection<InstanceServerEntryViewModel> InstanceServerEntries { get; } = [];
 
-    public ObservableCollection<InstanceResourceEntryViewModel> InstanceResourceEntries { get; } = [];
+    public ObservableCollection<InstanceResourceEntryViewModel> InstanceResourceEntries => GetCurrentInstanceResourceSurfaceState().Entries;
 
     public ObservableCollection<HelpTopicGroupViewModel> HelpTopicGroups { get; } = [];
 

@@ -35,6 +35,21 @@
         IsVisible="{Binding ShowInstanceResourceEmptyState}" />
 
     <controls:PclCard
+        x:Name="LoadingCard"
+        Width="360"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Margin="40"
+        IsVisible="{Binding ShowInstanceResourceLoadingCard}">
+      <controls:PclCard.CardContent>
+        <controls:PclLoading
+            Margin="0,6"
+            HorizontalAlignment="Center"
+            Text="{Binding InstanceResourceLoadingText}" />
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
+
+    <controls:PclCard
         x:Name="SelectionActionCard"
         MinWidth="420"
         MaxWidth="780"

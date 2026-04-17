@@ -11,6 +11,7 @@ internal sealed partial class FrontendShellViewModel
     private StandardShellLeftPaneDescriptor? _currentStandardLeftPaneDescriptor;
     private StandardShellRightPaneDescriptor? _currentStandardRightPaneDescriptor;
     private StandardShellPaneResolution? _currentStandardPaneResolution;
+    private readonly Dictionary<string, ShellRightPaneViewModel> _cachedRightPanes = new(StringComparer.Ordinal);
 
     public ShellLeftPaneViewModel? CurrentStandardLeftPane
     {
@@ -113,7 +114,24 @@ internal sealed partial class FrontendShellViewModel
 
     private ShellRightPaneViewModel ResolveStandardRightPane(StandardShellRightPaneDescriptor descriptor)
     {
-        return ShellPaneTemplateRegistry.CreateRightPane(this, descriptor);
+        if (ShouldCacheRightPane(descriptor)
+            && _cachedRightPanes.TryGetValue(descriptor.Key, out var cachedPane))
+        {
+            return cachedPane;
+        }
+
+        var pane = ShellPaneTemplateRegistry.CreateRightPane(this, descriptor);
+        if (ShouldCacheRightPane(descriptor))
+        {
+            _cachedRightPanes[descriptor.Key] = pane;
+        }
+
+        return pane;
+    }
+
+    private static bool ShouldCacheRightPane(StandardShellRightPaneDescriptor descriptor)
+    {
+        return descriptor.Kind == StandardShellRightPaneKind.InstanceResource;
     }
 
     private StandardShellRightPaneDescriptor ResolveStandardRightPaneDescriptor()

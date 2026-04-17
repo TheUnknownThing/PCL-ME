@@ -38,6 +38,16 @@ internal sealed partial class FrontendShellViewModel
         FileSize = 3
     }
 
+    private sealed class InstanceResourceSurfaceState
+    {
+        public ObservableCollection<InstanceResourceEntryViewModel> Entries { get; } = [];
+        public bool HasRefreshSnapshot { get; set; }
+        public IReadOnlyList<FrontendInstanceResourceEntry>? RefreshSourceEntries { get; set; }
+        public string RefreshSearchQuery { get; set; } = string.Empty;
+        public InstanceResourceFilter RefreshFilter { get; set; } = InstanceResourceFilter.All;
+        public InstanceResourceSortMethod RefreshSortMethod { get; set; } = InstanceResourceSortMethod.ResourceName;
+    }
+
     private string _instanceWorldSearchQuery = string.Empty;
     private string _instanceServerSearchQuery = string.Empty;
     private string _instanceResourceSearchQuery = string.Empty;
@@ -48,16 +58,12 @@ internal sealed partial class FrontendShellViewModel
     private int _instanceResourceDisabledCount;
     private int _instanceResourceDuplicateCount;
     private bool _instanceResourceIsSearching;
+    private bool _isInstanceResourceLoading;
     private InstanceWorldSortMethod _instanceWorldSortMethod = InstanceWorldSortMethod.FileName;
     private InstanceResourceSortMethod _instanceResourceSortMethod = InstanceResourceSortMethod.ResourceName;
+    private readonly Dictionary<LauncherFrontendSubpageKey, InstanceResourceSurfaceState> _instanceResourceSurfaceStates = new();
     private readonly HashSet<string> _instanceResourceSelectedPaths = new(StringComparer.OrdinalIgnoreCase);
     private bool _suppressInstanceResourceSelectionChanged;
-    private bool _hasInstanceResourceRefreshSnapshot;
-    private LauncherFrontendSubpageKey _instanceResourceRefreshSubpage;
-    private IReadOnlyList<FrontendInstanceResourceEntry>? _instanceResourceRefreshSourceEntries;
-    private string _instanceResourceRefreshSearchQuery = string.Empty;
-    private InstanceResourceFilter _instanceResourceRefreshFilter = InstanceResourceFilter.All;
-    private InstanceResourceSortMethod _instanceResourceRefreshSortMethod = InstanceResourceSortMethod.ResourceName;
 
     public string InstanceWorldSearchQuery
     {
@@ -138,11 +144,17 @@ internal sealed partial class FrontendShellViewModel
         _ => false
     };
 
-    public bool ShowInstanceResourceContent => !ShowInstanceResourceUnsupportedState
+    public bool ShowInstanceResourceLoadingCard => _isInstanceResourceLoading;
+
+    public string InstanceResourceLoadingText => T("download.resource.surface.loading", ("surface_name", InstanceResourceSurfaceTitle));
+
+    public bool ShowInstanceResourceContent => !_isInstanceResourceLoading
+        && !ShowInstanceResourceUnsupportedState
         && GetCurrentInstanceResourceSourceEntries().Count > 0;
 
-    public bool ShowInstanceResourceEmptyState => ShowInstanceResourceUnsupportedState
-        || GetCurrentInstanceResourceSourceEntries().Count == 0;
+    public bool ShowInstanceResourceEmptyState => !_isInstanceResourceLoading
+        && (ShowInstanceResourceUnsupportedState
+            || GetCurrentInstanceResourceSourceEntries().Count == 0);
 
     public bool ShowInstanceResourceFilterBar => _currentRoute.Subpage == LauncherFrontendSubpageKey.VersionMod
         && _instanceComposition.Selection.IsModable;
@@ -299,6 +311,48 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand SetInstanceResourceDuplicateFilterCommand => new(() => SetInstanceResourceFilter(InstanceResourceFilter.Duplicate));
 
+    private static bool IsInstanceResourceSubpage(LauncherFrontendSubpageKey subpage)
+    {
+        return subpage is LauncherFrontendSubpageKey.VersionMod
+            or LauncherFrontendSubpageKey.VersionModDisabled
+            or LauncherFrontendSubpageKey.VersionResourcePack
+            or LauncherFrontendSubpageKey.VersionShader
+            or LauncherFrontendSubpageKey.VersionSchematic;
+    }
+
+    private InstanceResourceSurfaceState GetCurrentInstanceResourceSurfaceState()
+    {
+        if (!_instanceResourceSurfaceStates.TryGetValue(_currentRoute.Subpage, out var state))
+        {
+            state = new InstanceResourceSurfaceState();
+            _instanceResourceSurfaceStates[_currentRoute.Subpage] = state;
+        }
+
+        return state;
+    }
+
+    private bool ShouldShowInstanceResourceLoadingForRoute(LauncherFrontendRoute route)
+    {
+        return route.Page == LauncherFrontendPageKey.InstanceSetup
+            && IsInstanceResourceSubpage(route.Subpage)
+            && ResolveInstanceCompositionLoadMode(route) == FrontendInstanceCompositionService.LoadMode.Full;
+    }
+
+    private void SetInstanceResourceLoading(bool isLoading)
+    {
+        if (_isInstanceResourceLoading == isLoading)
+        {
+            return;
+        }
+
+        _isInstanceResourceLoading = isLoading;
+        RaisePropertyChanged(nameof(ShowInstanceResourceLoadingCard));
+        RaisePropertyChanged(nameof(ShowInstanceResourceContent));
+        RaisePropertyChanged(nameof(ShowInstanceResourceEmptyState));
+        RaisePropertyChanged(nameof(ShowInstanceResourceDefaultActions));
+        RaisePropertyChanged(nameof(ShowInstanceResourceBatchActions));
+    }
+
     private void InitializeInstanceContentSurfaces()
     {
         _instanceWorldSearchQuery = string.Empty;
@@ -347,14 +401,17 @@ internal sealed partial class FrontendShellViewModel
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.InstanceResource))
         {
             RefreshInstanceResourceEntries();
+            RaisePropertyChanged(nameof(InstanceResourceEntries));
             RaisePropertyChanged(nameof(InstanceResourceSearchQuery));
             RaisePropertyChanged(nameof(InstanceResourceSurfaceTitle));
+            RaisePropertyChanged(nameof(InstanceResourceLoadingText));
             RaisePropertyChanged(nameof(InstanceResourceSearchWatermark));
             RaisePropertyChanged(nameof(InstanceResourceDownloadButtonText));
             RaisePropertyChanged(nameof(InstanceResourceEmptyTitle));
             RaisePropertyChanged(nameof(InstanceResourceEmptyDescription));
             RaisePropertyChanged(nameof(InstanceResourceEmptyDownloadButtonText));
             RaisePropertyChanged(nameof(ShowInstanceResourceCheckButton));
+            RaisePropertyChanged(nameof(ShowInstanceResourceLoadingCard));
             RaisePropertyChanged(nameof(HasInstanceResourceEntries));
             RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));
             RaisePropertyChanged(nameof(ShowInstanceResourceUnsupportedState));

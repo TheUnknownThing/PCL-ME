@@ -340,7 +340,9 @@ internal sealed partial class FrontendShellViewModel
         _setupComposition = FrontendSetupCompositionService.Compose(shellActionService.RuntimePaths, i18nService);
         _currentRoute = NormalizeRoute(_shellComposition.NavigationRequest.CurrentRoute);
         var initialInstanceLoadMode = _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
-            ? ResolveInstanceCompositionLoadMode(_currentRoute)
+            ? ShouldShowInstanceResourceLoadingForRoute(_currentRoute)
+                ? FrontendInstanceCompositionService.LoadMode.Lightweight
+                : ResolveInstanceCompositionLoadMode(_currentRoute)
             : FrontendInstanceCompositionService.LoadMode.Lightweight;
         _instanceComposition = FrontendInstanceCompositionService.Compose(shellActionService.RuntimePaths, initialInstanceLoadMode, _i18n);
         _instanceCompositionLoadMode = initialInstanceLoadMode;
@@ -485,6 +487,11 @@ internal sealed partial class FrontendShellViewModel
         InitializeStepOneSurfaces();
         InitializePromptLanes();
         RefreshHelpTopics();
+        if (ShouldShowInstanceResourceLoadingForRoute(_currentRoute))
+        {
+            QueueSelectedInstanceStateRefresh(Interlocked.Increment(ref _instanceSelectionRefreshVersion));
+        }
+
         RefreshShell("Shell initialized from portable frontend contracts.");
         _ = WarmPortableJavaSearchAsync();
         if (_currentRoute.Page == LauncherFrontendPageKey.Setup && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupUpdate)

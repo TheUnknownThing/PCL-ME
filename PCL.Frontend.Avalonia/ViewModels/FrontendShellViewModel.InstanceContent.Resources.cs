@@ -18,6 +18,7 @@ internal sealed partial class FrontendShellViewModel
     private void RefreshInstanceResourceEntries()
     {
         InstanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
+        RaisePropertyChanged(nameof(InstanceResourceLoadingText));
         var sourceEntries = GetCurrentInstanceResourceSourceEntries();
         if (!ShouldRefreshInstanceResourceEntries(sourceEntries))
         {
@@ -52,9 +53,7 @@ internal sealed partial class FrontendShellViewModel
             .ToArray();
         _instanceResourceSelectedPaths.IntersectWith(visibleEntries.Select(entry => entry.Path));
 
-        ReplaceItems(
-            InstanceResourceEntries,
-            visibleEntries.Select(CreateInstanceResourceEntry));
+        PopulateInstanceResourceEntries(visibleEntries);
         CaptureInstanceResourceRefreshSnapshot(sourceEntries);
 
         RaisePropertyChanged(nameof(HasInstanceResourceEntries));
@@ -84,28 +83,36 @@ internal sealed partial class FrontendShellViewModel
         RaiseInstanceResourceSelectionProperties();
     }
 
+    private void PopulateInstanceResourceEntries(IReadOnlyList<FrontendInstanceResourceEntry> visibleEntries)
+    {
+        var state = GetCurrentInstanceResourceSurfaceState();
+        ReplaceItems(
+            state.Entries,
+            visibleEntries.Select(CreateInstanceResourceEntry));
+    }
+
     private bool ShouldRefreshInstanceResourceEntries(IReadOnlyList<FrontendInstanceResourceEntry> sourceEntries)
     {
-        if (!_hasInstanceResourceRefreshSnapshot)
+        var state = GetCurrentInstanceResourceSurfaceState();
+        if (!state.HasRefreshSnapshot)
         {
             return true;
         }
 
-        return _instanceResourceRefreshSubpage != _currentRoute.Subpage
-               || !ReferenceEquals(_instanceResourceRefreshSourceEntries, sourceEntries)
-               || !string.Equals(_instanceResourceRefreshSearchQuery, InstanceResourceSearchQuery, StringComparison.Ordinal)
-               || _instanceResourceRefreshFilter != _instanceResourceFilter
-               || _instanceResourceRefreshSortMethod != _instanceResourceSortMethod;
+        return !ReferenceEquals(state.RefreshSourceEntries, sourceEntries)
+               || !string.Equals(state.RefreshSearchQuery, InstanceResourceSearchQuery, StringComparison.Ordinal)
+               || state.RefreshFilter != _instanceResourceFilter
+               || state.RefreshSortMethod != _instanceResourceSortMethod;
     }
 
     private void CaptureInstanceResourceRefreshSnapshot(IReadOnlyList<FrontendInstanceResourceEntry> sourceEntries)
     {
-        _hasInstanceResourceRefreshSnapshot = true;
-        _instanceResourceRefreshSubpage = _currentRoute.Subpage;
-        _instanceResourceRefreshSourceEntries = sourceEntries;
-        _instanceResourceRefreshSearchQuery = InstanceResourceSearchQuery;
-        _instanceResourceRefreshFilter = _instanceResourceFilter;
-        _instanceResourceRefreshSortMethod = _instanceResourceSortMethod;
+        var state = GetCurrentInstanceResourceSurfaceState();
+        state.HasRefreshSnapshot = true;
+        state.RefreshSourceEntries = sourceEntries;
+        state.RefreshSearchQuery = InstanceResourceSearchQuery;
+        state.RefreshFilter = _instanceResourceFilter;
+        state.RefreshSortMethod = _instanceResourceSortMethod;
     }
 
     private IEnumerable<FrontendInstanceResourceEntry> ApplyInstanceResourceFilter(
@@ -309,6 +316,7 @@ internal sealed partial class FrontendShellViewModel
         var display = IsInstanceResourceToggleSupported()
             ? FrontendGameManagementService.ResolveLocalModDisplay(entry, SelectedModLocalNameStyleIndex)
             : new FrontendLocalModDisplay(entry.Title, entry.Summary);
+        var icon = LoadInstanceResourceBitmap(entry);
         var detailCommand = new ActionCommand(() => _ = ShowInstanceResourceDetailsAsync(entry));
         var websiteCommand = string.IsNullOrWhiteSpace(entry.Website)
             ? null
@@ -334,8 +342,8 @@ internal sealed partial class FrontendShellViewModel
             new[] { (Title: entry.Title, Path: entry.Path) },
             SD("instance.content.resource.messages.no_deletable_entries")));
 
-        return new InstanceResourceEntryViewModel(
-            LoadInstanceResourceBitmap(entry),
+        var viewModel = new InstanceResourceEntryViewModel(
+            icon,
             display.Title,
             LocalizeResourceSummary(display.Summary),
             LocalizeResourceMeta(entry.Meta),
@@ -360,6 +368,8 @@ internal sealed partial class FrontendShellViewModel
             disableToolTip: SD("instance.content.resource.tooltips.disable"),
             deleteToolTip: SD("instance.content.resource.tooltips.delete"),
             disabledTagText: SD("instance.content.resource.tags.disabled"));
+
+        return viewModel;
     }
 
     private async Task ShowInstanceResourceDetailsAsync(FrontendInstanceResourceEntry entry)
