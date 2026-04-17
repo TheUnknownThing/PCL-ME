@@ -108,12 +108,6 @@ internal sealed partial class FrontendShellViewModel
         "UiBlurValue",
         "UiBlurSamplingRate",
         "UiBlurType",
-        "UiMusicVolume",
-        "UiMusicStop",
-        "UiMusicStart",
-        "UiMusicAuto",
-        "UiMusicRandom",
-        "UiMusicSMTC",
         "UiCustomType",
         "UiCustomPreset",
         "UiCustomNet",
@@ -362,13 +356,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(BackgroundBlurLabel));
                 RaisePropertyChanged(nameof(BackgroundCardHeader));
                 RaisePropertyChanged(nameof(ShowBackgroundClearAction));
-                RaisePropertyChanged(nameof(MusicVolume));
-                RaisePropertyChanged(nameof(MusicVolumeLabel));
-                RaisePropertyChanged(nameof(MusicRandomPlay));
-                RaisePropertyChanged(nameof(MusicAutoStart));
-                RaisePropertyChanged(nameof(MusicStartOnGameLaunch));
-                RaisePropertyChanged(nameof(MusicStopOnGameLaunch));
-                RaisePropertyChanged(nameof(MusicEnableSmtc));
                 RaisePropertyChanged(nameof(SelectedLogoTypeIndex));
                 RaisePropertyChanged(nameof(IsLogoTypeNoneSelected));
                 RaisePropertyChanged(nameof(IsLogoTypeDefaultSelected));
@@ -673,24 +660,6 @@ internal sealed partial class FrontendShellViewModel
             case nameof(BackgroundBlur):
                 _shellActionService.PersistLocalValue("UiBackgroundBlur", (int)Math.Round(BackgroundBlur));
                 break;
-            case nameof(MusicVolume):
-                _shellActionService.PersistLocalValue("UiMusicVolume", (int)Math.Round(MusicVolume));
-                break;
-            case nameof(MusicRandomPlay):
-                _shellActionService.PersistLocalValue("UiMusicRandom", MusicRandomPlay);
-                break;
-            case nameof(MusicAutoStart):
-                _shellActionService.PersistLocalValue("UiMusicAuto", MusicAutoStart);
-                break;
-            case nameof(MusicStartOnGameLaunch):
-                _shellActionService.PersistLocalValue("UiMusicStart", MusicStartOnGameLaunch);
-                break;
-            case nameof(MusicStopOnGameLaunch):
-                _shellActionService.PersistLocalValue("UiMusicStop", MusicStopOnGameLaunch);
-                break;
-            case nameof(MusicEnableSmtc):
-                _shellActionService.PersistLocalValue("UiMusicSMTC", MusicEnableSmtc);
-                break;
             case nameof(SelectedLogoTypeIndex):
                 _shellActionService.PersistLocalValue("UiLogoType", SelectedLogoTypeIndex);
                 break;
@@ -896,13 +865,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(BackgroundBlurLabel));
         RaisePropertyChanged(nameof(BackgroundCardHeader));
         RaisePropertyChanged(nameof(ShowBackgroundClearAction));
-        RaisePropertyChanged(nameof(MusicVolume));
-        RaisePropertyChanged(nameof(MusicVolumeLabel));
-        RaisePropertyChanged(nameof(MusicRandomPlay));
-        RaisePropertyChanged(nameof(MusicAutoStart));
-        RaisePropertyChanged(nameof(MusicStartOnGameLaunch));
-        RaisePropertyChanged(nameof(MusicStopOnGameLaunch));
-        RaisePropertyChanged(nameof(MusicEnableSmtc));
         RaisePropertyChanged(nameof(SelectedLogoTypeIndex));
         RaisePropertyChanged(nameof(IsLogoTypeNoneSelected));
         RaisePropertyChanged(nameof(IsLogoTypeDefaultSelected));

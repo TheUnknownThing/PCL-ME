@@ -32,7 +32,6 @@ public static class LauncherStartupBootstrapService
         var directoriesToCreate = new List<string>
         {
             CombinePath(executableDirectory, "PCL", "Pictures"),
-            CombinePath(executableDirectory, "PCL", "Musics"),
             CombinePath(tempDirectory, "Cache"),
             CombinePath(tempDirectory, "Download"),
             appDataDirectory

@@ -228,8 +228,6 @@ internal sealed partial class FrontendShellActionService
         var watcherStopPlan = MinecraftLaunchShellService.GetWatcherStopShellPlan(
             new MinecraftLaunchWatcherStopShellRequest(
                 ReadSharedValue("LaunchArgumentVisible", LauncherVisibility.DoNothing),
-                ReadLocalValue("UiMusicStop", false),
-                ReadLocalValue("UiMusicStart", false),
                 TriggerLauncherShutdown: false));
         ApplyLauncherShellAction(watcherStopPlan.LauncherAction);
     }

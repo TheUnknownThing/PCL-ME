@@ -33,41 +33,6 @@ internal sealed partial class FrontendShellViewModel
                 : LT("setup.ui.background.activities.clear_count", ("count", removedCount)));
     }
 
-    private void OpenMusicFolder()
-    {
-        var folder = GetMusicFolderPath();
-        Directory.CreateDirectory(folder);
-        if (_shellActionService.TryOpenExternalTarget(folder, out var error))
-        {
-            AddActivity(LT("setup.ui.music.activities.open_folder"), folder);
-        }
-        else
-        {
-            AddFailureActivity(LT("setup.ui.music.activities.open_folder_failed"), error ?? folder);
-        }
-    }
-
-    private void RefreshMusicAssets()
-    {
-        var assets = EnumerateMediaFiles(GetMusicFolderPath(), MusicMediaExtensions).ToArray();
-        AddActivity(
-            LT("setup.ui.music.activities.refresh"),
-            assets.Length == 0
-                ? LT("setup.ui.music.activities.empty")
-                : LT("setup.ui.music.activities.refreshed_count", ("count", assets.Length)));
-    }
-
-    private void ClearMusicAssets()
-    {
-        var folder = GetMusicFolderPath();
-        var removedCount = DeleteDirectoryContents(folder, MusicMediaExtensions);
-        AddActivity(
-            LT("setup.ui.music.activities.clear"),
-            removedCount == 0
-                ? LT("setup.ui.music.activities.clear_empty")
-                : LT("setup.ui.music.activities.clear_count", ("count", removedCount)));
-    }
-
     private async Task ChangeLogoImageAsync()
     {
         string? sourcePath;
@@ -184,24 +149,9 @@ internal sealed partial class FrontendShellViewModel
         ".mov"
     ];
 
-    private static readonly string[] MusicMediaExtensions =
-    [
-        ".mp3",
-        ".flac",
-        ".wav",
-        ".ogg",
-        ".m4a",
-        ".aac"
-    ];
-
     private string GetBackgroundFolderPath()
     {
         return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Pictures");
-    }
-
-    private string GetMusicFolderPath()
-    {
-        return Path.Combine(_shellActionService.RuntimePaths.DataDirectory, "Musics");
     }
 
     private string GetLogoImagePath()

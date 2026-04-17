@@ -121,16 +121,6 @@ internal sealed partial class FrontendShellViewModel
                 BackgroundOpenFolderButton = _i18n.T("setup.ui.background.actions.open_folder"),
                 BackgroundRefreshButton = _i18n.T("setup.ui.background.actions.refresh"),
                 BackgroundClearButton = _i18n.T("setup.ui.background.actions.clear"),
-                MusicCardHeader = _i18n.T("setup.ui.cards.music.header"),
-                MusicVolumeLabel = _i18n.T("setup.ui.music.fields.volume"),
-                MusicRandomLabel = _i18n.T("setup.ui.music.flags.random"),
-                MusicAutoStartLabel = _i18n.T("setup.ui.music.flags.auto_start"),
-                MusicStartOnLaunchLabel = _i18n.T("setup.ui.music.flags.start_on_game_launch"),
-                MusicStopOnLaunchLabel = _i18n.T("setup.ui.music.flags.stop_on_game_launch"),
-                MusicEnableSmtcLabel = _i18n.T("setup.ui.music.flags.enable_smtc"),
-                MusicOpenFolderButton = _i18n.T("setup.ui.music.actions.open_folder"),
-                MusicRefreshButton = _i18n.T("setup.ui.music.actions.refresh"),
-                MusicClearButton = _i18n.T("setup.ui.music.actions.clear"),
                 TitleBarCardHeader = _i18n.T("setup.ui.cards.title_bar.header"),
                 LogoTypeNoneLabel = _i18n.T("setup.ui.title_bar.options.none"),
                 LogoTypeDefaultLabel = _i18n.T("setup.ui.title_bar.options.default"),
@@ -461,16 +451,6 @@ internal sealed class SetupUiLocalization
     public required string BackgroundOpenFolderButton { get; init; }
     public required string BackgroundRefreshButton { get; init; }
     public required string BackgroundClearButton { get; init; }
-    public required string MusicCardHeader { get; init; }
-    public required string MusicVolumeLabel { get; init; }
-    public required string MusicRandomLabel { get; init; }
-    public required string MusicAutoStartLabel { get; init; }
-    public required string MusicStartOnLaunchLabel { get; init; }
-    public required string MusicStopOnLaunchLabel { get; init; }
-    public required string MusicEnableSmtcLabel { get; init; }
-    public required string MusicOpenFolderButton { get; init; }
-    public required string MusicRefreshButton { get; init; }
-    public required string MusicClearButton { get; init; }
     public required string TitleBarCardHeader { get; init; }
     public required string LogoTypeNoneLabel { get; init; }
     public required string LogoTypeDefaultLabel { get; init; }

@@ -231,50 +231,6 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _backgroundColorful, value);
     }
 
-    public double MusicVolume
-    {
-        get => _musicVolume;
-        set
-        {
-            if (SetProperty(ref _musicVolume, value))
-            {
-                RaisePropertyChanged(nameof(MusicVolumeLabel));
-            }
-        }
-    }
-
-    public string MusicVolumeLabel => $"{Math.Round(MusicVolume / 10)}%";
-
-    public bool MusicRandomPlay
-    {
-        get => _musicRandomPlay;
-        set => SetProperty(ref _musicRandomPlay, value);
-    }
-
-    public bool MusicAutoStart
-    {
-        get => _musicAutoStart;
-        set => SetProperty(ref _musicAutoStart, value);
-    }
-
-    public bool MusicStartOnGameLaunch
-    {
-        get => _musicStartOnGameLaunch;
-        set => SetProperty(ref _musicStartOnGameLaunch, value);
-    }
-
-    public bool MusicStopOnGameLaunch
-    {
-        get => _musicStopOnGameLaunch;
-        set => SetProperty(ref _musicStopOnGameLaunch, value);
-    }
-
-    public bool MusicEnableSmtc
-    {
-        get => _musicEnableSmtc;
-        set => SetProperty(ref _musicEnableSmtc, value);
-    }
-
     public int SelectedLogoTypeIndex
     {
         get => _selectedLogoTypeIndex;

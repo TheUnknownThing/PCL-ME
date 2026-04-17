@@ -96,12 +96,6 @@ internal sealed partial class FrontendShellViewModel
 
     public ActionCommand BackgroundClearCommand => _backgroundClearCommand;
 
-    public ActionCommand MusicOpenFolderCommand => _musicOpenFolderCommand;
-
-    public ActionCommand MusicRefreshCommand => _musicRefreshCommand;
-
-    public ActionCommand MusicClearCommand => _musicClearCommand;
-
     public ActionCommand ChangeLogoImageCommand => _changeLogoImageCommand;
 
     public ActionCommand DeleteLogoImageCommand => _deleteLogoImageCommand;

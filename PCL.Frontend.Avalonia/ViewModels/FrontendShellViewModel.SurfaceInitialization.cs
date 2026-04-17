@@ -540,12 +540,6 @@ internal sealed partial class FrontendShellViewModel
         _backgroundOpacity = _setupComposition.Ui.BackgroundOpacity;
         _backgroundBlur = _setupComposition.Ui.BackgroundBlur;
         _selectedBackgroundSuitIndex = Math.Clamp(_setupComposition.Ui.BackgroundSuitIndex, 0, BackgroundSuitOptions.Count - 1);
-        _musicVolume = _setupComposition.Ui.MusicVolume;
-        _musicRandomPlay = _setupComposition.Ui.MusicRandomPlay;
-        _musicAutoStart = _setupComposition.Ui.MusicAutoStart;
-        _musicStartOnGameLaunch = _setupComposition.Ui.MusicStartOnGameLaunch;
-        _musicStopOnGameLaunch = _setupComposition.Ui.MusicStopOnGameLaunch;
-        _musicEnableSmtc = _setupComposition.Ui.MusicEnableSmtc;
         _selectedLogoTypeIndex = _setupComposition.Ui.LogoTypeIndex;
         _logoAlignLeft = _setupComposition.Ui.LogoAlignLeft;
         _logoText = _setupComposition.Ui.LogoText;

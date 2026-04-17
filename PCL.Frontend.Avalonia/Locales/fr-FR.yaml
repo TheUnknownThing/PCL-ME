@@ -1678,8 +1678,6 @@ setup:
         header: Polices
       homepage:
         header: Page d'accueil
-      music:
-        header: Musique de fond
       title_bar:
         header: Barre de titre
     fields:
@@ -1764,28 +1762,6 @@ setup:
         local_file: Charger le fichier local
         preset: Préréglage
         remote: Mise à jour à distance
-    music:
-      actions:
-        clear: Effacer
-        open_folder: Ouvrir le dossier
-        refresh: Actualiser
-      activities:
-        clear: Effacer la musique de fond
-        clear_empty: Il n'y a aucun fichier de musique de fond à supprimer.
-        empty: Aucune musique de fond détectée.
-        open_folder: Ouvrir le dossier de musique
-        open_folder_failed: Échec de l'ouverture du dossier de musique
-        refresh: Actualiser la musique de fond
-        clear_count: Fichiers de musique de fond {count} effacés.
-        refreshed_count: J'ai réanalysé le dossier de musique et trouvé les fichiers {count}.
-      fields:
-        volume: Volume
-      flags:
-        auto_start: Lire automatiquement à l'ouverture du lanceur
-        enable_smtc: Intégration aux contrôles de transport des médias du système (SMTC)
-        random: Lecture aléatoire
-        start_on_game_launch: Lancer la lecture après le démarrage du jeu et la mettre en pause à la fermeture
-        stop_on_game_launch: Mettre en pause au démarrage du jeu et reprendre à la fermeture
     options:
       background_suit:
         bottom_left: En bas à gauche

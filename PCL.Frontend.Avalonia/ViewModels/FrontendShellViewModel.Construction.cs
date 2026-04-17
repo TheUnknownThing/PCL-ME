@@ -88,9 +88,6 @@ internal sealed partial class FrontendShellViewModel
     private readonly ActionCommand _backgroundOpenFolderCommand;
     private readonly ActionCommand _backgroundRefreshCommand;
     private readonly ActionCommand _backgroundClearCommand;
-    private readonly ActionCommand _musicOpenFolderCommand;
-    private readonly ActionCommand _musicRefreshCommand;
-    private readonly ActionCommand _musicClearCommand;
     private readonly ActionCommand _changeLogoImageCommand;
     private readonly ActionCommand _deleteLogoImageCommand;
     private readonly ActionCommand _refreshHomepageCommand;
@@ -288,12 +285,6 @@ internal sealed partial class FrontendShellViewModel
     private double _backgroundOpacity = 1000;
     private double _backgroundBlur;
     private int _selectedBackgroundSuitIndex;
-    private double _musicVolume = 680;
-    private bool _musicRandomPlay = true;
-    private bool _musicAutoStart;
-    private bool _musicStartOnGameLaunch = true;
-    private bool _musicStopOnGameLaunch;
-    private bool _musicEnableSmtc = true;
     private int _selectedLogoTypeIndex = 1;
     private bool _logoAlignLeft = true;
     private string _logoText = "Plain Craft Launcher";
@@ -408,9 +399,6 @@ internal sealed partial class FrontendShellViewModel
         _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
         _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
         _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);
-        _musicOpenFolderCommand = new ActionCommand(OpenMusicFolder);
-        _musicRefreshCommand = new ActionCommand(RefreshMusicAssets);
-        _musicClearCommand = new ActionCommand(ClearMusicAssets);
         _changeLogoImageCommand = new ActionCommand(() => _ = ChangeLogoImageAsync());
         _deleteLogoImageCommand = new ActionCommand(DeleteLogoImage);
         _refreshHomepageCommand = new ActionCommand(RefreshHomepageContent);

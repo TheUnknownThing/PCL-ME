@@ -81,7 +81,6 @@ public static class MinecraftLaunchShellService
     public static MinecraftGameShellPlan GetPostLaunchShellPlan(MinecraftLaunchPostLaunchShellRequest request)
     {
         return new MinecraftGameShellPlan(
-            GetLaunchMusicAction(request.StopMusicInGame, request.StartMusicInGame),
             new MinecraftLaunchVideoBackgroundShellAction(MinecraftLaunchVideoBackgroundActionKind.Pause),
             GetPostLaunchShellAction(request.Visibility),
             GlobalLaunchCountIncrement: 1,
@@ -91,7 +90,6 @@ public static class MinecraftLaunchShellService
     public static MinecraftGameShellPlan GetWatcherStopShellPlan(MinecraftLaunchWatcherStopShellRequest request)
     {
         return new MinecraftGameShellPlan(
-            GetWatcherStopMusicAction(request.StopMusicInGame, request.StartMusicInGame),
             new MinecraftLaunchVideoBackgroundShellAction(MinecraftLaunchVideoBackgroundActionKind.Play),
             GetWatcherStopShellAction(request.Visibility, request.TriggerLauncherShutdown),
             GlobalLaunchCountIncrement: 0,
@@ -115,44 +113,6 @@ public static class MinecraftLaunchShellService
                 MinecraftLaunchShellActionKind.None,
                 string.Empty)
         };
-    }
-
-    private static MinecraftLaunchMusicShellAction GetLaunchMusicAction(bool stopMusicInGame, bool startMusicInGame)
-    {
-        if (stopMusicInGame)
-        {
-            return new MinecraftLaunchMusicShellAction(
-                MinecraftLaunchMusicActionKind.Pause,
-                "[Music] Music will pause after launch because of the current setting");
-        }
-
-        if (startMusicInGame)
-        {
-            return new MinecraftLaunchMusicShellAction(
-                MinecraftLaunchMusicActionKind.Resume,
-                "[Music] Music will start playing after launch because of the current setting");
-        }
-
-        return MinecraftLaunchMusicShellAction.None;
-    }
-
-    private static MinecraftLaunchMusicShellAction GetWatcherStopMusicAction(bool stopMusicInGame, bool startMusicInGame)
-    {
-        if (stopMusicInGame)
-        {
-            return new MinecraftLaunchMusicShellAction(
-                MinecraftLaunchMusicActionKind.Resume,
-                "[Music] Music will start playing when launch ends because of the current setting");
-        }
-
-        if (startMusicInGame)
-        {
-            return new MinecraftLaunchMusicShellAction(
-                MinecraftLaunchMusicActionKind.Pause,
-                "[Music] Music will pause when launch ends because of the current setting");
-        }
-
-        return MinecraftLaunchMusicShellAction.None;
     }
 
     private static MinecraftLaunchShellAction GetWatcherStopShellAction(LauncherVisibility visibility, bool triggerLauncherShutdown)
@@ -179,14 +139,10 @@ public sealed record MinecraftLaunchCompletionRequest(
     string? AbortHint);
 
 public sealed record MinecraftLaunchPostLaunchShellRequest(
-    LauncherVisibility Visibility,
-    bool StopMusicInGame,
-    bool StartMusicInGame);
+    LauncherVisibility Visibility);
 
 public sealed record MinecraftLaunchWatcherStopShellRequest(
     LauncherVisibility Visibility,
-    bool StopMusicInGame,
-    bool StartMusicInGame,
     bool TriggerLauncherShutdown);
 
 public sealed record MinecraftLaunchNotification(
@@ -204,18 +160,10 @@ public sealed record MinecraftLaunchScriptExportPlan(
     string RevealInShellPath);
 
 public sealed record MinecraftGameShellPlan(
-    MinecraftLaunchMusicShellAction MusicAction,
     MinecraftLaunchVideoBackgroundShellAction VideoBackgroundAction,
     MinecraftLaunchShellAction LauncherAction,
     int GlobalLaunchCountIncrement,
     int InstanceLaunchCountIncrement);
-
-public sealed record MinecraftLaunchMusicShellAction(
-    MinecraftLaunchMusicActionKind Kind,
-    string LogMessage)
-{
-    public static MinecraftLaunchMusicShellAction None { get; } = new(MinecraftLaunchMusicActionKind.None, string.Empty);
-}
 
 public sealed record MinecraftLaunchVideoBackgroundShellAction(
     MinecraftLaunchVideoBackgroundActionKind Kind);
@@ -245,13 +193,6 @@ public enum MinecraftLaunchShellActionKind
     HideLauncher = 2,
     MinimizeLauncher = 3,
     ShowLauncher = 4
-}
-
-public enum MinecraftLaunchMusicActionKind
-{
-    None = 0,
-    Pause = 1,
-    Resume = 2
 }
 
 public enum MinecraftLaunchVideoBackgroundActionKind

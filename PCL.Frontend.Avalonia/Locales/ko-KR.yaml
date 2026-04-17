@@ -1678,8 +1678,6 @@ setup:
         header: 글꼴
       homepage:
         header: 홈페이지
-      music:
-        header: 배경음악
       title_bar:
         header: 제목 표시줄
     fields:
@@ -1764,28 +1762,6 @@ setup:
         local_file: 로컬 파일 로드
         preset: 프리셋
         remote: 원격 업데이트
-    music:
-      actions:
-        clear: 분명한
-        open_folder: 폴더 열기
-        refresh: 새로 고치다
-      activities:
-        clear: 명확한 배경 음악
-        clear_empty: 제거할 배경음악 파일이 없습니다.
-        empty: 배경 음악이 감지되지 않았습니다.
-        open_folder: 음악 폴더 열기
-        open_folder_failed: 음악 폴더를 열지 못했습니다.
-        refresh: 배경 음악 새로 고침
-        clear_count: "{count}개의 배경 음악 파일을 삭제했습니다."
-        refreshed_count: 음악 폴더를 다시 검색하여 {count}개의 파일을 찾았습니다.
-      fields:
-        volume: 용량
-      flags:
-        auto_start: 런처가 열리면 자동으로 재생 시작
-        enable_smtc: 시스템 미디어 전송 제어(SMTC)와 통합
-        random: 셔플 재생
-        start_on_game_launch: 게임이 시작된 후 플레이를 시작하고 게임이 종료되면 일시 중지합니다.
-        stop_on_game_launch: 게임 시작 후 일시 중지하고 종료 시 다시 시작
     options:
       background_suit:
         bottom_left: 왼쪽 하단

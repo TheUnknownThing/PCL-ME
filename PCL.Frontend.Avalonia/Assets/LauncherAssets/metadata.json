@@ -26,12 +26,6 @@
       "license": "https://opensource.org/licenses/MIT"
     },
     {
-      "name": "NAudio",
-      "info": "Copyright © 2015 Mark Heath (mark.heath@gmail.com)\nLicensed under the MIT License.",
-      "website": "https://github.com/naudio/NAudio",
-      "license": "https://github.com/naudio/NAudio/blob/master/license.txt"
-    },
-    {
       "name": "Iconmonstr",
       "info": "Copyright © 2019 iconmonstr (Alexander Kahlkopf)",
       "website": "https://iconmonstr.com/",

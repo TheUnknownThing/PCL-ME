@@ -1678,8 +1678,6 @@ setup:
         header: Schriftarten
       homepage:
         header: Startseite
-      music:
-        header: Hintergrundmusik
       title_bar:
         header: Titelleiste
     fields:
@@ -1764,28 +1762,6 @@ setup:
         local_file: Lokale Datei laden
         preset: Voreinstellung
         remote: Entfernt aktualisieren
-    music:
-      actions:
-        clear: Löschen
-        open_folder: Ordner öffnen
-        refresh: Aktualisieren
-      activities:
-        clear: Hintergrundmusik löschen
-        clear_empty: Es gibt keine Hintergrundmusikdateien zum Entfernen.
-        empty: Keine Hintergrundmusik erkannt.
-        open_folder: Musikordner öffnen
-        open_folder_failed: Musikordner konnte nicht geöffnet werden
-        refresh: Hintergrundmusik aktualisieren
-        clear_count: "{count} Hintergrundmusikdatei(en) gelöscht."
-        refreshed_count: "Musikordner erneut gescannt und {count} Datei(en) gefunden."
-      fields:
-        volume: Lautstärke
-      flags:
-        auto_start: Wiedergabe automatisch starten, wenn sich der Launcher öffnet
-        enable_smtc: Mit den System-Mediensteuerungen (SMTC) integrieren
-        random: Wiedergabe mischen
-        start_on_game_launch: Wiedergabe nach dem Spielstart beginnen und beim Beenden pausieren
-        stop_on_game_launch: Nach Spielstart pausieren und nach dem Beenden fortsetzen
     options:
       background_suit:
         bottom_left: Unten links

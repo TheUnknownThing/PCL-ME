@@ -1683,8 +1683,6 @@ setup:
         header: Fuentes
       homepage:
         header: Página de inicio
-      music:
-        header: Música de fondo
       title_bar:
         header: Barra de título
     fields:
@@ -1771,28 +1769,6 @@ setup:
         local_file: Cargar archivo local
         preset: Preestablecido
         remote: Actualización remota
-    music:
-      actions:
-        clear: Borrar
-        open_folder: Abrir carpeta
-        refresh: Actualizar
-      activities:
-        clear: Música de fondo clara
-        clear_empty: No hay archivos de música de fondo para eliminar.
-        empty: No se detectó música de fondo.
-        open_folder: Abrir carpeta de música
-        open_folder_failed: No se pudo abrir la carpeta de música
-        refresh: Actualizar música de fondo
-        clear_count: Se borraron {count} archivos de música de fondo.
-        refreshed_count: Volvió a escanear la carpeta de música y encontró {count} archivos.
-      fields:
-        volume: Volumen
-      flags:
-        auto_start: Comienza a jugar automáticamente cuando se abre el lanzador
-        enable_smtc: Integrar con los controles de transporte de medios del sistema (SMTC)
-        random: Reproducción aleatoria
-        start_on_game_launch: Comience a jugar después de que se inicie el juego y haga una pausa cuando salga
-        stop_on_game_launch: Pausa después de que se inicia el juego y reanuda cuando sale
     options:
       background_suit:
         bottom_left: Abajo a la izquierda

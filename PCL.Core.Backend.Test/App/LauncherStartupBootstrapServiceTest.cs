@@ -22,7 +22,6 @@ public sealed class LauncherStartupBootstrapServiceTest
             new[]
             {
                 @"C:\PCL\/PCL/Pictures".Replace('/', '\\'),
-                @"C:\PCL\/PCL/Musics".Replace('/', '\\'),
                 @"C:\PCL\Temp\/Cache".Replace('/', '\\'),
                 @"C:\PCL\Temp\/Download".Replace('/', '\\'),
                 @"C:\Users\Alice\AppData\Roaming\PCL\"

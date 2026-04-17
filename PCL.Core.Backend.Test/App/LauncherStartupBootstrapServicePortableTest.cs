@@ -22,7 +22,6 @@ public sealed class LauncherStartupBootstrapServicePortableTest
             new[]
             {
                 @"C:\PCL\PCL\Pictures",
-                @"C:\PCL\PCL\Musics",
                 @"C:\PCL\Temp\Cache",
                 @"C:\PCL\Temp\Download",
                 @"C:\Users\Alice\AppData\Roaming\PCL\"

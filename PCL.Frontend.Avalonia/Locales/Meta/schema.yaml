@@ -1885,8 +1885,6 @@ setup:
         header: []
       homepage:
         header: []
-      music:
-        header: []
       title_bar:
         header: []
     fields:
@@ -1971,30 +1969,6 @@ setup:
         local_file: []
         preset: []
         remote: []
-    music:
-      actions:
-        clear: []
-        open_folder: []
-        refresh: []
-      activities:
-        clear: []
-        clear_empty: []
-        empty: []
-        open_folder: []
-        open_folder_failed: []
-        refresh: []
-        clear_count:
-          - count
-        refreshed_count:
-          - count
-      fields:
-        volume: []
-      flags:
-        auto_start: []
-        enable_smtc: []
-        random: []
-        start_on_game_launch: []
-        stop_on_game_launch: []
     options:
       background_suit:
         bottom_left: []

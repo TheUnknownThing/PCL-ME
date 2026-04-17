@@ -179,9 +179,7 @@ internal static partial class FrontendLaunchCompositionService
             argumentPlan);
         var postLaunchShell = MinecraftLaunchShellService.GetPostLaunchShellPlan(
             new MinecraftLaunchPostLaunchShellRequest(
-                ReadValue(sharedConfig, "LaunchArgumentVisible", LauncherVisibility.DoNothing),
-                ReadValue(localConfig, "UiMusicStop", false),
-                ReadValue(localConfig, "UiMusicStart", false)));
+                ReadValue(sharedConfig, "LaunchArgumentVisible", LauncherVisibility.DoNothing)));
         var launchCount = LauncherFrontendRuntimeStateService.ReadProtectedInt(
             runtimePaths.SharedConfigDirectory,
             runtimePaths.SharedConfigPath,

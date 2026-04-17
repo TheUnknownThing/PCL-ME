@@ -95,16 +95,12 @@ public sealed class MinecraftLaunchShellServiceTest
     }
 
     [TestMethod]
-    public void GetPostLaunchShellPlanReturnsMusicVideoVisibilityAndCounterPlan()
+    public void GetPostLaunchShellPlanReturnsVideoVisibilityAndCounterPlan()
     {
         var result = MinecraftLaunchShellService.GetPostLaunchShellPlan(
             new MinecraftLaunchPostLaunchShellRequest(
-                LauncherVisibility.HideAndReopen,
-                StopMusicInGame: true,
-                StartMusicInGame: false));
+                LauncherVisibility.HideAndReopen));
 
-        Assert.AreEqual(MinecraftLaunchMusicActionKind.Pause, result.MusicAction.Kind);
-        Assert.AreEqual("[Music] Music will pause after launch because of the current setting", result.MusicAction.LogMessage);
         Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Pause, result.VideoBackgroundAction.Kind);
         Assert.AreEqual(MinecraftLaunchShellActionKind.HideLauncher, result.LauncherAction.Kind);
         Assert.AreEqual(1, result.GlobalLaunchCountIncrement);
@@ -117,12 +113,8 @@ public sealed class MinecraftLaunchShellServiceTest
         var result = MinecraftLaunchShellService.GetWatcherStopShellPlan(
             new MinecraftLaunchWatcherStopShellRequest(
                 LauncherVisibility.HideAndExit,
-                StopMusicInGame: false,
-                StartMusicInGame: true,
                 TriggerLauncherShutdown: false));
 
-        Assert.AreEqual(MinecraftLaunchMusicActionKind.Pause, result.MusicAction.Kind);
-        Assert.AreEqual("[Music] Music will pause when launch ends because of the current setting", result.MusicAction.LogMessage);
         Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Play, result.VideoBackgroundAction.Kind);
         Assert.AreEqual(MinecraftLaunchShellActionKind.ShowLauncher, result.LauncherAction.Kind);
         Assert.AreEqual(0, result.GlobalLaunchCountIncrement);
@@ -135,11 +127,8 @@ public sealed class MinecraftLaunchShellServiceTest
         var result = MinecraftLaunchShellService.GetWatcherStopShellPlan(
             new MinecraftLaunchWatcherStopShellRequest(
                 LauncherVisibility.HideAndExit,
-                StopMusicInGame: true,
-                StartMusicInGame: false,
                 TriggerLauncherShutdown: true));
 
-        Assert.AreEqual(MinecraftLaunchMusicActionKind.Resume, result.MusicAction.Kind);
         Assert.AreEqual(MinecraftLaunchShellActionKind.ExitLauncher, result.LauncherAction.Kind);
     }
 }

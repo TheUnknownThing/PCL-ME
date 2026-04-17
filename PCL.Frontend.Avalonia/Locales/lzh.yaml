@@ -1678,8 +1678,6 @@ setup:
         header: 字體
       homepage:
         header: 主頁
-      music:
-        header: 背景音樂
       title_bar:
         header: 標題欄
     fields:
@@ -1764,28 +1762,6 @@ setup:
         local_file: 讀本地檔
         preset: 預設
         remote: 聯網更新
-    music:
-      actions:
-        clear: 清背景音樂
-        open_folder: 啟夾
-        refresh: 刷背景音樂
-      activities:
-        clear: 清背景音樂
-        clear_empty: 音樂目錄中無可刪之背景音樂檔。
-        empty: 未檢得可用背景音樂。
-        open_folder: 啟音樂夾
-        open_folder_failed: 啟音樂夾敗
-        refresh: 刷背景音樂
-        clear_count: 已清 {count} 背景音樂檔。
-        refreshed_count: 已復掃背景音樂目錄，共得 {count} 檔。
-      fields:
-        volume: 音量
-      flags:
-        auto_start: 啟啓動器自動開始播放
-        enable_smtc: 接系統媒體傳輸控制 (SMTC) 控件
-        random: 隨機播放
-        start_on_game_launch: 遊戲啓後自動播放，遊戲退後自動暫停
-        stop_on_game_launch: 遊戲啓後自動暫停，遊戲退後自動播放
     options:
       background_suit:
         bottom_left: 居於左下

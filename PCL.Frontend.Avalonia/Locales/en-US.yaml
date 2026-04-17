@@ -1680,8 +1680,6 @@ setup:
         header: Fonts
       homepage:
         header: Homepage
-      music:
-        header: Background Music
       title_bar:
         header: Title Bar
     fields:
@@ -1768,28 +1766,6 @@ setup:
         local_file: Load local file
         preset: Preset
         remote: Remote update
-    music:
-      actions:
-        clear: Clear
-        open_folder: Open folder
-        refresh: Refresh
-      activities:
-        clear: Clear background music
-        clear_empty: There are no background music files to remove.
-        empty: No background music detected.
-        open_folder: Open music folder
-        open_folder_failed: Failed to open music folder
-        refresh: Refresh background music
-        clear_count: Cleared {count} background music files.
-        refreshed_count: Rescanned the music folder and found {count} files.
-      fields:
-        volume: Volume
-      flags:
-        auto_start: Start playing automatically when the launcher opens
-        enable_smtc: Integrate with system media transport controls (SMTC)
-        random: Shuffle playback
-        start_on_game_launch: Start playing after the game launches and pause when it exits
-        stop_on_game_launch: Pause after the game launches and resume when it exits
     options:
       background_suit:
         bottom_left: Bottom left
