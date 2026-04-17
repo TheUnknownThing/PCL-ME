@@ -1300,7 +1300,6 @@ launch:
       random_hint: Random Hint
       simple_homepage: Simple Homepage
       skin_recommendations: Skin Recommendations
-      update_summary: Update Summary
       whats_new: What's New
     random_hint:
       actions:
@@ -1609,7 +1608,6 @@ setup:
       channel:
         release: Release
         beta: Beta
-        dev: Dev
       mode:
         auto_download_and_install: Automatically download and install
         auto_download_and_prompt: Automatically download, then prompt

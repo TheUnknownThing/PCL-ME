@@ -1303,7 +1303,6 @@ launch:
       random_hint: Pista aleatoria
       simple_homepage: Página de inicio sencilla
       skin_recommendations: Recomendaciones de skins
-      update_summary: Resumen de actualización
       whats_new: Novedades
     random_hint:
       actions:
@@ -1612,7 +1611,6 @@ setup:
       channel:
         release: Lanzamiento
         beta: Beta
-        dev: Desarrollador
       mode:
         auto_download_and_install: Descargar e instalar automáticamente
         auto_download_and_prompt: Descargar automáticamente y luego solicitar

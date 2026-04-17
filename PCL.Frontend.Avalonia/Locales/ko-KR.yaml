@@ -1298,7 +1298,6 @@ launch:
       random_hint: 무작위 힌트
       simple_homepage: 간단한 홈페이지
       skin_recommendations: 피부 추천
-      update_summary: 업데이트 요약
       whats_new: 새로운 소식
     random_hint:
       actions:
@@ -1607,7 +1606,6 @@ setup:
       channel:
         release: 풀어 주다
         beta: 베타
-        dev: 데브
       mode:
         auto_download_and_install: 자동으로 다운로드 및 설치
         auto_download_and_prompt: 자동으로 다운로드한 후 메시지 표시

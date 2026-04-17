@@ -1298,7 +1298,6 @@ launch:
       random_hint: Zufälliger Hinweis
       simple_homepage: Einfache Startseite
       skin_recommendations: Skin-Empfehlungen
-      update_summary: Update-Zusammenfassung
       whats_new: "Neuigkeiten"
     random_hint:
       actions:
@@ -1607,7 +1606,6 @@ setup:
       channel:
         release: Release
         beta: Beta
-        dev: Dev
       mode:
         auto_download_and_install: Automatisch herunterladen und installieren
         auto_download_and_prompt: Automatisch herunterladen, dann fragen

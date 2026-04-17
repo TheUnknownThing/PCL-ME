@@ -1483,7 +1483,6 @@ launch:
       random_hint: []
       simple_homepage: []
       skin_recommendations: []
-      update_summary: []
       whats_new: []
     random_hint:
       actions:
@@ -1803,7 +1802,6 @@ setup:
       channel:
         release: []
         beta: []
-        dev: []
       mode:
         auto_download_and_install: []
         auto_download_and_prompt: []

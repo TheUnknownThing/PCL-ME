@@ -26,7 +26,6 @@ internal sealed partial class FrontendShellViewModel
         new(T("launch.homepage.presets.whats_new"), HomepagePresetKind.RemoteMarkup, "https://raw.gitcode.com/WForst-Breeze/WhatsNewPCL/raw/main/Custom.xaml"),
         new(T("launch.homepage.presets.magazine"), HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Ext1nguisher/Custom.xaml"),
         new(T("launch.homepage.presets.github_dashboard"), HomepagePresetKind.RemoteMarkup, "https://ddf.pcl-community.org/Custom.xaml"),
-        new(T("launch.homepage.presets.update_summary"), HomepagePresetKind.RemoteMarkup, "https://raw.gitcode.com/ENC_Euphony/PCL-AI-Summary-HomePage/raw/master/Custom.xaml"),
         new(T("launch.homepage.presets.announcement_board"), HomepagePresetKind.RemoteMarkup, "https://s3.pysio.online/pcl2-ce/apiv2/pages/announce.xaml"),
         new(T("launch.homepage.presets.official_news"), HomepagePresetKind.OfficialNews, null)
     ];

@@ -1298,7 +1298,6 @@ launch:
       random_hint: Indice aléatoire
       simple_homepage: Page d'accueil simple
       skin_recommendations: Recommandations pour la peau
-      update_summary: Résumé de la mise à jour
       whats_new: Quoi de neuf
     random_hint:
       actions:
@@ -1607,7 +1606,6 @@ setup:
       channel:
         release: Stable
         beta: Bêta
-        dev: Dev
       mode:
         auto_download_and_install: Télécharger et installer automatiquement
         auto_download_and_prompt: Télécharger automatiquement, puis demander

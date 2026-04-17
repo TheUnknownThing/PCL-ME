@@ -1298,7 +1298,6 @@ launch:
       random_hint: 隨機提示
       simple_homepage: 簡首頁
       skin_recommendations: 皮膚推薦
-      update_summary: 更新摘要
       whats_new: 新訊
     random_hint:
       actions:
@@ -1607,7 +1606,6 @@ setup:
       channel:
         release: 正式版
         beta: 測試版
-        dev: 開發版
       mode:
         auto_download_and_install: 自下載而安
         auto_download_and_prompt: 自下載，既下而示可安

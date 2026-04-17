@@ -270,8 +270,7 @@ internal sealed partial class FrontendShellViewModel
                 ChannelOptions =
                 [
                     _i18n.T("setup.update.options.channel.release"),
-                    _i18n.T("setup.update.options.channel.beta"),
-                    _i18n.T("setup.update.options.channel.dev")
+                    _i18n.T("setup.update.options.channel.beta")
                 ],
                 ModeOptions =
                 [

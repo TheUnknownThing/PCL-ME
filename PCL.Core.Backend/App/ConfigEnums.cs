@@ -6,8 +6,7 @@
 public enum UpdateChannel
 {
     Release = 0,
-    Beta = 1,
-    Dev = 2
+    Beta = 1
 }
 
 /// <summary>
