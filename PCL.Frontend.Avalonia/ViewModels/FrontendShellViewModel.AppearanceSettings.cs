@@ -9,7 +9,8 @@ internal sealed partial class FrontendShellViewModel
 
     public IReadOnlyList<string> ThemeColorOptions => SetupText.Ui.ThemeColorOptions;
 
-    public IReadOnlyList<string> FontOptions => SetupText.Ui.FontOptions;
+    public IReadOnlyList<string> FontOptions => FrontendAppearanceService.BuildDisplayFontOptions(
+        SetupText.Ui.FontOptions.FirstOrDefault());
 
     public IReadOnlyList<string> HomepagePresetOptions => HomepagePresetCatalog.Select(item => item.Title).ToArray();
 

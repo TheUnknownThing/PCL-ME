@@ -85,6 +85,29 @@ internal static class FrontendAppearanceService
         }
     }
 
+    public static IReadOnlyList<string> BuildDisplayFontOptions(string? defaultFontOptionLabel)
+    {
+        var options = GetFontOptions();
+        if (options.Count == 0 || string.IsNullOrWhiteSpace(defaultFontOptionLabel))
+        {
+            return options;
+        }
+
+        if (options.Count == 1)
+        {
+            return [defaultFontOptionLabel];
+        }
+
+        var displayOptions = new string[options.Count];
+        displayOptions[0] = defaultFontOptionLabel;
+        for (var index = 1; index < options.Count; index++)
+        {
+            displayOptions[index] = options[index];
+        }
+
+        return displayOptions;
+    }
+
     public static int CustomThemeColorIndex => ThemeColorOptions.Count - 1;
 
     public static bool IsThemeColorSwitchSupported
