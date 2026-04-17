@@ -3286,10 +3286,19 @@ resource_detail:
     removed: []
     unlisted: []
   suggested_release:
+    not_found_for_current_instance:
+      - resource_type
     none: []
     target_save:
     - save_name
     title: []
+    types:
+      data_pack: []
+      mod: []
+      resource: []
+      resource_pack: []
+      shader: []
+      world: []
   translate_description:
     empty: []
   values:

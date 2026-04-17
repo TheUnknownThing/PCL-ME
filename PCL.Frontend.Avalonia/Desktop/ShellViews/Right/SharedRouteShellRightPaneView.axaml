@@ -502,7 +502,7 @@
             <controls:PclCard
                 Margin="0,0,0,15"
                 Header="{Binding CommunityProjectSuggestedReleaseTitle}"
-                IsVisible="{Binding ShowCommunityProjectInstallSuggestionCard}"
+                IsVisible="{Binding HasCommunityProjectInstallSuggestion}"
                 ContentMargin="20,18,20,18">
               <controls:PclCard.CardContent>
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
@@ -535,12 +535,33 @@
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
                       MinWidth="170"
+                      IsVisible="{Binding ShowCommunityProjectInstallModeSelector}"
                       ZIndex="1"
                       ItemsSource="{Binding CommunityProjectInstallModeOptions}"
                       ItemTemplate="{StaticResource CommunityProjectInstallModeOptionTemplate}"
                       SelectedItem="{Binding SelectedCommunityProjectInstallModeOption}"
                       SelectionBoxItemTemplate="{StaticResource CommunityProjectInstallModeOptionTemplate}" />
                 </Grid>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
+            <controls:PclCard
+                Margin="0,0,0,15"
+                IsVisible="{Binding ShowCommunityProjectInstallSuggestionWarning}"
+                ContentMargin="0">
+              <controls:PclCard.CardContent>
+                <Border
+                    Padding="12,10"
+                    Background="{DynamicResource ColorBrushSemanticWarningBackground}"
+                    BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
+                      FontSize="12.5"
+                      Text="{Binding CommunityProjectInstallSuggestionWarningText}"
+                      TextWrapping="Wrap" />
+                </Border>
               </controls:PclCard.CardContent>
             </controls:PclCard>
 

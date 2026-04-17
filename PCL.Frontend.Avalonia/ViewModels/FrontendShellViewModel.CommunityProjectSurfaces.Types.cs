@@ -43,16 +43,24 @@ internal sealed partial class FrontendShellViewModel
 
     private const string CommunityProjectInstallModeWithDependenciesValue = "with-dependencies";
 
-    private static readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectModInstallModeOptions =
+    private const string CommunityProjectInstallModePreferenceKey = "CompProjectInstallMode";
+
+    private static readonly (string LabelKey, string FilterValue)[] CommunityProjectModInstallModeOptionBlueprints =
     [
-        new DownloadResourceFilterOptionViewModel("resource_detail.install_modes.current_only", CommunityProjectInstallModeCurrentOnlyValue),
-        new DownloadResourceFilterOptionViewModel("resource_detail.install_modes.with_dependencies", CommunityProjectInstallModeWithDependenciesValue)
+        ("resource_detail.install_modes.current_only", CommunityProjectInstallModeCurrentOnlyValue),
+        ("resource_detail.install_modes.with_dependencies", CommunityProjectInstallModeWithDependenciesValue)
     ];
 
-    private static readonly IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectSingleInstallModeOptions =
+    private static readonly (string LabelKey, string FilterValue)[] CommunityProjectSingleInstallModeOptionBlueprints =
     [
-        new DownloadResourceFilterOptionViewModel("resource_detail.install_modes.single_resource", CommunityProjectInstallModeCurrentOnlyValue)
+        ("resource_detail.install_modes.single_resource", CommunityProjectInstallModeCurrentOnlyValue)
     ];
+
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _communityProjectModInstallModeOptions = [];
+
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> _communityProjectSingleInstallModeOptions = [];
+
+    private bool _communityProjectInstallModeLoaded;
 
     private string _communityProjectDependencyReleaseTitle = string.Empty;
 

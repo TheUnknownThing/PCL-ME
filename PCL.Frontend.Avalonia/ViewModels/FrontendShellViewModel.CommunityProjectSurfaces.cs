@@ -182,7 +182,11 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public bool ShowCommunityProjectInstallSuggestionCard => CanInstallCommunityProjectToCurrentInstance();
+    public bool ShowCommunityProjectInstallSuggestionCard => CanShowCommunityProjectInstallSuggestionCard();
+
+    public bool HasCommunityProjectInstallSuggestion => GetSuggestedCommunityProjectInstallRelease() is not null;
+
+    public bool ShowCommunityProjectInstallSuggestionWarning => ShowCommunityProjectInstallSuggestionCard && !HasCommunityProjectInstallSuggestion;
 
     public string CommunityProjectInstallSuggestionTitle => GetSuggestedCommunityProjectInstallRelease()?.Title ?? T("resource_detail.suggested_release.none");
 
@@ -219,30 +223,45 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
+    public string CommunityProjectInstallSuggestionWarningText =>
+        T(
+            "resource_detail.suggested_release.not_found_for_current_instance",
+            ("resource_type", GetCommunityProjectSuggestedReleaseResourceTypeText()));
+
     public ActionCommand InstallCommunityProjectToCurrentInstanceCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());
 
     public ActionCommand ExecuteCommunityProjectInstallSuggestionCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());
 
-    public IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectInstallModeOptions =>
-        (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
-            ? CommunityProjectModInstallModeOptions
-            : CommunityProjectSingleInstallModeOptions)
-        .Select(option => new DownloadResourceFilterOptionViewModel(
-            T(option.Label),
-            option.FilterValue,
-            option.IsHeader))
-        .ToArray();
+    public bool ShowCommunityProjectInstallModeSelector => ShowCommunityProjectInstallSuggestionCard && CommunityProjectInstallModeOptions.Count > 0;
+
+    public IReadOnlyList<DownloadResourceFilterOptionViewModel> CommunityProjectInstallModeOptions => GetCommunityProjectInstallModeOptions();
 
     public DownloadResourceFilterOptionViewModel? SelectedCommunityProjectInstallModeOption
     {
-        get => CommunityProjectInstallModeOptions.FirstOrDefault(option =>
+        get => GetCommunityProjectInstallModeOptions().FirstOrDefault(option =>
                    string.Equals(option.FilterValue, _selectedCommunityProjectInstallMode, StringComparison.OrdinalIgnoreCase))
-               ?? CommunityProjectInstallModeOptions.FirstOrDefault();
+               ?? GetCommunityProjectInstallModeOptions().FirstOrDefault();
         set
         {
-            var nextValue = value?.FilterValue ?? CommunityProjectInstallModeOptions.FirstOrDefault()?.FilterValue ?? CommunityProjectInstallModeCurrentOnlyValue;
+            if (value is null)
+            {
+                return;
+            }
+
+            EnsureCommunityProjectInstallModeState();
+            if (_selectedCommunityProjectOriginSubpage != LauncherFrontendSubpageKey.DownloadMod)
+            {
+                return;
+            }
+
+            var availableOptions = GetCommunityProjectInstallModeOptions();
+            var nextValue = availableOptions.Any(option =>
+                    string.Equals(option.FilterValue, value.FilterValue, StringComparison.OrdinalIgnoreCase))
+                ? value.FilterValue
+                : CommunityProjectInstallModeCurrentOnlyValue;
             if (SetProperty(ref _selectedCommunityProjectInstallMode, nextValue, nameof(SelectedCommunityProjectInstallModeOption)))
             {
+                _shellActionService.PersistSharedValue(CommunityProjectInstallModePreferenceKey, nextValue);
                 RaisePropertyChanged(nameof(CommunityProjectInstallModeOptions));
             }
         }
@@ -286,6 +305,62 @@ internal sealed partial class FrontendShellViewModel
     public bool ShowCommunityProjectWarning => _communityProjectState.ShowWarning;
 
     public string CommunityProjectWarningText => LocalizeCommunityProjectWarningText(_communityProjectState.WarningText);
+
+    private void EnsureCommunityProjectInstallModeState()
+    {
+        if (_communityProjectInstallModeLoaded)
+        {
+            return;
+        }
+
+        _communityProjectInstallModeLoaded = true;
+        var provider = _shellActionService.RuntimePaths.OpenSharedConfigProvider();
+        if (provider.Exists(CommunityProjectInstallModePreferenceKey))
+        {
+            var storedValue = SafeReadSharedValue(provider, CommunityProjectInstallModePreferenceKey, string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(storedValue))
+            {
+                _selectedCommunityProjectInstallMode = storedValue;
+            }
+        }
+
+        RebuildCommunityProjectInstallModeOptions();
+    }
+
+    private void RebuildCommunityProjectInstallModeOptions()
+    {
+        _communityProjectModInstallModeOptions = CommunityProjectModInstallModeOptionBlueprints
+            .Select(option => new DownloadResourceFilterOptionViewModel(
+                T(option.LabelKey),
+                option.FilterValue))
+            .ToArray();
+        _communityProjectSingleInstallModeOptions = CommunityProjectSingleInstallModeOptionBlueprints
+            .Select(option => new DownloadResourceFilterOptionViewModel(
+                T(option.LabelKey),
+                option.FilterValue))
+            .ToArray();
+    }
+
+    private IReadOnlyList<DownloadResourceFilterOptionViewModel> GetCommunityProjectInstallModeOptions()
+    {
+        EnsureCommunityProjectInstallModeState();
+        return _selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadMod
+            ? _communityProjectModInstallModeOptions
+            : _communityProjectSingleInstallModeOptions;
+    }
+
+    private string GetCommunityProjectSuggestedReleaseResourceTypeText()
+    {
+        return _selectedCommunityProjectOriginSubpage switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => T("resource_detail.suggested_release.types.mod"),
+            LauncherFrontendSubpageKey.DownloadDataPack => T("resource_detail.suggested_release.types.data_pack"),
+            LauncherFrontendSubpageKey.DownloadResourcePack => T("resource_detail.suggested_release.types.resource_pack"),
+            LauncherFrontendSubpageKey.DownloadShader => T("resource_detail.suggested_release.types.shader"),
+            LauncherFrontendSubpageKey.DownloadWorld => T("resource_detail.suggested_release.types.world"),
+            _ => T("resource_detail.suggested_release.types.resource")
+        };
+    }
 
     private string FormatCompactCount(int value)
     {

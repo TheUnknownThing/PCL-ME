@@ -126,9 +126,13 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(CommunityProjectCurrentInstanceName));
         RaisePropertyChanged(nameof(CommunityProjectCurrentInstanceSummary));
         RaisePropertyChanged(nameof(ShowCommunityProjectInstallSuggestionCard));
+        RaisePropertyChanged(nameof(HasCommunityProjectInstallSuggestion));
+        RaisePropertyChanged(nameof(ShowCommunityProjectInstallSuggestionWarning));
         RaisePropertyChanged(nameof(CommunityProjectInstallSuggestionTitle));
         RaisePropertyChanged(nameof(CommunityProjectInstallSuggestionSummary));
+        RaisePropertyChanged(nameof(CommunityProjectInstallSuggestionWarningText));
         RaisePropertyChanged(nameof(CommunityProjectInstallModeOptions));
+        RaisePropertyChanged(nameof(ShowCommunityProjectInstallModeSelector));
         RaisePropertyChanged(nameof(SelectedCommunityProjectInstallModeOption));
         RaisePropertyChanged(nameof(HasCommunityProjectActionButtons));
         RaisePropertyChanged(nameof(ShowCommunityProjectFilterCard));

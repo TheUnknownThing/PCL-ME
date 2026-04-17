@@ -93,18 +93,30 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private bool CanInstallCommunityProjectToCurrentInstance()
+    private bool CanShowCommunityProjectInstallSuggestionCard()
     {
-        if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack
-            && ResolveCurrentDatapackInstallSelection() is null)
+        if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadPack
+            || _selectedCommunityProjectOriginSubpage is null)
         {
             return false;
         }
 
-        return _instanceComposition.Selection.HasSelection
-               && _selectedCommunityProjectOriginSubpage != LauncherFrontendSubpageKey.DownloadPack
-               && _selectedCommunityProjectOriginSubpage is not null
-               && TryGetCommunityProjectInstallRelease(out _);
+        if (_selectedCommunityProjectOriginSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
+        {
+            return ResolveCurrentDatapackInstallSelection() is not null;
+        }
+
+        return _instanceComposition.Selection.HasSelection;
+    }
+
+    private bool CanInstallCommunityProjectToCurrentInstance()
+    {
+        if (!CanShowCommunityProjectInstallSuggestionCard())
+        {
+            return false;
+        }
+
+        return TryGetCommunityProjectInstallRelease(out _);
     }
 
     private FrontendVersionSaveSelectionState? ResolveCurrentDatapackInstallSelection()

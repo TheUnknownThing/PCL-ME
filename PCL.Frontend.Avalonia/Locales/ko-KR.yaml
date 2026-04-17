@@ -2865,9 +2865,17 @@ resource_detail:
     removed: 제거됨
     unlisted: 미등록
   suggested_release:
+    not_found_for_current_instance: "No {resource_type} version matches the current instance"
     none: 제안된 릴리스가 없습니다.
     target_save: 'Target save: {save_name}'
     title: 제안된 릴리스
+    types:
+      data_pack: data pack
+      mod: mod
+      resource: resource
+      resource_pack: resource pack
+      shader: shader pack
+      world: save
   translate_description:
     empty: 번역할 설명이 없습니다.
   values:

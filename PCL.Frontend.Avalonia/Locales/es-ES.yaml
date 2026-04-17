@@ -2881,9 +2881,17 @@ resource_detail:
     removed: Eliminado
     unlisted: No listado
   suggested_release:
+    not_found_for_current_instance: "No {resource_type} version matches the current instance"
     none: No se sugiere ninguna versión
     target_save: 'Target save: {save_name}'
     title: Versión sugerida
+    types:
+      data_pack: data pack
+      mod: mod
+      resource: resource
+      resource_pack: resource pack
+      shader: shader pack
+      world: save
   translate_description:
     empty: No hay descripción para traducir
   values:

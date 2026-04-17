@@ -2865,9 +2865,17 @@ resource_detail:
     removed: 已下架
     unlisted: 未列出
   suggested_release:
+    not_found_for_current_instance: 未見實例所對之{resource_type}版本
     none: 無建議版本
     target_save: '目標存檔：{save_name}'
     title: 建議版本
+    types:
+      data_pack: 資料包
+      mod: 模組
+      resource: 資源
+      resource_pack: 資源包
+      shader: 光影包
+      world: 存檔
   translate_description:
     empty: 無可翻譯的簡介
   values:
