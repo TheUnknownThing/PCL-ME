@@ -196,6 +196,20 @@ internal sealed partial class FrontendShellViewModel
             applyAppearance);
     }
 
+    private void ReloadActiveSetupSurface(bool applyAppearance = true)
+    {
+        FrontendHttpProxyService.ApplyStoredProxySettings(_shellActionService.RuntimePaths);
+        FrontendHttpProxyService.ApplyStoredDnsSettings(_shellActionService.RuntimePaths);
+        ApplySetupComposition(
+            FrontendSetupCompositionService.ComposeActiveSurface(
+                _shellActionService.RuntimePaths,
+                _i18n,
+                _setupComposition,
+                _currentRoute.Subpage),
+            initializeAllSurfaces: false,
+            applyAppearance);
+    }
+
     private void RefreshSetupLocalizationState()
     {
         RefreshSetupLocalizationCatalog();
@@ -687,7 +701,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         _shellActionService.PersistLocalValue(key, value);
-        ReloadSetupComposition(initializeAllSurfaces: false);
+        ReloadActiveSetupSurface();
         RefreshShell(_i18n.T(
             value
                 ? "setup.ui.hidden_features.reactions.hidden"

@@ -222,7 +222,7 @@ internal sealed partial class FrontendShellViewModel
 
         SaveStoredJavaItems(items);
         SelectJavaRuntime(installedRuntime.ExecutablePath);
-        ReloadSetupComposition(initializeAllSurfaces: false);
+        ReloadActiveSetupSurface();
     }
 
     private static bool? Is64BitMachineType(MachineType? machineType)

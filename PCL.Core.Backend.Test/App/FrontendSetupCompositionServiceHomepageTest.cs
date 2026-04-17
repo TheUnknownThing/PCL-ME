@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.Essentials;
 using PCL.Core.Testing;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -73,6 +75,72 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
         Assert.IsFalse(result.Ui.BackgroundColorful);
     }
 
+    [TestMethod]
+    public void ComposeActiveSurface_RefreshesLaunchWithoutRebuildingJava()
+    {
+        using var environment = new FrontendSetupEnvironment();
+        File.WriteAllText(
+            environment.LocalConfigPath,
+            """
+            LaunchArgumentTitle: Old Title
+            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-8/bin/java","IsEnable":true}]'
+            """);
+
+        var runtimePaths = environment.CreateRuntimePaths();
+        var i18n = new DictionaryI18nService();
+        var initial = FrontendSetupCompositionService.Compose(runtimePaths, i18n);
+
+        File.WriteAllText(
+            environment.LocalConfigPath,
+            """
+            LaunchArgumentTitle: New Title
+            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-17/bin/java","IsEnable":true}]'
+            """);
+
+        var updated = FrontendSetupCompositionService.ComposeActiveSurface(
+            runtimePaths,
+            i18n,
+            initial,
+            LauncherFrontendSubpageKey.SetupLaunch);
+
+        Assert.AreEqual("New Title", updated.Launch.WindowTitle);
+        Assert.AreSame(initial.Java, updated.Java);
+        Assert.AreEqual("/tmp/java-8/bin/java", updated.Java.Entries.Single().Key);
+    }
+
+    [TestMethod]
+    public void ComposeActiveSurface_RefreshesJavaWithoutRebuildingLaunch()
+    {
+        using var environment = new FrontendSetupEnvironment();
+        File.WriteAllText(
+            environment.LocalConfigPath,
+            """
+            LaunchArgumentTitle: Old Title
+            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-8/bin/java","IsEnable":true}]'
+            """);
+
+        var runtimePaths = environment.CreateRuntimePaths();
+        var i18n = new DictionaryI18nService();
+        var initial = FrontendSetupCompositionService.Compose(runtimePaths, i18n);
+
+        File.WriteAllText(
+            environment.LocalConfigPath,
+            """
+            LaunchArgumentTitle: New Title
+            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-17/bin/java","IsEnable":true}]'
+            """);
+
+        var updated = FrontendSetupCompositionService.ComposeActiveSurface(
+            runtimePaths,
+            i18n,
+            initial,
+            LauncherFrontendSubpageKey.SetupJava);
+
+        Assert.AreSame(initial.Launch, updated.Launch);
+        Assert.AreEqual("Old Title", updated.Launch.WindowTitle);
+        Assert.AreEqual("/tmp/java-17/bin/java", updated.Java.Entries.Single().Key);
+    }
+
     private sealed class FrontendSetupEnvironment : IDisposable
     {
         public FrontendSetupEnvironment()
@@ -80,11 +148,14 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
             RootDirectory = Path.Combine(Path.GetTempPath(), "pcl-setup-homepage-test-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(RootDirectory);
             LocalConfigPath = Path.Combine(RootDirectory, "config.v1.yml");
+            SharedConfigPath = Path.Combine(RootDirectory, "shared", "config.v1.json");
         }
 
         public string RootDirectory { get; }
 
         public string LocalConfigPath { get; }
+
+        public string SharedConfigPath { get; }
 
         public FrontendRuntimePaths CreateRuntimePaths()
         {
@@ -93,7 +164,7 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
                 TempDirectory: Path.Combine(RootDirectory, "temp"),
                 DataDirectory: RootDirectory,
                 SharedConfigDirectory: Path.Combine(RootDirectory, "shared"),
-                SharedConfigPath: Path.Combine(RootDirectory, "shared", "config.v1.json"),
+                SharedConfigPath: SharedConfigPath,
                 LocalConfigPath: LocalConfigPath,
                 LauncherAppDataDirectory: Path.Combine(RootDirectory, "launcher"),
                 MigrationWarnings: []);

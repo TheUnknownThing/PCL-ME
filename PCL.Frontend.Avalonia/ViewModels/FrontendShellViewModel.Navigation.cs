@@ -748,11 +748,11 @@ internal sealed partial class FrontendShellViewModel
 
         if (route.Page == LauncherFrontendPageKey.Setup)
         {
-            ReloadSetupComposition(initializeAllSurfaces: false);
+            ReloadActiveSetupSurface();
         }
         else if (route.Page == LauncherFrontendPageKey.Tools)
         {
-            ReloadToolsComposition();
+            ReloadActiveToolsSurface();
         }
         else if (route.Page == LauncherFrontendPageKey.InstanceSetup)
         {

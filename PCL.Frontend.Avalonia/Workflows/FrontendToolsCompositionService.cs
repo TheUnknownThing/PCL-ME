@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using PCL.Core.App.Essentials;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Frontend.Avalonia.Models;
 
@@ -20,6 +21,30 @@ internal static class FrontendToolsCompositionService
         return new FrontendToolsComposition(
             LoadHelpState(runtimePaths, i18n.Locale),
             BuildTestState(sharedConfig, runtimePaths, i18n));
+    }
+
+    public static FrontendToolsComposition ComposeActiveSurface(
+        FrontendRuntimePaths runtimePaths,
+        II18nService i18n,
+        FrontendToolsComposition current,
+        LauncherFrontendSubpageKey subpage)
+    {
+        ArgumentNullException.ThrowIfNull(i18n);
+        ArgumentNullException.ThrowIfNull(current);
+
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        return subpage switch
+        {
+            LauncherFrontendSubpageKey.ToolsLauncherHelp => current with
+            {
+                Help = LoadHelpState(runtimePaths, i18n.Locale)
+            },
+            LauncherFrontendSubpageKey.ToolsTest or LauncherFrontendSubpageKey.Default => current with
+            {
+                Test = BuildTestState(sharedConfig, runtimePaths, i18n)
+            },
+            _ => current
+        };
     }
 
     public static FrontendToolsHelpState LoadHelpState(FrontendRuntimePaths runtimePaths, string locale)

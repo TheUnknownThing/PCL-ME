@@ -497,7 +497,7 @@ internal sealed partial class FrontendShellViewModel
                 if (_currentRoute.Page == LauncherFrontendPageKey.Setup
                     && _currentRoute.Subpage == LauncherFrontendSubpageKey.SetupJava)
                 {
-                    ReloadSetupComposition(initializeAllSurfaces: false);
+                    ReloadActiveSetupSurface();
                 }
 
                 RefreshLaunchState();

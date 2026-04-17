@@ -27,6 +27,55 @@ internal static class FrontendSetupCompositionService
             BuildUiState(sharedConfig, localConfig, i18n));
     }
 
+    public static FrontendSetupComposition ComposeActiveSurface(
+        FrontendRuntimePaths paths,
+        II18nService i18n,
+        FrontendSetupComposition current,
+        LauncherFrontendSubpageKey subpage)
+    {
+        ArgumentNullException.ThrowIfNull(current);
+
+        var sharedConfig = paths.OpenSharedConfigProvider();
+        var localConfig = paths.OpenLocalConfigProvider();
+
+        return subpage switch
+        {
+            LauncherFrontendSubpageKey.SetupAbout => current with
+            {
+                About = BuildAboutState(i18n)
+            },
+            LauncherFrontendSubpageKey.SetupLog => current with
+            {
+                Log = BuildLogState(paths, i18n)
+            },
+            LauncherFrontendSubpageKey.SetupUpdate => current with
+            {
+                Update = BuildUpdateState(sharedConfig, localConfig)
+            },
+            LauncherFrontendSubpageKey.SetupLaunch or LauncherFrontendSubpageKey.SetupLink => current with
+            {
+                Launch = BuildLaunchState(sharedConfig, localConfig)
+            },
+            LauncherFrontendSubpageKey.SetupGameManage => current with
+            {
+                GameManage = BuildGameManageState(sharedConfig)
+            },
+            LauncherFrontendSubpageKey.SetupLauncherMisc => current with
+            {
+                LauncherMisc = BuildLauncherMiscState(paths, sharedConfig, localConfig)
+            },
+            LauncherFrontendSubpageKey.SetupJava => current with
+            {
+                Java = BuildJavaState(sharedConfig, localConfig, i18n)
+            },
+            LauncherFrontendSubpageKey.SetupUI => current with
+            {
+                Ui = BuildUiState(sharedConfig, localConfig, i18n)
+            },
+            _ => current
+        };
+    }
+
     public static int MapStoredLaunchVisibilityToDisplayIndex(int storedValue)
     {
         return storedValue switch

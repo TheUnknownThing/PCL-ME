@@ -1,4 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.Essentials;
+using PCL.Core.Testing;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Core.Backend.Test.App;
@@ -35,6 +37,97 @@ public sealed class FrontendToolsCompositionServiceTest
         Assert.IsFalse(helpState.Entries.Any(entry => entry.Title == "自定义帮助页面"));
     }
 
+    [TestMethod]
+    public void ComposeActiveSurface_RefreshesToolsTestWithoutRebuildingHelp()
+    {
+        using var environment = new HelpCompositionTestEnvironment();
+        File.WriteAllText(
+            environment.SharedConfigPath,
+            """
+            {
+              "CacheDownloadFolder": "/tmp/downloads-one"
+            }
+            """);
+
+        var runtimePaths = environment.CreateRuntimePaths();
+        var i18n = new DictionaryI18nService();
+        var initial = FrontendToolsCompositionService.Compose(runtimePaths, i18n);
+
+        File.WriteAllText(
+            environment.SharedConfigPath,
+            """
+            {
+              "CacheDownloadFolder": "/tmp/downloads-two"
+            }
+            """);
+
+        var updated = FrontendToolsCompositionService.ComposeActiveSurface(
+            runtimePaths,
+            i18n,
+            initial,
+            LauncherFrontendSubpageKey.ToolsTest);
+
+        Assert.AreEqual("/tmp/downloads-two", updated.Test.DownloadFolder);
+        Assert.AreSame(initial.Help, updated.Help);
+    }
+
+    [TestMethod]
+    public void ComposeActiveSurface_RefreshesToolsHelpWithoutRebuildingTest()
+    {
+        using var environment = new HelpCompositionTestEnvironment();
+        var helpFilePath = Path.Combine(environment.DataDirectory, "Help", "en-US", "Guides", "Temporary Guide.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(helpFilePath)!);
+        File.WriteAllText(
+            helpFilePath,
+            """
+            {
+              "Title": "Temporary Guide One",
+              "Description": "First version",
+              "Keywords": "temporary guide",
+              "Types": ["Guides"]
+            }
+            """);
+        File.WriteAllText(
+            environment.SharedConfigPath,
+            """
+            {
+              "CacheDownloadFolder": "/tmp/downloads-one"
+            }
+            """);
+
+        var runtimePaths = environment.CreateRuntimePaths();
+        var i18n = new DictionaryI18nService();
+        var initial = FrontendToolsCompositionService.Compose(runtimePaths, i18n);
+
+        File.WriteAllText(
+            helpFilePath,
+            """
+            {
+              "Title": "Temporary Guide Two",
+              "Description": "Second version",
+              "Keywords": "temporary guide",
+              "Types": ["Guides"]
+            }
+            """);
+        File.WriteAllText(
+            environment.SharedConfigPath,
+            """
+            {
+              "CacheDownloadFolder": "/tmp/downloads-two"
+            }
+            """);
+
+        var updated = FrontendToolsCompositionService.ComposeActiveSurface(
+            runtimePaths,
+            i18n,
+            initial,
+            LauncherFrontendSubpageKey.ToolsLauncherHelp);
+
+        Assert.IsTrue(updated.Help.Entries.Any(entry => entry.Title == "Temporary Guide Two"));
+        Assert.AreSame(initial.Test, updated.Test);
+        Assert.AreEqual("/tmp/downloads-one", updated.Test.DownloadFolder);
+    }
+
     private sealed class HelpCompositionTestEnvironment : IDisposable
     {
         public HelpCompositionTestEnvironment()
@@ -53,9 +146,11 @@ public sealed class FrontendToolsCompositionServiceTest
 
         public string RootDirectory { get; }
 
-        private string DataDirectory { get; }
+        public string DataDirectory { get; }
 
         private string SharedDirectory { get; }
+
+        public string SharedConfigPath => Path.Combine(SharedDirectory, "config.v1.json");
 
         private string TempDirectory { get; }
 
@@ -68,7 +163,7 @@ public sealed class FrontendToolsCompositionServiceTest
                 TempDirectory: TempDirectory,
                 DataDirectory: DataDirectory,
                 SharedConfigDirectory: SharedDirectory,
-                SharedConfigPath: Path.Combine(SharedDirectory, "config.v1.json"),
+                SharedConfigPath: SharedConfigPath,
                 LocalConfigPath: Path.Combine(DataDirectory, "config.v1.yml"),
                 LauncherAppDataDirectory: LauncherAppDataDirectory,
                 MigrationWarnings: []);

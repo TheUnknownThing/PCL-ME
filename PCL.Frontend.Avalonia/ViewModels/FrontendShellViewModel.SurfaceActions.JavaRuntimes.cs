@@ -32,7 +32,7 @@ internal sealed partial class FrontendShellViewModel
             await FrontendJavaInventoryService.RefreshPortableJavaScanCacheAsync();
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ReloadSetupComposition(initializeAllSurfaces: false);
+                ReloadActiveSetupSurface();
                 RefreshLaunchState();
                 AddActivity(
                     LT("setup.java.activities.refresh"),
@@ -43,7 +43,7 @@ internal sealed partial class FrontendShellViewModel
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ReloadSetupComposition(initializeAllSurfaces: false);
+                ReloadActiveSetupSurface();
                 AddFailureActivity(LT("setup.java.activities.refresh_failed"), ex.Message);
             });
         }
@@ -372,7 +372,7 @@ internal sealed partial class FrontendShellViewModel
             .FirstOrDefault(item => string.Equals(item.Path, key, StringComparison.OrdinalIgnoreCase))
             ?.IsEnable;
         LogWrapper.Info(SetupJavaLogModule, $"Toggle persisted for key='{key}': persistedEnabled={(persistedState is null ? "<missing>" : persistedState.Value)}.");
-        ReloadSetupComposition(initializeAllSurfaces: false);
+        ReloadActiveSetupSurface();
         AddActivity(
             entry.IsEnabled ? LT("setup.java.activities.enable") : LT("setup.java.activities.disable"),
             LT(

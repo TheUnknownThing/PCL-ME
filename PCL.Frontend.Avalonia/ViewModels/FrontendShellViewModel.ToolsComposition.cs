@@ -2,6 +2,7 @@ using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
+using PCL.Core.App.Essentials;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -63,14 +64,22 @@ internal sealed partial class FrontendShellViewModel
 
     public string ToolsTestHeadSaveButtonText => LT("shell.tools.test.head.save");
 
-    private void ApplyToolsComposition(FrontendToolsComposition composition)
+    private void ApplyToolsComposition(FrontendToolsComposition composition, bool initializeAllSurfaces = true)
     {
         _toolsComposition = composition;
         _suppressToolsPersistence = true;
         try
         {
-            InitializeToolsTestSurface();
-            RefreshHelpTopics();
+            if (initializeAllSurfaces)
+            {
+                InitializeToolsTestSurface();
+                RefreshHelpTopics();
+                RefreshHelpDetailSurface();
+            }
+            else
+            {
+                InitializeActiveToolsSurface();
+            }
         }
         finally
         {
@@ -96,9 +105,35 @@ internal sealed partial class FrontendShellViewModel
         ApplyToolsComposition(FrontendToolsCompositionService.Compose(_shellActionService.RuntimePaths, _i18n));
     }
 
+    private void ReloadActiveToolsSurface()
+    {
+        ApplyToolsComposition(
+            FrontendToolsCompositionService.ComposeActiveSurface(
+                _shellActionService.RuntimePaths,
+                _i18n,
+                _toolsComposition,
+                _currentRoute.Subpage),
+            initializeAllSurfaces: false);
+    }
+
     private void ReloadHelpState()
     {
         ApplyHelpState(FrontendToolsCompositionService.LoadHelpState(_shellActionService.RuntimePaths, _i18n.Locale));
+    }
+
+    private void InitializeActiveToolsSurface()
+    {
+        switch (_currentRoute.Subpage)
+        {
+            case LauncherFrontendSubpageKey.ToolsLauncherHelp:
+                RefreshHelpTopics();
+                RefreshHelpDetailSurface();
+                break;
+            case LauncherFrontendSubpageKey.ToolsTest:
+            default:
+                InitializeToolsTestSurface();
+                break;
+        }
     }
 
     private void PersistToolsSetting(string? propertyName)

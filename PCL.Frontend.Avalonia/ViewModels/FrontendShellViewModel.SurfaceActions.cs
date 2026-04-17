@@ -91,7 +91,7 @@ internal sealed partial class FrontendShellViewModel
 
     private void RefreshToolsTestSurface()
     {
-        ReloadToolsComposition();
+        ReloadActiveToolsSurface();
         RaisePropertyChanged(nameof(ToolDownloadUrl));
         RaisePropertyChanged(nameof(ToolDownloadUserAgent));
         RaisePropertyChanged(nameof(ToolDownloadFolder));
