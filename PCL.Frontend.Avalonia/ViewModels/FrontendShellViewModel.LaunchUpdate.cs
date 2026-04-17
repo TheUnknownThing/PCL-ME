@@ -271,6 +271,8 @@ internal sealed partial class FrontendShellViewModel
                                                 ? CustomRamAllocation / _launchTotalRamGb > 0.75
                                                 : CustomRamAllocation >= 8);
 
+    public bool ShowLaunch32BitJavaWarning => _launchComposition.SelectedJavaRuntime is { Is64Bit: false };
+
     public bool OptimizeMemoryBeforeLaunch
     {
         get => _optimizeMemoryBeforeLaunch;

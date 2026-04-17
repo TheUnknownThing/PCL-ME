@@ -153,6 +153,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(LaunchAvatarImage));
         RaisePropertyChanged(nameof(LaunchUserName));
         RaisePropertyChanged(nameof(LaunchAuthLabel));
+        RaisePropertyChanged(nameof(ShowLaunch32BitJavaWarning));
         RaisePropertyChanged(nameof(CanRefreshLaunchProfile));
         RaisePropertyChanged(nameof(HasSelectedLaunchProfile));
         RaisePropertyChanged(nameof(ShowLaunchProfileSetupActions));

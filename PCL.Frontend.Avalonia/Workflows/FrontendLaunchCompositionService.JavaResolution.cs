@@ -796,7 +796,7 @@ internal static partial class FrontendLaunchCompositionService
             using var process = Process.Start(new ProcessStartInfo
             {
                 FileName = executablePath,
-                Arguments = "-version",
+                Arguments = "-XshowSettings:properties -version",
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
@@ -833,8 +833,19 @@ internal static partial class FrontendLaunchCompositionService
                 return null;
             }
 
+            var resolvedExecutablePath = ResolveProbedJavaExecutablePath(executablePath, process);
+            if (FrontendJavaInventoryService.TryResolveRuntime(
+                    resolvedExecutablePath,
+                    fallbackDisplayName: $"Java {majorVersion.Value}") is { ParsedVersion: not null } probedRuntime)
+            {
+                return probedRuntime with
+                {
+                    DisplayName = $"Java {majorVersion.Value}"
+                };
+            }
+
             return new FrontendStoredJavaRuntime(
-                ResolveProbedJavaExecutablePath(executablePath, process),
+                resolvedExecutablePath,
                 $"Java {majorVersion.Value}",
                 parsedVersion,
                 majorVersion.Value,
@@ -842,7 +853,7 @@ internal static partial class FrontendLaunchCompositionService
                 Is64Bit: TryParseJavaBitness(output),
                 IsJre: null,
                 Brand: null,
-                Architecture: null);
+                Architecture: TryParseJavaArchitecture(output));
         }
         catch
         {
@@ -1171,6 +1182,11 @@ internal static partial class FrontendLaunchCompositionService
             return null;
         }
 
+        if (TryParseJavaArchitecture(output) is { } architecture)
+        {
+            return architecture is MachineType.AMD64 or MachineType.ARM64 or MachineType.IA64;
+        }
+
         if (output.Contains("64-Bit", StringComparison.OrdinalIgnoreCase))
         {
             return true;
@@ -1182,6 +1198,45 @@ internal static partial class FrontendLaunchCompositionService
         }
 
         return null;
+    }
+
+    private static MachineType? TryParseJavaArchitecture(string output)
+    {
+        if (string.IsNullOrWhiteSpace(output))
+        {
+            return null;
+        }
+
+        foreach (var rawLine in output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            var separatorIndex = rawLine.IndexOf('=');
+            if (separatorIndex < 0)
+            {
+                continue;
+            }
+
+            var key = rawLine[..separatorIndex].Trim();
+            if (!string.Equals(key, "os.arch", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            return MapJavaArchitecture(rawLine[(separatorIndex + 1)..].Trim().Trim('"'));
+        }
+
+        return null;
+    }
+
+    private static MachineType? MapJavaArchitecture(string? architectureText)
+    {
+        return architectureText?.ToLowerInvariant() switch
+        {
+            "x86_64" or "amd64" => MachineType.AMD64,
+            "aarch64" or "arm64" => MachineType.ARM64,
+            "x86" or "i386" or "i486" or "i586" or "i686" => MachineType.I386,
+            "arm" => MachineType.ARM,
+            _ => null
+        };
     }
 
 }

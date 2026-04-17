@@ -139,7 +139,8 @@
                 Background="{DynamicResource ColorBrushSemanticWarningBackground}"
                 BorderBrush="{DynamicResource ColorBrushSemanticWarningBorder}"
                 BorderThickness="1"
-                CornerRadius="4">
+                CornerRadius="4"
+                IsVisible="{Binding ShowLaunch32BitJavaWarning}">
               <TextBlock
                   Foreground="{DynamicResource ColorBrushSemanticWarningForeground}"
                   FontSize="12.5"

@@ -406,6 +406,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(AllocatedRamBarWidth));
                 RaisePropertyChanged(nameof(FreeRamBarWidth));
                 RaisePropertyChanged(nameof(ShowRamAllocationWarning));
+                RaisePropertyChanged(nameof(ShowLaunch32BitJavaWarning));
                 RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
                 RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
                 RaisePropertyChanged(nameof(LaunchJvmArguments));
@@ -778,6 +779,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(AllocatedRamBarWidth));
         RaisePropertyChanged(nameof(FreeRamBarWidth));
         RaisePropertyChanged(nameof(ShowRamAllocationWarning));
+        RaisePropertyChanged(nameof(ShowLaunch32BitJavaWarning));
         RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
         RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
         RaisePropertyChanged(nameof(LaunchJvmArguments));
