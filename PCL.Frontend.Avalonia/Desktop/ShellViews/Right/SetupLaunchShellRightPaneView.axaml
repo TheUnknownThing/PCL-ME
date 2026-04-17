@@ -238,44 +238,14 @@
                   SelectedIndex="{Binding SelectedLaunchRendererIndex}" />
             </Grid>
 
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto,9,Auto,9,Auto">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto,9,Auto,9,Auto,9,Auto,9,Auto">
               <TextBlock
-                  VerticalAlignment="Top"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,4,25,0"
-                  Text="{Binding SetupText.Launch.JvmArgumentsLabel}" />
-              <TextBox
-                  Grid.Column="1"
-                  MinHeight="92"
-                  Padding="8,6"
-                  AcceptsReturn="True"
-                  Text="{Binding LaunchJvmArguments}"
-                  TextWrapping="Wrap"
-                  VerticalContentAlignment="Top" />
-
-              <TextBlock
-                  Grid.Row="2"
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,0,25,0"
-                  Text="{Binding SetupText.Launch.GameArgumentsLabel}" />
-              <TextBox
-                  Grid.Row="2"
-                  Grid.Column="1"
-                  Height="28"
-                  Padding="8,4"
-                  Text="{Binding LaunchGameArguments}" />
-
-              <TextBlock
-                  Grid.Row="4"
                   VerticalAlignment="Top"
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
                   Text="{Binding SetupText.Launch.BeforeCommandLabel}" />
-              <StackPanel Grid.Row="4" Grid.Column="1" Spacing="8">
+              <StackPanel Grid.Column="1" Spacing="8">
                 <TextBox
                     MinHeight="72"
                     Padding="8,6"
@@ -290,13 +260,58 @@
               </StackPanel>
 
               <TextBlock
+                  Grid.Row="2"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="{Binding SetupText.Launch.WrapperCommandLabel}" />
+              <TextBox
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Height="28"
+                  Padding="8,4"
+                  Text="{Binding LaunchWrapperCommand}" />
+
+              <TextBlock
+                  Grid.Row="4"
+                  VerticalAlignment="Top"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,4,25,0"
+                  Text="{Binding SetupText.Launch.JvmArgumentsLabel}" />
+              <TextBox
+                  Grid.Row="4"
+                  Grid.Column="1"
+                  MinHeight="92"
+                  Padding="8,6"
+                  AcceptsReturn="True"
+                  Text="{Binding LaunchJvmArguments}"
+                  TextWrapping="Wrap"
+                  VerticalContentAlignment="Top" />
+
+              <TextBlock
                   Grid.Row="6"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,0,25,0"
+                  Text="{Binding SetupText.Launch.GameArgumentsLabel}" />
+              <TextBox
+                  Grid.Row="6"
+                  Grid.Column="1"
+                  Height="28"
+                  Padding="8,4"
+                  Text="{Binding LaunchGameArguments}" />
+
+              <TextBlock
+                  Grid.Row="8"
                   VerticalAlignment="Top"
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
                   Text="{Binding SetupText.Launch.EnvironmentVariablesLabel}" />
-              <StackPanel Grid.Row="6" Grid.Column="1" Spacing="6">
+              <StackPanel Grid.Row="8" Grid.Column="1" Spacing="6">
                 <TextBox
                     MinHeight="92"
                     Padding="8,6"
@@ -312,13 +327,13 @@
               </StackPanel>
 
               <TextBlock
-                  Grid.Row="8"
+                  Grid.Row="10"
                   VerticalAlignment="Top"
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,4,25,0"
                   Text="{Binding SetupText.Launch.LinuxDisplayBackendLabel}" />
-              <StackPanel Grid.Row="8" Grid.Column="1" Spacing="6">
+              <StackPanel Grid.Row="10" Grid.Column="1" Spacing="6">
                 <CheckBox
                     Foreground="{DynamicResource ColorBrush1}"
                     Content="{Binding SetupText.Launch.ForceX11Label}"

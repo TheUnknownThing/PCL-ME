@@ -272,6 +272,9 @@ internal sealed partial class FrontendShellViewModel
             case nameof(SelectedInstanceRendererIndex):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceRenderer", SelectedInstanceRendererIndex);
                 break;
+            case nameof(InstanceLaunchWrapperCommand):
+                _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceWrapper", InstanceLaunchWrapperCommand);
+                break;
             case nameof(InstanceLaunchJvmArguments):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionAdvanceJvm", InstanceLaunchJvmArguments);
                 break;

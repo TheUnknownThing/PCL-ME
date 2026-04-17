@@ -176,6 +176,7 @@ internal static class FrontendSetupCompositionService
             CustomRamAllocationGb: MapStoredLaunchRamToGb(storedCustomRam),
             OptimizeMemoryBeforeLaunch: ReadValue(sharedConfig, "LaunchArgumentRam", false),
             RendererIndex: ReadValue(localConfig, "LaunchAdvanceRenderer", 0),
+            WrapperCommand: ReadValue(localConfig, "LaunchAdvanceWrapper", string.Empty),
             JvmArguments: ReadValue(localConfig, "LaunchAdvanceJvm", "-XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Djdk.lang.Process.allowAmbiguousCommands=true -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true"),
             GameArguments: ReadValue(localConfig, "LaunchAdvanceGame", string.Empty),
             BeforeCommand: ReadValue(localConfig, "LaunchAdvanceRun", string.Empty),

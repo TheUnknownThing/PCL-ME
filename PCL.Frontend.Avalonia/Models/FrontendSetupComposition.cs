@@ -38,6 +38,7 @@ internal sealed record FrontendSetupLaunchState(
     double CustomRamAllocationGb,
     bool OptimizeMemoryBeforeLaunch,
     int RendererIndex,
+    string WrapperCommand,
     string JvmArguments,
     string GameArguments,
     string BeforeCommand,

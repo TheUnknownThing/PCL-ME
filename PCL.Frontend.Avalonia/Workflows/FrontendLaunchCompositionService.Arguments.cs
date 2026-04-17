@@ -190,6 +190,19 @@ internal static partial class FrontendLaunchCompositionService
                 javaFolder,
                 replaceTime: true);
         var launchEnvironmentOverrides = BuildLaunchEnvironmentOverrides(localConfig, instanceConfig);
+        var wrapperCommand = string.IsNullOrWhiteSpace(instanceConfig is null
+                ? null
+                : ReadValue(instanceConfig, "VersionAdvanceWrapper", string.Empty))
+            ? ReadValue(localConfig, "LaunchAdvanceWrapper", string.Empty)
+            : ReadValue(instanceConfig!, "VersionAdvanceWrapper", string.Empty);
+        var effectiveWrapperCommand = ReplaceLaunchTokens(
+            wrapperCommand,
+            selectedProfile,
+            instanceName,
+            launcherFolder,
+            indieDirectory,
+            javaFolder,
+            replaceTime: true);
 
         return MinecraftLaunchSessionWorkflowService.BuildStartPlan(
             new MinecraftLaunchSessionStartWorkflowRequest(
@@ -204,7 +217,8 @@ internal static partial class FrontendLaunchCompositionService
                         NullIfWhiteSpace(globalCommand),
                         ReadValue(localConfig, "LaunchAdvanceRunWait", true),
                         NullIfWhiteSpace(instanceCommand),
-                        instanceConfig is null || ReadValue(instanceConfig, "VersionAdvanceRunWait", true)),
+                        instanceConfig is null || ReadValue(instanceConfig, "VersionAdvanceRunWait", true),
+                        NullIfWhiteSpace(effectiveWrapperCommand)),
                     ShellWorkingDirectory: launcherFolder),
                 new MinecraftLaunchProcessRequest(
                     ReadValue(sharedConfig, "LaunchAdvanceNoJavaw", false),
@@ -215,6 +229,7 @@ internal static partial class FrontendLaunchCompositionService
                     launcherFolder,
                     indieDirectory,
                     argumentPlan.FinalArguments,
+                    NullIfWhiteSpace(effectiveWrapperCommand),
                     launchEnvironmentOverrides,
                     ReadValue(sharedConfig, "LaunchArgumentPriority", 1)),
                 watcherWorkflowRequest));

@@ -88,6 +88,7 @@ internal static partial class FrontendInstanceCompositionService
             AuthName: ReadValue(instanceConfig, "VersionServerAuthName", string.Empty),
             AutoJoinServer: ReadValue(instanceConfig, "VersionServerEnter", string.Empty),
             RendererIndex: Math.Clamp(ReadValue(instanceConfig, "VersionAdvanceRenderer", 0), 0, 4),
+            WrapperCommand: ReadValue(instanceConfig, "VersionAdvanceWrapper", string.Empty),
             JvmArguments: ReadValue(instanceConfig, "VersionAdvanceJvm", string.Empty),
             GameArguments: ReadValue(instanceConfig, "VersionAdvanceGame", string.Empty),
             ClasspathHead: ReadValue(instanceConfig, "VersionAdvanceClasspathHead", string.Empty),

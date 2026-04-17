@@ -67,6 +67,7 @@ internal sealed record FrontendInstanceSetupState(
     string AuthName,
     string AutoJoinServer,
     int RendererIndex,
+    string WrapperCommand,
     string JvmArguments,
     string GameArguments,
     string ClasspathHead,

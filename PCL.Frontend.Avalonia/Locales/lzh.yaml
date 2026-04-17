@@ -1362,6 +1362,7 @@ setup:
       window_size: 遊戲視窗大小
       preferred_ip_stack: 所先 IP 協議棧
       renderer: 渲染器
+      wrapper_command: 包裝器命令
       jvm_arguments_head: JVM 參
       game_arguments_tail: 遊戲參
       before_command: 啟前所行之命
@@ -3301,6 +3302,7 @@ instance:
         both: 二者皆可
     advanced:
       renderer: 渲染器
+      wrapper_command: 包裝器命令
       jvm_head: JVM 參數前置
       game_tail: 遊戲參數後置
       classpath_head: Classpath 前置

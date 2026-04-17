@@ -43,6 +43,7 @@ public sealed class MinecraftLaunchExecutionWorkflowServiceTest
                 AppDataPath: @"D:\.minecraft",
                 WorkingDirectory: @"D:\Instances\Fabric",
                 LaunchArguments: "--demo",
+                WrapperCommand: null,
                 EnvironmentVariables: new Dictionary<string, string>(),
                 PrioritySetting: 0));
 

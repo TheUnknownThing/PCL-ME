@@ -60,6 +60,7 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceSetupMemoryOptimizeLabelText => SD("instance.settings.memory.optimize_before_launch");
     public string InstanceSetupAdvancedHeaderText => SD("instance.settings.sections.advanced");
     public string InstanceSetupRendererLabelText => SD("instance.settings.advanced.renderer");
+    public string InstanceSetupWrapperCommandLabelText => SD("instance.settings.advanced.wrapper_command");
     public string InstanceSetupJvmArgumentsLabelText => SD("instance.settings.advanced.jvm_head");
     public string InstanceSetupGameArgumentsLabelText => SD("instance.settings.advanced.game_tail");
     public string InstanceSetupClasspathHeadLabelText => SD("instance.settings.advanced.classpath_head");

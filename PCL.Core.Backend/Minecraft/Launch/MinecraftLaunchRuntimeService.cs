@@ -31,6 +31,11 @@ public static class MinecraftLaunchRuntimeService
         var executablePath = shouldUseConsoleJava
             ? request.JavaExecutablePath
             : request.JavawExecutablePath ?? request.JavaExecutablePath;
+        var wrappedLaunchPlan = MinecraftLaunchWrapperCommandService.BuildPlan(
+            new MinecraftLaunchWrapperCommandRequest(
+                executablePath,
+                request.LaunchArguments,
+                request.WrapperCommand));
 
         var pathEntries = string.IsNullOrWhiteSpace(request.CurrentPathEnvironmentValue)
             ? []
@@ -44,10 +49,10 @@ public static class MinecraftLaunchRuntimeService
         }
 
         return new MinecraftLaunchProcessPlan(
-            executablePath,
+            wrappedLaunchPlan.ExecutablePath,
             request.WorkingDirectory,
             shouldUseConsoleJava || !hasJavaw,
-            request.LaunchArguments,
+            wrappedLaunchPlan.Arguments,
             string.Join(Path.PathSeparator, pathEntries),
             request.AppDataPath,
             request.EnvironmentVariables ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
@@ -99,6 +104,7 @@ public sealed record MinecraftLaunchProcessRequest(
     string AppDataPath,
     string WorkingDirectory,
     string LaunchArguments,
+    string? WrapperCommand,
     IReadOnlyDictionary<string, string>? EnvironmentVariables,
     int PrioritySetting);
 

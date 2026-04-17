@@ -163,6 +163,7 @@ internal static partial class FrontendInstanceCompositionService
             AuthName: string.Empty,
             AutoJoinServer: string.Empty,
             RendererIndex: 0,
+            WrapperCommand: string.Empty,
             JvmArguments: string.Empty,
             GameArguments: string.Empty,
             ClasspathHead: string.Empty,

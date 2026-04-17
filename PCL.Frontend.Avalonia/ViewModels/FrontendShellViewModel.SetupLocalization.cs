@@ -34,6 +34,7 @@ internal sealed partial class FrontendShellViewModel
                 OptimizeBeforeLaunchLabel = _i18n.T("setup.launch.memory.optimize_before_launch"),
                 AdvancedCardHeader = _i18n.T("setup.launch.cards.advanced.header"),
                 RendererLabel = _i18n.T("setup.launch.fields.renderer"),
+                WrapperCommandLabel = _i18n.T("setup.launch.fields.wrapper_command"),
                 JvmArgumentsLabel = _i18n.T("setup.launch.fields.jvm_arguments_head"),
                 GameArgumentsLabel = _i18n.T("setup.launch.fields.game_arguments_tail"),
                 BeforeCommandLabel = _i18n.T("setup.launch.fields.before_command"),
@@ -409,6 +410,7 @@ internal sealed class SetupLaunchLocalization
     public required string OptimizeBeforeLaunchLabel { get; init; }
     public required string AdvancedCardHeader { get; init; }
     public required string RendererLabel { get; init; }
+    public required string WrapperCommandLabel { get; init; }
     public required string JvmArgumentsLabel { get; init; }
     public required string GameArgumentsLabel { get; init; }
     public required string BeforeCommandLabel { get; init; }

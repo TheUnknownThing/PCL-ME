@@ -108,6 +108,7 @@ internal sealed partial class FrontendShellViewModel
         _optimizeMemoryBeforeLaunch = _setupComposition.Launch.OptimizeMemoryBeforeLaunch;
         _isLaunchAdvancedOptionsExpanded = false;
         _selectedLaunchRendererIndex = _setupComposition.Launch.RendererIndex;
+        _launchWrapperCommand = _setupComposition.Launch.WrapperCommand;
         _launchJvmArguments = _setupComposition.Launch.JvmArguments;
         _launchGameArguments = _setupComposition.Launch.GameArguments;
         _launchBeforeCommand = _setupComposition.Launch.BeforeCommand;

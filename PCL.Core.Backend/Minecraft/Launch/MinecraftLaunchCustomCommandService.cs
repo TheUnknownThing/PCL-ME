@@ -62,7 +62,12 @@ public static class MinecraftLaunchCustomCommandService
             MinecraftLaunchCustomCommandScope.Instance);
 
         AppendEnvironmentVariables(scriptLines, request.EnvironmentVariables);
-        scriptLines.Add($"\"{request.JavaExecutablePath}\" {request.LaunchArguments}");
+        var wrappedLaunchCommand = MinecraftLaunchWrapperCommandService.BuildPlan(
+            new MinecraftLaunchWrapperCommandRequest(
+                request.JavaExecutablePath,
+                request.LaunchArguments,
+                request.WrapperCommand));
+        scriptLines.Add(wrappedLaunchCommand.ShellCommandLine);
         if (OperatingSystem.IsWindows())
         {
             scriptLines.Add("echo Game has exited.");
@@ -139,7 +144,8 @@ public sealed record MinecraftLaunchCustomCommandRequest(
     string? GlobalCommand,
     bool WaitForGlobalCommand,
     string? InstanceCommand,
-    bool WaitForInstanceCommand);
+    bool WaitForInstanceCommand,
+    string? WrapperCommand);
 
 public sealed record MinecraftLaunchCustomCommandPlan(
     string BatchScriptContent,

@@ -1367,6 +1367,7 @@ setup:
       window_size: Tamaño de la ventana del juego
       preferred_ip_stack: Pila de IP preferida
       renderer: Renderizador
+      wrapper_command: Comando del envoltorio
       jvm_arguments_head: argumentos de JVM
       game_arguments_tail: Argumentos del juego
       before_command: Comando antes del lanzamiento
@@ -3325,6 +3326,7 @@ instance:
         both: Ambos
     advanced:
       renderer: Renderizador
+      wrapper_command: Comando del envoltorio
       jvm_head: Argumentos de JVM (Cabeza)
       game_tail: Argumentos del juego (cola)
       classpath_head: Cabezal de ruta de clase

@@ -5,7 +5,7 @@
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
   <controls:PclCard Header="{Binding InstanceSetupAdvancedHeaderText}" ContentMargin="20,40,20,18">
     <controls:PclCard.CardContent>
-      <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,100,9,28,9,28,9,64,9,100,9,Auto">
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,100,9,28,9,100,9,28,9,28,9,100,9,Auto">
         <TextBlock
             Grid.Row="0"
             Margin="0,0,25,0"
@@ -21,52 +21,13 @@
 
         <TextBlock
             Grid.Row="2"
-            Margin="0,0,25,0"
-            VerticalAlignment="Top"
-            Foreground="{DynamicResource ColorBrush1}"
-            FontSize="13"
-            Text="{Binding InstanceSetupJvmArgumentsLabelText}" />
-        <TextBox
-            Grid.Row="2"
-            Grid.Column="1"
-            AcceptsReturn="True"
-            Text="{Binding InstanceLaunchJvmArguments}"
-            TextWrapping="Wrap"
-            VerticalContentAlignment="Top" />
-
-        <TextBlock
-            Grid.Row="4"
-            Margin="0,0,25,0"
-            VerticalAlignment="Center"
-            Foreground="{DynamicResource ColorBrush1}"
-            FontSize="13"
-            Text="{Binding InstanceSetupGameArgumentsLabelText}" />
-        <TextBox
-            Grid.Row="4"
-            Grid.Column="1"
-            Text="{Binding InstanceLaunchGameArguments}" />
-
-        <TextBlock
-            Grid.Row="6"
-            Margin="0,0,25,0"
-            VerticalAlignment="Center"
-            Foreground="{DynamicResource ColorBrush1}"
-            FontSize="13"
-            Text="{Binding InstanceSetupClasspathHeadLabelText}" />
-        <TextBox
-            Grid.Row="6"
-            Grid.Column="1"
-            Text="{Binding InstanceClasspathHead}" />
-
-        <TextBlock
-            Grid.Row="8"
             Margin="0,0,25,3"
             VerticalAlignment="Top"
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="{Binding InstanceSetupPreLaunchCommandLabelText}" />
         <TextBox
-            Grid.Row="8"
+            Grid.Row="2"
             Grid.Column="1"
             AcceptsReturn="True"
             Text="{Binding InstanceLaunchBeforeCommand}"
@@ -74,13 +35,64 @@
             VerticalContentAlignment="Top" />
 
         <TextBlock
+            Grid.Row="4"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupWrapperCommandLabelText}" />
+        <TextBox
+            Grid.Row="4"
+            Grid.Column="1"
+            Text="{Binding InstanceLaunchWrapperCommand}" />
+
+        <TextBlock
+            Grid.Row="6"
+            Margin="0,0,25,0"
+            VerticalAlignment="Top"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupJvmArgumentsLabelText}" />
+        <TextBox
+            Grid.Row="6"
+            Grid.Column="1"
+            AcceptsReturn="True"
+            Text="{Binding InstanceLaunchJvmArguments}"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top" />
+
+        <TextBlock
+            Grid.Row="8"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupGameArgumentsLabelText}" />
+        <TextBox
+            Grid.Row="8"
+            Grid.Column="1"
+            Text="{Binding InstanceLaunchGameArguments}" />
+
+        <TextBlock
             Grid.Row="10"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupClasspathHeadLabelText}" />
+        <TextBox
+            Grid.Row="10"
+            Grid.Column="1"
+            Text="{Binding InstanceClasspathHead}" />
+
+        <TextBlock
+            Grid.Row="12"
             Margin="0,0,25,3"
             VerticalAlignment="Top"
             Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="{Binding InstanceSetupEnvironmentVariablesLabelText}" />
-        <StackPanel Grid.Row="10" Grid.Column="1" Spacing="6">
+        <StackPanel Grid.Row="12" Grid.Column="1" Spacing="6">
           <TextBox
               AcceptsReturn="True"
               Text="{Binding InstanceEnvironmentVariables}"
@@ -93,7 +105,7 @@
               TextWrapping="Wrap" />
         </StackPanel>
 
-        <StackPanel Grid.Row="12" Grid.ColumnSpan="2" Margin="0,8,0,0" Spacing="8">
+        <StackPanel Grid.Row="14" Grid.ColumnSpan="2" Margin="0,8,0,0" Spacing="8">
           <Grid ColumnDefinitions="Auto,*">
             <TextBlock
                 Margin="0,0,25,0"

@@ -129,6 +129,7 @@
     <Compile Include="Minecraft/Launch/MinecraftLaunchThirdPartyLoginExecutionService.cs" />
     <Compile Include="Minecraft/Launch/MinecraftLaunchThirdPartyLoginWorkflowService.cs" />
     <Compile Include="Minecraft/Launch/MinecraftLaunchWatcherWorkflowService.cs" />
+    <Compile Include="Minecraft/Launch/MinecraftLaunchWrapperCommandService.cs" />
     <Compile Include="Minecraft/MinecraftCrashAnalysisService.Collection.cs" />
     <Compile Include="Minecraft/MinecraftCrashAnalysisService.Entry.cs" />
     <Compile Include="Minecraft/MinecraftCrashAnalysisService.Models.cs" />

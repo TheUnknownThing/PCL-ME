@@ -20,6 +20,7 @@ public sealed class MinecraftLaunchRuntimeServiceTest
             AppDataPath: @"D:\.minecraft",
             WorkingDirectory: @"D:\Instances\Fabric",
             LaunchArguments: "--demo",
+            WrapperCommand: null,
             EnvironmentVariables: new Dictionary<string, string>(),
             PrioritySetting: 0));
 
@@ -44,6 +45,7 @@ public sealed class MinecraftLaunchRuntimeServiceTest
             AppDataPath: @"/tmp/.minecraft",
             WorkingDirectory: @"/tmp/instance",
             LaunchArguments: "--width 1280",
+            WrapperCommand: null,
             EnvironmentVariables: new Dictionary<string, string>(),
             PrioritySetting: 2));
 

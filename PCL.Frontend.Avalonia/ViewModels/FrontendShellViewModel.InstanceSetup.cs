@@ -29,6 +29,7 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedInstanceJavaIndex;
     private string _instanceClasspathHead = string.Empty;
     private int _selectedInstanceRendererIndex;
+    private string _instanceLaunchWrapperCommand = string.Empty;
     private string _instanceLaunchJvmArguments = string.Empty;
     private string _instanceLaunchGameArguments = string.Empty;
     private string _instanceLaunchBeforeCommand = string.Empty;
@@ -292,6 +293,12 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _instanceLaunchJvmArguments, value);
     }
 
+    public string InstanceLaunchWrapperCommand
+    {
+        get => _instanceLaunchWrapperCommand;
+        set => SetProperty(ref _instanceLaunchWrapperCommand, value);
+    }
+
     public string InstanceLaunchGameArguments
     {
         get => _instanceLaunchGameArguments;
@@ -395,6 +402,7 @@ internal sealed partial class FrontendShellViewModel
         _instanceServerAuthName = setup.AuthName;
         _instanceServerAutoJoin = setup.AutoJoinServer;
         _selectedInstanceRendererIndex = Math.Clamp(setup.RendererIndex, 0, InstanceRendererOptions.Count - 1);
+        _instanceLaunchWrapperCommand = setup.WrapperCommand;
         _instanceLaunchJvmArguments = setup.JvmArguments;
         _instanceLaunchGameArguments = setup.GameArguments;
         _instanceClasspathHead = setup.ClasspathHead;
@@ -454,6 +462,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceServerAutoJoin));
         RaisePropertyChanged(nameof(InstanceRendererOptions));
         RaisePropertyChanged(nameof(SelectedInstanceRendererIndex));
+        RaisePropertyChanged(nameof(InstanceLaunchWrapperCommand));
         RaisePropertyChanged(nameof(InstanceLaunchJvmArguments));
         RaisePropertyChanged(nameof(InstanceLaunchGameArguments));
         RaisePropertyChanged(nameof(InstanceClasspathHead));

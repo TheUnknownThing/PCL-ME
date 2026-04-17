@@ -17,11 +17,12 @@ public sealed class MinecraftLaunchCustomCommandServiceTest
             WorkingDirectory: @"C:\Minecraft",
             JavaExecutablePath: @"C:\Java\bin\java.exe",
             LaunchArguments: "--demo",
-            EnvironmentVariables: new Dictionary<string, string>(),
-            GlobalCommand: "echo global",
-            WaitForGlobalCommand: true,
-            InstanceCommand: "echo version",
-            WaitForInstanceCommand: false));
+                        EnvironmentVariables: new Dictionary<string, string>(),
+                        GlobalCommand: "echo global",
+                        WaitForGlobalCommand: true,
+                        InstanceCommand: "echo version",
+                        WaitForInstanceCommand: false,
+                        WrapperCommand: null));
 
         var expectedScript = OperatingSystem.IsWindows()
             ? string.Join("\r\n", new[]
@@ -29,10 +30,10 @@ public sealed class MinecraftLaunchCustomCommandServiceTest
                 "chcp 65001>nul",
                 "@echo off",
                 "title Launch - Fabric 1.20.1",
-                "echo Game is starting, please wait.",
-                "cd /D \"C:\\Minecraft\"",
-                "echo global",
-                "echo version",
+                        "echo Game is starting, please wait.",
+                        "cd /D \"C:\\Minecraft\"",
+                        "echo global",
+                        "echo version",
                 "\"C:\\Java\\bin\\java.exe\" --demo",
                 "echo Game has exited.",
                 "pause"
@@ -66,15 +67,35 @@ public sealed class MinecraftLaunchCustomCommandServiceTest
             WorkingDirectory: @"D:\Games\.minecraft",
             JavaExecutablePath: @"D:\Java\bin\java.exe",
             LaunchArguments: "--fullscreen",
-            EnvironmentVariables: new Dictionary<string, string>(),
-            GlobalCommand: "",
-            WaitForGlobalCommand: false,
-            InstanceCommand: null,
-            WaitForInstanceCommand: false));
+                        EnvironmentVariables: new Dictionary<string, string>(),
+                        GlobalCommand: "",
+                        WaitForGlobalCommand: false,
+                        InstanceCommand: null,
+                        WaitForInstanceCommand: false,
+                        WrapperCommand: null));
 
         Assert.IsFalse(result.UseUtf8Encoding);
         Assert.AreEqual(0, result.CommandExecutions.Count);
         Assert.IsFalse(result.BatchScriptContent.Split("\r\n").Contains("chcp 65001>nul"));
         StringAssert.Contains(result.BatchScriptContent, "\"D:\\Java\\bin\\java.exe\" --fullscreen");
+    }
+
+    [TestMethod]
+    public void BuildPlanPrefixesWrapperCommandBeforeJavaLaunch()
+    {
+        var result = MinecraftLaunchCustomCommandService.BuildPlan(new MinecraftLaunchCustomCommandRequest(
+            JavaMajorVersion: 21,
+            InstanceName: "Vanilla",
+            WorkingDirectory: @"/tmp/minecraft",
+            JavaExecutablePath: @"/usr/bin/java",
+            LaunchArguments: "--demo",
+            EnvironmentVariables: new Dictionary<string, string>(),
+            GlobalCommand: null,
+            WaitForGlobalCommand: false,
+            InstanceCommand: null,
+            WaitForInstanceCommand: false,
+            WrapperCommand: "prime-run"));
+
+        StringAssert.Contains(result.BatchScriptContent, "prime-run \"/usr/bin/java\" --demo");
     }
 }

@@ -320,6 +320,12 @@ internal sealed partial class FrontendShellViewModel
         set => SetProperty(ref _launchJvmArguments, value);
     }
 
+    public string LaunchWrapperCommand
+    {
+        get => _launchWrapperCommand;
+        set => SetProperty(ref _launchWrapperCommand, value);
+    }
+
     public string LaunchGameArguments
     {
         get => _launchGameArguments;

@@ -1549,6 +1549,7 @@ setup:
       window_size: []
       preferred_ip_stack: []
       renderer: []
+      wrapper_command: []
       jvm_arguments_head: []
       game_arguments_tail: []
       before_command: []
@@ -3777,6 +3778,7 @@ instance:
         both: []
     advanced:
       renderer: []
+      wrapper_command: []
       jvm_head: []
       game_tail: []
       classpath_head: []

@@ -24,7 +24,8 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                         GlobalCommand: "echo global",
                         WaitForGlobalCommand: true,
                         InstanceCommand: "echo instance",
-                        WaitForInstanceCommand: false),
+                        WaitForInstanceCommand: false,
+                        WrapperCommand: null),
                     ShellWorkingDirectory: @"D:\Minecraft"),
                 new MinecraftLaunchProcessRequest(
                     PreferConsoleJava: false,
@@ -35,6 +36,7 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                     AppDataPath: @"D:\Minecraft\.minecraft",
                     WorkingDirectory: @"D:\Instances\Demo",
                     LaunchArguments: "--demo",
+                    WrapperCommand: null,
                     EnvironmentVariables: new Dictionary<string, string>(),
                     PrioritySetting: 0),
                 new MinecraftLaunchWatcherWorkflowRequest(
@@ -91,7 +93,8 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                         GlobalCommand: null,
                         WaitForGlobalCommand: false,
                         InstanceCommand: null,
-                        WaitForInstanceCommand: false),
+                        WaitForInstanceCommand: false,
+                        WrapperCommand: null),
                     ShellWorkingDirectory: @"D:\Minecraft"),
                 new MinecraftLaunchProcessRequest(
                     PreferConsoleJava: true,
@@ -102,6 +105,7 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
                     AppDataPath: @"D:\Minecraft\.minecraft",
                     WorkingDirectory: @"D:\Instances\Demo",
                     LaunchArguments: "--demo",
+                    WrapperCommand: null,
                     EnvironmentVariables: new Dictionary<string, string>(),
                     PrioritySetting: 1),
                 new MinecraftLaunchWatcherWorkflowRequest(
@@ -137,5 +141,71 @@ public sealed class MinecraftLaunchSessionWorkflowServiceTest
         Assert.AreEqual(0, result.CustomCommandShellPlans.Count);
         Assert.AreEqual(@"C:\Java\bin\java.exe", result.ProcessShellPlan.FileName);
         Assert.AreEqual(string.Empty, result.WatcherWorkflowPlan.JstackExecutablePath);
+    }
+
+    [TestMethod]
+    public void BuildStartPlanUsesWrapperForProcessAndScript()
+    {
+        var result = MinecraftLaunchSessionWorkflowService.BuildStartPlan(
+            new MinecraftLaunchSessionStartWorkflowRequest(
+                new MinecraftLaunchCustomCommandWorkflowRequest(
+                    new MinecraftLaunchCustomCommandRequest(
+                        JavaMajorVersion: 21,
+                        InstanceName: "Demo",
+                        WorkingDirectory: @"/tmp/demo",
+                        JavaExecutablePath: @"/usr/bin/java",
+                        LaunchArguments: "--demo",
+                        EnvironmentVariables: new Dictionary<string, string>(),
+                        GlobalCommand: null,
+                        WaitForGlobalCommand: false,
+                        InstanceCommand: null,
+                        WaitForInstanceCommand: false,
+                        WrapperCommand: "prime-run"),
+                    ShellWorkingDirectory: @"/tmp"),
+                new MinecraftLaunchProcessRequest(
+                    PreferConsoleJava: false,
+                    JavaExecutablePath: @"/usr/bin/java",
+                    JavawExecutablePath: null,
+                    JavaFolder: @"/usr/bin",
+                    CurrentPathEnvironmentValue: @"/usr/local/bin",
+                    AppDataPath: @"/tmp/.minecraft",
+                    WorkingDirectory: @"/tmp/demo",
+                    LaunchArguments: "--demo",
+                    WrapperCommand: "prime-run",
+                    EnvironmentVariables: new Dictionary<string, string>(),
+                    PrioritySetting: 1),
+                new MinecraftLaunchWatcherWorkflowRequest(
+                    new MinecraftLaunchSessionLogRequest(
+                        LauncherVersionName: "2.11.0",
+                        LauncherVersionCode: 2110,
+                        GameVersionDisplayName: "1.20.5",
+                        GameVersionRaw: "1.20.5",
+                        GameVersionDrop: 8,
+                        IsGameVersionReliable: true,
+                        AssetsIndexName: "8",
+                        InheritedInstanceName: null,
+                        AllocatedMemoryInGigabytes: 4,
+                        MinecraftFolder: @"/tmp/.minecraft",
+                        InstanceFolder: @"/tmp/demo",
+                        IsVersionIsolated: false,
+                        IsHmclFormatJson: false,
+                        JavaDescription: null,
+                        NativesFolder: @"/tmp/natives",
+                        PlayerName: "DemoPlayer",
+                        AccessToken: "token",
+                        ClientToken: "client",
+                        Uuid: "uuid",
+                        LoginType: "Microsoft"),
+                    new MinecraftLaunchWatcherRequest(
+                        VersionSpecificWindowTitleTemplate: null,
+                        VersionTitleExplicitlyEmpty: false,
+                        GlobalWindowTitleTemplate: "{global}",
+                        JavaFolder: @"/usr/bin",
+                        JstackExecutableExists: false),
+                    OutputRealTimeLog: false)));
+
+        Assert.AreEqual("prime-run", result.ProcessShellPlan.FileName);
+        Assert.AreEqual("\"/usr/bin/java\" --demo", result.ProcessShellPlan.Arguments);
+        StringAssert.Contains(result.CustomCommandPlan.BatchScriptContent, "prime-run \"/usr/bin/java\" --demo");
     }
 }

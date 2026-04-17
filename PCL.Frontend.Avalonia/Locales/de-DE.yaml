@@ -1362,6 +1362,7 @@ setup:
       window_size: Spielfenstergröße
       preferred_ip_stack: Bevorzugter IP-Stack
       renderer: Renderer
+      wrapper_command: Wrapper-Befehl
       jvm_arguments_head: JVM-Argumente
       game_arguments_tail: Spielargumente
       before_command: Befehl vor dem Start
@@ -3301,6 +3302,7 @@ instance:
         both: Beide
     advanced:
       renderer: Renderer
+      wrapper_command: Wrapper-Befehl
       jvm_head: JVM-Argumente (Anfang)
       game_tail: Spielargumente (Ende)
       classpath_head: Classpath-Anfang

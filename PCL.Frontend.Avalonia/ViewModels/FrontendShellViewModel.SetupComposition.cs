@@ -18,6 +18,7 @@ internal sealed partial class FrontendShellViewModel
         "LaunchRamType",
         "LaunchRamCustom",
         "LaunchAdvanceRenderer",
+        "LaunchAdvanceWrapper",
         "LaunchAdvanceJvm",
         "LaunchAdvanceGame",
         "LaunchAdvanceRun",
@@ -415,6 +416,7 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(ShowLaunch32BitJavaWarning));
                 RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
                 RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
+                RaisePropertyChanged(nameof(LaunchWrapperCommand));
                 RaisePropertyChanged(nameof(LaunchJvmArguments));
                 RaisePropertyChanged(nameof(LaunchGameArguments));
                 RaisePropertyChanged(nameof(LaunchBeforeCommand));
@@ -487,6 +489,9 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(SelectedLaunchRendererIndex):
                 _shellActionService.PersistLocalValue("LaunchAdvanceRenderer", SelectedLaunchRendererIndex);
+                break;
+            case nameof(LaunchWrapperCommand):
+                _shellActionService.PersistLocalValue("LaunchAdvanceWrapper", LaunchWrapperCommand);
                 break;
             case nameof(LaunchJvmArguments):
                 _shellActionService.PersistLocalValue("LaunchAdvanceJvm", LaunchJvmArguments);
@@ -801,6 +806,7 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(ShowLaunch32BitJavaWarning));
         RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
         RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
+        RaisePropertyChanged(nameof(LaunchWrapperCommand));
         RaisePropertyChanged(nameof(LaunchJvmArguments));
         RaisePropertyChanged(nameof(LaunchGameArguments));
         RaisePropertyChanged(nameof(LaunchBeforeCommand));
