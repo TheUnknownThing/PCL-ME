@@ -98,7 +98,9 @@ internal static partial class FrontendLaunchCompositionService
         var configuration = FrontendHttpProxyService.ResolveConfiguration(runtimePaths, sharedConfig);
         return configuration.Mode switch
         {
-            PCL.Core.IO.Net.Http.Proxying.ProxyMode.CustomProxy => CreateProxyOptions(configuration.CustomProxyAddress),
+            PCL.Core.IO.Net.Http.Proxying.ProxyMode.CustomProxy => CreateProxyOptions(
+                configuration.CustomProxyAddress,
+                configuration.CustomProxyCredentials),
             PCL.Core.IO.Net.Http.Proxying.ProxyMode.SystemProxy => ResolveSystemProxyOptions(),
             _ => FrontendProxyOptions.None
         };
@@ -125,7 +127,9 @@ internal static partial class FrontendLaunchCompositionService
         }
     }
 
-    private static FrontendProxyOptions CreateProxyOptions(Uri? uri)
+    private static FrontendProxyOptions CreateProxyOptions(
+        Uri? uri,
+        NetworkCredential? credentials = null)
     {
         if (uri is null || !uri.IsAbsoluteUri || string.IsNullOrWhiteSpace(uri.Host))
         {
@@ -150,7 +154,12 @@ internal static partial class FrontendLaunchCompositionService
             return FrontendProxyOptions.None;
         }
 
-        return new FrontendProxyOptions(scheme, uri.Host, port);
+        return new FrontendProxyOptions(
+            scheme,
+            uri.Host,
+            port,
+            string.IsNullOrWhiteSpace(credentials?.UserName) ? null : credentials.UserName,
+            string.IsNullOrEmpty(credentials?.Password) ? null : credentials.Password);
     }
 
     private static FrontendJavaWrapperOptions ResolveJavaWrapperOptions(

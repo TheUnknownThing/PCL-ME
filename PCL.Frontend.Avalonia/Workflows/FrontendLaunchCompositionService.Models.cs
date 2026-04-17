@@ -55,9 +55,11 @@ internal static partial class FrontendLaunchCompositionService
     private readonly record struct FrontendProxyOptions(
         string? Scheme,
         string? Host,
-        int? Port)
+        int? Port,
+        string? Username,
+        string? Password)
     {
-        public static FrontendProxyOptions None { get; } = new(null, null, null);
+        public static FrontendProxyOptions None { get; } = new(null, null, null, null, null);
     }
 
     private readonly record struct FrontendJavaWrapperOptions(
