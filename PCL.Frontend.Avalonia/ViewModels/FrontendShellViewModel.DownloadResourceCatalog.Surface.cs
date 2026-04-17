@@ -343,7 +343,7 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, selectedInstance.Name);
+        var targetComposition = ComposeInstanceForSaveSelection(selectedInstance.Name);
         if (!targetComposition.Selection.HasSelection)
         {
             AddActivity(activityTitle, T("download.resource.current_instance.messages.instance_unavailable", ("instance_name", selectedInstance.Name)));
@@ -354,6 +354,18 @@ internal sealed partial class FrontendShellViewModel
         if (saves.Count == 0)
         {
             AddActivity(activityTitle, T("download.resource.current_instance.messages.no_saves_available", ("instance_name", selectedInstance.Name)));
+            try
+            {
+                await _shellActionService.ConfirmAsync(
+                    T("download.resource.current_instance.dialogs.select_save.title"),
+                    T("download.resource.current_instance.messages.no_saves_available", ("instance_name", selectedInstance.Name)),
+                    T("common.actions.confirm"));
+            }
+            catch (Exception ex)
+            {
+                AddFailureActivity(T("download.resource.current_instance.dialogs.select_save.failed"), ex.Message);
+            }
+
             return;
         }
 
@@ -416,5 +428,14 @@ internal sealed partial class FrontendShellViewModel
     private bool ShouldAutoSyncDownloadResourceFiltersWithInstance()
     {
         return _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack;
+    }
+
+    private FrontendInstanceComposition ComposeInstanceForSaveSelection(string instanceName)
+    {
+        return FrontendInstanceCompositionService.Compose(
+            _shellActionService.RuntimePaths,
+            instanceName,
+            FrontendInstanceCompositionService.LoadMode.Lightweight,
+            _i18n);
     }
 }

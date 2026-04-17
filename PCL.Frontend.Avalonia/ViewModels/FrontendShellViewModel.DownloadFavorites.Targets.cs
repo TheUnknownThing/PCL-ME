@@ -78,7 +78,7 @@ internal sealed partial class FrontendShellViewModel
             return new DownloadFavoriteInstallTargetSnapshot(instanceSnapshot, null);
         }
 
-        var targetComposition = FrontendInstanceCompositionService.Compose(_shellActionService.RuntimePaths, instanceSnapshot.Name);
+        var targetComposition = ComposeInstanceForSaveSelection(instanceSnapshot.Name);
         if (!targetComposition.Selection.HasSelection)
         {
             AddActivity(
