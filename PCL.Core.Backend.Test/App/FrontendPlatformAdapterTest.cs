@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -39,5 +40,35 @@ public sealed class FrontendPlatformAdapterTest
         };
 
         Assert.IsFalse(FrontendPlatformAdapter.IsSuccessfulStart(startInfo, null));
+    }
+
+    [TestMethod]
+    public void GetJavaExecutablePath_ResolvesNestedMacBundleLayout()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+
+        var root = Path.Combine(Path.GetTempPath(), "pcl-java-runtime-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var runtimeDirectory = Path.Combine(root, "runtime");
+            var nestedExecutablePath = Path.Combine(runtimeDirectory, "jre.bundle", "Contents", "Home", "bin", "java");
+            Directory.CreateDirectory(Path.GetDirectoryName(nestedExecutablePath)!);
+            File.WriteAllText(nestedExecutablePath, string.Empty);
+
+            var adapter = new FrontendPlatformAdapter();
+            var resolvedPath = adapter.GetJavaExecutablePath(runtimeDirectory);
+
+            Assert.AreEqual(nestedExecutablePath, resolvedPath);
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
     }
 }

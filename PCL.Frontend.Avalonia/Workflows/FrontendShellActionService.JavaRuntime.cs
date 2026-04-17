@@ -495,8 +495,7 @@ internal sealed partial class FrontendShellActionService
 
         foreach (var file in transferPlan.WorkflowPlan.Files)
         {
-            var relativePath = file.RelativePath.Replace('\\', '/');
-            if (!relativePath.StartsWith("bin/", StringComparison.OrdinalIgnoreCase))
+            if (!RequiresUnixExecutableBits(file.RelativePath))
             {
                 continue;
             }
@@ -506,15 +505,7 @@ internal sealed partial class FrontendShellActionService
                 continue;
             }
 
-            File.SetUnixFileMode(
-                file.TargetPath,
-                UnixFileMode.UserRead |
-                UnixFileMode.UserWrite |
-                UnixFileMode.UserExecute |
-                UnixFileMode.GroupRead |
-                UnixFileMode.GroupExecute |
-                UnixFileMode.OtherRead |
-                UnixFileMode.OtherExecute);
+            ApplyUnixExecutableBits(file.TargetPath);
         }
     }
 
@@ -525,14 +516,52 @@ internal sealed partial class FrontendShellActionService
             return;
         }
 
-        var executablePath = GetJavaExecutablePath(runtimeDirectory);
-        if (!File.Exists(executablePath))
+        foreach (var path in EnumerateUnixExecutablePaths(runtimeDirectory))
+        {
+            ApplyUnixExecutableBits(path);
+        }
+    }
+
+    internal static bool RequiresUnixExecutableBits(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return false;
+        }
+
+        var normalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
+        return normalizedPath.StartsWith("bin/", StringComparison.OrdinalIgnoreCase) ||
+               normalizedPath.Contains("/bin/", StringComparison.OrdinalIgnoreCase) ||
+               normalizedPath.EndsWith("/jspawnhelper", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(normalizedPath, "jspawnhelper", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IEnumerable<string> EnumerateUnixExecutablePaths(string runtimeDirectory)
+    {
+        if (!Directory.Exists(runtimeDirectory))
+        {
+            yield break;
+        }
+
+        foreach (var filePath in Directory.EnumerateFiles(runtimeDirectory, "*", SearchOption.AllDirectories))
+        {
+            var relativePath = Path.GetRelativePath(runtimeDirectory, filePath);
+            if (RequiresUnixExecutableBits(relativePath))
+            {
+                yield return filePath;
+            }
+        }
+    }
+
+    private static void ApplyUnixExecutableBits(string path)
+    {
+        if (OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
             return;
         }
 
         File.SetUnixFileMode(
-            executablePath,
+            path,
             UnixFileMode.UserRead |
             UnixFileMode.UserWrite |
             UnixFileMode.UserExecute |

@@ -236,7 +236,52 @@ internal sealed class FrontendPlatformAdapter
     public string GetJavaExecutablePath(string runtimeDirectory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(runtimeDirectory);
-        return Path.Combine(runtimeDirectory, "bin", GetJavaExecutableFileName());
+
+        var executableName = GetJavaExecutableFileName();
+        var directPath = Path.Combine(runtimeDirectory, "bin", executableName);
+        if (File.Exists(directPath) || !OperatingSystem.IsMacOS())
+        {
+            return directPath;
+        }
+
+        var bundleCandidates = new[]
+        {
+            Path.Combine(runtimeDirectory, "Contents", "Home", "bin", executableName),
+            Path.Combine(runtimeDirectory, "jre.bundle", "Contents", "Home", "bin", executableName)
+        };
+        foreach (var candidate in bundleCandidates)
+        {
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        try
+        {
+            foreach (var bundleDirectory in Directory.EnumerateDirectories(runtimeDirectory))
+            {
+                var extension = Path.GetExtension(bundleDirectory);
+                if (!extension.Equals(".bundle", StringComparison.OrdinalIgnoreCase) &&
+                    !extension.Equals(".jdk", StringComparison.OrdinalIgnoreCase) &&
+                    !extension.Equals(".jre", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var candidate = Path.Combine(bundleDirectory, "Contents", "Home", "bin", executableName);
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+        catch
+        {
+            // Fall back to the canonical root/bin path if the directory cannot be enumerated.
+        }
+
+        return directPath;
     }
 
     public IReadOnlyList<string> GetDefaultJavaDetectionCandidates()

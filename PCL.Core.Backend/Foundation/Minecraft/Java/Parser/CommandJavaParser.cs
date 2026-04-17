@@ -18,6 +18,7 @@ public sealed class CommandJavaParser(IJavaRuntimeEnvironment runtime, ICommandR
         {
             if (!File.Exists(javaExePath)) return null;
 
+            _TryEnsureExecutablePermission(javaExePath, runtime.IsWindows);
             var command = commandRunner.Run(javaExePath, "-XshowSettings:properties -version");
             if (command.ExitCode != 0 && string.IsNullOrWhiteSpace(command.StandardError) && string.IsNullOrWhiteSpace(command.StandardOutput))
                 return null;
@@ -53,6 +54,30 @@ public sealed class CommandJavaParser(IJavaRuntimeEnvironment runtime, ICommandR
         {
             LogWrapper.Error(ex, "Java", $"An error occurred while parsing {javaExePath}");
             return null;
+        }
+    }
+
+    private static void _TryEnsureExecutablePermission(string javaExePath, bool isWindows)
+    {
+        if (isWindows || OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(javaExePath) || !File.Exists(javaExePath))
+        {
+            return;
+        }
+
+        try
+        {
+            var currentMode = File.GetUnixFileMode(javaExePath);
+            var executableBits = UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
+            if ((currentMode & executableBits) == executableBits)
+            {
+                return;
+            }
+
+            File.SetUnixFileMode(javaExePath, currentMode | executableBits);
+        }
+        catch
+        {
+            // Best effort for portable or freshly-downloaded runtimes on Unix-like systems.
         }
     }
 

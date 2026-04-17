@@ -137,4 +137,13 @@ public sealed class FrontendJavaInventoryServiceTest
             "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.10%2B7/OpenJDK21U-jre_aarch64_linux_hotspot_21.0.10_7.tar.gz",
             result.ArchivePlan.RequestUrls.OfficialUrls.Single());
     }
+
+    [TestMethod]
+    public void RequiresUnixExecutableBits_MatchesNestedJavaBundleBinaries()
+    {
+        Assert.IsTrue(FrontendShellActionService.RequiresUnixExecutableBits("bin/java"));
+        Assert.IsTrue(FrontendShellActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/bin/java"));
+        Assert.IsTrue(FrontendShellActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/lib/jspawnhelper"));
+        Assert.IsFalse(FrontendShellActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/lib/server/libjvm.dylib"));
+    }
 }
