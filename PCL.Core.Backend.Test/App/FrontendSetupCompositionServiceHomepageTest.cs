@@ -79,11 +79,13 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
     public void ComposeActiveSurface_RefreshesLaunchWithoutRebuildingJava()
     {
         using var environment = new FrontendSetupEnvironment();
+        const string initialJavaPath = "/tmp/java-8/bin/java";
+        const string updatedJavaPath = "/tmp/java-17/bin/java";
         File.WriteAllText(
             environment.LocalConfigPath,
-            """
+            $$"""
             LaunchArgumentTitle: Old Title
-            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-8/bin/java","IsEnable":true}]'
+            LaunchArgumentJavaUser: '[{"Path":"{{initialJavaPath}}","IsEnable":true}]'
             """);
 
         var runtimePaths = environment.CreateRuntimePaths();
@@ -92,9 +94,9 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
 
         File.WriteAllText(
             environment.LocalConfigPath,
-            """
+            $$"""
             LaunchArgumentTitle: New Title
-            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-17/bin/java","IsEnable":true}]'
+            LaunchArgumentJavaUser: '[{"Path":"{{updatedJavaPath}}","IsEnable":true}]'
             """);
 
         var updated = FrontendSetupCompositionService.ComposeActiveSurface(
@@ -105,18 +107,20 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
 
         Assert.AreEqual("New Title", updated.Launch.WindowTitle);
         Assert.AreSame(initial.Java, updated.Java);
-        Assert.AreEqual("/tmp/java-8/bin/java", updated.Java.Entries.Single().Key);
+        Assert.AreEqual(Path.GetFullPath(initialJavaPath), updated.Java.Entries.Single().Key);
     }
 
     [TestMethod]
     public void ComposeActiveSurface_RefreshesJavaWithoutRebuildingLaunch()
     {
         using var environment = new FrontendSetupEnvironment();
+        const string initialJavaPath = "/tmp/java-8/bin/java";
+        const string updatedJavaPath = "/tmp/java-17/bin/java";
         File.WriteAllText(
             environment.LocalConfigPath,
-            """
+            $$"""
             LaunchArgumentTitle: Old Title
-            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-8/bin/java","IsEnable":true}]'
+            LaunchArgumentJavaUser: '[{"Path":"{{initialJavaPath}}","IsEnable":true}]'
             """);
 
         var runtimePaths = environment.CreateRuntimePaths();
@@ -125,9 +129,9 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
 
         File.WriteAllText(
             environment.LocalConfigPath,
-            """
+            $$"""
             LaunchArgumentTitle: New Title
-            LaunchArgumentJavaUser: '[{"Path":"/tmp/java-17/bin/java","IsEnable":true}]'
+            LaunchArgumentJavaUser: '[{"Path":"{{updatedJavaPath}}","IsEnable":true}]'
             """);
 
         var updated = FrontendSetupCompositionService.ComposeActiveSurface(
@@ -138,7 +142,7 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
 
         Assert.AreSame(initial.Launch, updated.Launch);
         Assert.AreEqual("Old Title", updated.Launch.WindowTitle);
-        Assert.AreEqual("/tmp/java-17/bin/java", updated.Java.Entries.Single().Key);
+        Assert.AreEqual(Path.GetFullPath(updatedJavaPath), updated.Java.Entries.Single().Key);
     }
 
     private sealed class FrontendSetupEnvironment : IDisposable
