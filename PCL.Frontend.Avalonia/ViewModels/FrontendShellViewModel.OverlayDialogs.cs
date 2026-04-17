@@ -2,6 +2,7 @@ using System.Threading;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
 
@@ -14,32 +15,37 @@ internal sealed partial class FrontendShellViewModel
 
     private readonly SemaphoreSlim _promptOverlayDialogSemaphore = new(1, 1);
     private PromptOverlayDialogState? _activePromptOverlayDialog;
+    private PromptOverlayDialogState? _closingPromptOverlayDialog;
     private string _promptOverlayInputText = string.Empty;
+    private string _closingPromptOverlayInputText = string.Empty;
     private string _promptOverlayInputPlaceholderText = string.Empty;
+    private string _closingPromptOverlayInputPlaceholderText = string.Empty;
     private bool _promptOverlayInputIsPassword;
+    private bool _closingPromptOverlayInputIsPassword;
     private PclChoiceDialogOption? _selectedPromptOverlayChoice;
+    private PclChoiceDialogOption? _closingPromptOverlayChoice;
 
-    public string PromptOverlayTitle => _activePromptOverlayDialog?.Title ?? CurrentPrompt?.Title ?? string.Empty;
+    public string PromptOverlayTitle => ResolvePromptOverlayPresentationDialog()?.Title ?? CurrentPrompt?.Title ?? string.Empty;
 
-    public IBrush PromptOverlayTitleBrush => _activePromptOverlayDialog?.TitleBrush
+    public IBrush PromptOverlayTitleBrush => ResolvePromptOverlayPresentationDialog()?.TitleBrush
         ?? CurrentPrompt?.TitleBrush
         ?? FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB");
 
-    public IBrush PromptOverlayAccentBrush => _activePromptOverlayDialog?.AccentBrush
+    public IBrush PromptOverlayAccentBrush => ResolvePromptOverlayPresentationDialog()?.AccentBrush
         ?? CurrentPrompt?.AccentBrush
         ?? FrontendThemeResourceResolver.GetBrush("ColorBrush2", "#0B5BCB");
 
-    public string PromptOverlayMessage => _activePromptOverlayDialog?.Message ?? CurrentPrompt?.Message ?? string.Empty;
+    public string PromptOverlayMessage => ResolvePromptOverlayPresentationDialog()?.Message ?? CurrentPrompt?.Message ?? string.Empty;
 
-    public IReadOnlyList<PromptOptionViewModel> PromptOverlayOptions => _activePromptOverlayDialog?.Options ?? CurrentPrompt?.Options ?? EmptyPromptOverlayOptions;
+    public IReadOnlyList<PromptOptionViewModel> PromptOverlayOptions => ResolvePromptOverlayPresentationDialog()?.Options ?? CurrentPrompt?.Options ?? EmptyPromptOverlayOptions;
 
-    public IReadOnlyList<PclChoiceDialogOption> PromptOverlayChoiceOptions => _activePromptOverlayDialog?.ChoiceOptions ?? EmptyPromptOverlayChoices;
+    public IReadOnlyList<PclChoiceDialogOption> PromptOverlayChoiceOptions => ResolvePromptOverlayPresentationDialog()?.ChoiceOptions ?? EmptyPromptOverlayChoices;
 
     public bool HasPromptOverlayInlineDialog => _activePromptOverlayDialog is not null;
 
-    public bool ShowPromptOverlayTextInput => _activePromptOverlayDialog?.Kind == PromptOverlayDialogKind.TextInput;
+    public bool ShowPromptOverlayTextInput => ResolvePromptOverlayPresentationDialog()?.Kind == PromptOverlayDialogKind.TextInput;
 
-    public bool ShowPromptOverlayChoiceList => _activePromptOverlayDialog?.Kind == PromptOverlayDialogKind.Choice;
+    public bool ShowPromptOverlayChoiceList => ResolvePromptOverlayPresentationDialog()?.Kind == PromptOverlayDialogKind.Choice;
 
     public bool ShowPromptOverlayMessage => !string.IsNullOrWhiteSpace(PromptOverlayMessage);
 
@@ -47,22 +53,32 @@ internal sealed partial class FrontendShellViewModel
         HasPromptOverlayInlineDialog ||
         !IsWelcomeOverlayVisible && HasActivePrompts && _isPromptOverlayOpen;
 
-    public bool IsPromptOverlayWarning => _activePromptOverlayDialog?.IsDanger
+    public bool IsPromptOverlayWarning => ResolvePromptOverlayPresentationDialog()?.IsDanger
         ?? string.Equals(CurrentPrompt?.Severity, "Warning", StringComparison.OrdinalIgnoreCase);
 
     public string PromptOverlayInputText
     {
-        get => _promptOverlayInputText;
+        get => _activePromptOverlayDialog is null && _closingPromptOverlayDialog is not null
+            ? _closingPromptOverlayInputText
+            : _promptOverlayInputText;
         set => SetProperty(ref _promptOverlayInputText, value);
     }
 
-    public string PromptOverlayInputPlaceholderText => _promptOverlayInputPlaceholderText;
+    public string PromptOverlayInputPlaceholderText => _activePromptOverlayDialog is null && _closingPromptOverlayDialog is not null
+        ? _closingPromptOverlayInputPlaceholderText
+        : _promptOverlayInputPlaceholderText;
 
-    public char PromptOverlayInputPasswordChar => _promptOverlayInputIsPassword ? '●' : '\0';
+    public char PromptOverlayInputPasswordChar => (_activePromptOverlayDialog is null && _closingPromptOverlayDialog is not null
+        ? _closingPromptOverlayInputIsPassword
+        : _promptOverlayInputIsPassword)
+        ? '●'
+        : '\0';
 
     public PclChoiceDialogOption? SelectedPromptOverlayChoice
     {
-        get => _selectedPromptOverlayChoice;
+        get => _activePromptOverlayDialog is null && _closingPromptOverlayDialog is not null
+            ? _closingPromptOverlayChoice
+            : _selectedPromptOverlayChoice;
         set
         {
             if (!SetProperty(ref _selectedPromptOverlayChoice, value))
@@ -72,6 +88,34 @@ internal sealed partial class FrontendShellViewModel
 
             _activePromptOverlayDialog?.ConfirmCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    private PromptOverlayDialogState? ResolvePromptOverlayPresentationDialog()
+    {
+        return _activePromptOverlayDialog ?? _closingPromptOverlayDialog;
+    }
+
+    private bool ShouldFallbackToPromptOverlayContent()
+    {
+        return !IsWelcomeOverlayVisible && HasActivePrompts && _isPromptOverlayOpen;
+    }
+
+    private void CaptureClosingPromptOverlayPresentation(PromptOverlayDialogState dialog)
+    {
+        _closingPromptOverlayDialog = dialog;
+        _closingPromptOverlayInputText = _promptOverlayInputText;
+        _closingPromptOverlayInputPlaceholderText = _promptOverlayInputPlaceholderText;
+        _closingPromptOverlayInputIsPassword = _promptOverlayInputIsPassword;
+        _closingPromptOverlayChoice = _selectedPromptOverlayChoice;
+    }
+
+    private void ClearClosingPromptOverlayPresentation()
+    {
+        _closingPromptOverlayDialog = null;
+        _closingPromptOverlayInputText = string.Empty;
+        _closingPromptOverlayInputPlaceholderText = string.Empty;
+        _closingPromptOverlayInputIsPassword = false;
+        _closingPromptOverlayChoice = null;
     }
 
     internal bool TryHandlePromptOverlayKey(Key key)
@@ -282,11 +326,22 @@ internal sealed partial class FrontendShellViewModel
         }
         finally
         {
+            var preserveClosingPresentation = false;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 if (ReferenceEquals(_activePromptOverlayDialog, dialog))
                 {
+                    preserveClosingPresentation = !ShouldFallbackToPromptOverlayContent();
+                    if (preserveClosingPresentation)
+                    {
+                        CaptureClosingPromptOverlayPresentation(dialog);
+                    }
+
                     SetActivePromptOverlayDialog(null);
+                }
+                else if (_closingPromptOverlayDialog is not null && ReferenceEquals(_closingPromptOverlayDialog, dialog))
+                {
+                    preserveClosingPresentation = true;
                 }
 
                 _promptOverlayInputText = string.Empty;
@@ -295,6 +350,30 @@ internal sealed partial class FrontendShellViewModel
                 _selectedPromptOverlayChoice = null;
                 RaisePromptOverlayPresentationProperties();
             });
+
+            if (preserveClosingPresentation)
+            {
+                await Task.Delay(PclModalMotion.ExitDuration).ConfigureAwait(false);
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (ReferenceEquals(_closingPromptOverlayDialog, dialog))
+                    {
+                        ClearClosingPromptOverlayPresentation();
+                        RaisePromptOverlayPresentationProperties();
+                    }
+                });
+            }
+            else
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (_closingPromptOverlayDialog is not null && ReferenceEquals(_closingPromptOverlayDialog, dialog))
+                    {
+                        ClearClosingPromptOverlayPresentation();
+                        RaisePromptOverlayPresentationProperties();
+                    }
+                });
+            }
 
             _promptOverlayDialogSemaphore.Release();
         }
