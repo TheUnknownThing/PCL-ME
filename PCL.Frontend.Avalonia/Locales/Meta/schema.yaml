@@ -2340,14 +2340,55 @@ download:
         - count
       canceled: []
       confirmation:
+        count:
+          - count
         confirm: []
         failed: []
+        footer: []
+        instance:
+          - instance_name
+        plan:
+          - title
+          - release_text
+        plan_dependency:
+          - title
+          - release_text
+        plans: []
+        skipped: []
+        skipped_item:
+          - value
         title: []
       empty_selection: []
+      no_instances: []
+      skip:
+        already_installed:
+          - title
+          - instance_name
+        exception:
+          - title
+          - message
+        missing_dependency:
+          - title
+          - dependency_title
+        missing_project_id:
+          - title
+        no_install_dir:
+          - title
+          - instance_name
+        no_version:
+          - title
+          - instance_name
+        pack_unsupported:
+          - title
+        unknown_type:
+          - title
       started_activity:
         - target_name
       started_hint: []
       summary:
+        completed:
+          - target_name
+          - summary
         dependencies:
           - count
         none: []
@@ -2356,16 +2397,39 @@ download:
         tasks:
           - count
       target:
+        body:
+          - count
+        confirm: []
         datapack_instance_unavailable:
         - instance_name
         datapack_no_saves:
         - instance_name
+        failed: []
         datapack_save_title: []
         datapack_save_message:
         - instance_name
         datapack_save_confirm: []
         datapack_save_failed: []
         datapack_directory_unresolved: []
+        title: []
+      target_unavailable: []
+      task_completed:
+        - title
+        - path
+      task_completed_hint:
+        - title
+        - instance_name
+      task_display:
+        - activity_title
+        - title
+      task_failed:
+        - activity_title
+      task_failed_body:
+        - title
+        - message
+      task_started:
+        - instance_name
+      task_title: []
     empty:
       body: []
       title: []

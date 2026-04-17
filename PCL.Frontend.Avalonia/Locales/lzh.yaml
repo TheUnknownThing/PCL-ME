@@ -2098,25 +2098,56 @@ download:
       analyzing_hint: 方分析 {count} 個已選項目...
       canceled: 已取消批量安裝
       confirmation:
+        count: 將列 {count} 任務
         confirm: 開始安裝
         failed: 確認批量安裝失敗
+        footer: 欲續行此等安裝任務乎？
+        instance: "目標：{instance_name}"
+        plan: "- {title} • {release_text}"
+        plan_dependency: "- {title} • {release_text}（依賴）"
+        plans: 所擬任務：
+        skipped: 所略項：
+        skipped_item: "- {value}"
         title: 批量安裝收藏項
       empty_selection: 未擇任何收藏項
+      no_instances: 無可用實例
+      skip:
+        already_installed: "{title} 已安於 {instance_name}"
+        exception: "處理 {title} 時有誤：{message}"
+        missing_dependency: "{title} 所需依賴 {dependency_title} 不可得"
+        missing_project_id: "{title} 缺專案 ID"
+        no_install_dir: "{instance_name} 中不得定 {title} 之安裝目錄"
+        no_version: "未得適於 {instance_name} 之 {title} 相容版本"
+        pack_unsupported: "{title} 為整合包，今不支批量安裝"
+        unknown_type: "{title} 之資源類不明"
       started_activity: 已開始為 {target_name} 批量安裝
       started_hint: 已開始批量安裝
       summary:
+        completed: "已為 {target_name} 列批量安裝任務：{summary}"
         dependencies: "{count} 個依賴項"
         none: 無任務
         skipped: 跳過了 {count} 項
         tasks: "{count} 個任務"
       target:
-        datapack_instance_unavailable: '{instance_name} 今不可用，故不得擇資料包存檔。'
-        datapack_no_saves: '{instance_name} 無可用存檔，故資料包不得安裝。'
+        body: 請為 {count} 個已選收藏項擇安裝實例。
+        confirm: 續
+        datapack_instance_unavailable: "{instance_name} 今不可用，故不得擇資料包存檔。"
+        datapack_no_saves: "{instance_name} 無可用存檔，故資料包不得安裝。"
+        failed: 擇安裝目標敗
         datapack_save_title: 擇資料包存檔
-        datapack_save_message: '資料包必裝於某存檔之 datapacks 夾中。請擇 {instance_name} 中之目標存檔。'
+        datapack_save_message: "資料包必裝於某存檔之 datapacks 夾中。請擇 {instance_name} 中之目標存檔。"
         datapack_save_confirm: 始安裝
         datapack_save_failed: 擇資料包存檔敗
         datapack_directory_unresolved: 所擇存檔之資料包目錄不可定。
+        title: 擇安裝目標
+      target_unavailable: 所選安裝目標不可用
+      task_completed: "已安 {title} 於 {path}"
+      task_completed_hint: "{title} 已安於 {instance_name}"
+      task_display: "{activity_title}：{title}"
+      task_failed: "{activity_title} 失敗"
+      task_failed_body: "安 {title} 失敗：{message}"
+      task_started: 已始安於 {instance_name}
+      task_title: 批量安裝收藏項
     empty:
       body: 把項目加入收藏夾，後即可安裝或分享。
       title: 還無收藏項

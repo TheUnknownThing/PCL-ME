@@ -2108,25 +2108,56 @@ download:
       analyzing_hint: Analyzing {count} selected items...
       canceled: Batch install canceled
       confirmation:
+        count: "{count} tasks will be queued"
         confirm: Start Install
         failed: Failed to confirm batch install
+        footer: Continue with these installation tasks?
+        instance: "Target: {instance_name}"
+        plan: "- {title} • {release_text}"
+        plan_dependency: "- {title} • {release_text} (dependency)"
+        plans: "Planned tasks:"
+        skipped: "Skipped items:"
+        skipped_item: "- {value}"
         title: Batch Install Favorites
       empty_selection: No favorites are selected
+      no_instances: There are no available instances
+      skip:
+        already_installed: "{title} is already installed in {instance_name}"
+        exception: "Error while processing {title}: {message}"
+        missing_dependency: "{title} requires dependency {dependency_title}, which could not be resolved"
+        missing_project_id: "{title} is missing a project ID"
+        no_install_dir: "No install directory is available for {title} in {instance_name}"
+        no_version: "No compatible version of {title} was found for {instance_name}"
+        pack_unsupported: "{title} is a modpack and cannot be batch installed"
+        unknown_type: "{title} has an unknown resource type"
       started_activity: Started batch install for {target_name}
       started_hint: Batch install started
       summary:
+        completed: "Batch install queued for {target_name}: {summary}"
         dependencies: "{count} dependencies"
         none: No tasks
         skipped: "{count} skipped"
         tasks: "{count} tasks"
       target:
-        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
-        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
+        body: Choose an instance for {count} selected favorites.
+        confirm: Continue
+        datapack_instance_unavailable: "{instance_name} is currently unavailable, so a datapack save cannot be selected."
+        datapack_no_saves: "{instance_name} has no available saves, so the datapack cannot be installed."
+        failed: Failed to choose install target
         datapack_save_title: Select datapack save
-        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
+        datapack_save_message: "Datapacks must be installed into a specific save's datapacks folder. Choose the target save in {instance_name}."
         datapack_save_confirm: Start install
         datapack_save_failed: Failed to select datapack save
         datapack_directory_unresolved: The selected save's datapack directory could not be resolved.
+        title: Choose Install Target
+      target_unavailable: The selected install target is unavailable
+      task_completed: "{title} installed to {path}"
+      task_completed_hint: "{title} was installed into {instance_name}"
+      task_display: "{activity_title}: {title}"
+      task_failed: "{activity_title} failed"
+      task_failed_body: "Failed to install {title}: {message}"
+      task_started: Started installing into {instance_name}
+      task_title: Batch install favorites
     empty:
       body: Add projects to favorites so you can install or share them later.
       title: No Favorites Yet

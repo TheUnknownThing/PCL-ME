@@ -2098,25 +2098,56 @@ download:
       analyzing_hint: 선택한 {count}개 항목을 분석하는 중...
       canceled: 일괄 설치가 취소되었습니다.
       confirmation:
+        count: "{count}개 작업이 대기열에 추가됩니다"
         confirm: 설치 시작
         failed: 일괄 설치를 확인하지 못했습니다.
+        footer: 이 설치 작업을 계속하시겠습니까?
+        instance: "대상: {instance_name}"
+        plan: "- {title} • {release_text}"
+        plan_dependency: "- {title} • {release_text} (종속성)"
+        plans: "예정된 작업:"
+        skipped: "건너뛴 항목:"
+        skipped_item: "- {value}"
         title: 일괄 설치 즐겨찾기
       empty_selection: 즐겨찾기가 선택되지 않았습니다.
+      no_instances: 사용 가능한 인스턴스가 없습니다
+      skip:
+        already_installed: "{title}은(는) 이미 {instance_name}에 설치되어 있습니다"
+        exception: "{title} 처리 중 오류: {message}"
+        missing_dependency: "{title}에 필요한 종속성 {dependency_title}을(를) 확인할 수 없습니다"
+        missing_project_id: "{title}에 프로젝트 ID가 없습니다"
+        no_install_dir: "{instance_name}에서 {title}의 설치 폴더를 찾을 수 없습니다"
+        no_version: "{instance_name}에 맞는 {title}의 호환 버전을 찾을 수 없습니다"
+        pack_unsupported: "{title}은(는) 모드팩이므로 일괄 설치를 지원하지 않습니다"
+        unknown_type: "{title}의 리소스 유형을 알 수 없습니다"
       started_activity: "{target_name}에 대한 일괄 설치가 시작되었습니다."
       started_hint: 일괄 설치가 시작되었습니다.
       summary:
+        completed: "{target_name}에 대한 일괄 설치를 대기열에 추가했습니다: {summary}"
         dependencies: "{count} 종속성"
         none: 작업 없음
         skipped: "{count} 건 건너뛰었습니다"
         tasks: "{count} 작업"
       target:
-        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
-        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
-        datapack_save_title: Select datapack save
-        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
-        datapack_save_confirm: Start install
-        datapack_save_failed: Failed to select datapack save
-        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
+        body: 선택한 즐겨찾기 {count}개를 설치할 인스턴스를 선택하세요.
+        confirm: 계속
+        datapack_instance_unavailable: "{instance_name}을(를) 현재 사용할 수 없어 데이터팩 저장 월드를 선택할 수 없습니다."
+        datapack_no_saves: "{instance_name}에 사용할 수 있는 저장 월드가 없어 데이터팩을 설치할 수 없습니다."
+        failed: 설치 대상을 선택하지 못했습니다
+        datapack_save_title: 데이터팩 저장 월드 선택
+        datapack_save_message: "데이터팩은 특정 저장 월드의 datapacks 폴더에 설치해야 합니다. {instance_name}에서 대상 월드를 선택하세요."
+        datapack_save_confirm: 설치 시작
+        datapack_save_failed: 데이터팩 저장 월드를 선택하지 못했습니다
+        datapack_directory_unresolved: 선택한 저장 월드의 데이터팩 디렉터리를 확인할 수 없습니다.
+        title: 설치 대상 선택
+      target_unavailable: 선택한 설치 대상이 현재 사용할 수 없습니다
+      task_completed: "{title}을(를) {path}에 설치했습니다"
+      task_completed_hint: "{title}이(가) {instance_name}에 설치되었습니다"
+      task_display: "{activity_title}: {title}"
+      task_failed: "{activity_title} 실패"
+      task_failed_body: "{title} 설치 실패: {message}"
+      task_started: "{instance_name}에 설치를 시작했습니다"
+      task_title: 즐겨찾기 일괄 설치
     empty:
       body: 나중에 설치하거나 공유할 수 있도록 즐겨찾기에 프로젝트를 추가하세요.
       title: 아직 즐겨찾기가 없습니다.

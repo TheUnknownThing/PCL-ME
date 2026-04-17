@@ -2098,25 +2098,56 @@ download:
       analyzing_hint: Analyse des éléments sélectionnés par {count}...
       canceled: Installation par lots annulée
       confirmation:
+        count: "{count} tâches seront ajoutées à la file d'attente"
         confirm: Démarrer l'installation
         failed: Échec de la confirmation de l'installation par lots
+        footer: Voulez-vous continuer avec ces tâches d'installation ?
+        instance: "Cible : {instance_name}"
+        plan: "- {title} • {release_text}"
+        plan_dependency: "- {title} • {release_text} (dépendance)"
+        plans: "Tâches prévues :"
+        skipped: "Éléments ignorés :"
+        skipped_item: "- {value}"
         title: Favoris d'installation par lots
       empty_selection: Aucun favori n'est sélectionné
+      no_instances: Aucune instance disponible
+      skip:
+        already_installed: "{title} est déjà installé dans {instance_name}"
+        exception: "Erreur lors du traitement de {title} : {message}"
+        missing_dependency: "{title} nécessite la dépendance {dependency_title}, qui n'a pas pu être résolue"
+        missing_project_id: "{title} n'a pas d'identifiant de projet"
+        no_install_dir: "Aucun dossier d'installation n'est disponible pour {title} dans {instance_name}"
+        no_version: "Aucune version compatible de {title} n'a été trouvée pour {instance_name}"
+        pack_unsupported: "{title} est un modpack et n'est pas pris en charge par l'installation par lots"
+        unknown_type: "{title} a un type de ressource inconnu"
       started_activity: Installation par lots démarrée pour {target_name}
       started_hint: L'installation par lots a démarré
       summary:
+        completed: "Installation par lots mise en file pour {target_name} : {summary}"
         dependencies: Dépendances {count}
         none: Aucune tâche
         skipped: "{count} ignoré"
         tasks: Tâches {count}
       target:
-        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
-        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
-        datapack_save_title: Select datapack save
-        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
-        datapack_save_confirm: Start install
-        datapack_save_failed: Failed to select datapack save
-        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
+        body: Choisissez une instance pour {count} favoris sélectionnés.
+        confirm: Continuer
+        datapack_instance_unavailable: "{instance_name} n'est pas disponible actuellement, donc aucun monde de datapack ne peut être sélectionné."
+        datapack_no_saves: "{instance_name} n'a aucun monde disponible, donc le datapack ne peut pas être installé."
+        failed: Échec de la sélection de la cible d'installation
+        datapack_save_title: Choisir le monde du datapack
+        datapack_save_message: "Les datapacks doivent être installés dans le dossier datapacks d'un monde précis. Choisissez le monde cible dans {instance_name}."
+        datapack_save_confirm: Démarrer l'installation
+        datapack_save_failed: Échec de la sélection du monde du datapack
+        datapack_directory_unresolved: Le dossier datapacks du monde sélectionné n'a pas pu être résolu.
+        title: Choisir la cible d'installation
+      target_unavailable: La cible d'installation sélectionnée n'est pas disponible
+      task_completed: "{title} a été installé dans {path}"
+      task_completed_hint: "{title} a été installé dans {instance_name}"
+      task_display: "{activity_title} : {title}"
+      task_failed: "{activity_title} a échoué"
+      task_failed_body: "Échec de l'installation de {title} : {message}"
+      task_started: Installation démarrée dans {instance_name}
+      task_title: Installer les favoris par lots
     empty:
       body: Ajoutez des projets aux favoris afin de pouvoir les installer ou les partager plus tard.
       title: Pas encore de favoris

@@ -2108,25 +2108,56 @@ download:
       analyzing_hint: 正在分析 {count} 个已选项目...
       canceled: 已取消批量安装
       confirmation:
+        count: 将排入 {count} 个任务
         confirm: 开始安装
         failed: 确认批量安装失败
+        footer: 要继续这些安装任务吗？
+        instance: "目标：{instance_name}"
+        plan: "- {title} • {release_text}"
+        plan_dependency: "- {title} • {release_text}（依赖项）"
+        plans: 计划安装：
+        skipped: 将跳过：
+        skipped_item: "- {value}"
         title: 批量安装收藏项
       empty_selection: 未选择任何收藏项
+      no_instances: 没有可用实例
+      skip:
+        already_installed: "{title} 已安装到 {instance_name}"
+        exception: "处理 {title} 时出错：{message}"
+        missing_dependency: "{title} 依赖 {dependency_title}，但无法解析"
+        missing_project_id: "{title} 缺少项目 ID"
+        no_install_dir: "无法确定 {title} 在 {instance_name} 中的安装目录"
+        no_version: "未找到适用于 {instance_name} 的 {title} 兼容版本"
+        pack_unsupported: "{title} 是整合包，暂不支持批量安装"
+        unknown_type: "{title} 的资源类型未知"
       started_activity: 已开始为 {target_name} 批量安装
       started_hint: 已开始批量安装
       summary:
+        completed: "已为 {target_name} 加入批量安装队列：{summary}"
         dependencies: "{count} 个依赖项"
         none: 无任务
         skipped: 跳过了 {count} 项
         tasks: "{count} 个任务"
       target:
-        datapack_instance_unavailable: '{instance_name} 当前不可用，因此无法选择数据包存档。'
-        datapack_no_saves: '{instance_name} 没有可用存档，因此无法安装数据包。'
+        body: 为 {count} 个已选收藏项选择安装实例。
+        confirm: 继续
+        datapack_instance_unavailable: "{instance_name} 当前不可用，因此无法选择数据包存档。"
+        datapack_no_saves: "{instance_name} 没有可用存档，因此无法安装数据包。"
+        failed: 选择安装目标失败
         datapack_save_title: 选择数据包存档
-        datapack_save_message: '数据包必须安装到某个存档的 datapacks 文件夹中。请选择 {instance_name} 中的目标存档。'
+        datapack_save_message: "数据包必须安装到某个存档的 datapacks 文件夹中。请选择 {instance_name} 中的目标存档。"
         datapack_save_confirm: 开始安装
         datapack_save_failed: 选择数据包存档失败
         datapack_directory_unresolved: 无法定位所选存档的数据包目录。
+        title: 选择安装目标
+      target_unavailable: 所选安装目标不可用
+      task_completed: "已将 {title} 安装到 {path}"
+      task_completed_hint: "{title} 已安装到 {instance_name}"
+      task_display: "{activity_title}：{title}"
+      task_failed: "{activity_title} 失败"
+      task_failed_body: "安装 {title} 失败：{message}"
+      task_started: 已开始安装到 {instance_name}
+      task_title: 批量安装收藏项
     empty:
       body: 把项目加入收藏夹，之后即可安装或分享。
       title: 还没有收藏项

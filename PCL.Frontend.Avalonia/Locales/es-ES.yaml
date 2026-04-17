@@ -2111,25 +2111,56 @@ download:
       analyzing_hint: Analizando {count} elementos seleccionados...
       canceled: Instalación por lotes cancelada
       confirmation:
+        count: Se pondrán en cola {count} tareas
         confirm: Iniciar instalación
         failed: No se pudo confirmar la instalación por lotes
+        footer: "¿Continuar con estas tareas de instalación?"
+        instance: "Destino: {instance_name}"
+        plan: "- {title} • {release_text}"
+        plan_dependency: "- {title} • {release_text} (dependencia)"
+        plans: "Tareas planificadas:"
+        skipped: "Elementos omitidos:"
+        skipped_item: "- {value}"
         title: Favoritos de instalación por lotes
       empty_selection: No se han seleccionado favoritos
+      no_instances: No hay instancias disponibles
+      skip:
+        already_installed: "{title} ya está instalado en {instance_name}"
+        exception: "Error al procesar {title}: {message}"
+        missing_dependency: "{title} requiere la dependencia {dependency_title}, pero no se pudo resolver"
+        missing_project_id: "{title} no tiene ID de proyecto"
+        no_install_dir: "No hay una carpeta de instalación disponible para {title} en {instance_name}"
+        no_version: "No se encontró una versión compatible de {title} para {instance_name}"
+        pack_unsupported: "{title} es un modpack y no se puede instalar por lotes"
+        unknown_type: "{title} tiene un tipo de recurso desconocido"
       started_activity: Se inició la instalación por lotes para {target_name}
       started_hint: Se inició la instalación por lotes
       summary:
+        completed: "Instalación por lotes puesta en cola para {target_name}: {summary}"
         dependencies: "{count} dependencias"
         none: Sin tareas
         skipped: "{count} omitido"
         tasks: "{count} tareas"
       target:
-        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
-        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
-        datapack_save_title: Select datapack save
-        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
-        datapack_save_confirm: Start install
-        datapack_save_failed: Failed to select datapack save
-        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
+        body: Elija una instancia para {count} favoritos seleccionados.
+        confirm: Continuar
+        datapack_instance_unavailable: "{instance_name} no está disponible actualmente, así que no se puede elegir un mundo para el datapack."
+        datapack_no_saves: "{instance_name} no tiene mundos disponibles, así que el datapack no se puede instalar."
+        failed: No se pudo elegir el destino de instalación
+        datapack_save_title: Elegir mundo para el datapack
+        datapack_save_message: "Los datapacks deben instalarse en la carpeta datapacks de un mundo específico. Elija el mundo de destino en {instance_name}."
+        datapack_save_confirm: Iniciar instalación
+        datapack_save_failed: No se pudo elegir el mundo para el datapack
+        datapack_directory_unresolved: No se pudo resolver la carpeta datapacks del mundo seleccionado.
+        title: Elegir destino de instalación
+      target_unavailable: El destino de instalación seleccionado no está disponible
+      task_completed: "{title} se instaló en {path}"
+      task_completed_hint: "{title} se instaló en {instance_name}"
+      task_display: "{activity_title}: {title}"
+      task_failed: "{activity_title} falló"
+      task_failed_body: "No se pudo instalar {title}: {message}"
+      task_started: Se inició la instalación en {instance_name}
+      task_title: Instalar favoritos por lotes
     empty:
       body: Agregue proyectos a favoritos para poder instalarlos o compartirlos más tarde.
       title: Aún no hay favoritos

@@ -2098,25 +2098,56 @@ download:
       analyzing_hint: "{count} ausgewählte Einträge werden analysiert..."
       canceled: Stapelinstallation abgebrochen
       confirmation:
+        count: "{count} Aufgaben werden in die Warteschlange gestellt"
         confirm: Installation starten
         failed: Bestätigung der Stapelinstallation fehlgeschlagen
+        footer: Mit diesen Installationsaufgaben fortfahren?
+        instance: "Ziel: {instance_name}"
+        plan: "- {title} • {release_text}"
+        plan_dependency: "- {title} • {release_text} (Abhängigkeit)"
+        plans: "Geplante Aufgaben:"
+        skipped: "Übersprungene Einträge:"
+        skipped_item: "- {value}"
         title: Favoriten stapelweise installieren
       empty_selection: Keine Favoriten ausgewählt
+      no_instances: Es sind keine Instanzen verfügbar
+      skip:
+        already_installed: "{title} ist in {instance_name} bereits installiert"
+        exception: "Fehler bei {title}: {message}"
+        missing_dependency: "{title} benötigt die Abhängigkeit {dependency_title}, die nicht aufgelöst werden konnte"
+        missing_project_id: "{title} hat keine Projekt-ID"
+        no_install_dir: "Für {title} ist in {instance_name} kein Installationsordner verfügbar"
+        no_version: "Für {title} wurde keine kompatible Version für {instance_name} gefunden"
+        pack_unsupported: "{title} ist ein Modpack und wird von der Stapelinstallation nicht unterstützt"
+        unknown_type: "{title} hat einen unbekannten Ressourcentyp"
       started_activity: "Stapelinstallation für {target_name} gestartet"
       started_hint: Stapelinstallation gestartet
       summary:
+        completed: "Stapelinstallation für {target_name} in die Warteschlange gestellt: {summary}"
         dependencies: "{count} Abhängigkeiten"
         none: Keine Aufgaben
         skipped: "{count} übersprungen"
         tasks: "{count} Aufgaben"
       target:
-        datapack_instance_unavailable: '{instance_name} is currently unavailable, so a datapack save cannot be selected.'
-        datapack_no_saves: '{instance_name} has no available saves, so the datapack cannot be installed.'
-        datapack_save_title: Select datapack save
-        datapack_save_message: 'Datapacks must be installed into a specific save''s datapacks folder. Choose the target save in {instance_name}.'
-        datapack_save_confirm: Start install
-        datapack_save_failed: Failed to select datapack save
-        datapack_directory_unresolved: The selected save''s datapack directory could not be resolved.
+        body: Wähle eine Instanz für {count} ausgewählte Favoriten.
+        confirm: Weiter
+        datapack_instance_unavailable: "{instance_name} ist derzeit nicht verfügbar, daher kann kein Datapack-Spielstand ausgewählt werden."
+        datapack_no_saves: "{instance_name} hat keine verfügbaren Spielstände, daher kann das Datapack nicht installiert werden."
+        failed: Installationsziel konnte nicht ausgewählt werden
+        datapack_save_title: Datapack-Spielstand auswählen
+        datapack_save_message: "Datapacks müssen im Ordner datapacks eines bestimmten Spielstands installiert werden. Wähle den Ziel-Spielstand in {instance_name}."
+        datapack_save_confirm: Installation starten
+        datapack_save_failed: Auswahl des Datapack-Spielstands fehlgeschlagen
+        datapack_directory_unresolved: Der Datapack-Ordner des ausgewählten Spielstands konnte nicht ermittelt werden.
+        title: Installationsziel wählen
+      target_unavailable: Das ausgewählte Installationsziel ist nicht verfügbar
+      task_completed: "{title} wurde nach {path} installiert"
+      task_completed_hint: "{title} wurde in {instance_name} installiert"
+      task_display: "{activity_title}: {title}"
+      task_failed: "{activity_title} fehlgeschlagen"
+      task_failed_body: "Installation von {title} fehlgeschlagen: {message}"
+      task_started: Installation nach {instance_name} gestartet
+      task_title: Favoriten stapelweise installieren
     empty:
       body: Füge Projekte zu den Favoriten hinzu, damit du sie später installieren oder teilen kannst.
       title: Noch keine Favoriten
