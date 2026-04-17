@@ -987,7 +987,7 @@ launch:
         use_compatible: 改用相容 Java
         abort: 取消啟動
   actions:
-    launch: 啟動
+    launch: 啟動遊戲
     launching: 正在啟動...
     version_select: 選擇版本
     version_setup: 版本設定

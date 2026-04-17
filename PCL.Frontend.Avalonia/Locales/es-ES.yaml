@@ -987,7 +987,7 @@ launch:
         use_compatible: Usar Java compatible
         abort: Cancelar lanzamiento
   actions:
-    launch: Iniciar
+    launch: Iniciar el juego
     launching: Iniciando...
     version_select: Seleccionar versión
     version_setup: Configuración de versión

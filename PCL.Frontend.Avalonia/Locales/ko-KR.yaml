@@ -985,7 +985,7 @@ launch:
         use_compatible: 호환 가능한 Java 사용
         abort: 실행 취소
   actions:
-    launch: 실행
+    launch: 게임 실행
     launching: 실행 중...
     version_select: 버전 선택
     version_setup: 버전 설정
