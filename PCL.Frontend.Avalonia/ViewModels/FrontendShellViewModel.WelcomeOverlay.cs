@@ -179,7 +179,7 @@ internal sealed partial class FrontendShellViewModel
 
         _welcomeOverlayDismissed = true;
         RaisePropertyChanged(nameof(IsWelcomeOverlayVisible));
-        RaisePropertyChanged(nameof(IsTopLevelNavigationInteractive));
+        NotifyTopLevelNavigationInteractionChanged();
         RaisePropertyChanged(nameof(IsPromptOverlayVisible));
     }
 
