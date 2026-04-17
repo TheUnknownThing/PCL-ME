@@ -3,6 +3,7 @@ using System.Runtime.Loader;
 using System.Text.Json;
 using Avalonia.Threading;
 using PCL.Core.App.Essentials;
+using PCL.Core.Logging;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Runtime;
@@ -13,6 +14,8 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private const string SetupJavaLogModule = "SetupJava";
+
     private void RefreshJavaSurface()
     {
         _ = RefreshJavaSurfaceAsync();
@@ -119,7 +122,11 @@ internal sealed partial class FrontendShellViewModel
             new ActionCommand(() => SelectJavaRuntime(key)),
             new ActionCommand(() => OpenJavaRuntimeFolder(title, folder)),
             new ActionCommand(() => OpenJavaRuntimeDetail(key, title, folder, tags)),
-            new ActionCommand(() => ToggleJavaEnabled(key)),
+            new ActionCommand(() =>
+            {
+                LogWrapper.Info(SetupJavaLogModule, $"Toggle button clicked for Java runtime: key='{key}', title='{title}'.");
+                ToggleJavaEnabled(key);
+            }),
             _i18n.T("setup.java.actions.enable"),
             _i18n.T("setup.java.actions.disable"));
     }
@@ -319,23 +326,27 @@ internal sealed partial class FrontendShellViewModel
 
     private void ToggleJavaEnabled(string key)
     {
+        LogWrapper.Info(SetupJavaLogModule, $"ToggleJavaEnabled requested: key='{key}', selected='{_selectedJavaRuntimeKey}'.");
         var entry = JavaRuntimeEntries.FirstOrDefault(item => item.Key == key);
         if (entry is null)
         {
+            LogWrapper.Warn(SetupJavaLogModule, $"ToggleJavaEnabled skipped: runtime entry not found for key='{key}'.");
             return;
         }
 
+        LogWrapper.Info(SetupJavaLogModule, $"Current runtime state before toggle: key='{key}', enabled={entry.IsEnabled}, title='{entry.Title}'.");
+
         if (_selectedJavaRuntimeKey == key && entry.IsEnabled)
         {
-            AddActivity(
-                LT("setup.java.activities.disable_blocked"),
-                LT("setup.java.activities.disable_blocked_reason"));
-            return;
+            // Keep the launch selection valid, then disable the runtime.
+            LogWrapper.Info(SetupJavaLogModule, $"Runtime '{key}' is currently selected and enabled. Auto-switching selection to 'auto' before disabling.");
+            SelectJavaRuntime("auto");
         }
 
         entry.IsEnabled = !entry.IsEnabled;
         var items = LoadStoredJavaItems();
         var updated = items.FindIndex(item => string.Equals(item.Path, key, StringComparison.OrdinalIgnoreCase));
+        LogWrapper.Info(SetupJavaLogModule, $"Persisting runtime toggle: key='{key}', nextEnabled={entry.IsEnabled}, storedItems={items.Count}, matchIndex={updated}.");
         if (updated >= 0)
         {
             items[updated] = new JavaStorageItem
@@ -357,6 +368,10 @@ internal sealed partial class FrontendShellViewModel
         }
 
         SaveStoredJavaItems(items);
+        var persistedState = LoadStoredJavaItems()
+            .FirstOrDefault(item => string.Equals(item.Path, key, StringComparison.OrdinalIgnoreCase))
+            ?.IsEnable;
+        LogWrapper.Info(SetupJavaLogModule, $"Toggle persisted for key='{key}': persistedEnabled={(persistedState is null ? "<missing>" : persistedState.Value)}.");
         ReloadSetupComposition(initializeAllSurfaces: false);
         AddActivity(
             entry.IsEnabled ? LT("setup.java.activities.enable") : LT("setup.java.activities.disable"),
@@ -382,16 +397,25 @@ internal sealed partial class FrontendShellViewModel
             var rawJson = provider.Exists("LaunchArgumentJavaUser")
                 ? provider.Get<string>("LaunchArgumentJavaUser")
                 : "[]";
-            return FrontendJavaInventoryService.ParseStorageItems(rawJson).ToList();
+            var parsed = FrontendJavaInventoryService.ParseStorageItems(rawJson).ToList();
+            LogWrapper.Trace(
+                SetupJavaLogModule,
+                $"Loaded Java storage items from '{_shellActionService.RuntimePaths.LocalConfigPath}': rawLength={rawJson.Length}, parsedCount={parsed.Count}.");
+            return parsed;
         }
-        catch
+        catch (Exception ex)
         {
+            LogWrapper.Warn(ex, SetupJavaLogModule, "Failed to load Java storage items from local config.");
             return [];
         }
     }
 
     private void SaveStoredJavaItems(IReadOnlyList<JavaStorageItem> items)
     {
-        _shellActionService.PersistLocalValue("LaunchArgumentJavaUser", JsonSerializer.Serialize(items));
+        var rawJson = JsonSerializer.Serialize(items);
+        LogWrapper.Info(
+            SetupJavaLogModule,
+            $"Saving Java storage items to '{_shellActionService.RuntimePaths.LocalConfigPath}': count={items.Count}, rawLength={rawJson.Length}.");
+        _shellActionService.PersistLocalValue("LaunchArgumentJavaUser", rawJson);
     }
 }

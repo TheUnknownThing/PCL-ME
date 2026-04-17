@@ -66,6 +66,49 @@ public sealed class FrontendJavaInventoryServiceTest
     }
 
     [TestMethod]
+    public void ParseStorageItemsAllowsNullInstallationPayload()
+    {
+        const string executablePath = "/tmp/runtime/jre-21/bin/java";
+        var result = FrontendJavaInventoryService.ParseStorageItems(
+            """
+            [
+              {
+                "Path": "/tmp/runtime/jre-21/bin/java",
+                "IsEnable": false,
+                "Source": "AutoScanned",
+                "Installation": null
+              }
+            ]
+            """);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(Path.GetFullPath(executablePath), result.Single().Path);
+        Assert.IsFalse(result.Single().IsEnable);
+        Assert.IsNull(result.Single().Installation);
+    }
+
+    [TestMethod]
+    public void ParseStoredJavaRuntimesAllowsNullInstallationPayload()
+    {
+        const string executablePath = "/tmp/runtime/jre-21/bin/java";
+        var result = FrontendJavaInventoryService.ParseStoredJavaRuntimes(
+            """
+            [
+              {
+                "Path": "/tmp/runtime/jre-21/bin/java",
+                "IsEnable": true,
+                "Source": "AutoScanned",
+                "Installation": null
+              }
+            ]
+            """);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(Path.GetFullPath(executablePath), result.Single().ExecutablePath);
+        Assert.IsTrue(result.Single().IsEnabled);
+    }
+
+    [TestMethod]
     public void ResolveJavaRuntimePlatformKeyForPlatformFallsBackToLinuxOnArm64()
     {
         var result = FrontendLaunchCompositionService.ResolveJavaRuntimePlatformKeyForPlatform(

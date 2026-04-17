@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
+using PCL.Core.Logging;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
@@ -514,6 +515,9 @@ internal sealed partial class FrontendShellViewModel
                     entry.Tags,
                     entry.IsEnabled)));
         SyncJavaSelection();
+        LogWrapper.Trace(
+            "SetupJava",
+            $"InitializeJavaSurface: selected='{_selectedJavaRuntimeKey}', uiEntries={JavaRuntimeEntries.Count}.");
     }
 
     private void InitializeUiSurface()

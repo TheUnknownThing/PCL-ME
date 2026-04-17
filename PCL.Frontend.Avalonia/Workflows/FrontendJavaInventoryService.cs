@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PCL.Core.Logging;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
@@ -35,6 +36,11 @@ internal static class FrontendJavaInventoryService
 
             foreach (var item in document.RootElement.EnumerateArray())
             {
+                if (item.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
                 var executablePath = GetString(item, "Path")
                                      ?? GetNestedString(item, "Installation", "JavaExePath");
                 if (string.IsNullOrWhiteSpace(executablePath))
@@ -73,8 +79,9 @@ internal static class FrontendJavaInventoryService
 
             return result;
         }
-        catch
+        catch (Exception ex)
         {
+            LogWrapper.Warn(ex, "SetupJava", $"ParseStorageItems failed. rawLength={rawJson.Length}.");
             return [];
         }
     }
@@ -99,6 +106,11 @@ internal static class FrontendJavaInventoryService
 
             foreach (var item in document.RootElement.EnumerateArray())
             {
+                if (item.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
                 var executablePath = GetString(item, "Path")
                                      ?? GetNestedString(item, "Installation", "JavaExePath");
                 if (string.IsNullOrWhiteSpace(executablePath))
@@ -149,8 +161,9 @@ internal static class FrontendJavaInventoryService
 
             return result;
         }
-        catch
+        catch (Exception ex)
         {
+            LogWrapper.Warn(ex, "SetupJava", $"ParseStoredJavaRuntimes failed. rawLength={rawJson.Length}.");
             return [];
         }
     }
@@ -401,6 +414,11 @@ internal static class FrontendJavaInventoryService
 
     private static string? GetString(JsonElement element, string propertyName)
     {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
         if (!element.TryGetProperty(propertyName, out var property))
         {
             return null;
@@ -413,13 +431,9 @@ internal static class FrontendJavaInventoryService
 
     private static string? GetNestedString(JsonElement element, params string[] path)
     {
-        var current = element;
-        foreach (var segment in path)
+        if (!TryGetNestedProperty(element, path, out var current))
         {
-            if (!current.TryGetProperty(segment, out current))
-            {
-                return null;
-            }
+            return null;
         }
 
         return current.ValueKind == JsonValueKind.String
@@ -429,6 +443,11 @@ internal static class FrontendJavaInventoryService
 
     private static bool? GetBoolean(JsonElement element, string propertyName)
     {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
         if (!element.TryGetProperty(propertyName, out var property))
         {
             return null;
@@ -445,13 +464,9 @@ internal static class FrontendJavaInventoryService
 
     private static bool? GetNestedBoolean(JsonElement element, params string[] path)
     {
-        var current = element;
-        foreach (var segment in path)
+        if (!TryGetNestedProperty(element, path, out var current))
         {
-            if (!current.TryGetProperty(segment, out current))
-            {
-                return null;
-            }
+            return null;
         }
 
         return current.ValueKind switch
@@ -466,6 +481,11 @@ internal static class FrontendJavaInventoryService
     private static TEnum? GetEnum<TEnum>(JsonElement element, string propertyName)
         where TEnum : struct, Enum
     {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
         if (!element.TryGetProperty(propertyName, out var property))
         {
             return null;
@@ -483,13 +503,9 @@ internal static class FrontendJavaInventoryService
     private static TEnum? GetNestedEnum<TEnum>(JsonElement element, params string[] path)
         where TEnum : struct, Enum
     {
-        var current = element;
-        foreach (var segment in path)
+        if (!TryGetNestedProperty(element, path, out var current))
         {
-            if (!current.TryGetProperty(segment, out current))
-            {
-                return null;
-            }
+            return null;
         }
 
         return current.ValueKind switch
@@ -503,13 +519,9 @@ internal static class FrontendJavaInventoryService
 
     private static int? GetNestedInt(JsonElement element, params string[] path)
     {
-        var current = element;
-        foreach (var segment in path)
+        if (!TryGetNestedProperty(element, path, out var current))
         {
-            if (!current.TryGetProperty(segment, out current))
-            {
-                return null;
-            }
+            return null;
         }
 
         return current.ValueKind switch
@@ -518,6 +530,21 @@ internal static class FrontendJavaInventoryService
             JsonValueKind.String when int.TryParse(current.GetString(), out var parsed) => parsed,
             _ => null
         };
+    }
+
+    private static bool TryGetNestedProperty(JsonElement element, IReadOnlyList<string> path, out JsonElement current)
+    {
+        current = element;
+        foreach (var segment in path)
+        {
+            if (current.ValueKind != JsonValueKind.Object || !current.TryGetProperty(segment, out current))
+            {
+                current = default;
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

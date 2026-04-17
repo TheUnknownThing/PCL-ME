@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using PCL.Core.App;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Core.Logging;
 using PCL.Core.Minecraft.Java;
 using PCL.Frontend.Avalonia.Models;
 
@@ -253,6 +254,9 @@ internal static class FrontendSetupCompositionService
             .OrderByDescending(item => item.IsEnabled)
             .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase)
             .ToArray();
+        LogWrapper.Trace(
+            "SetupJava",
+            $"BuildJavaState: selected='{(string.IsNullOrWhiteSpace(selectedJava) ? "auto" : selectedJava)}', rawLength={rawJavaList.Length}, storedItems={storageItems.Count}, resolvedEntries={entries.Length}.");
 
         return new FrontendSetupJavaState(
             string.IsNullOrWhiteSpace(selectedJava) ? "auto" : selectedJava,
