@@ -76,22 +76,29 @@ internal sealed partial class FrontendShellViewModel
 
     internal bool TryHandlePromptOverlayKey(Key key)
     {
-        if (_activePromptOverlayDialog is null)
-        {
-            return false;
-        }
-
         switch (key)
         {
-            case Key.Escape:
+            case Key.Escape when _activePromptOverlayDialog is not null:
                 _activePromptOverlayDialog.CancelCommand.Execute(null);
                 return true;
-            case Key.Enter when _activePromptOverlayDialog.ConfirmCommand.CanExecute(null):
-                _activePromptOverlayDialog.ConfirmCommand.Execute(null);
+            case Key.Enter when ResolvePromptOverlayPrimaryCommand() is { } command && command.CanExecute(null):
+                command.Execute(null);
                 return true;
             default:
                 return false;
         }
+    }
+
+    private ActionCommand? ResolvePromptOverlayPrimaryCommand()
+    {
+        if (_activePromptOverlayDialog is not null)
+        {
+            return _activePromptOverlayDialog.ConfirmCommand;
+        }
+
+        var primaryOption = CurrentPrompt?.Options.FirstOrDefault(option => option.ColorType != PclButtonColorState.Normal)
+            ?? CurrentPrompt?.Options.FirstOrDefault();
+        return primaryOption?.Command;
     }
 
     internal void ConfirmPromptOverlayChoice()

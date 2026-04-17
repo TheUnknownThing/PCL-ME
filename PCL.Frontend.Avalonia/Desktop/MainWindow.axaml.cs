@@ -16,6 +16,7 @@ using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Icons;
@@ -23,6 +24,7 @@ using PCL.Frontend.Avalonia.ViewModels;
 using PCL.Frontend.Avalonia.Workflows;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace PCL.Frontend.Avalonia.Desktop;
 
@@ -91,6 +93,7 @@ internal sealed partial class MainWindow : Window
         Deactivated += OnWindowDeactivated;
         KeyDown += OnWindowKeyDown;
         KeyUp += OnWindowKeyUp;
+        TextInput += OnWindowTextInput;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
         SizeChanged += (_, _) => ApplyDynamicBackgroundState();
@@ -259,6 +262,7 @@ internal sealed partial class MainWindow : Window
         Deactivated -= OnWindowDeactivated;
         KeyDown -= OnWindowKeyDown;
         KeyUp -= OnWindowKeyUp;
+        TextInput -= OnWindowTextInput;
 
         foreach (var state in _activeHints.Values)
         {
@@ -283,29 +287,58 @@ internal sealed partial class MainWindow : Window
 
     private void OnWindowKeyDown(object? sender, KeyEventArgs e)
     {
-        _shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+        var shellViewModel = _shellViewModel;
+        shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
 
-        if (_shellViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
+        if (shellViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
         {
             e.Handled = true;
             return;
         }
 
-        if (_shellViewModel is not null && e.Key == Key.F12)
+        if (shellViewModel is null || e.Handled)
         {
-            _shellViewModel.ToggleHiddenItemsOverride();
+            return;
+        }
+
+        if (e.Key == Key.F12)
+        {
+            shellViewModel.ToggleHiddenItemsOverride();
             e.Handled = true;
             return;
         }
 
-        if (e.Handled || e.Key != Key.Escape || _shellViewModel is null)
+        if (e.Key == Key.F
+            && e.KeyModifiers == KeyModifiers.Control
+            && !ShouldSuppressSearchShortcut(e.Source, e.KeyModifiers)
+            && TryFocusPrimarySearchBox(selectAll: true))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (shellViewModel.TryHandleTopLevelNavigationShortcut(e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Enter
+            && !ShouldSuppressPrimaryEnterShortcut(e.Source)
+            && shellViewModel.TryHandlePrimaryEnterShortcut())
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key != Key.Escape)
         {
             return;
         }
 
-        if (_shellViewModel.BackCommand.CanExecute(null))
+        if (shellViewModel.BackCommand.CanExecute(null))
         {
-            _shellViewModel.BackCommand.Execute(null);
+            shellViewModel.BackCommand.Execute(null);
             e.Handled = true;
         }
     }
@@ -313,6 +346,110 @@ internal sealed partial class MainWindow : Window
     private void OnWindowKeyUp(object? sender, KeyEventArgs e)
     {
         _shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+    }
+
+    private void OnWindowTextInput(object? sender, TextInputEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Text)
+            || ShouldSuppressSearchShortcut(e.Source)
+            || !ContainsSearchableText(e.Text)
+            || !TryAppendTextToPrimarySearchBox(e.Text))
+        {
+            return;
+        }
+
+        e.Handled = true;
+    }
+
+    private static bool ShouldSuppressPrimaryEnterShortcut(object? eventSource)
+    {
+        for (var current = eventSource as StyledElement; current is not null; current = current.Parent as StyledElement)
+        {
+            if (current is TextBox or ComboBox or ComboBoxItem)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool ShouldSuppressSearchShortcut(object? eventSource, KeyModifiers modifiers = KeyModifiers.None)
+    {
+        if (_shellViewModel is null
+            || _shellViewModel.IsWelcomeOverlayVisible
+            || _shellViewModel.IsPromptOverlayVisible
+            || _shellViewModel.IsLaunchDialogVisible)
+        {
+            return true;
+        }
+
+        if ((modifiers & ~KeyModifiers.Shift) != KeyModifiers.None)
+        {
+            return true;
+        }
+
+        return HasEditableInputAncestor(eventSource);
+    }
+
+    private static bool HasEditableInputAncestor(object? eventSource)
+    {
+        for (var current = eventSource as StyledElement; current is not null; current = current.Parent as StyledElement)
+        {
+            if (current is TextBox or ComboBox or ComboBoxItem)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool TryFocusPrimarySearchBox(bool selectAll)
+    {
+        var searchBox = FindPrimaryVisibleSearchBox();
+        if (searchBox is null)
+        {
+            return false;
+        }
+
+        searchBox.FocusSearchTextBox(selectAll);
+        return true;
+    }
+
+    private bool TryAppendTextToPrimarySearchBox(string text)
+    {
+        var searchBox = FindPrimaryVisibleSearchBox();
+        if (searchBox is null)
+        {
+            return false;
+        }
+
+        searchBox.AppendTextInput(text);
+        return true;
+    }
+
+    private PclSearchBox? FindPrimaryVisibleSearchBox()
+    {
+        return this
+            .GetVisualDescendants()
+            .OfType<PclSearchBox>()
+            .Where(searchBox => searchBox.IsVisible && searchBox.IsEffectivelyEnabled && searchBox.Bounds.Width > 0 && searchBox.Bounds.Height > 0)
+            .Select(searchBox => new
+            {
+                SearchBox = searchBox,
+                Origin = searchBox.TranslatePoint(default, this)
+            })
+            .Where(item => item.Origin is not null)
+            .OrderBy(item => item.Origin!.Value.Y)
+            .ThenBy(item => item.Origin!.Value.X)
+            .Select(item => item.SearchBox)
+            .FirstOrDefault();
+    }
+
+    private static bool ContainsSearchableText(string text)
+    {
+        return text.Any(character => !char.IsControl(character));
     }
 
     private void OnWindowDeactivated(object? sender, EventArgs e)
@@ -481,6 +618,11 @@ internal sealed partial class MainWindow : Window
     {
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
 
+        if (_shellViewModel?.IsPromptOverlayVisible != true || !PromptOverlayHost.IsVisible)
+        {
+            return;
+        }
+
         if (_shellViewModel?.ShowPromptOverlayTextInput == true && PromptOverlayInputTextBox.IsVisible)
         {
             PromptOverlayInputTextBox.Focus();
@@ -492,7 +634,25 @@ internal sealed partial class MainWindow : Window
         if (_shellViewModel?.ShowPromptOverlayChoiceList == true && PromptOverlayChoiceListBox.IsVisible)
         {
             PromptOverlayChoiceListBox.Focus();
+            return;
         }
+
+        var primaryButton = PromptOverlayHost
+            .GetVisualDescendants()
+            .OfType<PclButton>()
+            .Where(button => button.IsVisible && button.IsEffectivelyEnabled && button.Bounds.Width > 0 && button.Bounds.Height > 0)
+            .Select(button => new
+            {
+                Button = button,
+                Origin = button.TranslatePoint(default, PromptOverlayHost)
+            })
+            .Where(item => item.Origin is not null)
+            .OrderBy(item => item.Button.ColorType == PclButtonColorState.Normal ? 1 : 0)
+            .ThenByDescending(item => item.Origin!.Value.X)
+            .FirstOrDefault()
+            ?.Button;
+
+        primaryButton?.FocusButtonHost();
     }
 
     private void UpdatePromptOverlayBackdropBrush()

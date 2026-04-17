@@ -173,6 +173,11 @@ internal sealed partial class PclButton : UserControl
         Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
     }
 
+    public void FocusButtonHost()
+    {
+        ButtonHost.Focus();
+    }
+
     private IBrush ResolveBorderBrush()
     {
         var isHovered = ButtonHost.IsPointerOver;

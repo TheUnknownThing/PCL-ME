@@ -140,6 +140,46 @@ internal sealed partial class PclSearchBox : UserControl
         SearchTextBox.Focus();
     }
 
+    public void FocusSearchTextBox(bool selectAll = false)
+    {
+        SearchTextBox.Focus();
+        var textLength = SearchTextBox.Text?.Length ?? 0;
+        if (selectAll)
+        {
+            SearchTextBox.SelectionStart = 0;
+            SearchTextBox.SelectionEnd = textLength;
+            return;
+        }
+
+        SearchTextBox.SelectionStart = textLength;
+        SearchTextBox.SelectionEnd = textLength;
+        SearchTextBox.CaretIndex = textLength;
+    }
+
+    public void AppendTextInput(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        FocusSearchTextBox();
+
+        var currentText = SearchTextBox.Text ?? string.Empty;
+        var selectionStart = Math.Clamp(SearchTextBox.SelectionStart, 0, currentText.Length);
+        var selectionEnd = Math.Clamp(SearchTextBox.SelectionEnd, selectionStart, currentText.Length);
+        var updatedText = string.Concat(
+            currentText.AsSpan(0, selectionStart),
+            text,
+            currentText.AsSpan(selectionEnd));
+        Text = updatedText;
+
+        var caretIndex = selectionStart + text.Length;
+        SearchTextBox.SelectionStart = caretIndex;
+        SearchTextBox.SelectionEnd = caretIndex;
+        SearchTextBox.CaretIndex = caretIndex;
+    }
+
     private void RefreshClearButtonState()
     {
         var hasText = !string.IsNullOrWhiteSpace(Text);
