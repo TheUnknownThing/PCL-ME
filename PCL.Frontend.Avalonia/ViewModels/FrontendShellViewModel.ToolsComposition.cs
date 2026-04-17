@@ -124,7 +124,6 @@ internal sealed partial class FrontendShellViewModel
         return actionKey switch
         {
             "crash-test" => new ActionCommand(TriggerCrashPromptTest),
-            "memory-optimize" => new ActionCommand(OpenMemoryOptimizeDialog),
             "clear-rubbish" => new ActionCommand(ClearToolboxRubbish),
             "daily-luck" => new ActionCommand(ShowDailyLuck),
             "create-shortcut" => new ActionCommand(CreateLauncherShortcut),
@@ -149,7 +148,6 @@ internal sealed partial class FrontendShellViewModel
     {
         return actionKey switch
         {
-            "memory-optimize" => LT("shell.tools.test.toolbox.actions.memory_optimize.title"),
             "clear-rubbish" => LT("shell.tools.test.toolbox.actions.clear_rubbish.title"),
             "daily-luck" => LT("shell.tools.test.toolbox.actions.daily_luck.title"),
             "crash-test" => LT("shell.tools.test.toolbox.actions.crash_test.title"),
@@ -163,7 +161,6 @@ internal sealed partial class FrontendShellViewModel
     {
         return actionKey switch
         {
-            "memory-optimize" => LT("shell.tools.test.toolbox.actions.memory_optimize.tooltip"),
             "clear-rubbish" => LT("shell.tools.test.toolbox.actions.clear_rubbish.tooltip"),
             "daily-luck" => LT("shell.tools.test.toolbox.actions.daily_luck.tooltip"),
             "crash-test" => LT("shell.tools.test.toolbox.actions.crash_test.tooltip"),
@@ -262,50 +259,6 @@ internal sealed partial class FrontendShellViewModel
         }
 
         AddActivity(LT("shell.tools.test.toolbox.actions.launch_count.title"), message);
-    }
-
-    private void OpenMemoryOptimizeDialog() => _ = OpenMemoryOptimizeDialogAsync();
-
-    private async Task OpenMemoryOptimizeDialogAsync()
-    {
-        var (totalMemoryGb, availableMemoryGb) = FrontendSystemMemoryService.GetPhysicalMemoryState();
-        var memoryLoadPercent = totalMemoryGb <= 0
-            ? 0
-            : (int)Math.Round((1d - Math.Clamp(availableMemoryGb / totalMemoryGb, 0d, 1d)) * 100d);
-        if (memoryLoadPercent <= 90)
-        {
-            var prompt = BuildMemoryOptimizePrompt(totalMemoryGb);
-            if (!string.IsNullOrWhiteSpace(prompt))
-            {
-                var confirmed = await ShowToolboxConfirmationAsync(
-                    LT("shell.tools.test.toolbox.actions.memory_optimize.confirm_title"),
-                    prompt,
-                    LT("shell.tools.test.toolbox.actions.memory_optimize.continue"));
-                if (confirmed is null)
-                {
-                    return;
-                }
-
-                if (confirmed == false)
-                {
-                    AddActivity(
-                        LT("shell.tools.test.toolbox.actions.memory_optimize.title"),
-                        LT("shell.tools.test.toolbox.actions.memory_optimize.cancelled"));
-                    return;
-                }
-            }
-        }
-
-        var detail = OperatingSystem.IsWindows()
-            ? LT("shell.tools.test.toolbox.actions.memory_optimize.unsupported_windows")
-            : LT("shell.tools.test.toolbox.actions.memory_optimize.unsupported_other");
-        var result = await ShowToolboxConfirmationAsync(LT("shell.tools.test.toolbox.actions.memory_optimize.title"), detail);
-        if (result is null)
-        {
-            return;
-        }
-
-        AddActivity(LT("shell.tools.test.toolbox.actions.memory_optimize.title"), detail);
     }
 
     private void CreateLauncherShortcut() => _ = CreateLauncherShortcutAsync();
@@ -510,19 +463,6 @@ internal sealed partial class FrontendShellViewModel
             >= 30 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r30"),
             >= 10 => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r10"),
             _ => LT("shell.tools.test.toolbox.actions.daily_luck.ratings.r0")
-        };
-    }
-
-    private string BuildMemoryOptimizePrompt(double totalMemoryGb)
-    {
-        return totalMemoryGb switch
-        {
-            >= 32 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r32"),
-            >= 16 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r16"),
-            >= 6 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r6"),
-            >= 2 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r2"),
-            > 0 => LT("shell.tools.test.toolbox.actions.memory_optimize.prompts.r0"),
-            _ => string.Empty
         };
     }
 

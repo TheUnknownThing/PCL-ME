@@ -13,7 +13,6 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<FrontendInstanceJavaOption> _instanceJavaOptionEntries = [];
     private int _instanceMemoryModeIndex = 2;
     private double _instanceCustomRamAllocation = 2.5;
-    private int _selectedInstanceMemoryOptimizeIndex;
     private double _instanceUsedRamGb;
     private double _instanceTotalRamGb;
     private double _instanceAutomaticAllocatedRamGb;
@@ -56,13 +55,6 @@ internal sealed partial class FrontendShellViewModel
         SD("instance.settings.server.require.official"),
         SD("instance.settings.server.require.third_party"),
         SD("instance.settings.server.require.both")
-    ];
-
-    public IReadOnlyList<string> InstanceMemoryOptimizeOptions =>
-    [
-        SD("instance.settings.options.follow_global"),
-        SD("instance.settings.options.on"),
-        SD("instance.settings.options.off")
     ];
 
     public IReadOnlyList<string> InstanceRendererOptions =>
@@ -164,18 +156,6 @@ internal sealed partial class FrontendShellViewModel
     }
 
     public string InstanceCustomRamAllocationLabel => FormatMemorySummarySize(Math.Round(InstanceCustomRamAllocation));
-
-    public int SelectedInstanceMemoryOptimizeIndex
-    {
-        get => _selectedInstanceMemoryOptimizeIndex;
-        set
-        {
-            if (TryNormalizeSelectionIndex(value, InstanceMemoryOptimizeOptions.Count, out var normalizedValue))
-            {
-                SetProperty(ref _selectedInstanceMemoryOptimizeIndex, normalizedValue);
-            }
-        }
-    }
 
     public string InstanceUsedRamLabel => FormatMemorySummarySize(_instanceUsedRamGb);
 
@@ -388,7 +368,6 @@ internal sealed partial class FrontendShellViewModel
         _selectedInstanceJavaIndex = Math.Clamp(setup.SelectedJavaIndex, 0, Math.Max(setup.JavaOptions.Count - 1, 0));
         _instanceMemoryModeIndex = Math.Clamp(setup.MemoryModeIndex, 0, 2);
         _instanceCustomRamAllocation = setup.CustomMemoryAllocationGb;
-        _selectedInstanceMemoryOptimizeIndex = Math.Clamp(setup.OptimizeMemoryIndex, 0, InstanceMemoryOptimizeOptions.Count - 1);
         _instanceUsedRamGb = setup.UsedMemoryGb;
         _instanceTotalRamGb = setup.TotalMemoryGb;
         _instanceAutomaticAllocatedRamGb = setup.AutomaticAllocatedMemoryGb;
@@ -438,7 +417,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(IsInstanceCustomRamAllocationEnabled));
         RaisePropertyChanged(nameof(InstanceCustomRamAllocation));
         RaisePropertyChanged(nameof(InstanceCustomRamAllocationLabel));
-        RaisePropertyChanged(nameof(SelectedInstanceMemoryOptimizeIndex));
         RaisePropertyChanged(nameof(InstanceUsedRamLabel));
         RaisePropertyChanged(nameof(InstanceTotalRamLabel));
         RaisePropertyChanged(nameof(InstanceAllocatedRamLabel));
@@ -507,8 +485,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(InstanceFreeRamBarWidth));
         RaisePropertyChanged(nameof(ShowInstanceRamAllocationWarning));
         RaisePropertyChanged(nameof(ShowInstance32BitJavaWarning));
-        RaisePropertyChanged(nameof(SelectedInstanceMemoryOptimizeIndex));
-        RaisePropertyChanged(nameof(InstanceMemoryOptimizeOptions));
         RaisePropertyChanged(nameof(InstanceUsedRamLabel));
         RaisePropertyChanged(nameof(InstanceTotalRamLabel));
         RaisePropertyChanged(nameof(InstanceCustomRamAllocationLabel));

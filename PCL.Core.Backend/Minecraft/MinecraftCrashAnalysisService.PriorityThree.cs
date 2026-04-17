@@ -332,7 +332,7 @@ public static partial class MinecraftCrashAnalysisService
                         results.Add("A mod archive was extracted, which prevented the game from continuing.\nPlace the entire mod file directly in the Mods folder; extracting it will break the game.\n\nRemove the extracted mod from the Mods folder, then start the game again.");
                         break;
                     case CrashReason.OutOfMemory:
-                        results.Add("Minecraft ran out of memory and could not continue.\nThis is usually caused by low system memory, too little memory allocated to the game, or a pack that is too demanding.\n\nTry Memory Optimization in More -> Toolbox, then start the game again.\nIf that does not help, increase the memory allocated to the game and remove demanding resource packs, mods, or shaders.\nIf it still fails, close other software before launching, or... try a different computer?\\h");
+                        results.Add("Minecraft ran out of memory and could not continue.\nThis is usually caused by low system memory, too little memory allocated to the game, or a pack that is too demanding.\n\nIncrease the memory allocated to the game and remove demanding resource packs, mods, or shaders.\nIf that does not help, close other software before launching, or... try a different computer?\\h");
                         break;
                     case CrashReason.UsingOpenJ9:
                         results.Add("The game crashed because it is using OpenJ9.\nIn the Java selection for launch settings, switch to a non-OpenJ9 Java and start the game again.");

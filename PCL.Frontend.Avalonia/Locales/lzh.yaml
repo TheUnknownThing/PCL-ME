@@ -203,7 +203,6 @@ shell:
       commands:
         none: 無
         set_gpu_preference: 設顯卡所先
-        optimize_memory: 理記憶
         invalid: 不可
         invalid_message:
           gpu_preference_path_missing: 缺少用於設置顯卡偏好之可執行檔路徑。
@@ -849,20 +848,6 @@ shell:
             message: PCL 已為汝啟遊戲 {count} 次矣。
             title: 覽啟動計數
             tooltip: 覽啟動器啟遊戲之次數。
-          memory_optimize:
-            cancelled: 已取消理記憶。
-            confirm_title: 果欲理記憶乎？
-            continue: 續理記憶
-            prompts:
-              r0: 嗯……？
-              r2: 記憶頗窘，宜加記憶，毋數數理之，以免大困硬碟。
-              r6: 用後宜靜置一分，俟系統答應既畢。
-              r16: 今記憶尚裕，宜先任系統自理記憶。
-              r32: 今總記憶甚裕，宜閉無須之程，而勿試理記憶。
-            title: 理記憶
-            tooltip: 試釋部分系統記憶。
-            unsupported_other: 今平台暫不支與標準實作同一之理記憶執行器。今仍留標準確認彈窗之行，不復啟文字編輯器。
-            unsupported_windows: Avalonia 前端尚未接入與標準實作同一之 Windows 理記憶執行器。今仍留標準確認彈窗之行，不復啟文字編輯器。
         unsupported: 此百寶箱操作於 Avalonia 前端暫未支。
   startup:
     migration_warnings:
@@ -1385,7 +1370,6 @@ setup:
         automatic: 自配
         automatic_description: 視其設備與實例之狀，而自配記憶。
         custom: 自定分配
-      optimize_before_launch: 啟前理記憶
       warnings:
         java_32_bit: 今 Java 為三十二位，大記憶之配或不得效。
         overallocated: 今所配記憶，已逼或逾可用之實體記憶。
@@ -3260,7 +3244,6 @@ instance:
       use_global: 用全域設
       use_auto: 自配
       use_custom: 自定分配
-      optimize_before_launch: 啟前理記憶
     server:
       locked_warning: 此實例之伺服器登入設已鎖。
       login_requirement: 登入要求

@@ -251,9 +251,6 @@ internal sealed partial class FrontendShellViewModel
                     "VersionRamCustom",
                     FrontendSetupCompositionService.MapLaunchRamGbToStoredValue(InstanceCustomRamAllocation));
                 break;
-            case nameof(SelectedInstanceMemoryOptimizeIndex):
-                _shellActionService.PersistInstanceValue(instanceDirectory, "VersionRamOptimize", SelectedInstanceMemoryOptimizeIndex);
-                break;
             case nameof(SelectedInstanceServerLoginRequireIndex):
                 _shellActionService.PersistInstanceValue(instanceDirectory, "VersionServerLoginRequire", SelectedInstanceServerLoginRequireIndex);
                 break;

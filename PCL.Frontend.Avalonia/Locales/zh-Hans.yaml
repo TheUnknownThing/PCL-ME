@@ -203,7 +203,6 @@ shell:
       commands:
         none: 无
         set_gpu_preference: 设置显卡偏好
-        optimize_memory: 优化内存
         invalid: 无效
         invalid_message:
           gpu_preference_path_missing: 缺少用于设置显卡偏好的可执行文件路径。
@@ -849,20 +848,6 @@ shell:
             message: PCL 已经为你启动了 {count} 次游戏了。
             title: 查看启动计数
             tooltip: 查看启动器已启动游戏的次数。
-          memory_optimize:
-            cancelled: 已取消内存优化。
-            confirm_title: 确认内存优化？
-            continue: 继续
-            prompts:
-              r0: 嗯……？
-              r2: 内存资源比较紧张，建议加装内存，避免频繁使用内存优化并对硬盘造成过大压力。
-              r6: 建议在使用后静置一分钟，等待系统响应完毕。
-              r16: 当前内存比较充足，建议优先让系统自动管理内存。
-              r32: 当前总内存充足，建议关闭不必要的程序，而不是尝试使用内存优化。
-            title: 内存优化
-            tooltip: 尝试释放一部分系统内存。
-            unsupported_other: 当前平台暂不支持与标准实现一致的内存优化执行器。已保留标准确认弹窗行为，不再打开文本编辑器。
-            unsupported_windows: Avalonia 前端尚未接入与标准实现一致的 Windows 内存优化执行器。已保留标准确认弹窗行为，不再打开文本编辑器。
         unsupported: 该百宝箱操作在 Avalonia 前端中暂未支持。
   startup:
     migration_warnings:
@@ -1387,7 +1372,6 @@ setup:
         automatic: 自动分配
         automatic_description: 根据设备和实例状态自动分配内存。
         custom: 自定义分配
-      optimize_before_launch: 启动前优化内存
       warnings:
         java_32_bit: 当前 Java 为 32 位，大内存分配可能无法生效。
         overallocated: 当前分配的内存已接近或超过可用物理内存。
@@ -3270,7 +3254,6 @@ instance:
       use_global: 使用全局设置
       use_auto: 自动分配
       use_custom: 自定义分配
-      optimize_before_launch: 启动前优化内存
     server:
       locked_warning: 该实例的服务器登录设置已锁定。
       login_requirement: 登录要求

@@ -32,7 +32,6 @@ internal sealed partial class FrontendShellViewModel
     [
         "LaunchArgumentVisible",
         "LaunchArgumentPriority",
-        "LaunchArgumentRam",
         "LaunchAdvanceDisableRW",
         "LaunchAdvanceGraphicCard",
         "LaunchAdvanceNoJavaw",
@@ -401,7 +400,6 @@ internal sealed partial class FrontendShellViewModel
                 RaisePropertyChanged(nameof(FreeRamBarWidth));
                 RaisePropertyChanged(nameof(ShowRamAllocationWarning));
                 RaisePropertyChanged(nameof(ShowLaunch32BitJavaWarning));
-                RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
                 RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
                 RaisePropertyChanged(nameof(LaunchWrapperCommand));
                 RaisePropertyChanged(nameof(LaunchJvmArguments));
@@ -470,9 +468,6 @@ internal sealed partial class FrontendShellViewModel
                 break;
             case nameof(CustomRamAllocation):
                 _shellActionService.PersistLocalValue("LaunchRamCustom", FrontendSetupCompositionService.MapLaunchRamGbToStoredValue(CustomRamAllocation));
-                break;
-            case nameof(OptimizeMemoryBeforeLaunch):
-                _shellActionService.PersistSharedValue("LaunchArgumentRam", OptimizeMemoryBeforeLaunch);
                 break;
             case nameof(SelectedLaunchRendererIndex):
                 _shellActionService.PersistLocalValue("LaunchAdvanceRenderer", SelectedLaunchRendererIndex);
@@ -773,7 +768,6 @@ internal sealed partial class FrontendShellViewModel
         RaisePropertyChanged(nameof(FreeRamBarWidth));
         RaisePropertyChanged(nameof(ShowRamAllocationWarning));
         RaisePropertyChanged(nameof(ShowLaunch32BitJavaWarning));
-        RaisePropertyChanged(nameof(OptimizeMemoryBeforeLaunch));
         RaisePropertyChanged(nameof(SelectedLaunchRendererIndex));
         RaisePropertyChanged(nameof(LaunchWrapperCommand));
         RaisePropertyChanged(nameof(LaunchJvmArguments));

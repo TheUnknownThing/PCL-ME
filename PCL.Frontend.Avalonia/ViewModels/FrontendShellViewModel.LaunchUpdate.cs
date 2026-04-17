@@ -273,12 +273,6 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowLaunch32BitJavaWarning => _launchComposition.SelectedJavaRuntime is { Is64Bit: false };
 
-    public bool OptimizeMemoryBeforeLaunch
-    {
-        get => _optimizeMemoryBeforeLaunch;
-        set => SetProperty(ref _optimizeMemoryBeforeLaunch, value);
-    }
-
     public bool IsLaunchAdvancedOptionsExpanded
     {
         get => _isLaunchAdvancedOptionsExpanded;

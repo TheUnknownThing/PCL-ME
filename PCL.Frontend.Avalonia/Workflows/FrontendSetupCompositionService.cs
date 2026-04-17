@@ -174,7 +174,6 @@ internal static class FrontendSetupCompositionService
             WindowHeight: ReadValue(localConfig, "LaunchArgumentWindowHeight", 480).ToString(),
             UseAutomaticRamAllocation: ReadValue(localConfig, "LaunchRamType", 0) == 0,
             CustomRamAllocationGb: MapStoredLaunchRamToGb(storedCustomRam),
-            OptimizeMemoryBeforeLaunch: ReadValue(sharedConfig, "LaunchArgumentRam", false),
             RendererIndex: ReadValue(localConfig, "LaunchAdvanceRenderer", 0),
             WrapperCommand: ReadValue(localConfig, "LaunchAdvanceWrapper", string.Empty),
             JvmArguments: ReadValue(localConfig, "LaunchAdvanceJvm", "-XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Djdk.lang.Process.allowAmbiguousCommands=true -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true"),

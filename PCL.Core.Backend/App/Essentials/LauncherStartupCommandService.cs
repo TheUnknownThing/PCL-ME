@@ -25,11 +25,6 @@ public static class LauncherStartupCommandService
                 IsValid: true);
         }
 
-        if (commandText.StartsWith("--memory", StringComparison.Ordinal))
-        {
-            return new LauncherStartupCommand(LauncherStartupCommandKind.OptimizeMemory, null, IsValid: true);
-        }
-
         return LauncherStartupCommand.None;
     }
 }
@@ -45,6 +40,5 @@ public sealed record LauncherStartupCommand(
 public enum LauncherStartupCommandKind
 {
     None = 0,
-    SetGpuPreference = 1,
-    OptimizeMemory = 2
+    SetGpuPreference = 1
 }

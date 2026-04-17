@@ -207,7 +207,6 @@ shell:
       commands:
         none: []
         set_gpu_preference: []
-        optimize_memory: []
         invalid: []
         invalid_message:
           gpu_preference_path_missing: []
@@ -979,20 +978,6 @@ shell:
               - count
             title: []
             tooltip: []
-          memory_optimize:
-            cancelled: []
-            confirm_title: []
-            continue: []
-            prompts:
-              r0: []
-              r2: []
-              r6: []
-              r16: []
-              r32: []
-            title: []
-            tooltip: []
-            unsupported_other: []
-            unsupported_windows: []
         unsupported: []
   startup:
     migration_warnings:
@@ -1572,7 +1557,6 @@ setup:
         automatic: []
         automatic_description: []
         custom: []
-      optimize_before_launch: []
       warnings:
         java_32_bit: []
         overallocated: []
@@ -3734,7 +3718,6 @@ instance:
       use_global: []
       use_auto: []
       use_custom: []
-      optimize_before_launch: []
     server:
       locked_warning: []
       login_requirement: []

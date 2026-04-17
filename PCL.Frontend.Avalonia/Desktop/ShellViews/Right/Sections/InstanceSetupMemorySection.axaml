@@ -67,19 +67,6 @@
           </Grid>
         </Grid>
 
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="28">
-          <TextBlock
-              Margin="0,0,25,0"
-              VerticalAlignment="Center"
-              Foreground="{DynamicResource ColorBrush1}"
-              FontSize="13"
-              Text="{Binding InstanceSetupMemoryOptimizeLabelText}" />
-          <ComboBox
-              Grid.Column="1"
-              ItemsSource="{Binding InstanceMemoryOptimizeOptions}"
-              SelectedIndex="{Binding SelectedInstanceMemoryOptimizeIndex}" />
-        </Grid>
-
         <controls:PclMemorySummary
             UsedBarWidth="{Binding InstanceUsedRamBarWidth}"
             AllocatedBarWidth="{Binding InstanceAllocatedRamBarWidth}"

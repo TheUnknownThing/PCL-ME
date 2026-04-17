@@ -203,7 +203,6 @@ shell:
       commands:
         none: Ninguno
         set_gpu_preference: Establecer preferencia de GPU
-        optimize_memory: Optimizar memoria
         invalid: Inválido
         invalid_message:
           gpu_preference_path_missing: Falta la ruta del ejecutable necesaria para configurar la preferencia de GPU.
@@ -849,20 +848,6 @@ shell:
             message: PCL ya ha iniciado el juego {count} veces para ti.
             title: Recuento de lanzamientos
             tooltip: Muestra cuántas veces el lanzador ha iniciado el juego.
-          memory_optimize:
-            cancelled: Optimización de memoria cancelada.
-            confirm_title: ¿Confirmar optimización de memoria?
-            continue: Continuar
-            prompts:
-              r0: ¿Eh...?
-              r2: La memoria es escasa. Se recomienda agregar más RAM para evitar optimizaciones repetidas y una gran presión en el disco.
-              r6: Deje que el sistema se asiente durante aproximadamente un minuto después de usar esta función.
-              r16: Tienes bastante memoria. Deje que el sistema administre la memoria primero.
-              r32: La memoria total es abundante. Cierre los programas innecesarios en lugar de intentar optimizar la memoria.
-            title: Opción de memoria
-            tooltip: Libera algo de memoria automáticamente.
-            unsupported_other: Esta plataforma no proporciona un optimizador de memoria compatible con la implementación estándar. El flujo de confirmación se mantiene, pero no se abrirá ningún editor externo.
-            unsupported_windows: La interfaz de Avalonia aún no ha integrado el optimizador de memoria de Windows utilizado por la implementación estándar. El flujo de confirmación se mantiene, pero no se abrirá ningún editor externo.
         unsupported: Esta acción de la caja de herramientas aún no es compatible con la interfaz de Avalonia.
   startup:
     migration_warnings:
@@ -1390,7 +1375,6 @@ setup:
         automatic: Asignación automática
         automatic_description: Asigne memoria automáticamente según su dispositivo y el estado de la instancia.
         custom: Asignación personalizada
-      optimize_before_launch: Optimizar la memoria antes del lanzamiento
       warnings:
         java_32_bit: El tiempo de ejecución de Java seleccionado es de 32 bits. Es posible que las asignaciones de memoria grandes no funcionen.
         overallocated: La memoria configurada está cerca o excede la memoria física disponible.
@@ -3284,7 +3268,6 @@ instance:
       use_global: Usar configuración global
       use_auto: Asignar automáticamente
       use_custom: Establecer asignación personalizada
-      optimize_before_launch: Optimizar la memoria antes del lanzamiento
     server:
       locked_warning: La configuración de inicio de sesión del servidor está bloqueada para esta instancia.
       login_requirement: Requisito de inicio de sesión

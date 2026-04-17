@@ -112,7 +112,7 @@ public sealed class LauncherFrontendPageContentServiceTest
     private static LauncherStartupWorkflowPlan BuildStartupPlan()
     {
         return LauncherStartupWorkflowService.BuildPlan(new LauncherStartupWorkflowRequest(
-            CommandLineArguments: ["--memory"],
+            CommandLineArguments: [],
             ExecutableDirectory: @"C:\PCL\",
             TempDirectory: @"C:\PCL\Temp\",
             AppDataDirectory: @"C:\Users\demo\AppData\Roaming\PCL\",

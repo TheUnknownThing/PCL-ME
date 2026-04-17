@@ -10,7 +10,6 @@ internal enum FrontendHelpEventType
     DownloadFile,
     Popup,
     LaunchGame,
-    MemoryOptimize,
     ClearRubbish,
     RefreshHomepage
 }
@@ -28,7 +27,6 @@ internal static class FrontendHelpEventTypeResolver
             "download_file" => FrontendHelpEventType.DownloadFile,
             "popup" => FrontendHelpEventType.Popup,
             "launch_game" => FrontendHelpEventType.LaunchGame,
-            "memory_optimize" => FrontendHelpEventType.MemoryOptimize,
             "clear_rubbish" => FrontendHelpEventType.ClearRubbish,
             "refresh_homepage" => FrontendHelpEventType.RefreshHomepage,
             _ => FrontendHelpEventType.Unknown

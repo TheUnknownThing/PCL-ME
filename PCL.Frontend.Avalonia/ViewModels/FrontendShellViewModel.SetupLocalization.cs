@@ -31,7 +31,6 @@ internal sealed partial class FrontendShellViewModel
                 AutomaticAllocationLabel = _i18n.T("setup.launch.memory.modes.automatic"),
                 AutomaticAllocationDescription = _i18n.T("setup.launch.memory.modes.automatic_description"),
                 CustomAllocationLabel = _i18n.T("setup.launch.memory.modes.custom"),
-                OptimizeBeforeLaunchLabel = _i18n.T("setup.launch.memory.optimize_before_launch"),
                 AdvancedCardHeader = _i18n.T("setup.launch.cards.advanced.header"),
                 RendererLabel = _i18n.T("setup.launch.fields.renderer"),
                 WrapperCommandLabel = _i18n.T("setup.launch.fields.wrapper_command"),
@@ -397,7 +396,6 @@ internal sealed class SetupLaunchLocalization
     public required string AutomaticAllocationLabel { get; init; }
     public required string AutomaticAllocationDescription { get; init; }
     public required string CustomAllocationLabel { get; init; }
-    public required string OptimizeBeforeLaunchLabel { get; init; }
     public required string AdvancedCardHeader { get; init; }
     public required string RendererLabel { get; init; }
     public required string WrapperCommandLabel { get; init; }

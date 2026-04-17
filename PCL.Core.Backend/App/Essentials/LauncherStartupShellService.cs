@@ -16,8 +16,6 @@ public static class LauncherStartupShellService
             LauncherStartupCommandKind.SetGpuPreference => new LauncherStartupImmediateCommandPlan(
                 LauncherStartupImmediateCommandKind.SetGpuPreference,
                 command.Argument),
-            LauncherStartupCommandKind.OptimizeMemory => new LauncherStartupImmediateCommandPlan(
-                LauncherStartupImmediateCommandKind.OptimizeMemory),
             _ => LauncherStartupImmediateCommandPlan.None
         };
     }
@@ -55,6 +53,5 @@ public enum LauncherStartupImmediateCommandKind
 {
     None = 0,
     SetGpuPreference = 1,
-    OptimizeMemory = 2,
-    Invalid = 3
+    Invalid = 2
 }

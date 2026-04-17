@@ -50,7 +50,6 @@ internal sealed record FrontendInstanceSetupState(
     string SelectedJavaKey,
     int MemoryModeIndex,
     double CustomMemoryAllocationGb,
-    int OptimizeMemoryIndex,
     double UsedMemoryGb,
     double TotalMemoryGb,
     double AutomaticAllocatedMemoryGb,

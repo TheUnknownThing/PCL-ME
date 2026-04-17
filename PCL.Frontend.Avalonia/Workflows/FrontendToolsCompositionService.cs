@@ -39,16 +39,6 @@ internal static class FrontendToolsCompositionService
             ToolboxActions:
             [
                 new FrontendToolboxActionDefinition(
-                    "memory-optimize",
-                    LocalizeToolboxTitle(locale, "Mem Opt", "Memory optimization", "Memory optimization"),
-                    LocalizeToolboxTooltip(
-                        locale,
-                        "Memory optimization is tuned for the PCL-ME build.\n\nIt can reduce physical memory pressure by roughly one third, not just for Minecraft.\nOn a mechanical drive this may cause a brief period of heavy stutter.\nStarting PCL with the --memory option can run the optimization silently.",
-                        "Memory optimization is tuned for the PCL-ME build.\n\nIt can reduce physical memory pressure by roughly one third, not just for Minecraft.\nOn a mechanical drive this may cause a brief period of heavy stutter.\nStarting PCL with the --memory option can run the optimization silently.",
-                        "Memory optimization is tuned for the PCL-ME build.\n\nIt can reduce physical memory pressure by roughly one third, not just for Minecraft.\nOn a mechanical drive this may cause a brief period of heavy stutter.\nStarting PCL with the --memory option can run the optimization silently."),
-                    100,
-                    false),
-                new FrontendToolboxActionDefinition(
                     "clear-rubbish",
                     LocalizeToolboxTitle(locale, "Clear Game Junk", "Clear game junk", "Clear game junk"),
                     LocalizeToolboxTooltip(
@@ -414,7 +404,6 @@ internal static class FrontendToolsCompositionService
             "下载文件" => "download_file",
             "弹出窗口" => "popup",
             "启动游戏" => "launch_game",
-            "内存优化" => "memory_optimize",
             "清理垃圾" => "clear_rubbish",
             "刷新主页" => "refresh_homepage",
             _ => value
@@ -437,7 +426,6 @@ internal static class FrontendToolsCompositionService
             .Replace("EventType=\"下载文件\"", "EventType=\"download_file\"", StringComparison.Ordinal)
             .Replace("EventType=\"弹出窗口\"", "EventType=\"popup\"", StringComparison.Ordinal)
             .Replace("EventType=\"启动游戏\"", "EventType=\"launch_game\"", StringComparison.Ordinal)
-            .Replace("EventType=\"内存优化\"", "EventType=\"memory_optimize\"", StringComparison.Ordinal)
             .Replace("EventType=\"清理垃圾\"", "EventType=\"clear_rubbish\"", StringComparison.Ordinal)
             .Replace("EventType=\"刷新主页\"", "EventType=\"refresh_homepage\"", StringComparison.Ordinal);
     }

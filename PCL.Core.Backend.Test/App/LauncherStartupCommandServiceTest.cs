@@ -37,11 +37,11 @@ public sealed class LauncherStartupCommandServiceTest
     }
 
     [TestMethod]
-    public void ParseReturnsMemoryCommandForLegacySwitch()
+    public void ParseReturnsNoneForUnsupportedLegacySwitch()
     {
         var result = LauncherStartupCommandService.Parse(["--memory"]);
 
-        Assert.AreEqual(LauncherStartupCommandKind.OptimizeMemory, result.Kind);
+        Assert.AreEqual(LauncherStartupCommandKind.None, result.Kind);
         Assert.IsTrue(result.IsValid);
     }
 }

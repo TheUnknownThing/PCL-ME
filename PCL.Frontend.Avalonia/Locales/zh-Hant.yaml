@@ -203,7 +203,6 @@ shell:
       commands:
         none: 無
         set_gpu_preference: 設定顯卡偏好
-        optimize_memory: 最佳化記憶體
         invalid: 無效
         invalid_message:
           gpu_preference_path_missing: 缺少用於設定顯卡偏好的可執行檔路徑。
@@ -849,20 +848,6 @@ shell:
             message: PCL 已經為你啟動了 {count} 次遊戲了。
             title: 查看啟動計數
             tooltip: 查看啟動器已啟動遊戲的次數。
-          memory_optimize:
-            cancelled: 已取消記憶體最佳化。
-            confirm_title: 確認記憶體最佳化？
-            continue: 繼續
-            prompts:
-              r0: 嗯……？
-              r2: 記憶體資源比較緊張，建議加裝記憶體，避免頻繁使用記憶體最佳化並對硬碟造成過大壓力。
-              r6: 建議在使用後靜置一分鐘，等待系統回應完畢。
-              r16: 目前記憶體比較充足，建議優先讓系統自動管理記憶體。
-              r32: 目前總記憶體充足，建議關閉不必要的程式，而不是嘗試使用記憶體最佳化。
-            title: 記憶體最佳化
-            tooltip: 嘗試釋放一部分系統記憶體。
-            unsupported_other: 目前平台暫不支援與標準實作一致的記憶體最佳化執行器。已保留標準確認彈窗行為，不再打開文字編輯器。
-            unsupported_windows: Avalonia 前端尚未接入與標準實作一致的 Windows 記憶體最佳化執行器。已保留標準確認彈窗行為，不再打開文字編輯器。
         unsupported: 該百寶箱操作在 Avalonia 前端中暫未支援。
   startup:
     migration_warnings:
@@ -1387,7 +1372,6 @@ setup:
         automatic: 自动分配
         automatic_description: 根据设备和实例状态自动分配内存。
         custom: 自定义分配
-      optimize_before_launch: 启动前优化内存
       warnings:
         java_32_bit: 当前 Java 为 32 位，大内存分配可能无法生效。
         overallocated: 当前分配的内存已接近或超过可用物理内存。
@@ -3270,7 +3254,6 @@ instance:
       use_global: 使用全域設定
       use_auto: 自動分配
       use_custom: 自訂分配
-      optimize_before_launch: 啟動前最佳化記憶體
     server:
       locked_warning: 這個實例的伺服器登入設定已鎖定。
       login_requirement: 登入要求

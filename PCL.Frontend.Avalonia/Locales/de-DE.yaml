@@ -203,7 +203,6 @@ shell:
       commands:
         none: Keine
         set_gpu_preference: GPU-Präferenz festlegen
-        optimize_memory: Arbeitsspeicher optimieren
         invalid: Ungültig
         invalid_message:
           gpu_preference_path_missing: Der für die GPU-Präferenzkonfiguration erforderliche ausführbare Pfad fehlt.
@@ -849,20 +848,6 @@ shell:
             message: "PCL hat das Spiel bereits {count} Mal für dich gestartet."
             title: Startanzahl
             tooltip: Anzeigen, wie oft der Launcher das Spiel gestartet hat.
-          memory_optimize:
-            cancelled: Speicheroptimierung abgebrochen.
-            confirm_title: Speicheroptimierung bestätigen?
-            continue: Weiter
-            prompts:
-              r0: "Hä...?"
-              r2: Der Speicher ist knapp. Mehr RAM wird empfohlen, um wiederholte Optimierungen und starken Festplattenzugriff zu vermeiden.
-              r6: Lass das System nach der Nutzung dieser Funktion etwa eine Minute zur Ruhe kommen.
-              r16: Du hast eine ordentliche Menge Speicher. Lass das System den Speicher zuerst selbst verwalten.
-              r32: Insgesamt ist reichlich Speicher vorhanden. Schließe lieber unnötige Programme, statt die Speicheroptimierung zu versuchen.
-            title: Speicheropt.
-            tooltip: Automatisch etwas Speicher freigeben.
-            unsupported_other: "Diese Plattform bietet keinen Speicheroptimierer, der mit der Standardimplementierung kompatibel ist. Der Bestätigungsablauf bleibt erhalten, es wird jedoch kein externer Editor geöffnet."
-            unsupported_windows: "Das Avalonia-Frontend hat den Windows-Speicheroptimierer der Standardimplementierung noch nicht integriert. Der Bestätigungsablauf bleibt erhalten, es wird jedoch kein externer Editor geöffnet."
         unsupported: Diese Werkzeugkasten-Aktion wird im Avalonia-Frontend noch nicht unterstützt.
   startup:
     migration_warnings:
@@ -1385,7 +1370,6 @@ setup:
         automatic: Automatische Zuweisung
         automatic_description: Speicher basierend auf deinem Gerät und dem Instanzzustand automatisch zuweisen.
         custom: Benutzerdefinierte Zuweisung
-      optimize_before_launch: Arbeitsspeicher vor dem Start optimieren
       warnings:
         java_32_bit: Die ausgewählte Java-Laufzeit ist 32-Bit. Große Speicherzuweisungen funktionieren möglicherweise nicht.
         overallocated: Der konfigurierte Speicher liegt nahe am verfügbaren physischen Speicher oder überschreitet ihn.
@@ -3260,7 +3244,6 @@ instance:
       use_global: Globale Einstellung verwenden
       use_auto: Automatisch zuweisen
       use_custom: Benutzerdefinierte Zuweisung festlegen
-      optimize_before_launch: Arbeitsspeicher vor dem Start optimieren
     server:
       locked_warning: Server-Anmeldeeinstellungen sind für diese Instanz gesperrt.
       login_requirement: Anmeldeanforderung

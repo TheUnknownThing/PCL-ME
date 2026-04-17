@@ -146,7 +146,6 @@ internal static partial class FrontendInstanceCompositionService
             SelectedJavaKey: "global",
             MemoryModeIndex: 2,
             CustomMemoryAllocationGb: FrontendSetupCompositionService.MapStoredLaunchRamToGb(15),
-            OptimizeMemoryIndex: 0,
             UsedMemoryGb: 0,
             TotalMemoryGb: 0,
             AutomaticAllocatedMemoryGb: 0,

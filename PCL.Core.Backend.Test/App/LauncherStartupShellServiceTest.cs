@@ -39,11 +39,11 @@ public sealed class LauncherStartupShellServiceTest
     }
 
     [TestMethod]
-    public void ResolveImmediateCommandReturnsMemoryPlanForMemorySwitch()
+    public void ResolveImmediateCommandReturnsNoneForUnsupportedLegacySwitch()
     {
         var result = LauncherStartupShellService.ResolveImmediateCommand(["--memory"]);
 
-        Assert.AreEqual(LauncherStartupImmediateCommandKind.OptimizeMemory, result.Kind);
+        Assert.AreEqual(LauncherStartupImmediateCommandKind.None, result.Kind);
         Assert.IsNull(result.Argument);
         Assert.IsNull(result.InvalidMessage);
     }

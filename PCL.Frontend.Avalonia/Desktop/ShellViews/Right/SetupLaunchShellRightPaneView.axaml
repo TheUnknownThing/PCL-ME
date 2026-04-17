@@ -162,7 +162,7 @@
                   TextWrapping="Wrap" />
             </Border>
 
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto">
               <RadioButton
                   Content="{Binding SetupText.Launch.AutomaticAllocationLabel}"
                   IsChecked="{Binding UseAutomaticRamAllocation}" />
@@ -194,13 +194,6 @@
                     FontSize="12"
                     Text="{Binding CustomRamAllocationLabel}" />
               </Grid>
-
-              <CheckBox
-                  Grid.Row="4"
-                  Grid.ColumnSpan="2"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.Launch.OptimizeBeforeLaunchLabel}"
-                  IsChecked="{Binding OptimizeMemoryBeforeLaunch}" />
             </Grid>
 
             <controls:PclMemorySummary

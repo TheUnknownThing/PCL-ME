@@ -203,7 +203,6 @@ shell:
       commands:
         none: 없음
         set_gpu_preference: GPU 기본 설정 지정
-        optimize_memory: 메모리 최적화
         invalid: 유효하지 않음
         invalid_message:
           gpu_preference_path_missing: GPU 기본 설정을 구성하는 데 필요한 실행 파일 경로가 없습니다.
@@ -849,20 +848,6 @@ shell:
             message: PCL이 이미 귀하를 위해 게임을 {count}번 시작했습니다.
             title: 실행 횟수
             tooltip: 런처가 게임을 시작한 횟수를 표시합니다.
-          memory_optimize:
-            cancelled: 메모리 최적화가 취소되었습니다.
-            confirm_title: 메모리 최적화를 확인하시겠습니까?
-            continue: 계속하다
-            prompts:
-              r0: 뭐...?
-              r2: 기억력이 빡빡합니다. 반복적인 최적화와 과도한 디스크 압력을 방지하려면 더 많은 RAM을 추가하는 것이 좋습니다.
-              r6: 이 기능을 사용한 후 약 1분 동안 시스템이 안정되도록 기다립니다.
-              r16: 당신은 상당한 양의 기억력을 가지고 있습니다. 시스템이 먼저 메모리를 관리하도록 하십시오.
-              r32: 총 메모리가 풍부합니다. 메모리 최적화를 시도하는 대신 불필요한 프로그램을 닫으세요.
-            title: 메모리 선택
-            tooltip: 일부 메모리를 자동으로 확보합니다.
-            unsupported_other: 이 플랫폼은 표준 구현과 호환되는 메모리 최적화 프로그램을 제공하지 않습니다. 확인 흐름은 유지되지만 외부 편집기는 열리지 않습니다.
-            unsupported_windows: Avalonia 프런트엔드는 표준 구현에서 사용되는 Windows 메모리 최적화 프로그램을 아직 통합하지 않았습니다. 확인 흐름은 유지되지만 외부 편집기는 열리지 않습니다.
         unsupported: 이 도구 상자 작업은 아직 Avalonia 프런트엔드에서 지원되지 않습니다.
   startup:
     migration_warnings:
@@ -1385,7 +1370,6 @@ setup:
         automatic: 자동 할당
         automatic_description: 장치 및 인스턴스 상태에 따라 자동으로 메모리를 할당합니다.
         custom: 맞춤 할당
-      optimize_before_launch: 실행 전 메모리 최적화
       warnings:
         java_32_bit: 선택한 Java 런타임은 32비트입니다. 대용량 메모리 할당은 작동하지 않을 수 있습니다.
         overallocated: 구성된 메모리가 사용 가능한 실제 메모리에 가깝거나 이를 초과합니다.
@@ -3260,7 +3244,6 @@ instance:
       use_global: 전역 설정 사용
       use_auto: 자동으로 할당
       use_custom: 맞춤 할당 설정
-      optimize_before_launch: 실행 전 메모리 최적화
     server:
       locked_warning: 이 인스턴스에 대한 서버 로그인 설정이 잠겨 있습니다.
       login_requirement: 로그인 요구 사항

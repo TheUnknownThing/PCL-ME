@@ -203,7 +203,6 @@ shell:
       commands:
         none: None
         set_gpu_preference: Set GPU Preference
-        optimize_memory: Optimize Memory
         invalid: Invalid
         invalid_message:
           gpu_preference_path_missing: The executable path required for GPU preference configuration is missing.
@@ -849,20 +848,6 @@ shell:
             message: PCL has already started the game {count} time(s) for you.
             title: Launch Count
             tooltip: Show how many times the launcher has started the game.
-          memory_optimize:
-            cancelled: Memory optimization canceled.
-            confirm_title: Confirm Memory Optimization?
-            continue: Continue
-            prompts:
-              r0: Huh...?
-              r2: Memory is tight. Adding more RAM is recommended to avoid repeated optimization and heavy disk pressure.
-              r6: Let the system settle for about a minute after using this feature.
-              r16: You have a fair amount of memory. Let the system manage memory first.
-              r32: Total memory is abundant. Close unnecessary programs instead of trying memory optimization.
-            title: Mem Opt
-            tooltip: Automatically free some memory.
-            unsupported_other: This platform does not provide a memory optimizer compatible with the standard implementation. The confirmation flow is kept, but no external editor will be opened.
-            unsupported_windows: The Avalonia frontend has not yet integrated the Windows memory optimizer used by the standard implementation. The confirmation flow is kept, but no external editor will be opened.
         unsupported: This toolbox action is not yet supported in the Avalonia frontend.
   startup:
     migration_warnings:
@@ -1387,7 +1372,6 @@ setup:
         automatic: Automatic allocation
         automatic_description: Allocate memory automatically based on your device and instance state.
         custom: Custom allocation
-      optimize_before_launch: Optimize memory before launch
       warnings:
         java_32_bit: The selected Java runtime is 32-bit. Large memory allocations may not work.
         overallocated: The configured memory is close to or exceeds the available physical memory.
@@ -3270,7 +3254,6 @@ instance:
       use_global: Use global setting
       use_auto: Allocate automatically
       use_custom: Set custom allocation
-      optimize_before_launch: Optimize memory before launch
     server:
       locked_warning: Server login settings are locked for this instance.
       login_requirement: Login Requirement

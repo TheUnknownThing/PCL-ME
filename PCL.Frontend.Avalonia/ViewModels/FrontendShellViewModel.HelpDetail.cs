@@ -362,9 +362,6 @@ internal sealed partial class FrontendShellViewModel
                     new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
                     title);
                 return;
-            case FrontendHelpEventType.MemoryOptimize:
-                OpenMemoryOptimizeDialog();
-                return;
             case FrontendHelpEventType.ClearRubbish:
                 ClearToolboxRubbish();
                 return;

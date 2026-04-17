@@ -105,7 +105,6 @@ internal sealed partial class FrontendShellViewModel
             is64BitJava: null,
             totalMemoryGb,
             availableMemoryGb);
-        _optimizeMemoryBeforeLaunch = _setupComposition.Launch.OptimizeMemoryBeforeLaunch;
         _isLaunchAdvancedOptionsExpanded = false;
         _selectedLaunchRendererIndex = _setupComposition.Launch.RendererIndex;
         _launchWrapperCommand = _setupComposition.Launch.WrapperCommand;

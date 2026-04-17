@@ -203,7 +203,6 @@ shell:
       commands:
         none: Aucune
         set_gpu_preference: Définir la préférence GPU
-        optimize_memory: Optimiser la mémoire
         invalid: Invalide
         invalid_message:
           gpu_preference_path_missing: Le chemin de l'exécutable requis pour configurer la préférence GPU est manquant.
@@ -849,20 +848,6 @@ shell:
             message: PCL a déjà démarré le jeu {count} time(s) pour vous.
             title: Nombre de lancements
             tooltip: Montre combien de fois le lanceur a démarré le jeu.
-          memory_optimize:
-            cancelled: Optimisation de la mémoire annulée.
-            confirm_title: Confirmer l'optimisation de la mémoire ?
-            continue: Continuer
-            prompts:
-              r0: Hein...?
-              r2: La mémoire est serrée. L'ajout de plus de RAM est recommandé pour éviter des optimisations répétées et une forte pression sur le disque.
-              r6: Laissez le système s'installer pendant environ une minute après avoir utilisé cette fonctionnalité.
-              r16: Vous disposez d'une bonne quantité de mémoire. Laissez d'abord le système gérer la mémoire.
-              r32: La mémoire totale est abondante. Fermez les programmes inutiles au lieu d’essayer d’optimiser la mémoire.
-            title: Option mémoire
-            tooltip: Libérez automatiquement de la mémoire.
-            unsupported_other: Cette plateforme ne fournit pas d'optimiseur de mémoire compatible avec l'implémentation standard. Le flux de confirmation est conservé, mais aucun éditeur externe ne sera ouvert.
-            unsupported_windows: L'interface Avalonia n'a pas encore intégré l'optimiseur de mémoire Windows utilisé par l'implémentation standard. Le flux de confirmation est conservé, mais aucun éditeur externe ne sera ouvert.
         unsupported: Cette action de la boîte à outils n'est pas encore prise en charge dans l'interface Avalonia.
   startup:
     migration_warnings:
@@ -1385,7 +1370,6 @@ setup:
         automatic: Attribution automatique
         automatic_description: Allouez automatiquement de la mémoire en fonction de votre appareil et de l'état de votre instance.
         custom: Allocation personnalisée
-      optimize_before_launch: Optimiser la mémoire avant le lancement
       warnings:
         java_32_bit: L'environnement d'exécution Java sélectionné est en 32 bits. Les allocations de mémoire importantes peuvent ne pas fonctionner.
         overallocated: La mémoire configurée est proche ou dépasse la mémoire physique disponible.
@@ -3260,7 +3244,6 @@ instance:
       use_global: Utiliser le paramètre global
       use_auto: Allouer automatiquement
       use_custom: Définir une allocation personnalisée
-      optimize_before_launch: Optimiser la mémoire avant le lancement
     server:
       locked_warning: Les paramètres de connexion au serveur sont verrouillés pour cette instance.
       login_requirement: Exigence de connexion

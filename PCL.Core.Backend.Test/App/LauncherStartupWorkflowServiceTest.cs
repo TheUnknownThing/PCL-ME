@@ -13,7 +13,7 @@ public sealed class LauncherStartupWorkflowServiceTest
     {
         var result = LauncherStartupWorkflowService.BuildPlan(
             new LauncherStartupWorkflowRequest(
-                CommandLineArguments: ["--memory"],
+                CommandLineArguments: ["--gpu", "\"C:\\Java\\javaw.exe\""],
                 ExecutableDirectory: @"C:\Users\Alice\AppData\Local\Temp\PCL",
                 TempDirectory: @"C:\Users\Alice\AppData\Local\Temp\PCL\Temp",
                 AppDataDirectory: @"C:\Users\Alice\AppData\Roaming\PCL\",
@@ -22,7 +22,8 @@ public sealed class LauncherStartupWorkflowServiceTest
                 Is64BitOperatingSystem: false,
                 ShowStartupLogo: true));
 
-        Assert.AreEqual(LauncherStartupImmediateCommandKind.OptimizeMemory, result.ImmediateCommand.Kind);
+        Assert.AreEqual(LauncherStartupImmediateCommandKind.SetGpuPreference, result.ImmediateCommand.Kind);
+        Assert.AreEqual(@"C:\Java\javaw.exe", result.ImmediateCommand.Argument);
         Assert.AreEqual(UpdateChannel.Beta, result.Bootstrap.DefaultUpdateChannel);
         Assert.IsTrue(result.Visual.ShouldShowSplashScreen);
         Assert.IsNotNull(result.EnvironmentWarningPrompt);

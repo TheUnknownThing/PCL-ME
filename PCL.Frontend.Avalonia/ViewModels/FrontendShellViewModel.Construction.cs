@@ -226,7 +226,6 @@ internal sealed partial class FrontendShellViewModel
     private double _launchUsedRamGb;
     private double _launchTotalRamGb;
     private double _launchAutomaticAllocatedRamGb;
-    private bool _optimizeMemoryBeforeLaunch = true;
     private bool _isLaunchAdvancedOptionsExpanded;
     private int _selectedLaunchRendererIndex;
     private string _launchWrapperCommand = string.Empty;

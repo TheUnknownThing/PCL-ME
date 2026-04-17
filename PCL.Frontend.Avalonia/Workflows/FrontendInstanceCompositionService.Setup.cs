@@ -71,7 +71,6 @@ internal static partial class FrontendInstanceCompositionService
             SelectedJavaKey: selectedJavaKey,
             MemoryModeIndex: memoryModeIndex,
             CustomMemoryAllocationGb: customMemoryGb,
-            OptimizeMemoryIndex: Math.Clamp(ReadValue(instanceConfig, "VersionRamOptimize", 0), 0, 2),
             UsedMemoryGb: usedMemoryGb,
             TotalMemoryGb: totalMemoryGb,
             AutomaticAllocatedMemoryGb: automaticAllocatedMemory,

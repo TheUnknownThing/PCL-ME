@@ -57,7 +57,6 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceSetupMemoryUseGlobalText => SD("instance.settings.memory.use_global");
     public string InstanceSetupMemoryUseAutoText => SD("instance.settings.memory.use_auto");
     public string InstanceSetupMemoryUseCustomText => SD("instance.settings.memory.use_custom");
-    public string InstanceSetupMemoryOptimizeLabelText => SD("instance.settings.memory.optimize_before_launch");
     public string InstanceSetupAdvancedHeaderText => SD("instance.settings.sections.advanced");
     public string InstanceSetupRendererLabelText => SD("instance.settings.advanced.renderer");
     public string InstanceSetupWrapperCommandLabelText => SD("instance.settings.advanced.wrapper_command");

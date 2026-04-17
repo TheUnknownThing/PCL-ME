@@ -36,7 +36,6 @@ internal sealed record FrontendSetupLaunchState(
     string WindowHeight,
     bool UseAutomaticRamAllocation,
     double CustomRamAllocationGb,
-    bool OptimizeMemoryBeforeLaunch,
     int RendererIndex,
     string WrapperCommand,
     string JvmArguments,

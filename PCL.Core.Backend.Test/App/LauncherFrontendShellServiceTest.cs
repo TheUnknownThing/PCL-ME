@@ -13,7 +13,7 @@ public sealed class LauncherFrontendShellServiceTest
     {
         var plan = LauncherFrontendShellService.BuildPlan(new LauncherFrontendShellRequest(
             new LauncherStartupWorkflowRequest(
-                CommandLineArguments: ["--memory"],
+                CommandLineArguments: [],
                 ExecutableDirectory: @"C:\PCL\",
                 TempDirectory: @"C:\PCL\Temp\",
                 AppDataDirectory: @"C:\Users\demo\AppData\Roaming\PCL\",

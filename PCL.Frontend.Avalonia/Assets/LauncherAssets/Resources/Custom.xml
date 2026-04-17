@@ -159,8 +159,6 @@
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0" ColorType="Red"
                         Text="复制召唤命令" EventType="copy_text" EventData="/execute as @a at @s run summon Creeper ~ ~2 ~" ToolTip="这条 Minecraft 命令会在每个玩家头顶召唤一只苦力怕！" />
             <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0"
-                        Text="内存优化" EventType="memory_optimize" />
-            <local:MyButton Margin="0,0,10,0" Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0"
                         Text="下载百度的 Logo" EventType="download_file" EventData="https://www.baidu.com/img/flexible/logo/pc/result.png" />
         </StackPanel>
     </StackPanel>
