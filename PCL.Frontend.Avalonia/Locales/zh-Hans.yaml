@@ -117,7 +117,7 @@ shell:
         title: Java
         summary: 管理 Java 运行时与选择规则。
       setup_launcher_misc:
-        title: 启动器杂项
+        title: 杂项
         summary: 调整零散的启动器行为。
       tools_launcher_help:
         title: 帮助
