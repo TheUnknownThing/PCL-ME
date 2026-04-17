@@ -623,7 +623,7 @@ shell:
         failure: Error al agregar carpeta
         pick_title: Seleccionar carpeta de instancia
         switched: Cambió a {path}.
-        title: Agregar carpeta existente
+        title: Importar carpeta del juego
       import_pack:
         cancelled: Importación cancelada.
         description: Importe un archivo modpack al directorio del iniciador actual.
@@ -1692,7 +1692,7 @@ setup:
       dark_custom: Oscuro personalizado
       dark_palette: Paleta oscura
       global_font: Mundial
-      locale: Idioma de la interfaz
+      locale: Idioma
       launcher_opacity: Opacidad
       light_custom: Luz personalizada
       light_palette: Paleta de luz
@@ -1936,7 +1936,7 @@ setup:
       system:
         header: Sistema
     fields:
-      locale: Idioma de la interfaz
+      locale: Idioma
       announcements: Anuncios del lanzador
       debug_animation_speed: Velocidad de animación
       http_proxy: Proxy HTTP
@@ -3518,20 +3518,25 @@ save_detail:
 
 welcome:
   step_0:
-    title: Elige tu idioma
-    description: Selecciona el idioma de visualización para PCL ME.
+    title: Bienvenido a PCL-ME
+    description: Elige el idioma y el modo de color. Ambos siguen al sistema de forma predeterminada y el cambio de idioma se aplica de inmediato en esta pantalla.
+    language_hint: Puedes cambiar el idioma del lanzador ahora mismo y el texto de esta guía se actualizará al instante.
+    theme_hint: Elige el modo visual que PCL-ME usará en el primer inicio.
   step_1:
-    title: Acuerdo de licencia
-    description: Por favor, lee y acepta el Acuerdo de Licencia de Usuario Final (EULA) antes de usar PCL ME.
-    eula_summary: PCL ME es software libre de código abierto proporcionado "tal cual". Al continuar, aceptas los términos del Acuerdo de Licencia de Usuario Final (EULA). Lee el EULA completo para más detalles sobre el uso permitido y la redistribución.
-    open_eula: Abrir EULA completo
-    accept_label: He leído y acepto el EULA
+    title: Términos de uso
+    description: Estás usando PCL-ME. Esta es una edición multiplataforma creada por la comunidad basada en PCL, con el código fuente completamente abierto en GitHub. Al usar este software, debes cumplir las leyes y normativas de tu país o región y respetar los Términos de uso y la Exención de responsabilidad del autor original de PCL. Si quieres desarrollar o distribuir software basado en PCL-ME, primero lee en nuestro README la sección sobre la licencia.
+    community_notice: "Estás usando PCL-ME. Esta es una edición multiplataforma creada por la comunidad basada en PCL, con el código fuente completamente abierto en GitHub. Al usar este software, debes cumplir las leyes y normativas de tu país o región y respetar los "
+    community_ack_label: Entiendo que esta es una edición multiplataforma de PCL creada por la comunidad.
+    eula_summary: " del autor original de PCL. Si quieres desarrollar o distribuir software basado en PCL-ME, primero lee en nuestro "
+    open_eula: Términos de uso y Exención de responsabilidad
+    open_readme: README
+    readme_summary: la sección sobre la licencia.
+    accept_and_continue: Aceptar y continuar
+    accept_label: He leído y acepto los términos de uso
     decline: Rechazar y salir
   step_2:
-    title: Elige tu tema
-    description: Elige un modo de color y una paleta de énfasis. Puedes cambiarlo en cualquier momento en Configuración.
-  step_3:
     title: "¡Todo listo!"
-    description: PCL ME está listo para usar. Explora estos enlaces para empezar.
+    description: PCL-ME está listo. Abre el tutorial inicial o conserva estos enlaces de la comunidad para más tarde.
+    tutorial: Abrir tutorial
     feedback: Enviar comentarios
     github: GitHub

@@ -623,7 +623,7 @@ shell:
         failure: Échec de l'ajout d'un dossier
         pick_title: Sélectionner un dossier d'instance
         switched: Passé à {path}.
-        title: Ajouter un dossier existant
+        title: Importer le dossier du jeu
       import_pack:
         cancelled: Importation annulée.
         description: Importez une archive modpack dans le répertoire du lanceur actuel.
@@ -1687,7 +1687,7 @@ setup:
       dark_custom: Personnalisé sombre
       dark_palette: Palette sombre
       global_font: Police générale
-      locale: Langue de l'interface
+      locale: Langue
       launcher_opacity: Opacité
       light_custom: Clair personnalisé
       light_palette: Palette claire
@@ -1929,7 +1929,7 @@ setup:
       system:
         header: Système
     fields:
-      locale: Langue de l'interface
+      locale: Langue
       announcements: Annonces du lanceur
       debug_animation_speed: Vitesse d'animation
       http_proxy: proxy HTTP
@@ -3494,20 +3494,25 @@ save_detail:
 
 welcome:
   step_0:
-    title: Choisir la langue
-    description: Sélectionnez la langue d'affichage pour PCL ME.
+    title: Bienvenue dans PCL-ME
+    description: Choisissez votre langue et le mode de couleur. Les deux suivent le système par défaut et le changement de langue s'applique immédiatement à cet écran.
+    language_hint: Changez la langue du lanceur dès maintenant. Le texte de cette introduction se met à jour immédiatement.
+    theme_hint: Choisissez le mode d'apparence que PCL-ME utilisera au premier démarrage.
   step_1:
-    title: Accord de licence
-    description: Veuillez lire et accepter le Contrat de Licence Utilisateur Final (CLUF) avant d'utiliser PCL ME.
-    eula_summary: PCL ME est un logiciel libre et open source fourni "tel quel". En continuant, vous acceptez les termes du Contrat de Licence Utilisateur Final (CLUF). Lisez le CLUF complet pour en savoir plus sur l'utilisation autorisée et la redistribution.
-    open_eula: Ouvrir le CLUF complet
-    accept_label: J'ai lu et j'accepte le CLUF
+    title: Conditions d'utilisation
+    description: Vous utilisez PCL-ME. Il s'agit d'une édition multiplateforme communautaire basée sur PCL, dont le code source est entièrement ouvert sur GitHub. En utilisant ce logiciel, veuillez respecter les lois et règlements de votre pays ou de votre région, ainsi que les Conditions d'utilisation et la clause de non-responsabilité de l'auteur original de PCL. Si vous souhaitez développer ou distribuer un logiciel basé sur PCL-ME, veuillez d'abord lire dans notre README la section relative à la licence.
+    community_notice: "Vous utilisez PCL-ME. Il s'agit d'une édition multiplateforme communautaire basée sur PCL, dont le code source est entièrement ouvert sur GitHub. En utilisant ce logiciel, veuillez respecter les lois et règlements de votre pays ou de votre région, ainsi que les "
+    community_ack_label: Je comprends qu'il s'agit d'une édition multiplateforme de PCL développée par la communauté.
+    eula_summary: " de l'auteur original de PCL. Si vous souhaitez développer ou distribuer un logiciel basé sur PCL-ME, veuillez d'abord lire dans notre "
+    open_eula: Conditions d'utilisation et clause de non-responsabilité
+    open_readme: README
+    readme_summary: la section relative à la licence.
+    accept_and_continue: Accepter et continuer
+    accept_label: J'ai lu et j'accepte les conditions d'utilisation
     decline: Refuser et quitter
   step_2:
-    title: Choisir le thème
-    description: Choisissez un mode de couleur et une palette d'accentuation. Vous pouvez le modifier à tout moment dans les Paramètres.
-  step_3:
     title: Tout est prêt !
-    description: PCL ME est prêt à l'emploi. Découvrez ces liens pour commencer.
+    description: PCL-ME est prêt. Ouvrez le tutoriel de démarrage ou gardez ces liens communautaires à portée de main pour plus tard.
+    tutorial: Ouvrir le tutoriel
     feedback: Envoyer des commentaires
     github: GitHub

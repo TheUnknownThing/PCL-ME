@@ -3976,18 +3976,23 @@ welcome:
   step_0:
     title: []
     description: []
+    language_hint: []
+    theme_hint: []
   step_1:
     title: []
     description: []
+    community_notice: []
+    community_ack_label: []
     eula_summary: []
     open_eula: []
+    open_readme: []
+    readme_summary: []
+    accept_and_continue: []
     accept_label: []
     decline: []
   step_2:
     title: []
     description: []
-  step_3:
-    title: []
-    description: []
+    tutorial: []
     feedback: []
     github: []

@@ -471,6 +471,7 @@ internal sealed partial class FrontendShellViewModel
 
         _promptCatalog = BuildPromptCatalog(options.Scenario);
         _i18n.Changed += HandleI18nChanged;
+        FrontendAppearanceService.AppearanceChanged += HandleWelcomeAppearanceChanged;
         PropertyChanged += (_, args) => PersistSetupSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);

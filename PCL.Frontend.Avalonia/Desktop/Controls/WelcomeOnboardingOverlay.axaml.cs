@@ -5,11 +5,11 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
-using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
@@ -18,7 +18,11 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 {
     private static readonly Easing StepOpacityEasing = new CubicEaseOut();
     private static readonly Easing StepTranslateEasing = new BackEaseOut();
+    private const string TermsLinkKind = "terms";
+    private const string ReadmeLinkKind = "readme";
 
+    private readonly ComboBox _launcherLocaleComboBox;
+    private readonly ComboBox _themeModeComboBox;
     private FrontendShellViewModel? _shell;
     private bool _isRenderedOpen;
     private int _overlayAnimationVersion;
@@ -28,38 +32,27 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
     public WelcomeOnboardingOverlay()
     {
         InitializeComponent();
-        ConfigureIcons();
+        _launcherLocaleComboBox = this.FindControl<ComboBox>("WelcomeLauncherLocaleComboBox")
+            ?? throw new InvalidOperationException("The welcome overlay did not contain the launcher locale combo box.");
+        _themeModeComboBox = this.FindControl<ComboBox>("WelcomeThemeModeComboBox")
+            ?? throw new InvalidOperationException("The welcome overlay did not contain the theme mode combo box.");
         OverlayRoot.IsVisible = false;
         OverlayRoot.IsHitTestVisible = false;
         PclModalMotion.ResetToClosedState(WelcomeBackdrop, WelcomeCard);
+        WelcomeLicenseBodyHost.PointerPressed += OnWelcomeLicenseBodyPointerPressed;
+        WelcomeLicenseBodyHost.PointerMoved += OnWelcomeLicenseBodyPointerMoved;
+        WelcomeLicenseBodyHost.PointerExited += OnWelcomeLicenseBodyPointerExited;
         DataContextChanged += OnDataContextChanged;
         AttachedToVisualTree += (_, _) => QueueOverlaySync();
         DetachedFromVisualTree += (_, _) => ObserveShell(null);
-    }
-
-    private void ConfigureIcons()
-    {
-        WelcomePreviousButton.IconData = FrontendIconCatalog.Back.Data;
-        WelcomePreviousButton.IconScale = FrontendIconCatalog.Back.Scale;
-
-        WelcomeNextButton.IconData = FrontendIconCatalog.Back.Data;
-        WelcomeNextButton.IconScale = FrontendIconCatalog.Back.Scale;
-
-        WelcomeDoneButton.IconData = FrontendIconCatalog.EnableCircle.Data;
-        WelcomeDoneButton.IconScale = 1.1 * FrontendIconCatalog.EnableCircle.Scale;
-
-        var feedbackIcon = FrontendIconCatalog.GetSidebarIcon("feedback");
-        WelcomeFeedbackButton.IconData = feedbackIcon.Data;
-        WelcomeFeedbackButton.IconScale = feedbackIcon.Scale;
-
-        WelcomeGitHubButton.IconData = FrontendIconCatalog.Link.Data;
-        WelcomeGitHubButton.IconScale = FrontendIconCatalog.Link.Scale;
+        ScheduleSelectionRestore();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         ObserveShell(DataContext as FrontendShellViewModel);
         QueueOverlaySync();
+        ScheduleSelectionRestore();
     }
 
     private void ObserveShell(FrontendShellViewModel? shell)
@@ -94,7 +87,42 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         if (e.PropertyName == nameof(FrontendShellViewModel.WelcomeCurrentStep))
         {
             QueueStepTransition();
+            return;
         }
+
+        if (e.PropertyName is nameof(FrontendShellViewModel.LauncherLocaleOptions)
+            or nameof(FrontendShellViewModel.SelectedLauncherLocaleIndex)
+            or nameof(FrontendShellViewModel.DarkModeOptions)
+            or nameof(FrontendShellViewModel.SelectedDarkModeIndex))
+        {
+            ScheduleSelectionRestore();
+        }
+    }
+
+    private void ScheduleSelectionRestore()
+    {
+        Dispatcher.UIThread.Post(RestoreSelections, DispatcherPriority.Background);
+    }
+
+    private void RestoreSelections()
+    {
+        if (_shell is null)
+        {
+            return;
+        }
+
+        ApplySelectedIndex(_launcherLocaleComboBox, _shell.SelectedLauncherLocaleIndex);
+        ApplySelectedIndex(_themeModeComboBox, _shell.SelectedDarkModeIndex);
+    }
+
+    private static void ApplySelectedIndex(ComboBox comboBox, int selectedIndex)
+    {
+        if (selectedIndex < 0 || comboBox.SelectedIndex == selectedIndex)
+        {
+            return;
+        }
+
+        comboBox.SelectedIndex = selectedIndex;
     }
 
     private void QueueOverlaySync()
@@ -169,9 +197,9 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         _lastWelcomeStepIndex = currentStep;
         var version = ++_stepAnimationVersion;
 
-        PrepareStepElement(WelcomeTitleBlock, 0d, 10d);
+        PrepareStepElement(WelcomeStepHeader, 0d, 10d);
         PrepareStepElement(WelcomeStepContentHost, 34d * direction, 0d);
-        PrepareStepElement(WelcomeStepIndicatorDots, 0d, 8d);
+        PrepareStepElement(WelcomeActionBar, 0d, 8d);
 
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
         if (version != _stepAnimationVersion || !_isRenderedOpen)
@@ -179,9 +207,9 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
             return;
         }
 
-        StartStepElementAnimation(WelcomeTitleBlock, useBounce: false);
+        StartStepElementAnimation(WelcomeStepHeader, useBounce: false);
         StartStepElementAnimation(WelcomeStepContentHost, useBounce: true);
-        StartStepElementAnimation(WelcomeStepIndicatorDots, useBounce: false);
+        StartStepElementAnimation(WelcomeActionBar, useBounce: false);
     }
 
     private static void PrepareStepElement(Control target, double offsetX, double offsetY)
@@ -230,5 +258,86 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         target.Opacity = 1d;
         transform.X = 0d;
         transform.Y = 0d;
+    }
+
+    private void OnWelcomeLicenseBodyPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_shell is null || !e.GetCurrentPoint(WelcomeLicenseBodyHost).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        var point = e.GetPosition(WelcomeLicenseBodyText);
+        var linkKind = HitTestWelcomeLicenseLink(point);
+        if (linkKind is null)
+        {
+            return;
+        }
+
+        if (linkKind == TermsLinkKind)
+        {
+            _shell.WelcomeOpenTermsCommand.Execute(null);
+        }
+        else if (linkKind == ReadmeLinkKind)
+        {
+            _shell.WelcomeOpenReadmeCommand.Execute(null);
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnWelcomeLicenseBodyPointerMoved(object? sender, PointerEventArgs e)
+    {
+        WelcomeLicenseBodyHost.Cursor = HitTestWelcomeLicenseLink(e.GetPosition(WelcomeLicenseBodyText)) is null
+            ? new Cursor(StandardCursorType.Arrow)
+            : new Cursor(StandardCursorType.Hand);
+    }
+
+    private void OnWelcomeLicenseBodyPointerExited(object? sender, PointerEventArgs e)
+    {
+        WelcomeLicenseBodyHost.Cursor = new Cursor(StandardCursorType.Arrow);
+    }
+
+    private string? HitTestWelcomeLicenseLink(Point point)
+    {
+        if (_shell is null || WelcomeLicenseBodyText.Bounds.Width <= 0)
+        {
+            return null;
+        }
+
+        var layout = WelcomeLicenseBodyText.TextLayout;
+        if (layout is null)
+        {
+            return null;
+        }
+
+        var prefix = _shell.WelcomeTermsBodyPrefix;
+        var terms = _shell.WelcomeTermsLinkText;
+        var middle = _shell.WelcomeTermsBodyMiddle;
+        var readme = _shell.WelcomeReadmeLinkText;
+
+        var termsStart = prefix.Length;
+        if (ContainsPoint(layout.HitTestTextRange(termsStart, terms.Length), point))
+        {
+            return TermsLinkKind;
+        }
+
+        var readmeStart = termsStart + terms.Length + middle.Length;
+        return ContainsPoint(layout.HitTestTextRange(readmeStart, readme.Length), point)
+            ? ReadmeLinkKind
+            : null;
+    }
+
+    private static bool ContainsPoint(IEnumerable<Rect> rects, Point point)
+    {
+        foreach (var rect in rects)
+        {
+            if (rect.Contains(point))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

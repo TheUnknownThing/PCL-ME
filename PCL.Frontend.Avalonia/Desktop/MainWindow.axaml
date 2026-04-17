@@ -431,9 +431,9 @@
                       FontSize="15"
                       Text="{Binding TitleBarLabel}" />
                 </Grid>
-              </Grid>
-            </Grid>
-          </Border>
+	          </Grid>
+	        </Grid>
+      </Border>
 
           <Grid Grid.Row="1">
             <Border
@@ -687,12 +687,13 @@
                   </ItemsControl>
                 </Grid>
               </Border>
-            </Border>
+	            </Border>
 
-            <controls:WelcomeOnboardingOverlay ZIndex="60" />
+	            <controls:WelcomeOnboardingOverlay Grid.RowSpan="2" ZIndex="60" />
 
-          </Grid>
-        </Grid>
+	          </Grid>
+	        </Grid>
+
       </Border>
     </Border>
   </Grid>

@@ -623,7 +623,7 @@ shell:
         failure: 폴더 추가 실패
         pick_title: 인스턴스 폴더 선택
         switched: "{path}로 전환되었습니다."
-        title: 기존 폴더 추가
+        title: 게임 폴더 가져오기
       import_pack:
         cancelled: 가져오기가 취소되었습니다.
         description: Modpack 아카이브를 현재 실행기 디렉터리로 가져옵니다.
@@ -1687,7 +1687,7 @@ setup:
       dark_custom: 다크 커스텀
       dark_palette: 다크 팔레트
       global_font: 글로벌
-      locale: 인터페이스 언어
+      locale: 언어
       launcher_opacity: 불투명
       light_custom: 라이트 커스텀
       light_palette: 라이트 팔레트
@@ -1929,7 +1929,7 @@ setup:
       system:
         header: 체계
     fields:
-      locale: 인터페이스 언어
+      locale: 언어
       announcements: 런처 공지
       debug_animation_speed: 애니메이션 속도
       http_proxy: HTTP 프록시
@@ -3494,20 +3494,25 @@ save_detail:
 
 welcome:
   step_0:
-    title: 언어 선택
-    description: PCL ME에서 사용할 표시 언어를 선택하세요.
+    title: PCL-ME에 오신 것을 환영합니다
+    description: 언어와 테마를 선택하세요. 두 설정 모두 기본값은 시스템 따름이며, 언어 변경은 현재 화면에 즉시 반영됩니다.
+    language_hint: 지금 바로 런처 언어를 바꿀 수 있으며, 이 안내 화면의 텍스트도 즉시 갱신됩니다.
+    theme_hint: PCL-ME를 처음 열 때 사용할 표시 모드를 선택하세요.
   step_1:
-    title: 라이선스 계약
-    description: PCL ME를 사용하기 전에 최종 사용자 라이선스 계약(EULA)을 읽고 동의해 주세요.
-    eula_summary: PCL ME는 "있는 그대로" 제공되는 무료 오픈 소스 소프트웨어입니다. 계속 진행하면 최종 사용자 라이선스 계약(EULA)의 조건에 동의하는 것으로 간주됩니다. 허용된 사용 및 재배포에 대한 자세한 내용은 전체 EULA를 읽어주세요.
-    open_eula: 전체 EULA 열기
-    accept_label: EULA를 읽었으며 동의합니다
+    title: 이용 약관
+    description: 현재 PCL-ME를 사용하고 있습니다. 이는 PCL을 기반으로 한 커뮤니티 제작 멀티플랫폼 에디션이며, 소스 코드는 GitHub에 완전히 공개되어 있습니다. 이 소프트웨어를 사용할 때에는 거주 국가 또는 지역의 법률과 규정을 준수하고, PCL 원저자의 이용 약관 및 면책 고지를 존중해 주세요. PCL-ME를 기반으로 한 소프트웨어를 개발하거나 배포하려면 먼저 README의 라이선스 설명을 읽어 주세요.
+    community_notice: "현재 PCL-ME를 사용하고 있습니다. 이는 PCL을 기반으로 한 커뮤니티 제작 멀티플랫폼 에디션이며, 소스 코드는 GitHub에 완전히 공개되어 있습니다. 이 소프트웨어를 사용할 때에는 거주 국가 또는 지역의 법률과 규정을 준수하고, PCL 원저자의 "
+    community_ack_label: 이것이 커뮤니티에서 제작한 PCL의 멀티플랫폼 에디션임을 이해했습니다.
+    eula_summary: "을 존중해 주세요. PCL-ME를 기반으로 한 소프트웨어를 개발하거나 배포하려면 먼저 "
+    open_eula: 이용 약관 및 면책 고지
+    open_readme: README
+    readme_summary: 의 라이선스 설명을 읽어 주세요.
+    accept_and_continue: 동의하고 계속
+    accept_label: 이용 약관을 읽었으며 동의합니다
     decline: 거부 및 종료
   step_2:
-    title: 테마 선택
-    description: 색상 모드와 강조 색상을 선택하세요. 설정에서 언제든지 변경할 수 있습니다.
-  step_3:
-    title: 준비 완료!
-    description: PCL ME를 사용할 준비가 되었습니다. 아래 링크를 확인해 보세요.
+    title: 준비 완료
+    description: PCL-ME를 사용할 준비가 되었습니다. 시작용 튜토리얼을 열거나 아래 링크로 프로젝트와 피드백 채널을 확인하세요.
+    tutorial: 튜토리얼 열기
     feedback: 피드백 제출
     github: GitHub

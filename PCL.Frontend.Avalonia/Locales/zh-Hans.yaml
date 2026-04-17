@@ -623,7 +623,7 @@ shell:
         failure: 添加文件夹失败
         pick_title: 选择实例文件夹
         switched: 已切换到 {path}。
-        title: 添加已有文件夹
+        title: 导入游戏文件夹
       import_pack:
         cancelled: 已取消导入整合包。
         description: 将整合包压缩包导入到当前启动器目录。
@@ -1689,7 +1689,7 @@ setup:
       dark_custom: 深色自定义
       dark_palette: 深色配色
       global_font: 全局
-      locale: 界面语言
+      locale: 语言
       launcher_opacity: 不透明度
       light_custom: 浅色自定义
       light_palette: 浅色配色
@@ -1933,7 +1933,7 @@ setup:
       system:
         header: 系统
     fields:
-      locale: 界面语言
+      locale: 语言
       announcements: 启动器公告
       debug_animation_speed: 动画速度
       http_proxy: HTTP 代理
@@ -3504,20 +3504,25 @@ save_detail:
 
 welcome:
   step_0:
-    title: 选择语言
-    description: 请选择 PCL ME 的界面显示语言。
+    title: 欢迎使用 PCL-ME
+    description: 请选择语言和明暗主题。两项默认均跟随系统，语言切换会立即更新当前页面文本。
+    language_hint: 现在即可切换启动器语言，当前引导页文本会立刻刷新。
+    theme_hint: 选择 PCL-ME 首次启动时使用的外观模式。
   step_1:
-    title: 许可协议
-    description: 请阅读并接受最终用户许可协议（EULA），以继续使用 PCL ME。
-    eula_summary: PCL ME 是一款免费开源软件，按"现状"提供。继续使用即表示您接受最终用户许可协议的条款。请阅读完整 EULA，以了解允许的使用方式和再发行规定。
-    open_eula: 查看完整 EULA
-    accept_label: 我已阅读并接受 EULA
+    title: 使用条款
+    description: 您正在使用 PCL-ME。这是基于 PCL 的社区跨平台版本，源码在 GitHub 上完全开放。在使用该软件的时候，请遵守您所在国家/地区的法律法规，尊重 PCL 原作者的用户协议与免责声明。如果您想开发、分发基于 PCL-ME 的软件，请先阅读我们的 README 中关于许可证的说明。
+    community_notice: 您正在使用 PCL-ME。这是基于 PCL 的社区跨平台版本，源码在 GitHub 上完全开放。在使用该软件的时候，请遵守您所在国家/地区的法律法规，尊重 PCL 原作者的
+    community_ack_label: 我已了解这是 PCL 的社区构建跨平台版本。
+    eula_summary: 。如果您想开发、分发基于 PCL-ME 的软件，请先阅读我们的
+    open_eula: 用户协议与免责声明
+    open_readme: README
+    readme_summary: 中关于许可证的说明。
+    accept_and_continue: 同意并继续
+    accept_label: 我已阅读并同意使用条款
     decline: 拒绝并退出
   step_2:
-    title: 选择主题
-    description: 选择颜色模式与强调色。您可以随时在设置中更改。
-  step_3:
-    title: 设置完成！
-    description: PCL ME 已准备就绪，欢迎探索以下链接。
+    title: 一切就绪
+    description: PCL-ME 已准备就绪。您可以先打开入门教程，也可以稍后通过下方链接了解项目与反馈渠道。
+    tutorial: 打开教程
     feedback: 提交反馈
     github: GitHub

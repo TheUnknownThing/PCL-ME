@@ -162,7 +162,7 @@ internal sealed partial class FrontendShellViewModel : ViewModelBase
 
     public bool ShowTopLevelNavigation => !CanGoBack;
 
-    public bool IsTopLevelNavigationInteractive => !IsPromptOverlayVisible && !IsLaunchDialogVisible;
+    public bool IsTopLevelNavigationInteractive => !IsWelcomeOverlayVisible && !IsPromptOverlayVisible && !IsLaunchDialogVisible;
 
     public bool ShowInnerNavigation => CanGoBack;
 

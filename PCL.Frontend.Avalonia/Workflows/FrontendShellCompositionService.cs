@@ -23,7 +23,8 @@ internal static class FrontendShellCompositionService
 
         // When onboarding is needed, the welcome overlay handles EULA acceptance.
         // Suppress the legacy EULA prompt so it doesn't appear alongside the overlay.
-        var needsOnboarding = !ReadValue(sharedConfig, "SystemOnboardingCompleted", false);
+        var needsOnboarding = IsOnboardingForced() ||
+                              !ReadValue(sharedConfig, "SystemOnboardingCompleted", false);
         var effectiveMainWindowRequest = needsOnboarding
             ? mainWindowRequest with { HasAcceptedEula = true }
             : mainWindowRequest;
@@ -154,6 +155,11 @@ internal static class FrontendShellCompositionService
         return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
             ? path
             : path + Path.DirectorySeparatorChar;
+    }
+
+    private static bool IsOnboardingForced()
+    {
+        return !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PCL_FORCE_ONBOARDING"));
     }
 
     private static LauncherStartupSpecialBuildKind GetStartupSpecialBuildKind()
