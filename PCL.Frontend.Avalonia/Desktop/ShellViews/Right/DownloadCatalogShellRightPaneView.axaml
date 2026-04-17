@@ -6,79 +6,85 @@
     DataContext="{Binding Shell}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="5" Spacing="0">
+      <StackPanel
+          x:Name="ContentHost"
+          IsVisible="False"
+          Spacing="0">
+        <controls:PclCard
+            Margin="20,20,20,0"
+            Header="{Binding DownloadCatalogIntroTitle}"
+            IsVisible="{Binding HasDownloadCatalogIntro}"
+            ContentMargin="25,40,15,20">
+          <controls:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <TextBlock
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                  FontSize="13"
+                  Text="{Binding DownloadCatalogIntroBody}"
+                  TextWrapping="Wrap" />
+              <ItemsControl ItemsSource="{Binding DownloadCatalogIntroActions}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <controls:PclButton
+                        Margin="0,0,20,0"
+                        MinWidth="140"
+                        Command="{Binding Command}"
+                        ColorType="{Binding ColorType}"
+                        ContentPadding="13,0"
+                        Text="{Binding Text}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <ItemsControl ItemsSource="{Binding DownloadCatalogSections}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:PclCard
+                  Margin="20,15,20,0"
+                  Header="{Binding Title}"
+                  ShowChevron="{Binding IsCollapsible}"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  ContentMargin="20,40,18,12">
+                <controls:PclCard.CardContent>
+                  <StackPanel Spacing="8">
+                    <controls:PclLoading
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding IsLoading}"
+                        Text="{Binding LoadingText}" />
+
+                    <ItemsControl ItemsSource="{Binding Items}" IsVisible="{Binding HasItems}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <controls:PclListItem
+                              Margin="0,0,0,8"
+                              Command="{Binding Command}"
+                              Info="{Binding CombinedInfo}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </controls:PclCard.CardContent>
+              </controls:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
       <controls:PclCard
-          Margin="20,20,20,0"
-          Header="{Binding DownloadCatalogIntroTitle}"
-          IsVisible="{Binding HasDownloadCatalogIntro}"
-          ContentMargin="25,40,15,20">
-        <controls:PclCard.CardContent>
-          <StackPanel Spacing="12">
-            <TextBlock
-                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                FontSize="13"
-                Text="{Binding DownloadCatalogIntroBody}"
-                TextWrapping="Wrap" />
-            <ItemsControl ItemsSource="{Binding DownloadCatalogIntroActions}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <WrapPanel Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <controls:PclButton
-                      Margin="0,0,20,0"
-                      MinWidth="140"
-                      Command="{Binding Command}"
-                      ColorType="{Binding ColorType}"
-                      ContentPadding="13,0"
-                      Text="{Binding Text}" />
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </StackPanel>
-        </controls:PclCard.CardContent>
-      </controls:PclCard>
-
-      <ItemsControl IsVisible="{Binding ShowDownloadCatalogContent}" ItemsSource="{Binding DownloadCatalogSections}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <controls:PclCard
-                Margin="20,15,20,0"
-                Header="{Binding Title}"
-                ShowChevron="{Binding IsCollapsible}"
-                IsChevronExpanded="{Binding IsExpanded}"
-                ContentMargin="20,40,18,12">
-              <controls:PclCard.CardContent>
-                <StackPanel Spacing="8">
-                  <controls:PclLoading
-                      HorizontalAlignment="Center"
-                      IsVisible="{Binding IsLoading}"
-                      Text="{Binding LoadingText}" />
-
-                  <ItemsControl ItemsSource="{Binding Items}" IsVisible="{Binding HasItems}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <controls:PclListItem
-                            Margin="0,0,0,8"
-                            Command="{Binding Command}"
-                            Info="{Binding CombinedInfo}"
-                            Title="{Binding Title}" />
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
-              </controls:PclCard.CardContent>
-            </controls:PclCard>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-
-      <controls:PclCard
+          x:Name="LoadingCard"
           Margin="40,50"
           ContentMargin="20,20,20,17"
           HorizontalAlignment="Center"
-          IsVisible="{Binding ShowDownloadCatalogLoadingCard}">
+          IsVisible="False">
         <controls:PclCard.CardContent>
           <controls:PclLoading
               HorizontalAlignment="Center"

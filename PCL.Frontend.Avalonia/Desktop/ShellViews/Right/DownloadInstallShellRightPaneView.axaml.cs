@@ -10,11 +10,15 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
 {
     private readonly ScrollViewer _installScrollViewer;
     private readonly StackPanel _minecraftCatalogStage;
+    private readonly PCL.Frontend.Avalonia.Desktop.Controls.PclCard _minecraftCatalogLoadingCard;
+    private readonly PCL.Frontend.Avalonia.Desktop.Controls.PclCard _minecraftCatalogEmptyStateCard;
+    private readonly ItemsControl _minecraftCatalogContentHost;
     private readonly StackPanel _selectionStage;
     private FrontendShellViewModel? _observedShell;
     private bool _hasAppliedInitialStageVisibility;
     private DownloadInstallStage _currentStage = DownloadInstallStage.Catalog;
     private int _stageAnimationVersion;
+    private int _catalogVisualStateVersion;
 
     public DownloadInstallShellRightPaneView()
     {
@@ -23,6 +27,12 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
             ?? throw new InvalidOperationException("The install page did not contain the scroll viewer.");
         _minecraftCatalogStage = this.FindControl<StackPanel>("MinecraftCatalogStage")
             ?? throw new InvalidOperationException("The install page did not contain the Minecraft version selection stage.");
+        _minecraftCatalogLoadingCard = this.FindControl<PCL.Frontend.Avalonia.Desktop.Controls.PclCard>("MinecraftCatalogLoadingCard")
+            ?? throw new InvalidOperationException("The install page did not contain the Minecraft version loading card.");
+        _minecraftCatalogEmptyStateCard = this.FindControl<PCL.Frontend.Avalonia.Desktop.Controls.PclCard>("MinecraftCatalogEmptyStateCard")
+            ?? throw new InvalidOperationException("The install page did not contain the Minecraft version empty state.");
+        _minecraftCatalogContentHost = this.FindControl<ItemsControl>("MinecraftCatalogContentHost")
+            ?? throw new InvalidOperationException("The install page did not contain the Minecraft version content host.");
         _selectionStage = this.FindControl<StackPanel>("SelectionStage")
             ?? throw new InvalidOperationException("The install page did not contain the loader selection stage.");
         DataContextChanged += OnDataContextChanged;
@@ -30,16 +40,20 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
         {
             ObserveShell(null);
             _stageAnimationVersion++;
+            _catalogVisualStateVersion++;
             _hasAppliedInitialStageVisibility = false;
         };
         ConfigureStageMotion();
+        ConfigureCatalogMotion();
         ScheduleStageSync();
+        ScheduleCatalogStateSync();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         ObserveShell(DataContext as FrontendShellViewModel);
         ScheduleStageSync();
+        ScheduleCatalogStateSync();
     }
 
     private void ObserveShell(FrontendShellViewModel? shell)
@@ -63,14 +77,20 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
 
     private void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is not (
+        if (e.PropertyName is (
             nameof(FrontendShellViewModel.ShowDownloadInstallMinecraftCatalog)
             or nameof(FrontendShellViewModel.ShowDownloadInstallSelectionStage)))
         {
-            return;
+            ScheduleStageSync();
         }
 
-        ScheduleStageSync();
+        if (e.PropertyName is (
+            nameof(FrontendShellViewModel.ShowDownloadInstallMinecraftCatalogLoading)
+            or nameof(FrontendShellViewModel.ShowDownloadInstallMinecraftCatalogContent)
+            or nameof(FrontendShellViewModel.ShowDownloadInstallMinecraftCatalogEmptyState)))
+        {
+            ScheduleCatalogStateSync();
+        }
     }
 
     private void ScheduleStageSync()
@@ -118,6 +138,8 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
         {
             _currentStage = targetStage;
         }
+
+        ScheduleCatalogStateSync();
     }
 
     private DownloadInstallStage ResolveTargetStage()
@@ -161,9 +183,68 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
         await ShowAnimatedAsync(_minecraftCatalogStage, version);
     }
 
+    private void ScheduleCatalogStateSync()
+    {
+        var version = ++_catalogVisualStateVersion;
+        Dispatcher.UIThread.Post(
+            async () => await SyncCatalogVisualStateAsync(version),
+            DispatcherPriority.Background);
+    }
+
+    private async Task SyncCatalogVisualStateAsync(int version)
+    {
+        if (version != _catalogVisualStateVersion)
+        {
+            return;
+        }
+
+        var showCatalog = _observedShell?.ShowDownloadInstallMinecraftCatalog == true;
+        var showLoading = showCatalog && _observedShell?.ShowDownloadInstallMinecraftCatalogLoading == true;
+        var showContent = showCatalog && _observedShell?.ShowDownloadInstallMinecraftCatalogContent == true;
+        var showEmptyState = showCatalog && _observedShell?.ShowDownloadInstallMinecraftCatalogEmptyState == true;
+
+        if (VisualRoot is null)
+        {
+            ApplyCatalogVisibility(showLoading, showContent, showEmptyState);
+            return;
+        }
+
+        if (showLoading)
+        {
+            await HideAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
+            await ShowAnimatedAsync(_minecraftCatalogLoadingCard, version, _catalogVisualStateVersion);
+            return;
+        }
+
+        await HideAnimatedAsync(_minecraftCatalogLoadingCard, version, _catalogVisualStateVersion);
+
+        if (showEmptyState)
+        {
+            await HideAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+            await ShowAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
+            return;
+        }
+
+        await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
+        if (showContent)
+        {
+            await ShowAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+        }
+        else
+        {
+            await HideAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+        }
+    }
+
     private async Task ShowAnimatedAsync(Control control, int version)
     {
-        if (version != _stageAnimationVersion)
+        await ShowAnimatedAsync(control, version, _stageAnimationVersion);
+    }
+
+    private async Task ShowAnimatedAsync(Control control, int version, int expectedVersion)
+    {
+        if (version != expectedVersion)
         {
             return;
         }
@@ -175,7 +256,7 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
 
         control.IsVisible = true;
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (version != _stageAnimationVersion)
+        if (version != expectedVersion)
         {
             return;
         }
@@ -185,13 +266,18 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
 
     private async Task HideAnimatedAsync(Control control, int version)
     {
-        if (version != _stageAnimationVersion || !control.IsVisible)
+        await HideAnimatedAsync(control, version, _stageAnimationVersion);
+    }
+
+    private async Task HideAnimatedAsync(Control control, int version, int expectedVersion)
+    {
+        if (version != expectedVersion || !control.IsVisible)
         {
             return;
         }
 
         await Motion.PlayExitAsync(control);
-        if (version != _stageAnimationVersion)
+        if (version != expectedVersion)
         {
             return;
         }
@@ -205,14 +291,37 @@ internal sealed partial class DownloadInstallShellRightPaneView : UserControl
         ConfigureStage(_selectionStage, enterOffsetX: 48, exitOffsetX: 48);
     }
 
-    private static void ConfigureStage(Control control, double enterOffsetX, double exitOffsetX)
+    private void ConfigureCatalogMotion()
+    {
+        ConfigureStage(_minecraftCatalogContentHost, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: -8, exitOffsetY: -8, overshootTranslation: true);
+        ConfigureStage(_minecraftCatalogEmptyStateCard, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: -6, exitOffsetY: -6, overshootTranslation: true);
+        ConfigureStage(_minecraftCatalogLoadingCard, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: 10, exitOffsetY: 8, overshootTranslation: true);
+        Motion.SetStaggerChildren(_minecraftCatalogContentHost, true);
+        Motion.SetStaggerStep(_minecraftCatalogContentHost, 38);
+        Motion.SetDelay(_minecraftCatalogContentHost, 32);
+    }
+
+    private void ApplyCatalogVisibility(bool showLoading, bool showContent, bool showEmptyState)
+    {
+        _minecraftCatalogLoadingCard.IsVisible = showLoading;
+        _minecraftCatalogContentHost.IsVisible = showContent;
+        _minecraftCatalogEmptyStateCard.IsVisible = showEmptyState;
+    }
+
+    private static void ConfigureStage(
+        Control control,
+        double enterOffsetX,
+        double exitOffsetX,
+        double enterOffsetY = 0,
+        double exitOffsetY = 0,
+        bool overshootTranslation = false)
     {
         Motion.SetInitialOpacity(control, 0);
         Motion.SetOffsetX(control, enterOffsetX);
-        Motion.SetOffsetY(control, 0);
+        Motion.SetOffsetY(control, enterOffsetY);
         Motion.SetExitOffsetX(control, exitOffsetX);
-        Motion.SetExitOffsetY(control, 0);
-        Motion.SetOvershootTranslation(control, false);
+        Motion.SetExitOffsetY(control, exitOffsetY);
+        Motion.SetOvershootTranslation(control, overshootTranslation);
     }
 
     private enum DownloadInstallStage

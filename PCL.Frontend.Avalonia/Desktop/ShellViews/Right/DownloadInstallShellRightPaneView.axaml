@@ -11,7 +11,25 @@
       <StackPanel
           x:Name="MinecraftCatalogStage"
           Spacing="12">
-        <controls:PclCard IsVisible="{Binding ShowDownloadInstallMinecraftCatalogLoading}" ContentMargin="18,16,18,16">
+        <controls:PclCard
+            x:Name="MinecraftCatalogLoadingCard"
+            Margin="40,50"
+            ContentMargin="20,20,20,17"
+            HorizontalAlignment="Center"
+            IsVisible="False"
+            VerticalAlignment="Center">
+          <controls:PclCard.CardContent>
+            <controls:PclLoading
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Text="{Binding DownloadInstallMinecraftCatalogStatus}" />
+          </controls:PclCard.CardContent>
+        </controls:PclCard>
+
+        <controls:PclCard
+            x:Name="MinecraftCatalogEmptyStateCard"
+            IsVisible="False"
+            ContentMargin="18,16,18,16">
           <controls:PclCard.CardContent>
             <TextBlock
                 Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
@@ -21,17 +39,10 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <controls:PclCard IsVisible="{Binding ShowDownloadInstallMinecraftCatalogEmptyState}" ContentMargin="18,16,18,16">
-          <controls:PclCard.CardContent>
-            <TextBlock
-                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                FontSize="13"
-                Text="{Binding DownloadInstallMinecraftCatalogStatus}"
-                TextWrapping="Wrap" />
-          </controls:PclCard.CardContent>
-        </controls:PclCard>
-
-        <ItemsControl ItemsSource="{Binding DownloadInstallMinecraftSections}" IsVisible="{Binding ShowDownloadInstallMinecraftCatalogContent}">
+        <ItemsControl
+            x:Name="MinecraftCatalogContentHost"
+            IsVisible="False"
+            ItemsSource="{Binding DownloadInstallMinecraftSections}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <controls:PclCard
