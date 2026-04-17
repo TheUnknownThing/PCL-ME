@@ -27,7 +27,8 @@ internal sealed partial class FrontendShellViewModel
         var profile = _launchComposition.SelectedProfile;
         var version = Interlocked.Increment(ref _launchAvatarRefreshVersion);
         SetLaunchAvatarImagePath(TryGetCachedLaunchAvatarImagePath(profile) ?? LaunchAvatarFallbackImagePath);
-        _ = RefreshLaunchAvatarAsync(version, profile);
+        // Avatar cache generation can complete synchronously from local files, so keep it off the UI thread.
+        _ = Task.Run(() => RefreshLaunchAvatarAsync(version, profile));
     }
 
     private async Task RefreshLaunchAvatarAsync(int version, FrontendLaunchProfileSummary profile)
