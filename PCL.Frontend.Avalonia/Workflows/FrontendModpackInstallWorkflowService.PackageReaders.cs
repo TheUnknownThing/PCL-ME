@@ -11,6 +11,15 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static partial class FrontendModpackInstallWorkflowService
 {
+    internal static FrontendModpackPackage InspectPackage(
+        string archivePath,
+        int communitySourcePreference,
+        HttpClient httpClient,
+        CancellationToken cancelToken)
+    {
+        return InspectPackage(archivePath, communitySourcePreference, httpClient, cancelToken, i18n: null);
+    }
+
     private static FrontendModpackPackage InspectPackage(
         string archivePath,
         int communitySourcePreference,
@@ -137,8 +146,12 @@ internal static partial class FrontendModpackInstallWorkflowService
             dependencies["minecraft"]?.GetValue<string>() ?? string.Empty,
             dependencies["forge"]?.GetValue<string>(),
             dependencies["neoforge"]?.GetValue<string>() ?? dependencies["neo-forge"]?.GetValue<string>(),
+            null,
             dependencies["fabric-loader"]?.GetValue<string>(),
+            null,
             dependencies["quilt-loader"]?.GetValue<string>(),
+            null,
+            null,
             null,
             root["versionId"]?.GetValue<string>(),
             null,
@@ -187,9 +200,13 @@ internal static partial class FrontendModpackInstallWorkflowService
             minecraftVersion,
             addonVersions.TryGetValue("forge", out var forgeVersion) ? forgeVersion : null,
             addonVersions.TryGetValue("neoforge", out var neoForgeVersion) ? neoForgeVersion : null,
+            addonVersions.TryGetValue("cleanroom", out var cleanroomVersion) ? cleanroomVersion : null,
             addonVersions.TryGetValue("fabric", out var fabricVersion) ? fabricVersion : null,
+            addonVersions.TryGetValue("legacyfabric", out var legacyFabricVersion) ? legacyFabricVersion : null,
             addonVersions.TryGetValue("quilt", out var quiltVersion) ? quiltVersion : null,
+            addonVersions.TryGetValue("liteloader", out var liteLoaderVersion) ? liteLoaderVersion : null,
             addonVersions.TryGetValue("optifine", out var optiFineVersion) ? optiFineVersion : null,
+            addonVersions.TryGetValue("labymod", out var labyModVersion) ? labyModVersion : null,
             root["version"]?.GetValue<string>(),
             ReadJoinedText(launchInfo?["javaArgument"]),
             ReadJoinedText(launchInfo?["launchArgument"]),

@@ -20,8 +20,12 @@ internal static partial class FrontendModpackInstallWorkflowService
         var primaryChoice =
             ResolveLoaderChoice("Forge", package.MinecraftVersion, package.ForgeVersion, request.DownloadSourceIndex, i18n) ??
             ResolveLoaderChoice("NeoForge", package.MinecraftVersion, package.NeoForgeVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("Cleanroom", package.MinecraftVersion, package.CleanroomVersion, request.DownloadSourceIndex, i18n) ??
             ResolveLoaderChoice("Fabric", package.MinecraftVersion, package.FabricVersion, request.DownloadSourceIndex, i18n) ??
-            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion, request.DownloadSourceIndex, i18n);
+            ResolveLoaderChoice("Legacy Fabric", package.MinecraftVersion, package.LegacyFabricVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("Quilt", package.MinecraftVersion, package.QuiltVersion, request.DownloadSourceIndex, i18n) ??
+            ResolveLoaderChoice("LabyMod", package.MinecraftVersion, package.LabyModVersion, request.DownloadSourceIndex, i18n);
+        var liteLoaderChoice = ResolveLoaderChoice("LiteLoader", package.MinecraftVersion, package.LiteLoaderVersion, request.DownloadSourceIndex, i18n);
         var optiFineChoice = ResolveLoaderChoice("OptiFine", package.MinecraftVersion, package.OptiFineVersion, request.DownloadSourceIndex, i18n);
 
         return new FrontendInstallApplyRequest(
@@ -30,7 +34,7 @@ internal static partial class FrontendModpackInstallWorkflowService
             request.DownloadSourceIndex,
             minecraftChoice,
             primaryChoice,
-            LiteLoaderChoice: null,
+            LiteLoaderChoice: liteLoaderChoice,
             OptiFineChoice: optiFineChoice,
             FabricApiChoice: null,
             LegacyFabricApiChoice: null,

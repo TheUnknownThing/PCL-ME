@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Frontend.Avalonia.Models;
+using PCL.Frontend.Avalonia.Workflows;
 using PCL.Frontend.Avalonia.ViewModels.ShellPanes;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -275,13 +276,31 @@ internal sealed partial class FrontendShellViewModel
         var sources = CollectInstanceExportSources()
             .GroupBy(entry => entry.SourcePath, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
+            .Select(entry => new FrontendModpackExportSource(entry.SourcePath, entry.ArchivePath))
             .ToArray();
-        using (var archive = ZipFile.Open(archivePath, ZipArchiveMode.Create))
+
+        try
         {
-            foreach (var source in sources)
+            FrontendModpackExportWorkflowService.CreateArchive(new FrontendModpackExportRequest(
+                archivePath,
+                InstanceExportModrinthMode ? FrontendModpackExportPackageKind.Modrinth : FrontendModpackExportPackageKind.Mcbbs,
+                _instanceComposition.Selection.LauncherDirectory,
+                _instanceComposition.Selection.InstanceName,
+                GetEffectiveInstanceExportName(),
+                GetEffectiveInstanceExportVersion(),
+                sources,
+                InstanceLaunchJvmArguments,
+                InstanceLaunchGameArguments));
+        }
+        catch (Exception ex)
+        {
+            if (File.Exists(archivePath))
             {
-                AddInstanceExportSourceToArchive(archive, source.SourcePath, source.ArchivePath);
+                File.Delete(archivePath);
             }
+
+            AddFailureActivity("开始导出", ex.Message);
+            return;
         }
 
         OpenInstanceTarget(T("instance.export.activities.start"), archivePath, T("instance.export.messages.archive_missing"));
@@ -397,6 +416,11 @@ internal sealed partial class FrontendShellViewModel
         var indieDirectory = _instanceComposition.Selection.IndieDirectory;
         var instanceDirectory = _instanceComposition.Selection.InstanceDirectory;
 
+        foreach (var source in CollectBaseInstanceExportSources())
+        {
+            yield return source;
+        }
+
         foreach (var group in InstanceExportOptionGroups.Where(entry => entry.Header.IsChecked))
         {
             switch (group.Header.Key)
@@ -511,6 +535,86 @@ internal sealed partial class FrontendShellViewModel
                 yield return (entry.Path, BuildOverrideArchivePath(indieDirectory, entry.Path));
             }
         }
+    }
+
+    private IEnumerable<(string SourcePath, string ArchivePath)> CollectBaseInstanceExportSources()
+    {
+        var selection = _instanceComposition.Selection;
+        if (!selection.IsIndie || !Directory.Exists(selection.IndieDirectory))
+        {
+            yield break;
+        }
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(selection.IndieDirectory, "*", SearchOption.TopDirectoryOnly)
+                     .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+        {
+            if (ShouldExcludeBaseInstanceExportEntry(selection, entry))
+            {
+                continue;
+            }
+
+            yield return (entry, BuildOverrideArchivePath(selection.IndieDirectory, entry));
+        }
+    }
+
+    private static bool ShouldExcludeBaseInstanceExportEntry(FrontendInstanceSelectionState selection, string path)
+    {
+        var name = Path.GetFileName(path);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return true;
+        }
+
+        if (Directory.Exists(path))
+        {
+            if (name.EndsWith("-natives", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return name is ".mixin.out"
+                or "PCL"
+                or "assets"
+                or "asm"
+                or "backup"
+                or "backups"
+                or "crash-reports"
+                or "downloads"
+                or "dynamic-resource-pack-cache"
+                or "journeymap"
+                or "libraries"
+                or "local"
+                or "logs"
+                or "moddata"
+                or "replay_recordings"
+                or "resourcepacks"
+                or "saves"
+                or "schematics"
+                or "screenshots"
+                or "shaderpacks"
+                or "versions"
+                or "NVIDIA"
+                or "TCNodeTracker";
+        }
+
+        if (string.Equals(name, $"{selection.InstanceName}.jar", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, $"{selection.InstanceName}.json", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (name.StartsWith("hs_err_pid", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".log", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return name is "launcher_profiles.json"
+            or "options.txt"
+            or "optionsof.txt"
+            or "servers.dat"
+            or "usercache.json"
+            or "usernamecache.json";
     }
 
     private IEnumerable<(string SourcePath, string ArchivePath)> ResolveCheckedExportEntries(
