@@ -1427,8 +1427,6 @@ setup:
       max_thread_count: Hilos de descarga máximos
       speed_limit: Límite de velocidad de descarga
       download_timeout: Tiempo de espera de descarga
-      target_folder: Carpeta de destino
-      target_folder_hint: Se aplica a instancias recién instaladas.
       install_behavior: Comportamiento de instalación
       community_download_source: Fuente de descarga de la comunidad
       file_name_format: Formato de nombre de archivo de recurso
@@ -1436,7 +1434,6 @@ setup:
       game_language: Idioma del juego
     flags:
       auto_select_new_instance: Seleccionar automáticamente la nueva instancia después de la instalación
-      upgrade_partial_authlib: Actualizar automáticamente el soporte de authlib parcial
       hide_quilt_loader: Ocultar cargador de edredones en listas de versiones
       auto_switch_game_language: Cambia el idioma del juego automáticamente
       detect_clipboard_links: Detectar enlaces de recursos desde el portapapeles

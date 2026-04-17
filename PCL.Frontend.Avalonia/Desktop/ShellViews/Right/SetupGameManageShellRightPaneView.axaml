@@ -8,7 +8,7 @@
     <StackPanel Margin="25,10,25,10" Spacing="15">
       <controls:PclCard Header="{Binding SetupText.GameManage.GameResourcesCardHeader}" ContentMargin="25,37,25,15">
         <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,Auto,Auto,Auto,Auto,27">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,7,28,7,Auto,Auto,Auto,27">
             <TextBlock
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
@@ -103,37 +103,16 @@
 
             <TextBlock
                 Grid.Row="7"
-                VerticalAlignment="Top"
-                Foreground="{DynamicResource ColorBrush1}"
-                FontSize="13.5"
-                Margin="0,5,25,5"
-                Text="{Binding SetupText.GameManage.TargetFolderLabel}" />
-            <TextBlock
-                Grid.Row="7"
-                Grid.Column="1"
-                Margin="0,5"
-                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                FontSize="12"
-                Text="{Binding SetupText.GameManage.TargetFolderHint}"
-                TextWrapping="Wrap" />
-
-            <TextBlock
-                Grid.Row="8"
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
                 Text="{Binding SetupText.GameManage.InstallBehaviorLabel}" />
-            <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,*">
+            <Grid Grid.Row="7" Grid.Column="1" ColumnDefinitions="*">
               <CheckBox
                   Foreground="{DynamicResource ColorBrush1}"
                   Content="{Binding SetupText.GameManage.AutoSelectNewInstanceLabel}"
                   IsChecked="{Binding AutoSelectNewInstance}" />
-              <CheckBox
-                  Grid.Column="1"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.GameManage.UpgradePartialAuthlibLabel}"
-                  IsChecked="{Binding UpgradePartialAuthlib}" />
             </Grid>
           </Grid>
         </controls:PclCard.CardContent>

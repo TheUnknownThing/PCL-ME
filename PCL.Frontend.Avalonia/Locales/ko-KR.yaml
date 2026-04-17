@@ -1422,8 +1422,6 @@ setup:
       max_thread_count: 최대 다운로드 스레드
       speed_limit: 다운로드 속도 제한
       download_timeout: 다운로드 시간 초과
-      target_folder: 대상 폴더
-      target_folder_hint: 새로 설치된 인스턴스에 적용됩니다.
       install_behavior: 설치 동작
       community_download_source: 커뮤니티 다운로드 소스
       file_name_format: 리소스 파일 이름 형식
@@ -1431,7 +1429,6 @@ setup:
       game_language: 게임 언어
     flags:
       auto_select_new_instance: 설치 후 새 인스턴스를 자동으로 선택
-      upgrade_partial_authlib: 부분 authlib 지원을 자동으로 업그레이드
       hide_quilt_loader: 버전 목록에서 Quilt Loader 숨기기
       auto_switch_game_language: 게임 언어 자동 전환
       detect_clipboard_links: 클립보드에서 리소스 링크 감지

@@ -187,11 +187,8 @@ internal sealed partial class FrontendShellViewModel
                 MaxThreadCountLabel = _i18n.T("setup.game_manage.fields.max_thread_count"),
                 SpeedLimitLabel = _i18n.T("setup.game_manage.fields.speed_limit"),
                 DownloadTimeoutLabel = _i18n.T("setup.game_manage.fields.download_timeout"),
-                TargetFolderLabel = _i18n.T("setup.game_manage.fields.target_folder"),
-                TargetFolderHint = _i18n.T("setup.game_manage.fields.target_folder_hint"),
                 InstallBehaviorLabel = _i18n.T("setup.game_manage.fields.install_behavior"),
                 AutoSelectNewInstanceLabel = _i18n.T("setup.game_manage.flags.auto_select_new_instance"),
-                UpgradePartialAuthlibLabel = _i18n.T("setup.game_manage.flags.upgrade_partial_authlib"),
                 CommunityResourcesCardHeader = _i18n.T("setup.game_manage.cards.community_resources.header"),
                 CommunityDownloadSourceLabel = _i18n.T("setup.game_manage.fields.community_download_source"),
                 FileNameFormatLabel = _i18n.T("setup.game_manage.fields.file_name_format"),
@@ -485,11 +482,8 @@ internal sealed class SetupGameManageLocalization
     public required string MaxThreadCountLabel { get; init; }
     public required string SpeedLimitLabel { get; init; }
     public required string DownloadTimeoutLabel { get; init; }
-    public required string TargetFolderLabel { get; init; }
-    public required string TargetFolderHint { get; init; }
     public required string InstallBehaviorLabel { get; init; }
     public required string AutoSelectNewInstanceLabel { get; init; }
-    public required string UpgradePartialAuthlibLabel { get; init; }
     public required string CommunityResourcesCardHeader { get; init; }
     public required string CommunityDownloadSourceLabel { get; init; }
     public required string FileNameFormatLabel { get; init; }

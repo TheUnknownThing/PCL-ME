@@ -1422,8 +1422,6 @@ setup:
       max_thread_count: Maximale Download-Threads
       speed_limit: Download-Geschwindigkeitslimit
       download_timeout: Download-Zeitüberschreitung
-      target_folder: Zielordner
-      target_folder_hint: Gilt für neu installierte Instanzen.
       install_behavior: Installationsverhalten
       community_download_source: Downloadquelle für Community-Ressourcen
       file_name_format: Format für Ressourcendateinamen
@@ -1431,7 +1429,6 @@ setup:
       game_language: Spielsprache
     flags:
       auto_select_new_instance: Neue Instanz nach der Installation automatisch auswählen
-      upgrade_partial_authlib: Teilweise Authlib-Unterstützung automatisch aktualisieren
       hide_quilt_loader: Quilt-Loader in Versionslisten ausblenden
       auto_switch_game_language: Spielsprache automatisch wechseln
       detect_clipboard_links: Ressourcenlinks aus der Zwischenablage erkennen

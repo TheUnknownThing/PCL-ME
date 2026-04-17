@@ -1424,8 +1424,6 @@ setup:
       max_thread_count: 最大下载线程数
       speed_limit: 下载速度限制
       download_timeout: 下载超时
-      target_folder: 目标文件夹
-      target_folder_hint: 应用于新安装的实例。
       install_behavior: 安装行为
       community_download_source: 社区资源下载源
       file_name_format: 资源文件名格式
@@ -1433,7 +1431,6 @@ setup:
       game_language: 游戏语言
     flags:
       auto_select_new_instance: 安装后自动选中新实例
-      upgrade_partial_authlib: 自动升级部分 authlib 支持
       hide_quilt_loader: 在版本列表中隐藏 Quilt
       auto_switch_game_language: 自动切换游戏语言
       detect_clipboard_links: 检测剪贴板中的资源链接

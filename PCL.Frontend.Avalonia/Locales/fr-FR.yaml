@@ -1422,8 +1422,6 @@ setup:
       max_thread_count: Nombre maximum de fils de téléchargement
       speed_limit: Limite de vitesse de téléchargement
       download_timeout: Délai de téléchargement
-      target_folder: Dossier cible
-      target_folder_hint: S'applique aux instances nouvellement installées.
       install_behavior: Comportement d'installation
       community_download_source: Source de téléchargement de la communauté
       file_name_format: Format du nom de fichier de ressource
@@ -1431,7 +1429,6 @@ setup:
       game_language: Langage du jeu
     flags:
       auto_select_new_instance: Sélectionnez automatiquement la nouvelle instance après l'installation
-      upgrade_partial_authlib: Mettre à niveau automatiquement la prise en charge partielle d'authlib
       hide_quilt_loader: Masquer le chargeur Quilt dans les listes de versions
       auto_switch_game_language: Changer automatiquement la langue du jeu
       detect_clipboard_links: Détecter les liens de ressources du presse-papiers

@@ -1609,8 +1609,6 @@ setup:
       max_thread_count: []
       speed_limit: []
       download_timeout: []
-      target_folder: []
-      target_folder_hint: []
       install_behavior: []
       community_download_source: []
       file_name_format: []
@@ -1618,7 +1616,6 @@ setup:
       game_language: []
     flags:
       auto_select_new_instance: []
-      upgrade_partial_authlib: []
       hide_quilt_loader: []
       auto_switch_game_language: []
       detect_clipboard_links: []

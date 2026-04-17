@@ -1424,8 +1424,6 @@ setup:
       max_thread_count: Maximum download threads
       speed_limit: Download speed limit
       download_timeout: Download timeout
-      target_folder: Target folder
-      target_folder_hint: Applies to newly installed instances.
       install_behavior: Install behavior
       community_download_source: Community download source
       file_name_format: Resource filename format
@@ -1433,7 +1431,6 @@ setup:
       game_language: Game language
     flags:
       auto_select_new_instance: Automatically select the new instance after installation
-      upgrade_partial_authlib: Upgrade partial authlib support automatically
       hide_quilt_loader: Hide Quilt loader in version lists
       auto_switch_game_language: Switch game language automatically
       detect_clipboard_links: Detect resource links from the clipboard
