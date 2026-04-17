@@ -17,16 +17,10 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<HomepagePresetDefinition> HomepagePresetCatalog =>
     [
         new(T("launch.homepage.presets.random_hint"), HomepagePresetKind.RandomHint, null),
-        new(T("launch.homepage.presets.minecraft_news"), HomepagePresetKind.RemoteMarkup, "https://pcl.mcnews.thestack.top"),
-        new(T("launch.homepage.presets.simple_homepage"), HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/MFn233/Custom.xaml"),
+        new(T("launch.homepage.presets.minecraft_news"), HomepagePresetKind.RemoteMarkup, "https://news.bugjump.net/News.xaml"),
         new(T("launch.homepage.presets.daily_modpacks"), HomepagePresetKind.RemoteMarkup, "https://pclsub.sodamc.com/"),
         new(T("launch.homepage.presets.skin_recommendations"), HomepagePresetKind.RemoteMarkup, "https://forgepixel.com/pcl_sub_file"),
-        new(T("launch.homepage.presets.openbmclapi_dashboard"), HomepagePresetKind.RemoteMarkup, "https://pcl-bmcl.milu.ink/"),
-        new(T("launch.homepage.presets.news_flash"), HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Joker2184/UpdateHomepage.xaml"),
-        new(T("launch.homepage.presets.whats_new"), HomepagePresetKind.RemoteMarkup, "https://raw.gitcode.com/WForst-Breeze/WhatsNewPCL/raw/main/Custom.xaml"),
-        new(T("launch.homepage.presets.magazine"), HomepagePresetKind.RemoteMarkup, "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Ext1nguisher/Custom.xaml"),
-        new(T("launch.homepage.presets.github_dashboard"), HomepagePresetKind.RemoteMarkup, "https://ddf.pcl-community.org/Custom.xaml"),
-        new(T("launch.homepage.presets.announcement_board"), HomepagePresetKind.RemoteMarkup, "https://s3.pysio.online/pcl2-ce/apiv2/pages/announce.xaml"),
+        new(T("launch.homepage.presets.magazine"), HomepagePresetKind.RemoteMarkup, "https://cdn.jsdelivr.net/gh/CreeperIsASpy/Magazine-Homepage-PCL@main/output/Custom.xaml"),
         new(T("launch.homepage.presets.official_news"), HomepagePresetKind.OfficialNews, null)
     ];
     private CancellationTokenSource? _homepageRefreshCts;
@@ -119,8 +113,8 @@ internal sealed partial class FrontendShellViewModel
                             [CreateHomepageAction(
                                 T("launch.homepage.random_hint.actions.next"),
                                 T("launch.homepage.random_hint.actions.next_info"),
-                                T("launch.homepage.actions.refresh"),
-                                "/")])
+                                "refresh_homepage",
+                                string.Empty)])
                     ],
                     isLoading: false,
                     statusText: string.Empty);
@@ -406,7 +400,7 @@ internal sealed partial class FrontendShellViewModel
 
     private LaunchHomepageSectionViewModel ParseHomepageCard(XElement card, HomepageContentOrigin origin)
     {
-        var title = ReadAttribute(card, "Title");
+        var title = ReadDisplayAttribute(card, "Title");
         var lines = new List<string>();
         var images = new List<LaunchHomepageImageViewModel>();
         var actions = new List<SimpleListEntryViewModel>();
@@ -431,21 +425,32 @@ internal sealed partial class FrontendShellViewModel
         List<LaunchHomepageImageViewModel> images,
         List<SimpleListEntryViewModel> actions)
     {
+        if (IsXamlInfrastructureElement(element))
+        {
+            return;
+        }
+
         if (IsNamed(element, "TextBlock"))
         {
-            AddHelpText(lines, ReadAttribute(element, "Text"));
+            AddHelpText(lines, ReadDisplayAttribute(element, "Text"));
             return;
         }
 
         if (IsNamed(element, "Label"))
         {
-            AddHelpText(lines, ReadAttribute(element, "Content"));
+            AddHelpText(lines, ReadDisplayAttribute(element, "Content"));
             return;
         }
 
         if (IsNamed(element, "MyHint"))
         {
-            AddHelpText(lines, T("launch.homepage.hints.prefix", ("text", ReadAttribute(element, "Text"))));
+            AddHelpText(lines, T("launch.homepage.hints.prefix", ("text", ReadDisplayAttribute(element, "Text"))));
+            return;
+        }
+
+        if (IsRichTextElement(element))
+        {
+            AddHelpText(lines, ReadElementDisplayText(element));
             return;
         }
 
@@ -457,10 +462,10 @@ internal sealed partial class FrontendShellViewModel
 
         if (IsNamed(element, "MyListItem"))
         {
-            var title = ReadAttribute(element, "Title");
+            var title = ReadDisplayAttribute(element, "Title");
             var eventType = ReadAttribute(element, "EventType");
             var eventData = ResolveHomepageEventData(eventType, ReadAttribute(element, "EventData"), origin);
-            var info = ReadAttribute(element, "Info");
+            var info = ReadDisplayAttribute(element, "Info");
             actions.Add(CreateHomepageAction(
                 string.IsNullOrWhiteSpace(title) ? DeriveHelpActionTitle(eventType, eventData) : title,
                 string.IsNullOrWhiteSpace(info)
@@ -476,7 +481,7 @@ internal sealed partial class FrontendShellViewModel
             var source = ResolveHomepageAssetTarget(ReadAttribute(element, "Source"), origin);
             if (!string.IsNullOrWhiteSpace(source))
             {
-                images.Add(CreateHomepageImage(source, ReadAttribute(element, "ToolTip"), origin));
+                images.Add(CreateHomepageImage(source, ReadDisplayAttribute(element, "ToolTip"), origin));
             }
 
             return;
@@ -494,22 +499,22 @@ internal sealed partial class FrontendShellViewModel
         List<string> lines,
         List<SimpleListEntryViewModel> actions)
     {
-        var title = ReadAttribute(element, "Text");
+        var title = ReadDisplayAttribute(element, "Text");
         if (string.IsNullOrWhiteSpace(title))
         {
-            title = ReadAttribute(element, "Title");
+            title = ReadDisplayAttribute(element, "Title");
         }
 
         if (string.IsNullOrWhiteSpace(title))
         {
-            title = ReadAttribute(element, "ToolTip");
+            title = ReadDisplayAttribute(element, "ToolTip");
         }
 
         var eventType = ReadAttribute(element, "EventType");
         var eventData = ResolveHomepageEventData(eventType, ReadAttribute(element, "EventData"), origin);
         if (!string.IsNullOrWhiteSpace(eventType) || !string.IsNullOrWhiteSpace(eventData))
         {
-            var info = ReadAttribute(element, "ToolTip");
+            var info = ReadDisplayAttribute(element, "ToolTip");
             actions.Add(CreateHomepageAction(
                 string.IsNullOrWhiteSpace(title) ? DeriveHelpActionTitle(eventType, eventData) : title,
                 string.IsNullOrWhiteSpace(info)

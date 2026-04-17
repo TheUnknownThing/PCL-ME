@@ -175,7 +175,7 @@ internal sealed partial class FrontendShellViewModel
 
     private HelpDetailSectionViewModel ParseHelpCard(XElement card)
     {
-        var title = ReadAttribute(card, "Title");
+        var title = ReadDisplayAttribute(card, "Title");
         var lines = new List<string>();
         var actions = new List<SimpleListEntryViewModel>();
 
@@ -195,21 +195,32 @@ internal sealed partial class FrontendShellViewModel
         List<string> lines,
         List<SimpleListEntryViewModel> actions)
     {
+        if (IsXamlInfrastructureElement(element))
+        {
+            return;
+        }
+
         if (IsNamed(element, "TextBlock"))
         {
-            AddHelpText(lines, ReadAttribute(element, "Text"));
+            AddHelpText(lines, ReadDisplayAttribute(element, "Text"));
             return;
         }
 
         if (IsNamed(element, "Label"))
         {
-            AddHelpText(lines, ReadAttribute(element, "Content"));
+            AddHelpText(lines, ReadDisplayAttribute(element, "Content"));
             return;
         }
 
         if (IsNamed(element, "MyHint"))
         {
-            AddHelpText(lines, LT("shell.help_detail.generated.hint", ("text", ReadAttribute(element, "Text"))));
+            AddHelpText(lines, LT("shell.help_detail.generated.hint", ("text", ReadDisplayAttribute(element, "Text"))));
+            return;
+        }
+
+        if (IsRichTextElement(element))
+        {
+            AddHelpText(lines, ReadElementDisplayText(element));
             return;
         }
 
@@ -221,10 +232,10 @@ internal sealed partial class FrontendShellViewModel
 
         if (IsNamed(element, "MyListItem"))
         {
-            var title = ReadAttribute(element, "Title");
+            var title = ReadDisplayAttribute(element, "Title");
             var eventType = ReadAttribute(element, "EventType");
             var eventData = ReadAttribute(element, "EventData");
-            var info = ReadAttribute(element, "Info");
+            var info = ReadDisplayAttribute(element, "Info");
             actions.Add(CreateHelpAction(
                 string.IsNullOrWhiteSpace(title)
                     ? DeriveHelpActionTitle(eventType, eventData)
@@ -259,22 +270,22 @@ internal sealed partial class FrontendShellViewModel
         List<string> lines,
         List<SimpleListEntryViewModel> actions)
     {
-        var title = ReadAttribute(element, "Text");
+        var title = ReadDisplayAttribute(element, "Text");
         if (string.IsNullOrWhiteSpace(title))
         {
-            title = ReadAttribute(element, "Title");
+            title = ReadDisplayAttribute(element, "Title");
         }
 
         if (string.IsNullOrWhiteSpace(title))
         {
-            title = ReadAttribute(element, "ToolTip");
+            title = ReadDisplayAttribute(element, "ToolTip");
         }
 
         var eventType = ReadAttribute(element, "EventType");
         var eventData = ReadAttribute(element, "EventData");
         if (!string.IsNullOrWhiteSpace(eventType) || !string.IsNullOrWhiteSpace(eventData))
         {
-            var info = ReadAttribute(element, "ToolTip");
+            var info = ReadDisplayAttribute(element, "ToolTip");
             actions.Add(CreateHelpAction(
                 string.IsNullOrWhiteSpace(title) ? DeriveHelpActionTitle(eventType, eventData) : title,
                 string.IsNullOrWhiteSpace(info)
@@ -556,6 +567,120 @@ internal sealed partial class FrontendShellViewModel
         var attribute = element.Attributes()
             .FirstOrDefault(item => string.Equals(item.Name.LocalName, attributeName, StringComparison.Ordinal));
         return WebUtility.HtmlDecode(attribute?.Value ?? string.Empty).Trim();
+    }
+
+    private static string ReadDisplayAttribute(XElement element, string attributeName)
+    {
+        return NormalizeDisplayText(ReadAttribute(element, attributeName));
+    }
+
+    private static string ReadElementDisplayText(XElement element)
+    {
+        var text = ReadDisplayAttribute(element, "Text");
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        text = ReadDisplayAttribute(element, "Content");
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        var builder = new StringBuilder();
+        foreach (var node in element.DescendantNodes().OfType<XText>())
+        {
+            builder.Append(node.Value);
+        }
+
+        return NormalizeDisplayText(WebUtility.HtmlDecode(builder.ToString()));
+    }
+
+    private static string NormalizeDisplayText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var stripped = StripXamlMarkupExtensions(value);
+        return string.IsNullOrWhiteSpace(stripped)
+            ? string.Empty
+            : stripped.Trim();
+    }
+
+    private static string StripXamlMarkupExtensions(string value)
+    {
+        var builder = new StringBuilder(value.Length);
+        var depth = 0;
+
+        foreach (var ch in value)
+        {
+            switch (ch)
+            {
+                case '{':
+                    depth++;
+                    break;
+                case '}':
+                    if (depth > 0)
+                    {
+                        depth--;
+                    }
+                    else
+                    {
+                        builder.Append(ch);
+                    }
+
+                    break;
+                default:
+                    if (depth == 0)
+                    {
+                        builder.Append(ch);
+                    }
+
+                    break;
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    private static bool IsXamlInfrastructureElement(XElement element)
+    {
+        var name = element.Name.LocalName;
+        return name.EndsWith(".Resources", StringComparison.Ordinal)
+            || name.EndsWith(".Triggers", StringComparison.Ordinal)
+            || name.EndsWith(".Styles", StringComparison.Ordinal)
+            || name is "Style"
+            or "Setter"
+            or "Setter.Value"
+            or "ControlTemplate"
+            or "DataTemplate"
+            or "ItemsPanelTemplate"
+            or "HierarchicalDataTemplate"
+            or "Trigger"
+            or "MultiTrigger"
+            or "DataTrigger"
+            or "MultiDataTrigger"
+            or "Condition"
+            or "Storyboard"
+            or "VisualStateManager.VisualStateGroups"
+            or "VisualStateGroup"
+            or "VisualState"
+            or "VisualTransition";
+    }
+
+    private static bool IsRichTextElement(XElement element)
+    {
+        return element.Name.LocalName is "Paragraph"
+            or "Run"
+            or "Span"
+            or "Bold"
+            or "Italic"
+            or "Underline"
+            or "Hyperlink"
+            or "TextBox";
     }
 
     private static string DescribeCustomEvents(XElement element)
