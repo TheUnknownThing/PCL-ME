@@ -140,6 +140,7 @@ public sealed class FrontendLaunchCompositionServiceTest
             Directory.CreateDirectory(TempDirectory);
             Directory.CreateDirectory(LauncherAppDataDirectory);
 
+            SetEnvironmentVariable("PCL_ENCRYPTION_KEY", "frontend-launch-compose-test-key");
             SetEnvironmentVariable("HOME", RootDirectory);
             SetEnvironmentVariable("USERPROFILE", RootDirectory);
         }
