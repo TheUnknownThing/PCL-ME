@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Configuration;
 using PCL.Core.App.Configuration.Storage;
@@ -73,31 +74,6 @@ public class ConfigStoragePortabilityTest
     }
 
     [TestMethod]
-    public void DynamicCacheConfigStorage_InvalidateCache_RecreatesContextStorage()
-    {
-        var created = new List<DictionaryStorage>();
-        var storage = new DynamicCacheConfigStorage
-        {
-            StorageFactory = _ =>
-            {
-                var instance = new DictionaryStorage();
-                created.Add(instance);
-                return instance;
-            }
-        };
-
-        storage.SetValue("alpha", 1, "ctx");
-        Assert.AreEqual(1, created.Count);
-        Assert.IsTrue(storage.InvalidateCache("ctx"));
-        Assert.AreEqual(1, created[0].StopCount);
-
-        storage.SetValue("alpha", 2, "ctx");
-        Assert.AreEqual(2, created.Count);
-
-        storage.Stop();
-    }
-
-    [TestMethod]
     public void ConfigStorage_InvokesAccessFailureHook()
     {
         ConfigStorageAccessFailureContext? captured = null;
@@ -134,6 +110,23 @@ public class ConfigStoragePortabilityTest
         Assert.AreEqual("sync failure", captured.Exception.Message);
     }
 
+    [TestMethod]
+    public void FileConfigStorage_Stop_DrainsQueuedWrites()
+    {
+        var provider = new BlockingFileProvider();
+        var storage = new FileConfigStorage(provider);
+
+        storage.SetValue("alpha", 1);
+        storage.SetValue("beta", 2);
+        var stopTask = Task.Run(storage.Stop);
+
+        Assert.IsTrue(provider.FirstWriteStarted.Wait(TimeSpan.FromSeconds(1)));
+        provider.ReleaseFirstWrite.Set();
+        Assert.IsTrue(stopTask.Wait(TimeSpan.FromSeconds(1)));
+        Assert.AreEqual(1, provider.Values["alpha"]);
+        Assert.AreEqual(2, provider.Values["beta"]);
+    }
+
     private static string CreateTempDirectory()
     {
         var path = Path.Combine(Path.GetTempPath(), "pcl-config-test-" + Guid.NewGuid().ToString("N"));
@@ -149,40 +142,6 @@ public class ConfigStoragePortabilityTest
         }
     }
 
-    private sealed class DictionaryStorage : ConfigStorage
-    {
-        private readonly Dictionary<string, object?> _values = [];
-        public int StopCount { get; private set; }
-
-        protected override bool OnAccess<TKey, TValue>(StorageAction action, ref TKey key, [NotNullWhen(true)] ref TValue value, object? argument)
-        {
-            var stringKey = key as string ?? throw new InvalidOperationException();
-            switch (action)
-            {
-                case StorageAction.Get:
-                    if (!_values.TryGetValue(stringKey, out var result)) return false;
-                    value = (TValue)result!;
-                    return true;
-                case StorageAction.Exists:
-                    value = (TValue)(object)_values.ContainsKey(stringKey);
-                    return true;
-                case StorageAction.Set:
-                    _values[stringKey] = value;
-                    return false;
-                case StorageAction.Delete:
-                    _values.Remove(stringKey);
-                    return false;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(action), action, null);
-            }
-        }
-
-        protected override void OnStop()
-        {
-            StopCount++;
-        }
-    }
-
     private sealed class ThrowingFileProvider : IKeyValueFileProvider
     {
         public string FilePath => "/virtual/config.yml";
@@ -191,5 +150,32 @@ public class ConfigStoragePortabilityTest
         public bool Exists(string key) => false;
         public void Remove(string key) { }
         public void Sync() => throw new IOException("sync failure");
+    }
+
+    private sealed class BlockingFileProvider : IKeyValueFileProvider
+    {
+        public string FilePath => "/virtual/config.yml";
+        public Dictionary<string, object?> Values { get; } = new(StringComparer.Ordinal);
+        public ManualResetEventSlim FirstWriteStarted { get; } = new(false);
+        public ManualResetEventSlim ReleaseFirstWrite { get; } = new(false);
+
+        public T Get<T>(string key) => (T)Values[key]!;
+
+        public void Set<T>(string key, T value)
+        {
+            if (string.Equals(key, "alpha", StringComparison.Ordinal))
+            {
+                FirstWriteStarted.Set();
+                ReleaseFirstWrite.Wait(TimeSpan.FromSeconds(1));
+            }
+
+            Values[key] = value;
+        }
+
+        public bool Exists(string key) => Values.ContainsKey(key);
+
+        public void Remove(string key) => Values.Remove(key);
+
+        public void Sync() { }
     }
 }

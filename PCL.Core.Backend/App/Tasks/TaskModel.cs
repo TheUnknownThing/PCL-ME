@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -41,6 +42,8 @@ public partial class TaskModel : ObservableObject
     /// 任务标题
     /// </summary>
     public required string Title { get; init; }
+
+    internal SynchronizationContext? SynchronizationContext { get; init; }
 
     /// <summary>
     /// 任务是否支持进度

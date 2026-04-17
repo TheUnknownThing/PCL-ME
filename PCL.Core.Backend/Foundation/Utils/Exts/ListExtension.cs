@@ -7,45 +7,6 @@ public static class ListUtils
 {
     extension<T>(IEnumerable<T> source)
     {
-        /// <summary>
-        /// 选择最大值对应的对象。
-        /// 若没有元素则返回 default(T)。
-        /// </summary>
-        public T? MaxOrDefault<C>(Func<T, C> selector) where C : IComparable<C>
-        {
-            using var enumerator = source.GetEnumerator();
-            if (!enumerator.MoveNext()) return default;
-            var maxItem = enumerator.Current;
-            var maxValue = selector(maxItem);
-            while (enumerator.MoveNext())
-            {
-                var value = selector(enumerator.Current);
-                if (value.CompareTo(maxValue) <= 0) continue;
-                maxItem = enumerator.Current;
-                maxValue = value;
-            }
-            return maxItem;
-        }
-
-        /// <summary>
-        /// 选择最小值对应的对象。
-        /// 若没有元素则返回 default(T)。
-        /// </summary>
-        public T? MinOrDefault<C>(Func<T, C> selector) where C : IComparable<C>
-        {
-            using var enumerator = source.GetEnumerator();
-            if (!enumerator.MoveNext()) return default;
-            var minItem = enumerator.Current;
-            var minValue = selector(minItem);
-            while (enumerator.MoveNext())
-            {
-                var value = selector(enumerator.Current);
-                if (value.CompareTo(minValue) >= 0) continue;
-                minItem = enumerator.Current;
-                minValue = value;
-            }
-            return minItem;
-        }
     }
 }
 

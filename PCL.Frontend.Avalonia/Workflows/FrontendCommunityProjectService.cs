@@ -121,16 +121,6 @@ internal static partial class FrontendCommunityProjectService
         return value?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "unknown";
     }
 
-    private static string FormatCompactCount(int value)
-    {
-        return value switch
-        {
-            >= 100_000_000 => $"{value / 100_000_000d:0.#}\u4EBF",
-            >= 10_000 => $"{value / 10_000d:0.#}\u4E07",
-            _ => value.ToString()
-        };
-    }
-
     private static Version ParseVersion(string? rawValue)
     {
         return Version.TryParse(rawValue, out var version)

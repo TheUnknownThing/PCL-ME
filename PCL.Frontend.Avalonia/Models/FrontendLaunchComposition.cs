@@ -1,6 +1,7 @@
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
 using PCL.Core.Utils;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Models;
 
@@ -8,6 +9,7 @@ internal sealed record FrontendLaunchComposition(
     string Scenario,
     string InstanceName,
     string InstancePath,
+    string LauncherFolder,
     IReadOnlyList<FrontendLaunchArtifactRequirement> RequiredArtifacts,
     FrontendLaunchProfileSummary SelectedProfile,
     FrontendJavaRuntimeSummary? SelectedJavaRuntime,
@@ -18,6 +20,8 @@ internal sealed record FrontendLaunchComposition(
     MinecraftLaunchPrecheckResult PrecheckResult,
     MinecraftLaunchPrompt? SupportPrompt,
     MinecraftLaunchJavaWorkflowPlan JavaWorkflow,
+    FrontendDownloadSourcePreference DownloadSourcePreference,
+    MachineType TargetJavaRuntimeArchitecture,
     FrontendJavaRuntimeInstallPlan? JavaRuntimeInstallPlan,
     MinecraftLaunchResolutionPlan ResolutionPlan,
     MinecraftLaunchClasspathPlan ClasspathPlan,

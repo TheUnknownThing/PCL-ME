@@ -10,8 +10,6 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendSetupCompositionService
 {
-    private const int ObsoleteLaunchVisibilityIndex = 1;
-
     public static FrontendSetupComposition Compose(FrontendRuntimePaths paths, II18nService i18n)
     {
         var sharedConfig = paths.OpenSharedConfigProvider();

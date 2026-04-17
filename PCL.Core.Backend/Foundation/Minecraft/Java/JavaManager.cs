@@ -48,14 +48,18 @@ public class JavaManager
     {
         try
         {
-            var items = _javaEntrys
-                .Select(x => new JavaStorageItem()
-                {
-                    Path = x.Value.Installation.JavaExePath,
-                    IsEnable = x.Value.IsEnabled,
-                    Source = x.Value.Source
-                })
-                .ToArray();
+            JavaStorageItem[] items;
+            lock (_javaEntrys)
+            {
+                items = _javaEntrys
+                    .Select(x => new JavaStorageItem()
+                    {
+                        Path = x.Value.Installation.JavaExePath,
+                        IsEnable = x.Value.IsEnabled,
+                        Source = x.Value.Source
+                    })
+                    .ToArray();
+            }
             _storage.Save(items);
         }
         catch(Exception ex)
@@ -154,13 +158,19 @@ public class JavaManager
             }
         });
 
+        Dictionary<string, JavaEntry> existingEntries;
+        lock (_javaEntrys)
+        {
+            existingEntries = new Dictionary<string, JavaEntry>(_javaEntrys, StringComparer.OrdinalIgnoreCase);
+        }
+
         var scannedEntries = pathSet.Keys
             .Select(_parser.Parse)
             .Where(inst => inst != null)
             .Select(inst => new JavaEntry
             {
                 Installation = inst!,
-                IsEnabled = _javaEntrys.TryGetValue(_NormalizePath(inst!.JavaExePath), out var existingJava)
+                IsEnabled = existingEntries.TryGetValue(_NormalizePath(inst!.JavaExePath), out var existingJava)
                     ? existingJava.IsEnabled
                     : _installationEvaluator.ShouldEnableByDefault(inst!),
                 Source = JavaSource.AutoScanned
@@ -178,7 +188,12 @@ public class JavaManager
 
     public List<JavaEntry> GetSortedJavaList()
     {
-        var ret = _javaEntrys.Values.ToList();
+        List<JavaEntry> ret;
+        lock (_javaEntrys)
+        {
+            ret = _javaEntrys.Values.ToList();
+        }
+
         ret.Sort((a, b) =>
         {
             var versionCmp = a.Installation.Version.CompareTo(b.Installation.Version);
@@ -199,12 +214,18 @@ public class JavaManager
 
     public bool ExistAnyJava()
     {
-        return _javaEntrys.Count != 0;
+        lock (_javaEntrys)
+        {
+            return _javaEntrys.Count != 0;
+        }
     }
 
     public bool Exist(string javaExePath)
     {
-        return _javaEntrys.ContainsKey(javaExePath);
+        lock (_javaEntrys)
+        {
+            return _javaEntrys.ContainsKey(javaExePath);
+        }
     }
 
     /// <summary>
@@ -282,7 +303,7 @@ public class JavaManager
 
     public async Task<JavaEntry[]> SelectSuitableJavaAsync(Version minVersion, Version maxVersion)
     {
-        if (_javaEntrys.Count == 0)
+        if (!ExistAnyJava())
             await ScanJavaAsync();
 
         lock (_javaEntrys)

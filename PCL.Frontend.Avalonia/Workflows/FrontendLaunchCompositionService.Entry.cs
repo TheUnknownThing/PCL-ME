@@ -209,6 +209,7 @@ internal static partial class FrontendLaunchCompositionService
             HasMicrosoftProfile: selectedProfile.HasMicrosoftProfile,
             IsRestrictedFeatureAllowed: true);
         var precheckResult = MinecraftLaunchPrecheckService.Evaluate(precheckRequest);
+        var targetJavaRuntimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
         var javaRuntimeInstallPlan = BuildJavaRuntimeInstallPlan(
             javaWorkflow,
             manifestSummary,
@@ -220,6 +221,7 @@ internal static partial class FrontendLaunchCompositionService
             options.Scenario,
             resolvedInstanceName,
             instancePath,
+            launcherFolder,
             requiredArtifacts,
             selectedProfile,
             selectedJavaRuntime,
@@ -230,6 +232,8 @@ internal static partial class FrontendLaunchCompositionService
             precheckResult,
             supportPrompt,
             javaWorkflow,
+            downloadProvider.Preference,
+            targetJavaRuntimeArchitecture,
             javaRuntimeInstallPlan,
             resolutionPlan,
             classpathPlan,

@@ -226,86 +226,6 @@ internal static class FrontendInstanceRepairService
         AddOrMergeFilePlan(filePlans, filePlan with { ForceDownload = shouldForceDownload });
     }
 
-    private static bool TryGetLibraryDownload(
-        JsonElement library,
-        string entryName,
-        string launcherDirectory,
-        out FrontendInstanceRepairFilePlan filePlan)
-    {
-        filePlan = default!;
-        if (!library.TryGetProperty("downloads", out var downloads) || downloads.ValueKind != JsonValueKind.Object)
-        {
-            return false;
-        }
-
-        JsonElement downloadEntry;
-        if (string.Equals(entryName, "artifact", StringComparison.Ordinal))
-        {
-            if (!downloads.TryGetProperty("artifact", out downloadEntry) || downloadEntry.ValueKind != JsonValueKind.Object)
-            {
-                return false;
-            }
-        }
-        else
-        {
-            if (!downloads.TryGetProperty("classifiers", out var classifiers) ||
-                classifiers.ValueKind != JsonValueKind.Object ||
-                !classifiers.TryGetProperty(entryName, out downloadEntry) ||
-                downloadEntry.ValueKind != JsonValueKind.Object)
-            {
-                return false;
-            }
-        }
-
-        var path = GetString(downloadEntry, "path");
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            var libraryName = GetString(library, "name");
-            if (string.IsNullOrWhiteSpace(libraryName))
-            {
-                return false;
-            }
-
-            path = DeriveLibraryPathFromName(libraryName, string.Equals(entryName, "artifact", StringComparison.Ordinal) ? null : entryName);
-        }
-
-        var localPath = Path.Combine(launcherDirectory, "libraries", path.Replace('/', Path.DirectorySeparatorChar));
-        var hasExplicitUrl = downloadEntry.TryGetProperty("url", out var urlElement);
-        var url = hasExplicitUrl && urlElement.ValueKind == JsonValueKind.String
-            ? urlElement.GetString()
-            : GetString(downloadEntry, "url");
-        if (hasExplicitUrl && string.IsNullOrWhiteSpace(url))
-        {
-            filePlan = new FrontendInstanceRepairFilePlan(
-                localPath,
-                [],
-                GetString(downloadEntry, "sha1"),
-                GetLong(downloadEntry, "size"),
-                false,
-                FrontendInstanceRepairFileGroup.Libraries);
-            return true;
-        }
-
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            url = BuildLibraryUrl(library, path);
-        }
-
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            return false;
-        }
-
-        filePlan = new FrontendInstanceRepairFilePlan(
-            localPath,
-            [url],
-            GetString(downloadEntry, "sha1"),
-            GetLong(downloadEntry, "size"),
-            false,
-            FrontendInstanceRepairFileGroup.Libraries);
-        return true;
-    }
-
     private static FrontendInstanceRepairFilePlan? CreateAssetIndexDownload(
         string launcherDirectory,
         JsonElement assetIndex,
@@ -636,21 +556,6 @@ internal static class FrontendInstanceRepairService
         }
 
         value = value[..extensionIndex];
-    }
-
-    private static string GetOsKey()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return "windows";
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            return "osx";
-        }
-
-        return "linux";
     }
 
     private static string? NormalizeOsName(string? value)

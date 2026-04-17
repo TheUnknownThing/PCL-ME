@@ -78,40 +78,5 @@ public static class AsyncEnumerableExtensions
             await Task.WhenAll(tasks);
         }
 
-        /// <summary>
-        /// 对集合中的每个元素异步执行指定操作，限制并发数，并返回所有操作的结果。
-        /// 等同于：source.Select(x => action(x)).WhenAll()，但有并发控制。
-        /// </summary>
-        /// <typeparam name="TResult">操作返回类型</typeparam>
-        /// <param name="selector">异步选择器函数</param>
-        /// <param name="maxDegreeOfParallelism">最大并发数，默认为 10</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>包含所有操作结果的集合</returns>
-        public async Task<IEnumerable<TResult>> SelectAsync<TResult>(
-            Func<T, Task<TResult>> selector,
-            int maxDegreeOfParallelism = 10,
-            CancellationToken cancellationToken = default)
-        {
-            ArgumentNullException.ThrowIfNull(source);
-            ArgumentNullException.ThrowIfNull(selector);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxDegreeOfParallelism);
-
-            var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
-
-            var tasks = source.Select(async item =>
-            {
-                await semaphore.WaitAsync(cancellationToken);
-                try
-                {
-                    return await selector(item);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            });
-
-            return await Task.WhenAll(tasks);
-        }
     }
 }

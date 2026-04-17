@@ -33,7 +33,6 @@ internal interface II18nService
 internal sealed class I18nService : II18nService, IDisposable
 {
     private const string DefaultLocale = "en-US";
-    private const int SchemaPreviewLineLimit = 24;
 
     private static readonly IReadOnlyDictionary<string, object?> EmptyArgs =
         new Dictionary<string, object?>(0, StringComparer.Ordinal);

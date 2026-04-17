@@ -20,44 +20,78 @@ public class FileConfigStorage : ConfigStorage
     public IKeyValueFileProvider File { get; }
 
     private readonly Channel<(string, Action)> _writeActionChannel;
-    private readonly CancellationTokenSource _writeActionCts;
     private readonly ManualResetEventSlim _writeStopEvent = new(true);
 
     public FileConfigStorage(IKeyValueFileProvider file)
     {
         File = file;
         _writeActionChannel = Channel.CreateUnbounded<(string, Action)>();
-        _writeActionCts = new CancellationTokenSource();
         Task.Run(async () =>
         {
             _writeStopEvent.Reset();
             const long syncInterval = 10000; // ms
-            var lastSyncTick = 0L;
-            var cancelToken = _writeActionCts.Token;
+            var lastSyncTick = Environment.TickCount64;
             var writeActionMap = new Dictionary<string, Action>();
             var reader = _writeActionChannel.Reader;
             try
             {
-                while (!cancelToken.IsCancellationRequested)
+                while (true)
                 {
-                    // Read and merge buffered operations.
-                    var (key, action) = await reader.ReadAsync(cancelToken);
-                    writeActionMap[key] = action;
-                    if (Environment.TickCount64 - lastSyncTick < syncInterval || cancelToken.IsCancellationRequested) continue;
-                    // Sync the file.
-                    Sync();
-                    lastSyncTick = Environment.TickCount64;
-                    writeActionMap.Clear();
+                    if (writeActionMap.Count == 0)
+                    {
+                        if (!await reader.WaitToReadAsync())
+                        {
+                            break;
+                        }
+                    }
+
+                    while (reader.TryRead(out var pendingWrite))
+                    {
+                        writeActionMap[pendingWrite.Item1] = pendingWrite.Item2;
+                    }
+
+                    if (writeActionMap.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var elapsed = Environment.TickCount64 - lastSyncTick;
+                    if (elapsed >= syncInterval || reader.Completion.IsCompleted)
+                    {
+                        Sync();
+                        lastSyncTick = Environment.TickCount64;
+                        writeActionMap.Clear();
+                        continue;
+                    }
+
+                    var remaining = TimeSpan.FromMilliseconds(syncInterval - elapsed);
+                    var waitForMoreData = reader.WaitToReadAsync().AsTask();
+                    var delay = Task.Delay(remaining);
+                    var completed = await Task.WhenAny(waitForMoreData, delay);
+                    if (completed == delay)
+                    {
+                        Sync();
+                        lastSyncTick = Environment.TickCount64;
+                        writeActionMap.Clear();
+                        continue;
+                    }
+
+                    if (!await waitForMoreData)
+                    {
+                        break;
+                    }
                 }
             }
-            catch (OperationCanceledException) { /* ignoring*/ }
             finally
             {
-                // Perform one final sync at shutdown.
-                Sync();
+                if (writeActionMap.Count > 0)
+                {
+                    // Perform one final sync at shutdown after draining queued writes.
+                    Sync();
+                }
             }
             _writeStopEvent.Set();
-            return;
+
             void Sync()
             {
                 try
@@ -82,7 +116,7 @@ public class FileConfigStorage : ConfigStorage
 
     protected override void OnStop()
     {
-        _writeActionCts.Cancel();
+        _writeActionChannel.Writer.TryComplete();
         _writeStopEvent.Wait();
         _writeStopEvent.Dispose();
     }

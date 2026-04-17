@@ -33,8 +33,6 @@ internal static class FrontendUiVisibilityService
     private const string HideFunctionModUpdateKey = "UiHiddenFunctionModUpdate";
     private const string HideFunctionHiddenKey = "UiHiddenFunctionHidden";
 
-    private static readonly ImmutableHashSet<string> EmptyHiddenKeySet = ImmutableHashSet<string>.Empty.WithComparer(StringComparer.Ordinal);
-
     public static FrontendUiVisibilityPreferences BuildPreferences(
         FrontendSetupUiState uiState,
         bool forceShowHiddenItems,

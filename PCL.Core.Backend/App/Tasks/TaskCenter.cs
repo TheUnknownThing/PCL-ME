@@ -19,7 +19,6 @@ public static class TaskCenter
     public static ObservableCollection<TaskModel> Tasks { get; } = [];
 
     private static readonly ConditionalWeakTable<ITask, TaskModel> _ModelMap = [];
-    private static SynchronizationContext? _SynchronizationContext;
 
     private static void RunOnContext(SynchronizationContext? context, Action action)
     {
@@ -45,6 +44,7 @@ public static class TaskCenter
         model = new TaskModel
         {
             Title = instance.Title,
+            SynchronizationContext = context,
             SupportProgress = progressive != null,
             OnCancel = cancelable == null
                 ? null
@@ -200,7 +200,6 @@ public static class TaskCenter
     public static void Register(ITask instance, bool start = true)
     {
         var synchronizationContext = SynchronizationContext.Current;
-        _SynchronizationContext ??= synchronizationContext;
         var model = _InitModel(instance, synchronizationContext);
         RunOnContext(synchronizationContext, () => Tasks.Add(model));
 
@@ -229,7 +228,7 @@ public static class TaskCenter
     /// </summary>
     public static void Remove(TaskModel model)
     {
-        RunOnContext(_SynchronizationContext, () => Tasks.Remove(model));
+        RunOnContext(model.SynchronizationContext ?? SynchronizationContext.Current, () => Tasks.Remove(model));
     }
 
     /// <summary>

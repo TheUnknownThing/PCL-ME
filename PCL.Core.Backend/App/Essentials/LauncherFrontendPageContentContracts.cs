@@ -1,13 +1,5 @@
 namespace PCL.Core.App.Essentials;
 
-public sealed record LauncherFrontendPageContentRequest(
-    LauncherFrontendNavigationView Navigation,
-    LauncherStartupWorkflowPlan StartupPlan,
-    LauncherStartupConsentResult Consent,
-    IReadOnlyList<LauncherFrontendPromptLaneSummary> PromptLanes,
-    LauncherFrontendLaunchSurfaceData? Launch = null,
-    LauncherFrontendCrashSurfaceData? Crash = null);
-
 public sealed record LauncherFrontendPromptLaneSummary(
     string Id,
     string Title,

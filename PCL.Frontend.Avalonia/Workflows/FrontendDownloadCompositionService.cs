@@ -37,7 +37,7 @@ internal static class FrontendDownloadCompositionService
             BuildInstallState(instanceComposition),
             BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion, i18n),
             BuildFavoritesState(sharedConfig, communitySourcePreference),
-            BuildResourceStates(instanceComposition, communitySourcePreference));
+            new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());
     }
 
     public static Task<FrontendDownloadCatalogState> LoadCatalogStateAsync(
@@ -174,15 +174,6 @@ internal static class FrontendDownloadCompositionService
                 : targetStates,
             migratedOldFormat ? "Legacy favorite data was detected and has been read as the default favorites target." : string.Empty,
             migratedOldFormat && hasEntries);
-    }
-
-    private static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> BuildResourceStates(
-        FrontendInstanceComposition instanceComposition,
-        int communitySourcePreference)
-    {
-        return FrontendCommunityResourceCatalogService.BuildResourceStates(
-            instanceComposition,
-            communitySourcePreference);
     }
 
     private static FrontendDownloadCatalogEntry CreateFavoriteEntry(
@@ -336,45 +327,6 @@ internal static class FrontendDownloadCompositionService
             });
     }
 
-    private static IReadOnlyList<LocalManifestEntry> ReadLocalManifestEntries(string launcherFolder)
-    {
-        var versionsDirectory = Path.Combine(launcherFolder, "versions");
-        if (!Directory.Exists(versionsDirectory))
-        {
-            return [];
-        }
-
-        var results = new List<LocalManifestEntry>();
-        foreach (var versionDirectory in Directory.EnumerateDirectories(versionsDirectory, "*", SearchOption.TopDirectoryOnly))
-        {
-            var versionName = Path.GetFileName(versionDirectory);
-            var manifestPath = Path.Combine(versionDirectory, $"{versionName}.json");
-            if (!File.Exists(manifestPath))
-            {
-                continue;
-            }
-
-            try
-            {
-                var profile = FrontendVersionManifestInspector.ReadProfile(launcherFolder, versionName);
-                var loaderMap = FrontendVersionManifestInspector.CreateLoaderMap(profile);
-
-                results.Add(new LocalManifestEntry(
-                    versionName,
-                    profile.VanillaVersion,
-                    profile.VersionType ?? "Local version",
-                    profile.ReleaseTime,
-                    manifestPath,
-                    loaderMap));
-            }
-            catch
-            {
-                // Ignore malformed manifests and keep the rest of the launcher folder readable.
-            }
-        }
-
-        return results;
-    }
     private static IReadOnlyList<FavoriteTarget> ParseFavoriteTargets(string raw, out bool migratedOldFormat)
     {
         migratedOldFormat = false;
@@ -454,38 +406,11 @@ internal static class FrontendDownloadCompositionService
             : path + Path.DirectorySeparatorChar;
     }
 
-    private static string GetDisplayLoaderName(string loaderKey)
-    {
-        return loaderKey switch
-        {
-            "forge" => "Forge",
-            "neoforge" => "NeoForge",
-            "cleanroom" => "Cleanroom",
-            "fabric" => "Fabric",
-            "quilt" => "Quilt",
-            "legacyfabric" => "Legacy Fabric",
-            "optifine" => "OptiFine",
-            "liteloader" => "LiteLoader",
-            "labymod" => "LabyMod",
-            _ => loaderKey
-        };
-    }
-
     private static string? GetString(JsonElement element, string propertyName)
     {
         return element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
-    }
-
-    private static string FormatCompactCount(int value)
-    {
-        return value switch
-        {
-            >= 100_000_000 => $"{value / 100_000_000d:0.#} hundred-million",
-            >= 10_000 => $"{value / 10_000d:0.#} ten-thousand",
-            _ => value.ToString()
-        };
     }
 
     private static FavoriteTarget ParseFavoriteTarget(JsonElement element)
@@ -542,29 +467,9 @@ internal static class FrontendDownloadCompositionService
                 StringComparer.OrdinalIgnoreCase);
     }
 
-    private static DateTime? GetDateTime(JsonElement element, string propertyName)
-    {
-        if (!element.TryGetProperty(propertyName, out var value) || value.ValueKind != JsonValueKind.String)
-        {
-            return null;
-        }
-
-        return DateTime.TryParse(value.GetString(), out var result)
-            ? result
-            : null;
-    }
-
     private sealed record FavoriteTarget(
         string Name,
         string Id,
         IReadOnlyCollection<string> Favorites,
         IReadOnlyDictionary<string, string> Notes);
-
-    private sealed record LocalManifestEntry(
-        string Id,
-        string VanillaVersion,
-        string Type,
-        DateTime? ReleaseTime,
-        string SourcePath,
-        IReadOnlyDictionary<string, string> Loaders);
 }

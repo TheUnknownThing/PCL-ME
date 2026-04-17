@@ -4,10 +4,6 @@ internal sealed record FrontendToolsComposition(
     FrontendToolsHelpState Help,
     FrontendToolsTestState Test);
 
-internal sealed record FrontendToolsSimpleEntry(
-    string Title,
-    string Summary);
-
 internal sealed record FrontendToolsTestState(
     IReadOnlyList<FrontendToolboxActionDefinition> ToolboxActions,
     string DownloadUrl,
