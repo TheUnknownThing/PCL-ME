@@ -484,7 +484,7 @@ internal static class FrontendToolsCompositionService
             }
         }
 
-        if (IsChinese(locale) && !string.Equals(normalizedLocale, ChineseFallbackLocale, StringComparison.OrdinalIgnoreCase))
+        if (UsesChineseHelpFallback(locale) && !string.Equals(normalizedLocale, ChineseFallbackLocale, StringComparison.OrdinalIgnoreCase))
         {
             locales.Add(ChineseFallbackLocale);
             locales.Add("zh");
@@ -699,16 +699,31 @@ internal static class FrontendToolsCompositionService
     }
 
     private static string LocalizeHelpTitle(string locale, string english, string simplifiedChinese, string traditionalChinese)
-        => LocalizeToolboxTitle(locale, english, simplifiedChinese, traditionalChinese);
+        => LocalizeHelpText(locale, english, simplifiedChinese, traditionalChinese);
 
     private static string LocalizeHelpBody(string locale, string english, string simplifiedChinese, string traditionalChinese)
-        => LocalizeToolboxTooltip(locale, english, simplifiedChinese, traditionalChinese);
+        => LocalizeHelpText(locale, english, simplifiedChinese, traditionalChinese);
 
     private static string LocalizeHelpKeywords(string locale, string english, string simplifiedChinese, string traditionalChinese)
-        => LocalizeToolboxTooltip(locale, english, simplifiedChinese, traditionalChinese);
+        => LocalizeHelpText(locale, english, simplifiedChinese, traditionalChinese);
 
     private static string LocalizeHelpGroup(string locale, string english, string simplifiedChinese, string traditionalChinese)
-        => LocalizeToolboxTitle(locale, english, simplifiedChinese, traditionalChinese);
+        => LocalizeHelpText(locale, english, simplifiedChinese, traditionalChinese);
+
+    private static string LocalizeHelpText(string locale, string english, string simplifiedChinese, string traditionalChinese)
+    {
+        return IsTraditionalChinese(locale)
+            ? traditionalChinese
+            : UsesChineseHelpFallback(locale)
+                ? simplifiedChinese
+                : english;
+    }
+
+    private static bool UsesChineseHelpFallback(string locale)
+    {
+        return IsChinese(locale)
+               || string.Equals(NormalizeHelpLocale(locale), "lzh", StringComparison.OrdinalIgnoreCase);
+    }
 
     private static bool IsChinese(string locale)
     {
