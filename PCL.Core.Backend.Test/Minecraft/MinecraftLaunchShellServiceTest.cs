@@ -95,13 +95,12 @@ public sealed class MinecraftLaunchShellServiceTest
     }
 
     [TestMethod]
-    public void GetPostLaunchShellPlanReturnsVideoVisibilityAndCounterPlan()
+    public void GetPostLaunchShellPlanReturnsLauncherVisibilityAndCounterPlan()
     {
         var result = MinecraftLaunchShellService.GetPostLaunchShellPlan(
             new MinecraftLaunchPostLaunchShellRequest(
                 LauncherVisibility.HideAndReopen));
 
-        Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Pause, result.VideoBackgroundAction.Kind);
         Assert.AreEqual(MinecraftLaunchShellActionKind.HideLauncher, result.LauncherAction.Kind);
         Assert.AreEqual(1, result.GlobalLaunchCountIncrement);
         Assert.AreEqual(1, result.InstanceLaunchCountIncrement);
@@ -115,7 +114,6 @@ public sealed class MinecraftLaunchShellServiceTest
                 LauncherVisibility.HideAndExit,
                 TriggerLauncherShutdown: false));
 
-        Assert.AreEqual(MinecraftLaunchVideoBackgroundActionKind.Play, result.VideoBackgroundAction.Kind);
         Assert.AreEqual(MinecraftLaunchShellActionKind.ShowLauncher, result.LauncherAction.Kind);
         Assert.AreEqual(0, result.GlobalLaunchCountIncrement);
         Assert.AreEqual(0, result.InstanceLaunchCountIncrement);

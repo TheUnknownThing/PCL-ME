@@ -81,7 +81,6 @@ public static class MinecraftLaunchShellService
     public static MinecraftGameShellPlan GetPostLaunchShellPlan(MinecraftLaunchPostLaunchShellRequest request)
     {
         return new MinecraftGameShellPlan(
-            new MinecraftLaunchVideoBackgroundShellAction(MinecraftLaunchVideoBackgroundActionKind.Pause),
             GetPostLaunchShellAction(request.Visibility),
             GlobalLaunchCountIncrement: 1,
             InstanceLaunchCountIncrement: 1);
@@ -90,7 +89,6 @@ public static class MinecraftLaunchShellService
     public static MinecraftGameShellPlan GetWatcherStopShellPlan(MinecraftLaunchWatcherStopShellRequest request)
     {
         return new MinecraftGameShellPlan(
-            new MinecraftLaunchVideoBackgroundShellAction(MinecraftLaunchVideoBackgroundActionKind.Play),
             GetWatcherStopShellAction(request.Visibility, request.TriggerLauncherShutdown),
             GlobalLaunchCountIncrement: 0,
             InstanceLaunchCountIncrement: 0);
@@ -160,13 +158,9 @@ public sealed record MinecraftLaunchScriptExportPlan(
     string RevealInShellPath);
 
 public sealed record MinecraftGameShellPlan(
-    MinecraftLaunchVideoBackgroundShellAction VideoBackgroundAction,
     MinecraftLaunchShellAction LauncherAction,
     int GlobalLaunchCountIncrement,
     int InstanceLaunchCountIncrement);
-
-public sealed record MinecraftLaunchVideoBackgroundShellAction(
-    MinecraftLaunchVideoBackgroundActionKind Kind);
 
 public sealed record MinecraftLaunchShellAction(
     MinecraftLaunchShellActionKind Kind,
@@ -193,11 +187,4 @@ public enum MinecraftLaunchShellActionKind
     HideLauncher = 2,
     MinimizeLauncher = 3,
     ShowLauncher = 4
-}
-
-public enum MinecraftLaunchVideoBackgroundActionKind
-{
-    None = 0,
-    Pause = 1,
-    Play = 2
 }
