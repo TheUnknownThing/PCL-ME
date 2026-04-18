@@ -2328,6 +2328,9 @@ download:
     options:
       available: Disponible
       unavailable: No disponible
+      search:
+        watermark: Buscar versiones
+        no_results: No hay versiones que coincidan con “{query}”.
     validation:
       already_exists: Este nombre ya existe
       empty_name: Introduzca un nombre
@@ -2356,6 +2359,8 @@ download:
           message: Elija una opción disponible
           title: Seleccione {option_title}
       messages:
+        apply_completed: Instalación completada. Se descargaron {downloaded_count} archivo(s) y se reutilizaron {reused_count}.
+        apply_completed_with_target: "Instalado en {target_name}. Manifiesto: {manifest_path}. Se descargaron {downloaded_count} archivo(s) y se reutilizaron {reused_count}."
         instance_missing: No se ha seleccionado ninguna instancia de destino
         option_not_supported: Esta opción no es compatible con el instalador frontend
         queued_in_task_center: "En cola en el Centro de tareas: {task_title}"
@@ -3052,8 +3057,12 @@ instance:
       apply_changes: Aplicar cambios
       reset_to_scanned: Restablecer al estado escaneado
       modify: Modificar
+      clear_selection: Borrar selección
     option:
       can_add: Puede agregar
+      search:
+        watermark: Buscar versiones
+        no_results: No hay versiones que coincidan con “{query}”.
     hints:
       optifine_mod_compatibility: OptiFine puede ser incompatible con algunas modificaciones.
       fabric_api_required: Fabric API no está instalado, por lo que la mayoría de las modificaciones no funcionarán.

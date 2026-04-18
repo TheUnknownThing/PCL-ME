@@ -2312,6 +2312,9 @@ download:
     options:
       available: Available
       unavailable: Unavailable
+      search:
+        watermark: Versionen suchen
+        no_results: Keine Versionen für „{query}“ gefunden.
     validation:
       already_exists: This name already exists
       empty_name: Enter a name
@@ -2340,6 +2343,8 @@ download:
           message: Choose an available option
           title: "Select {option_title}"
       messages:
+        apply_completed: "Completed installation. Downloaded {downloaded_count} file(s), reused {reused_count}."
+        apply_completed_with_target: "Installed into {target_name}. Manifest: {manifest_path}. Downloaded {downloaded_count} file(s), reused {reused_count}."
         instance_missing: No target instance is selected
         option_not_supported: This option is not supported by the frontend installer
         queued_in_task_center: "Queued in Task Center: {task_title}"
@@ -3036,8 +3041,12 @@ instance:
       apply_changes: Apply Changes
       reset_to_scanned: Reset to Scanned State
       modify: Modify
+      clear_selection: Auswahl aufheben
     option:
       can_add: Can add
+      search:
+        watermark: Versionen suchen
+        no_results: Keine Versionen für „{query}“ gefunden.
     hints:
       optifine_mod_compatibility: OptiFine may be incompatible with some mods.
       fabric_api_required: "Fabric API is not installed, so most mods will not work."

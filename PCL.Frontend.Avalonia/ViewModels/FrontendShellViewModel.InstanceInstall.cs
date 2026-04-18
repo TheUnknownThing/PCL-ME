@@ -254,8 +254,11 @@ internal sealed partial class FrontendShellViewModel
             _instanceInstallOptionLoadsInProgress.Contains(optionTitle) ? SD("instance.install.option.loading_versions") : string.Empty,
             canExpand && !_instanceInstallOptionLoadsInProgress.Contains(optionTitle) && choiceItems.Length == 0 && isExpanded,
             canExpand ? string.Empty : selectionText,
+            SD("instance.install.option.search.watermark"),
+            query => SD("instance.install.option.search.no_results", ("query", query)),
             choiceItems,
             CanClearInstallSelection(isExistingInstance: true, optionTitle),
+            SD("instance.install.actions.clear_selection"),
             new ActionCommand(() => ToggleInstanceInstallOptionCard(optionTitle)),
             new ActionCommand(() => ClearInstanceInstallOption(optionTitle)));
     }

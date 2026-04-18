@@ -106,8 +106,11 @@ internal sealed class DownloadInstallOptionCardViewModel(
     string loadingText,
     bool showEmptyState,
     string emptyStateText,
+    string choiceSearchWatermark,
+    Func<string, string> filteredEmptyStateTextFactory,
     IReadOnlyList<DownloadInstallChoiceItemViewModel> choices,
     bool canClear,
+    string clearSelectionToolTip,
     ActionCommand toggleCommand,
     ActionCommand clearCommand) : ViewModelBase
 {
@@ -121,8 +124,11 @@ internal sealed class DownloadInstallOptionCardViewModel(
     private string _loadingText = loadingText;
     private bool _showEmptyState = showEmptyState;
     private string _emptyStateText = emptyStateText;
+    private string _choiceSearchWatermark = choiceSearchWatermark;
+    private Func<string, string> _filteredEmptyStateTextFactory = filteredEmptyStateTextFactory;
     private IReadOnlyList<DownloadInstallChoiceItemViewModel> _choices = choices;
     private bool _canClear = canClear;
+    private string _clearSelectionToolTip = clearSelectionToolTip;
     private string _choiceSearchQuery = string.Empty;
 
     public string Title { get; } = title;
@@ -224,6 +230,12 @@ internal sealed class DownloadInstallOptionCardViewModel(
         set => SetProperty(ref _emptyStateText, value);
     }
 
+    public string ChoiceSearchWatermark
+    {
+        get => _choiceSearchWatermark;
+        set => SetProperty(ref _choiceSearchWatermark, value);
+    }
+
     public IReadOnlyList<DownloadInstallChoiceItemViewModel> Choices
     {
         get => _choices;
@@ -242,6 +254,12 @@ internal sealed class DownloadInstallOptionCardViewModel(
     {
         get => _canClear;
         set => SetProperty(ref _canClear, value);
+    }
+
+    public string ClearSelectionToolTip
+    {
+        get => _clearSelectionToolTip;
+        set => SetProperty(ref _clearSelectionToolTip, value);
     }
 
     public string ChoiceSearchQuery
@@ -270,7 +288,7 @@ internal sealed class DownloadInstallOptionCardViewModel(
         && Choices.Count > 0
         && VisibleChoices.Count == 0;
 
-    public string FilteredEmptyStateText => $"No versions matched \"{ChoiceSearchQuery.Trim()}\".";
+    public string FilteredEmptyStateText => _filteredEmptyStateTextFactory(ChoiceSearchQuery.Trim());
 
     public ActionCommand ToggleCommand { get; } = toggleCommand;
 
@@ -288,8 +306,12 @@ internal sealed class DownloadInstallOptionCardViewModel(
         LoadingText = other.LoadingText;
         ShowEmptyState = other.ShowEmptyState;
         EmptyStateText = other.EmptyStateText;
+        ChoiceSearchWatermark = other.ChoiceSearchWatermark;
+        _filteredEmptyStateTextFactory = other._filteredEmptyStateTextFactory;
+        RaisePropertyChanged(nameof(FilteredEmptyStateText));
         Choices = other.Choices;
         CanClear = other.CanClear;
+        ClearSelectionToolTip = other.ClearSelectionToolTip;
     }
 
     private IReadOnlyList<DownloadInstallChoiceItemViewModel> GetVisibleChoices()

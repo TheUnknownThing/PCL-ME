@@ -491,8 +491,11 @@ internal sealed partial class FrontendShellViewModel
             _downloadInstallOptionLoadsInProgress.Contains(optionTitle) ? T("download.install.catalog.loading") : string.Empty,
             canExpand && !_downloadInstallOptionLoadsInProgress.Contains(optionTitle) && choiceItems.Length == 0 && isExpanded,
             canExpand ? string.Empty : selectionText,
+            T("download.install.options.search.watermark"),
+            query => T("download.install.options.search.no_results", ("query", query)),
             choiceItems,
             CanClearInstallSelection(isExistingInstance: false, optionTitle),
+            DownloadInstallClearSelectionText,
             new ActionCommand(() => ToggleDownloadInstallOptionCard(optionTitle)),
             new ActionCommand(() => ClearDownloadInstallOption(optionTitle)));
     }

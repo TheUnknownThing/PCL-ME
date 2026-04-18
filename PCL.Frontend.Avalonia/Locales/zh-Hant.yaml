@@ -2322,6 +2322,9 @@ download:
     options:
       available: 可用
       unavailable: 不可用
+      search:
+        watermark: 搜尋版本
+        no_results: 沒有符合「{query}」的版本。
     validation:
       already_exists: 此名稱已存在
       empty_name: 請輸入名稱
@@ -2350,6 +2353,8 @@ download:
           message: 選擇一個可用選項
           title: 選擇 {option_title}
       messages:
+        apply_completed: 安裝完成。已下載 {downloaded_count} 個檔案，重用 {reused_count} 個檔案。
+        apply_completed_with_target: 已安裝到 {target_name}。資訊清單檔案：{manifest_path}。已下載 {downloaded_count} 個檔案，重用 {reused_count} 個檔案。
         instance_missing: 未選擇目標實例
         option_not_supported: 此前端安裝器不支援此選項
         queued_in_task_center: 已加入工作中心：{task_title}
@@ -3046,8 +3051,12 @@ instance:
       apply_changes: 套用變更
       reset_to_scanned: 重設為掃描結果
       modify: 修改
+      clear_selection: 清除選取
     option:
       can_add: 可新增
+      search:
+        watermark: 搜尋版本
+        no_results: 沒有符合「{query}」的版本。
     hints:
       optifine_mod_compatibility: OptiFine 可能與部分 Mod 不相容。
       fabric_api_required: 尚未安裝 Fabric API，大多數 Mod 將無法使用。

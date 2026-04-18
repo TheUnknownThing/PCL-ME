@@ -2322,6 +2322,9 @@ download:
     options:
       available: 可用
       unavailable: 不可用
+      search:
+        watermark: 搜索版本
+        no_results: 没有匹配“{query}”的版本。
     validation:
       already_exists: 该名称已存在
       empty_name: 请输入名称
@@ -2350,6 +2353,8 @@ download:
           message: 选择一个可用选项
           title: 选择 {option_title}
       messages:
+        apply_completed: 安装完成。已下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。
+        apply_completed_with_target: 已安装到 {target_name}。清单文件：{manifest_path}。已下载 {downloaded_count} 个文件，复用 {reused_count} 个文件。
         instance_missing: 未选择目标实例
         option_not_supported: 此前端安装器不支持该选项
         queued_in_task_center: 已加入任务中心：{task_title}
@@ -3046,8 +3051,12 @@ instance:
       apply_changes: 应用更改
       reset_to_scanned: 重置为扫描结果
       modify: 修改
+      clear_selection: 清除选择
     option:
       can_add: 可添加
+      search:
+        watermark: 搜索版本
+        no_results: 没有匹配“{query}”的版本。
     hints:
       optifine_mod_compatibility: OptiFine 可能与部分 Mod 不兼容。
       fabric_api_required: 尚未安装 Fabric API，大多数 Mod 将无法使用。

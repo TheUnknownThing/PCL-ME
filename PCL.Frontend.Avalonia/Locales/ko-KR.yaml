@@ -2312,6 +2312,9 @@ download:
     options:
       available: 사용 가능
       unavailable: 없는
+      search:
+        watermark: 버전 검색
+        no_results: '"{query}"와 일치하는 버전이 없습니다.'
     validation:
       already_exists: 이미 존재하는 이름입니다.
       empty_name: 이름을 입력하세요
@@ -2340,6 +2343,8 @@ download:
           message: 사용 가능한 옵션을 선택하세요
           title: "{option_title} 선택"
       messages:
+        apply_completed: 설치가 완료되었습니다. {downloaded_count}개 파일을 다운로드했고, {reused_count}개 파일을 재사용했습니다.
+        apply_completed_with_target: '"{target_name}"에 설치했습니다. 매니페스트: {manifest_path}. {downloaded_count}개 파일을 다운로드했고, {reused_count}개 파일을 재사용했습니다.'
         instance_missing: 대상 인스턴스가 선택되지 않았습니다.
         option_not_supported: 이 옵션은 프런트엔드 설치 프로그램에서 지원되지 않습니다.
         queued_in_task_center: "작업 센터에 대기 중: {task_title}"
@@ -3036,8 +3041,12 @@ instance:
       apply_changes: 변경 사항 적용
       reset_to_scanned: 스캔된 상태로 재설정
       modify: 수정
+      clear_selection: 선택 지우기
     option:
       can_add: 추가 가능
+      search:
+        watermark: 버전 검색
+        no_results: '"{query}"와 일치하는 버전이 없습니다.'
     hints:
       optifine_mod_compatibility: OptiFine은 일부 모드와 호환되지 않을 수 있습니다.
       fabric_api_required: Fabric API가 설치되지 않아 대부분의 모드가 작동하지 않습니다.

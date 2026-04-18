@@ -2626,6 +2626,10 @@ download:
     options:
       available: []
       unavailable: []
+      search:
+        watermark: []
+        no_results:
+          - query
     validation:
       already_exists: []
       empty_name: []
@@ -2657,6 +2661,14 @@ download:
           title:
             - option_title
       messages:
+        apply_completed:
+          - downloaded_count
+          - reused_count
+        apply_completed_with_target:
+          - target_name
+          - manifest_path
+          - downloaded_count
+          - reused_count
         instance_missing: []
         option_not_supported: []
         queued_in_task_center:
@@ -3493,8 +3505,13 @@ instance:
       apply_changes: []
       reset_to_scanned: []
       modify: []
+      clear_selection: []
     option:
       can_add: []
+      search:
+        watermark: []
+        no_results:
+          - query
     hints:
       optifine_mod_compatibility: []
       fabric_api_required: []
