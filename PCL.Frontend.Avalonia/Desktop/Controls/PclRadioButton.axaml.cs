@@ -98,7 +98,7 @@ internal sealed partial class PclRadioButton : UserControl
             PanBack.Background = _isPressed
                 ? FrontendThemeResourceResolver.GetBrush("ColorBrush2")
                 : FrontendThemeResourceResolver.GetBrush("ColorBrush3");
-            LabText.Foreground = Brushes.White;
+            LabText.Foreground = FrontendThemeResourceResolver.GetBrush("ColorBrushRadioButtonCheckedForeground");
         }
         else
         {

@@ -129,6 +129,7 @@
       <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected" Color="{DynamicResource BaseColor_Blue810}" />
       <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle" Color="{DynamicResource BaseColor_Blue820}" />
       <SolidColorBrush x:Key="ColorBrushEntryChevronIdle" Color="{DynamicResource BaseColor_Blue760}" />
+      <SolidColorBrush x:Key="ColorBrushRadioButtonCheckedForeground" Color="{DynamicResource BaseColor_Neutral570}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarBackground" Color="{DynamicResource BaseColor_Blue870}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarForeground" Color="{DynamicResource BaseColor_Neutral570}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarHoverBackground" Color="{DynamicResource BaseColor_Neutral640Alpha20}" />
@@ -362,6 +363,7 @@
       <SolidColorBrush x:Key="ColorBrushEntrySecondarySelected" Color="{DynamicResource BaseColor_Blue810}" />
       <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle" Color="{DynamicResource BaseColor_Blue820}" />
       <SolidColorBrush x:Key="ColorBrushEntryChevronIdle" Color="{DynamicResource BaseColor_Blue760}" />
+      <SolidColorBrush x:Key="ColorBrushRadioButtonCheckedForeground" Color="{DynamicResource BaseColor_Blue950}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarBackground" Color="{DynamicResource BaseColor_Blue950}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarForeground" Color="{DynamicResource BaseColor_Cyan880}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarHoverBackground" Color="{DynamicResource BaseColor_Cyan900Alpha10}" />
