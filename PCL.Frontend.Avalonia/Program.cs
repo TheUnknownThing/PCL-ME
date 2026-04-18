@@ -1,5 +1,6 @@
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Desktop;
+using PCL.Frontend.Avalonia.Workflows;
 
 public partial class Program
 {
@@ -25,6 +26,12 @@ public partial class Program
             Console.WriteLine();
             Console.WriteLine(AvaloniaCommandParser.GetUsageText());
             Environment.ExitCode = 1;
+            return;
+        }
+
+        if (parseResult.Options.Command == AvaloniaCommandKind.LaunchInstance)
+        {
+            Environment.ExitCode = FrontendCliExecutionService.Run(parseResult.Options);
             return;
         }
 

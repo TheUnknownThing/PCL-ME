@@ -19,11 +19,21 @@ internal static class AvaloniaCommandParser
             return Error($"Legacy inspection command '{args[0]}' has been removed. Run the desktop app with `app` or no arguments.");
         }
 
-        if (!string.Equals(args[0], "app", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(args[0], "app", StringComparison.OrdinalIgnoreCase))
         {
-            return Error($"Unknown command '{args[0]}'.");
+            return ParseAppCommand(args);
         }
 
+        if (string.Equals(args[0], "launch-instance", StringComparison.OrdinalIgnoreCase))
+        {
+            return ParseLaunchInstanceCommand(args);
+        }
+
+        return Error($"Unknown command '{args[0]}'.");
+    }
+
+    private static AvaloniaParseResult ParseAppCommand(string[] args)
+    {
         var scenario = "modern-fabric";
         var forceCjkFontWarning = false;
         var index = 1;
@@ -60,7 +70,54 @@ internal static class AvaloniaCommandParser
             index = nextIndex;
         }
 
-        return Success(new AvaloniaCommandOptions(scenario, forceCjkFontWarning));
+        return Success(new AvaloniaCommandOptions(
+            AvaloniaCommandKind.App,
+            scenario,
+            forceCjkFontWarning,
+            InstanceNameOverride: null));
+    }
+
+    private static AvaloniaParseResult ParseLaunchInstanceCommand(string[] args)
+    {
+        string? instanceName = null;
+        var index = 1;
+
+        while (index < args.Length)
+        {
+            var token = args[index];
+            if (!token.StartsWith("--", StringComparison.Ordinal))
+            {
+                return Error($"Unexpected positional argument '{token}'.");
+            }
+
+            var (name, value, nextIndex, errorMessage) = ReadOption(args, index);
+            if (errorMessage is not null)
+            {
+                return Error(errorMessage);
+            }
+
+            switch (name)
+            {
+                case "instance":
+                    instanceName = value?.Trim();
+                    break;
+                default:
+                    return Error($"Unknown option '--{name}'.");
+            }
+
+            index = nextIndex;
+        }
+
+        if (string.IsNullOrWhiteSpace(instanceName))
+        {
+            return Error("Option '--instance' is required.");
+        }
+
+        return Success(new AvaloniaCommandOptions(
+            AvaloniaCommandKind.LaunchInstance,
+            Scenario: "modern-fabric",
+            ForceCjkFontWarning: false,
+            InstanceNameOverride: instanceName));
     }
 
     public static string GetUsageText()
@@ -70,6 +127,7 @@ PCL.Frontend.Avalonia
 
 Usage:
   app [--scenario modern-fabric|legacy-forge] [--force-cjk-font-warning true|false]
+  launch-instance --instance <instance-name>
   help
 
 Defaults:
@@ -80,7 +138,7 @@ Defaults:
     }
 
     public static AvaloniaCommandOptions CreateDefaultOptions() =>
-        new("modern-fabric", false);
+        new(AvaloniaCommandKind.App, "modern-fabric", false, InstanceNameOverride: null);
 
     private static AvaloniaParseResult Success(AvaloniaCommandOptions options) =>
         new(options, ShowHelp: false, ErrorMessage: null);

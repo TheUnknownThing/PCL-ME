@@ -909,6 +909,7 @@ launch:
       instance_path_reserved_chars: Le chemin de l'instance ne peut pas contenir ! ou ; ({path}).
       instance_indie_path_reserved_chars: Le chemin de jeu indépendant ne peut pas contenir ! ou ; ({path}).
       instance_not_selected: Aucune instance n'est actuellement sélectionnée.
+      instance_not_found: "Instance spécifiée introuvable : {instance_name}"
       instance_has_error: "L'instance sélectionnée est dans un état non valide : {detail}"
       no_profile_selected: Sélectionnez un profil de connexion avant de lancer.
       microsoft_profile_required: Cette instance nécessite un profil Microsoft.
@@ -2947,6 +2948,7 @@ instance:
       saves_folder: Dossier de sauvegardes
       mods_folder: Dossier de mods
     advanced:
+      direct_launch_entry: Créer un raccourci
       export_script: Exporter le script de lancement
       test_game: Jeu d'essai
       repair_files: Réparer les fichiers
@@ -2954,12 +2956,14 @@ instance:
       delete: Supprimer l'instance
       patch_core: Noyau du correctif
     artifacts:
+      direct_launch_entry_name: "PCL-ME {instance_name}"
       launch_script_name: Lancer {instance_name}
     messages:
       select_to_view_details: Sélectionnez une instance pour afficher les détails.
       no_instance_selected: Aucune instance n'est actuellement sélectionnée.
       no_saves_directory: L'instance actuelle n'a pas de répertoire de sauvegarde.
       no_mods_directory: L'instance actuelle n'a pas de répertoire mods.
+      direct_launch_entry_missing: L'entrée de lancement direct n'existe pas.
       rename_canceled: Renommer annulé.
       rename_empty: Le nom de l'instance ne peut pas être vide.
       rename_unchanged: Le nom de l'instance n'a pas changé.

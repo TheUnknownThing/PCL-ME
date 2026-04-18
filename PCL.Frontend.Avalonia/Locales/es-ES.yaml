@@ -911,6 +911,7 @@ launch:
       instance_path_reserved_chars: La ruta de la instancia no puede contener ! o ; ({path}).
       instance_indie_path_reserved_chars: ¡La ruta del juego independiente no puede contener! o ; ({path}).
       instance_not_selected: Actualmente no hay ninguna instancia seleccionada.
+      instance_not_found: "No se encontró la instancia especificada: {instance_name}"
       instance_has_error: "La instancia seleccionada está en un estado no válido: {detail}"
       no_profile_selected: Seleccione un perfil de inicio de sesión antes de iniciar.
       microsoft_profile_required: Esta instancia requiere un perfil de Microsoft.
@@ -2963,6 +2964,7 @@ instance:
       saves_folder: Carpeta guardada
       mods_folder: Carpeta de modificaciones
     advanced:
+      direct_launch_entry: Crear acceso directo
       export_script: Script de inicio de exportación
       test_game: Juego de prueba
       repair_files: Archivos de reparación
@@ -2970,12 +2972,14 @@ instance:
       delete: Eliminar instancia
       patch_core: Núcleo del parche
     artifacts:
+      direct_launch_entry_name: "PCL-ME {instance_name}"
       launch_script_name: Lanzar {instance_name}
     messages:
       select_to_view_details: Seleccione una instancia para ver los detalles.
       no_instance_selected: Actualmente no hay ninguna instancia seleccionada.
       no_saves_directory: La instancia actual no tiene directorio de guardado.
       no_mods_directory: La instancia actual no tiene directorio de modificaciones.
+      direct_launch_entry_missing: El acceso de inicio directo no existe.
       rename_canceled: Cambio de nombre cancelado.
       rename_empty: El nombre de la instancia no puede estar vacío.
       rename_unchanged: El nombre de la instancia no cambió.

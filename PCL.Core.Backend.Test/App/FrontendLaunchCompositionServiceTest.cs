@@ -27,7 +27,7 @@ public sealed class FrontendLaunchCompositionServiceTest
         localConfig.Sync();
 
         _ = FrontendLaunchCompositionService.Compose(
-            new AvaloniaCommandOptions("test", ForceCjkFontWarning: false),
+            CreateOptions(),
             runtimePaths);
 
         Assert.IsFalse(Directory.Exists(Path.Combine(launcherDirectory, "versions", "PCL")));
@@ -52,7 +52,7 @@ public sealed class FrontendLaunchCompositionServiceTest
         }, "zh-Hans");
 
         var result = FrontendLaunchCompositionService.Compose(
-            new AvaloniaCommandOptions("test", ForceCjkFontWarning: false),
+            CreateOptions(),
             runtimePaths,
             i18n: i18n);
 
@@ -104,7 +104,7 @@ public sealed class FrontendLaunchCompositionServiceTest
         sharedConfig.Sync();
 
         var result = FrontendLaunchCompositionService.Compose(
-            new AvaloniaCommandOptions("test", ForceCjkFontWarning: false),
+            CreateOptions(),
             runtimePaths);
 
         StringAssert.Contains(result.ArgumentPlan.FinalArguments, "-Dhttp.proxyHost=proxy.example");
@@ -121,6 +121,37 @@ public sealed class FrontendLaunchCompositionServiceTest
             runtimePaths.SharedConfigDirectory,
             Environment.GetEnvironmentVariable("PCL_ENCRYPTION_KEY"));
         return LauncherDataProtectionService.Protect(value, encryptionKey);
+    }
+
+    [TestMethod]
+    public void Compose_WithInstanceOverride_UsesCommandLineSelection()
+    {
+        using var environment = new LaunchCompositionTestEnvironment();
+        var launcherDirectory = Path.Combine(environment.RootDirectory, ".minecraft");
+        var localConfig = environment.CreateRuntimePaths().OpenLocalConfigProvider();
+        localConfig.Set("LaunchFolderSelect", launcherDirectory);
+        localConfig.Set("LaunchInstanceSelect", "ConfigInstance");
+        localConfig.Sync();
+
+        Directory.CreateDirectory(Path.Combine(launcherDirectory, "versions", "ConfigInstance"));
+        Directory.CreateDirectory(Path.Combine(launcherDirectory, "versions", "CliInstance"));
+
+        var runtimePaths = environment.CreateRuntimePaths();
+        var result = FrontendLaunchCompositionService.Compose(
+            CreateOptions(instanceNameOverride: "CliInstance"),
+            runtimePaths);
+
+        Assert.AreEqual("CliInstance", result.InstanceName);
+        Assert.AreEqual("CliInstance", result.PrecheckRequest.InstanceName);
+    }
+
+    private static AvaloniaCommandOptions CreateOptions(string scenario = "test", string? instanceNameOverride = null)
+    {
+        return new AvaloniaCommandOptions(
+            AvaloniaCommandKind.App,
+            scenario,
+            ForceCjkFontWarning: false,
+            InstanceNameOverride: instanceNameOverride);
     }
 
     private sealed class LaunchCompositionTestEnvironment : IDisposable

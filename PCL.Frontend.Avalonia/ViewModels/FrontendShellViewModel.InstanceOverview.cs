@@ -150,6 +150,8 @@ internal sealed partial class FrontendShellViewModel
             ResolveCurrentInstanceResourceDirectory("mods"),
             SD("instance.overview.messages.no_mods_directory")));
 
+    public ActionCommand CreateDirectLaunchShortcutCommand => new(CreateDirectLaunchShortcut);
+
     public ActionCommand ExportInstanceScriptCommand => new(ExportInstanceScript);
 
     public ActionCommand TestInstanceCommand => new(() => _ = TestInstanceAsync());
@@ -449,6 +451,28 @@ internal sealed partial class FrontendShellViewModel
                 encoding);
             _shellActionService.EnsureFileExecutable(scriptPath);
             OpenInstanceTarget(activityTitle, scriptPath, SD("instance.overview.messages.launch_script_missing"));
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
+        }
+    }
+
+    private void CreateDirectLaunchShortcut()
+    {
+        var activityTitle = SD("instance.overview.advanced.direct_launch_entry");
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity(activityTitle, SD("instance.overview.messages.no_instance_selected"));
+            return;
+        }
+
+        try
+        {
+            var shortcutPath = _shellActionService.CreateDirectLaunchShortcut(
+                _instanceComposition.Selection.InstanceName,
+                SD("instance.overview.artifacts.direct_launch_entry_name", ("instance_name", _instanceComposition.Selection.InstanceName)));
+            OpenInstanceTarget(activityTitle, shortcutPath, SD("instance.overview.messages.direct_launch_entry_missing"));
         }
         catch (Exception ex)
         {

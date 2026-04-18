@@ -9,6 +9,11 @@
         <controls:PclButton
             Width="140"
             Margin="0,0,20,12"
+            Command="{Binding CreateDirectLaunchShortcutCommand}"
+            Text="{Binding InstanceOverviewDirectLaunchEntryText}" />
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
             Command="{Binding ExportInstanceScriptCommand}"
             Text="{Binding InstanceOverviewExportScriptText}" />
         <controls:PclButton

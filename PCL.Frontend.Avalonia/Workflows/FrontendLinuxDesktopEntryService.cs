@@ -30,28 +30,47 @@ internal static class FrontendLinuxDesktopEntryService
             FrontendApplicationIdentity.LinuxDesktopFileId + ".desktop");
         var desktopEntryContent = BuildDesktopEntry(
             FrontendApplicationIdentity.DisplayName,
-            executablePath,
-            ResolveIconPath(executablePath));
+            [executablePath],
+            ResolveIconPath(executablePath),
+            Path.GetDirectoryName(executablePath));
 
         WriteIfChanged(desktopEntryPath, desktopEntryContent);
     }
 
     public static string BuildDesktopEntry(string displayName, string executablePath, string? iconPath)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
         ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
 
-        var executableDirectory = Path.GetDirectoryName(executablePath);
+        return BuildDesktopEntry(
+            displayName,
+            [executablePath],
+            iconPath,
+            Path.GetDirectoryName(executablePath));
+    }
+
+    public static string BuildDesktopEntry(
+        string displayName,
+        IReadOnlyList<string> execArguments,
+        string? iconPath,
+        string? workingDirectory = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        ArgumentNullException.ThrowIfNull(execArguments);
+        if (execArguments.Count == 0 || execArguments.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new ArgumentException("Desktop entry arguments cannot be empty.", nameof(execArguments));
+        }
+
         var builder = new StringBuilder();
         builder.AppendLine("[Desktop Entry]");
         builder.AppendLine("Type=Application");
         builder.AppendLine($"Name={EscapeDesktopValue(displayName)}");
         builder.AppendLine("Comment=PCL-ME frontend");
-        builder.AppendLine($"Exec={EscapeExecArgument(executablePath)}");
+        builder.AppendLine($"Exec={string.Join(" ", execArguments.Select(EscapeExecArgument))}");
 
-        if (!string.IsNullOrWhiteSpace(executableDirectory))
+        if (!string.IsNullOrWhiteSpace(workingDirectory))
         {
-            builder.AppendLine($"Path={EscapeDesktopValue(executableDirectory)}");
+            builder.AppendLine($"Path={EscapeDesktopValue(workingDirectory)}");
         }
 
         if (!string.IsNullOrWhiteSpace(iconPath))
@@ -66,6 +85,20 @@ internal static class FrontendLinuxDesktopEntryService
         return builder.ToString();
     }
 
+    public static string? ResolveApplicationsDirectory()
+    {
+        var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+        if (!string.IsNullOrWhiteSpace(dataHome))
+        {
+            return Path.Combine(dataHome, "applications");
+        }
+
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return string.IsNullOrWhiteSpace(userProfile)
+            ? null
+            : Path.Combine(userProfile, ".local", "share", "applications");
+    }
+
     public static string? ResolveIconPath(string executablePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
@@ -78,20 +111,6 @@ internal static class FrontendLinuxDesktopEntryService
 
         var iconPath = Path.Combine(executableDirectory, FrontendApplicationIdentity.LinuxIconRelativePath);
         return File.Exists(iconPath) ? iconPath : null;
-    }
-
-    private static string? ResolveApplicationsDirectory()
-    {
-        var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
-        if (!string.IsNullOrWhiteSpace(dataHome))
-        {
-            return Path.Combine(dataHome, "applications");
-        }
-
-        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        return string.IsNullOrWhiteSpace(userProfile)
-            ? null
-            : Path.Combine(userProfile, ".local", "share", "applications");
     }
 
     private static void WriteIfChanged(string path, string content)
@@ -117,11 +136,23 @@ internal static class FrontendLinuxDesktopEntryService
 
     private static string EscapeExecArgument(string value)
     {
-        return value
+        if (string.IsNullOrEmpty(value))
+        {
+            return "\"\"";
+        }
+
+        if (value.All(static character =>
+                !char.IsWhiteSpace(character) &&
+                character is not '"' and not '\'' and not '\\' and not '$' and not '`'))
+        {
+            return value;
+        }
+
+        return "\"" + value
             .Replace("\\", "\\\\", StringComparison.Ordinal)
             .Replace("\"", "\\\"", StringComparison.Ordinal)
-            .Replace(" ", "\\ ", StringComparison.Ordinal)
-            .Replace("\t", "\\\t", StringComparison.Ordinal)
-            .Replace("\n", "\\n", StringComparison.Ordinal);
+            .Replace("$", "\\$", StringComparison.Ordinal)
+            .Replace("`", "\\`", StringComparison.Ordinal)
+            .Replace("\n", "\\n", StringComparison.Ordinal) + "\"";
     }
 }

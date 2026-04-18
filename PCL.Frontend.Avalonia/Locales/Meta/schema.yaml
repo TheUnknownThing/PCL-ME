@@ -1044,6 +1044,8 @@ launch:
       instance_indie_path_reserved_chars:
         - path
       instance_not_selected: []
+      instance_not_found:
+        - instance_name
       instance_has_error:
         - detail
       no_profile_selected: []
@@ -3376,6 +3378,7 @@ instance:
       saves_folder: []
       mods_folder: []
     advanced:
+      direct_launch_entry: []
       export_script: []
       test_game: []
       repair_files: []
@@ -3383,6 +3386,8 @@ instance:
       delete: []
       patch_core: []
     artifacts:
+      direct_launch_entry_name:
+        - instance_name
       launch_script_name:
         - instance_name
     messages:
@@ -3390,6 +3395,7 @@ instance:
       no_instance_selected: []
       no_saves_directory: []
       no_mods_directory: []
+      direct_launch_entry_missing: []
       rename_canceled: []
       rename_empty: []
       rename_unchanged: []

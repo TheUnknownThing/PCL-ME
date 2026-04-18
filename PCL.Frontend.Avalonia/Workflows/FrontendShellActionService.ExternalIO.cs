@@ -66,6 +66,19 @@ internal sealed partial class FrontendShellActionService
         return PlatformAdapter.CreateLauncherShortcut(targetDirectory, executablePath, displayName).ShortcutPath;
     }
 
+    public string CreateDirectLaunchShortcut(string instanceName, string displayName)
+    {
+        var launcherEntryDirectory = PlatformAdapter.TryGetLauncherEntryDirectory()
+            ?? throw new InvalidOperationException("The current system did not provide a launcher entry directory.");
+        return CreateDirectLaunchShortcutAt(launcherEntryDirectory, instanceName, displayName);
+    }
+
+    public string CreateDirectLaunchShortcutAt(string targetDirectory, string instanceName, string displayName)
+    {
+        var executablePath = Environment.ProcessPath ?? Path.Combine(RuntimePaths.ExecutableDirectory, "PCL.Frontend.Avalonia");
+        return PlatformAdapter.CreateDirectLaunchShortcut(targetDirectory, executablePath, instanceName, displayName).ShortcutPath;
+    }
+
     private static void TryDeleteDirectory(string path)
     {
         try

@@ -911,6 +911,7 @@ launch:
       instance_path_reserved_chars: 实例路径中不可包含 ! 或 ;（{path}）。
       instance_indie_path_reserved_chars: 独立游戏路径中不可包含 ! 或 ;（{path}）。
       instance_not_selected: 当前未选择实例。
+      instance_not_found: "未找到指定实例：{instance_name}"
       instance_has_error: 当前实例状态异常：{detail}
       no_profile_selected: 请先选择登录档案后再启动。
       microsoft_profile_required: 当前实例要求使用微软档案启动。
@@ -2957,6 +2958,7 @@ instance:
       saves_folder: 存档文件夹
       mods_folder: Mod 文件夹
     advanced:
+      direct_launch_entry: 创建快捷方式
       export_script: 导出启动脚本
       test_game: 测试启动
       repair_files: 修复文件
@@ -2964,12 +2966,14 @@ instance:
       delete: 删除实例
       patch_core: 修补核心
     artifacts:
+      direct_launch_entry_name: "PCL-ME {instance_name}"
       launch_script_name: "启动 {instance_name}"
     messages:
       select_to_view_details: 请选择一个实例后再查看详细内容。
       no_instance_selected: 当前未选择实例。
       no_saves_directory: 当前实例没有存档目录。
       no_mods_directory: 当前实例没有 Mod 目录。
+      direct_launch_entry_missing: 直接启动入口不存在。
       rename_canceled: 已取消重命名。
       rename_empty: 实例名称不能为空。
       rename_unchanged: 实例名称未发生变化。

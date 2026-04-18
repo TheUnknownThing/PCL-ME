@@ -36,6 +36,7 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceOverviewOpenInstanceFolderText => SD("instance.overview.shortcuts.instance_folder");
     public string InstanceOverviewOpenSavesFolderText => SD("instance.overview.shortcuts.saves_folder");
     public string InstanceOverviewOpenModsFolderText => SD("instance.overview.shortcuts.mods_folder");
+    public string InstanceOverviewDirectLaunchEntryText => SD("instance.overview.advanced.direct_launch_entry");
     public string InstanceOverviewExportScriptText => SD("instance.overview.advanced.export_script");
     public string InstanceOverviewTestGameText => SD("instance.overview.advanced.test_game");
     public string InstanceOverviewRepairFilesText => SD("instance.overview.advanced.repair_files");

@@ -60,6 +60,32 @@ internal sealed class FrontendPlatformAdapter
             : Path.Combine(userProfile, "Desktop");
     }
 
+    public string? TryGetLauncherEntryDirectory()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            var startMenuDirectory = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
+            return string.IsNullOrWhiteSpace(startMenuDirectory)
+                ? null
+                : Path.Combine(startMenuDirectory, "Programs");
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return FrontendLinuxDesktopEntryService.ResolveApplicationsDirectory();
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return string.IsNullOrWhiteSpace(userProfile)
+                ? null
+                : Path.Combine(userProfile, "Applications");
+        }
+
+        return null;
+    }
+
     public bool TryOpenExternalTarget(string target, out string? error)
     {
         error = null;
@@ -214,6 +240,60 @@ internal sealed class FrontendPlatformAdapter
         File.WriteAllText(shortcutPath, shortcutContent, new UTF8Encoding(false));
         EnsureFileExecutable(shortcutPath);
         return new FrontendShortcutMaterializationResult(shortcutPath);
+    }
+
+    public FrontendShortcutMaterializationResult CreateDirectLaunchShortcut(
+        string targetDirectory,
+        string executablePath,
+        string instanceName,
+        string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(targetDirectory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+
+        Directory.CreateDirectory(targetDirectory);
+
+        var executableDirectory = Path.GetDirectoryName(executablePath) ?? Path.GetPathRoot(executablePath) ?? targetDirectory;
+        var arguments = new[] { "launch-instance", "--instance", instanceName };
+
+        if (OperatingSystem.IsWindows())
+        {
+            var shortcutPath = Path.Combine(targetDirectory, $"{SanitizeFileName(displayName)}.lnk");
+            var shellType = Type.GetTypeFromProgID("WScript.Shell", throwOnError: true)!;
+            dynamic shell = Activator.CreateInstance(shellType)!;
+            var link = shell.CreateShortcut(shortcutPath)!;
+            link.TargetPath = executablePath;
+            link.Arguments = JoinWindowsArguments(arguments);
+            link.WorkingDirectory = executableDirectory;
+            link.Description = $"{displayName} shortcut";
+            link.IconLocation = executablePath;
+            link.Save();
+            return new FrontendShortcutMaterializationResult(shortcutPath);
+        }
+
+        if (OperatingSystem.IsMacOS())
+        {
+            var appBundlePath = Path.Combine(targetDirectory, $"{SanitizeFileName(displayName)}.app");
+            WriteMacApplicationBundle(appBundlePath, executablePath, arguments, displayName);
+            return new FrontendShortcutMaterializationResult(appBundlePath);
+        }
+
+        var shortcutScriptPath = Path.Combine(
+            targetDirectory,
+            $"{BuildLauncherScriptFileName(displayName)}.sh");
+        WritePosixLauncherScript(shortcutScriptPath, executablePath, arguments);
+
+        var shortcutPathLinux = Path.Combine(targetDirectory, $"{SanitizeFileName(displayName)}.desktop");
+        var shortcutContentLinux = FrontendLinuxDesktopEntryService.BuildDesktopEntry(
+            displayName,
+            [shortcutScriptPath],
+            FrontendLinuxDesktopEntryService.ResolveIconPath(executablePath),
+            executableDirectory);
+        File.WriteAllText(shortcutPathLinux, shortcutContentLinux, new UTF8Encoding(false));
+        EnsureFileExecutable(shortcutPathLinux);
+        return new FrontendShortcutMaterializationResult(shortcutPathLinux);
     }
 
     public string GetCommandScriptExtension()
@@ -374,6 +454,133 @@ internal sealed class FrontendPlatformAdapter
     {
         ArgumentNullException.ThrowIfNull(startInfo);
         return process is not null || startInfo.UseShellExecute;
+    }
+
+    private void WriteMacApplicationBundle(
+        string appBundlePath,
+        string executablePath,
+        IReadOnlyList<string> arguments,
+        string displayName)
+    {
+        var contentsDirectory = Path.Combine(appBundlePath, "Contents");
+        var macOsDirectory = Path.Combine(contentsDirectory, "MacOS");
+        Directory.CreateDirectory(macOsDirectory);
+
+        var executableName = SanitizeFileName(displayName);
+        var launcherScriptPath = Path.Combine(macOsDirectory, executableName);
+        WritePosixLauncherScript(launcherScriptPath, executablePath, arguments);
+
+        var infoPlistPath = Path.Combine(contentsDirectory, "Info.plist");
+        var infoPlist = $$"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+                <key>CFBundleDevelopmentRegion</key>
+                <string>en</string>
+                <key>CFBundleDisplayName</key>
+                <string>{{EscapeXmlValue(displayName)}}</string>
+                <key>CFBundleExecutable</key>
+                <string>{{EscapeXmlValue(executableName)}}</string>
+                <key>CFBundleIdentifier</key>
+                <string>{{EscapeXmlValue(BuildMacBundleIdentifier(displayName))}}</string>
+                <key>CFBundleName</key>
+                <string>{{EscapeXmlValue(displayName)}}</string>
+                <key>CFBundlePackageType</key>
+                <string>APPL</string>
+                <key>CFBundleVersion</key>
+                <string>1</string>
+                <key>LSApplicationCategoryType</key>
+                <string>public.app-category.games</string>
+                <key>LSUIElement</key>
+                <true/>
+            </dict>
+            </plist>
+            """;
+        File.WriteAllText(infoPlistPath, infoPlist, new UTF8Encoding(false));
+    }
+
+    private void WritePosixLauncherScript(
+        string scriptPath,
+        string executablePath,
+        IReadOnlyList<string> arguments)
+    {
+        var launcherScript = string.Join(
+            Environment.NewLine,
+            [
+                "#!/bin/sh",
+                $"exec {EscapePosixArgument(executablePath)} {string.Join(" ", arguments.Select(EscapePosixArgument))}"
+            ]);
+        File.WriteAllText(scriptPath, launcherScript, new UTF8Encoding(false));
+        EnsureFileExecutable(scriptPath);
+    }
+
+    private static string JoinWindowsArguments(IEnumerable<string> arguments)
+    {
+        return string.Join(" ", arguments.Select(EscapeWindowsArgument));
+    }
+
+    private static string EscapeWindowsArgument(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return "\"\"";
+        }
+
+        if (value.IndexOfAny([' ', '\t', '"']) < 0)
+        {
+            return value;
+        }
+
+        return "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+    }
+
+    private static string EscapePosixArgument(string value)
+    {
+        return "'" + value.Replace("'", "'\"'\"'", StringComparison.Ordinal) + "'";
+    }
+
+    private static string EscapeXmlValue(string value)
+    {
+        return value
+            .Replace("&", "&amp;", StringComparison.Ordinal)
+            .Replace("<", "&lt;", StringComparison.Ordinal)
+            .Replace(">", "&gt;", StringComparison.Ordinal);
+    }
+
+    private static string BuildMacBundleIdentifier(string displayName)
+    {
+        var slug = new string(displayName
+            .ToLowerInvariant()
+            .Select(character => char.IsLetterOrDigit(character) ? character : '-')
+            .ToArray())
+            .Trim('-');
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            slug = "instance";
+        }
+
+        while (slug.Contains("--", StringComparison.Ordinal))
+        {
+            slug = slug.Replace("--", "-", StringComparison.Ordinal);
+        }
+
+        return $"org.pcl.me.frontend.instance.{slug}";
+    }
+
+    private static string BuildLauncherScriptFileName(string value)
+    {
+        var sanitized = SanitizeFileName(value)
+            .Replace(" ", "-", StringComparison.Ordinal)
+            .Replace("--", "-", StringComparison.Ordinal);
+        return string.IsNullOrWhiteSpace(sanitized) ? "pcl-me-launch" : sanitized;
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var sanitized = new string(value.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(sanitized) ? "PCL-ME" : sanitized;
     }
 }
 
