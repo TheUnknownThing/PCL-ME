@@ -94,7 +94,7 @@
         BorderThickness="0"
         HorizontalContentAlignment="Stretch">
       <Grid
-          Margin="4,0,0,0"
+          Margin="0"
           HorizontalAlignment="Stretch"
           VerticalAlignment="Center"
           ColumnDefinitions="*,Auto"

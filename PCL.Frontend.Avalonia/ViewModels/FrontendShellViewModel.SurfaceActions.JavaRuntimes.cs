@@ -314,6 +314,13 @@ internal sealed partial class FrontendShellViewModel
 
     private void SelectJavaRuntime(string key)
     {
+        if (!string.Equals(key, "auto", StringComparison.OrdinalIgnoreCase)
+            && JavaRuntimeEntries.FirstOrDefault(item => item.Key == key) is { IsEnabled: false })
+        {
+            LogWrapper.Info(SetupJavaLogModule, $"SelectJavaRuntime ignored for disabled runtime: key='{key}'.");
+            return;
+        }
+
         _selectedJavaRuntimeKey = key;
         _shellActionService.PersistSharedValue("LaunchArgumentJavaSelect", key == "auto" ? string.Empty : key);
         SyncJavaSelection();

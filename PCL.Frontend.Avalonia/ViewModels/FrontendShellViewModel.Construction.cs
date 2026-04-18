@@ -392,7 +392,7 @@ internal sealed partial class FrontendShellViewModel
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
-        _openSnapshotBuildCommand = CreateLinkCommand("Get official snapshot build", "https://github.com/TheUnknownThing/PCL-ME");
+        _openSnapshotBuildCommand = CreateLinkCommand("Get official snapshot build", "https://afdian.com/a/LTCat");
         _backgroundOpenFolderCommand = new ActionCommand(OpenBackgroundFolder);
         _backgroundRefreshCommand = new ActionCommand(RefreshBackgroundAssets);
         _backgroundClearCommand = new ActionCommand(ClearBackgroundAssets);

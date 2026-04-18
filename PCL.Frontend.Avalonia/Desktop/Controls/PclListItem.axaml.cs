@@ -59,6 +59,9 @@ internal sealed partial class PclListItem : UserControl
     public static readonly StyledProperty<bool> AccessoryIsSpinningProperty =
         AvaloniaProperty.Register<PclListItem, bool>(nameof(AccessoryIsSpinning));
 
+    public static readonly StyledProperty<Thickness> ContentPaddingProperty =
+        AvaloniaProperty.Register<PclListItem, Thickness>(nameof(ContentPadding), new Thickness(4, 0, 0, 0));
+
     private bool _isPressed;
     private bool? _selectionBarSelectedState;
     private bool _isAppearanceSubscribed;
@@ -223,6 +226,12 @@ internal sealed partial class PclListItem : UserControl
         set => SetValue(AccessoryIsSpinningProperty, value);
     }
 
+    public Thickness ContentPadding
+    {
+        get => GetValue(ContentPaddingProperty);
+        set => SetValue(ContentPaddingProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -261,6 +270,10 @@ internal sealed partial class PclListItem : UserControl
             RefreshIconLayout();
             _selectionBarSelectedState = null;
             RefreshVisualState();
+        }
+        else if (change.Property == ContentPaddingProperty)
+        {
+            RefreshIconLayout();
         }
         else if (change.Property == IsSelectedProperty)
         {
@@ -327,8 +340,13 @@ internal sealed partial class PclListItem : UserControl
         var iconColumnWidth = isCompactLayout ? 18 : 22;
         LayoutRoot.ColumnDefinitions[1].Width = hasIcon ? new GridLength(14) : new GridLength(6);
         LayoutRoot.ColumnDefinitions[2].Width = hasIcon ? new GridLength(iconColumnWidth) : new GridLength(6);
-        var textOffset = LogoImage.IsVisible ? 12 : 4;
-        MainButton.Margin = new Thickness(textOffset, 0, 0, 0);
+        var leadingPadding = ContentPadding.Left;
+        if (LogoImage.IsVisible)
+        {
+            leadingPadding += 8;
+        }
+
+        MainButton.Margin = new Thickness(leadingPadding, ContentPadding.Top, ContentPadding.Right, ContentPadding.Bottom);
         TitleBlock.Margin = new Thickness(0, 0, 0, isCompactLayout ? 0 : 2);
     }
 

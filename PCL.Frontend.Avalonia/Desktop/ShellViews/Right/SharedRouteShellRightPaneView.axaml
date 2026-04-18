@@ -37,7 +37,7 @@
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="4" />
-      <Setter Property="Padding" Value="0" />
+      <Setter Property="Padding" Value="14,12" />
     </Style>
     <Style Selector="Button.install-suggestion-button:pointerover > Border.install-suggestion-background">
       <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
@@ -611,8 +611,10 @@
                         <ItemsControl.ItemTemplate>
                           <DataTemplate>
                             <controls:PclListItem
-                                Margin="0,0,0,8"
+                                Margin="0,0,0,4"
                                 Command="{Binding Command}"
+                                ContentPadding="8,6,8,6"
+                                Height="50"
                                 IconSource="{Binding Icon}"
                                 Info="{Binding CombinedInfo}"
                                 Title="{Binding Title}" />

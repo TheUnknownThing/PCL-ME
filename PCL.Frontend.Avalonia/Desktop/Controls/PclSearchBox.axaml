@@ -36,12 +36,6 @@
       BorderBrush="{DynamicResource ColorBrush6}"
       BorderThickness="1"
       CornerRadius="5">
-    <Border.Transitions>
-      <Transitions>
-        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
-        <BrushTransition Property="BorderBrush" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
-      </Transitions>
-    </Border.Transitions>
     <Grid>
       <TextBox
           x:Name="SearchTextBox"

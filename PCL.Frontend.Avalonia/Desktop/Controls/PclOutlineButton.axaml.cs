@@ -1,9 +1,10 @@
 using System.Windows.Input;
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -20,17 +21,30 @@ internal sealed partial class PclOutlineButton : UserControl
 
     private bool _isHovered;
     private bool _isPressed;
+    private bool _isAppearanceSubscribed;
 
     public PclOutlineButton()
     {
         InitializeComponent();
 
-        ButtonHost.PointerEntered += (_, _) =>
+        AttachedToVisualTree += (_, _) =>
+        {
+            SubscribeAppearance();
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
+        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
+        DataContextChanged += (_, _) =>
+        {
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
+        PointerEntered += (_, _) =>
         {
             _isHovered = true;
             RefreshVisualState();
         };
-        ButtonHost.PointerExited += (_, _) =>
+        PointerExited += (_, _) =>
         {
             _isHovered = false;
             _isPressed = false;
@@ -80,20 +94,59 @@ internal sealed partial class PclOutlineButton : UserControl
         {
             LabText.Text = change.GetNewValue<string>();
         }
+        else if (change.Property == IsEnabledProperty)
+        {
+            RefreshVisualState();
+        }
     }
 
     private void RefreshVisualState()
     {
-        PanFore.BorderBrush = _isHovered
+        var foreground = _isHovered
             ? FrontendThemeResourceResolver.GetBrush("ColorBrush3")
             : FrontendThemeResourceResolver.GetBrush("ColorBrushGray1");
-        PanFore.Background = _isHovered
+        var background = _isHovered
             ? FrontendThemeResourceResolver.GetBrush("ColorBrush7")
             : FrontendThemeResourceResolver.GetBrush("ColorBrushHalfWhite");
+
+        PanFore.BorderBrush = foreground;
+        PanFore.Background = background;
         PanFore.Opacity = _isPressed ? 0.88 : 1.0;
         PanFore.RenderTransform = _isPressed
             ? new ScaleTransform(0.955, 0.955)
             : new ScaleTransform(1, 1);
-        LabText.Foreground = PanFore.BorderBrush;
+        LabText.Foreground = foreground;
+    }
+
+    private void QueueRefreshVisualState()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
+    }
+
+    private void SubscribeAppearance()
+    {
+        if (_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged += OnAppearanceChanged;
+        _isAppearanceSubscribed = true;
+    }
+
+    private void UnsubscribeAppearance()
+    {
+        if (!_isAppearanceSubscribed)
+        {
+            return;
+        }
+
+        FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
+        _isAppearanceSubscribed = false;
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
     }
 }

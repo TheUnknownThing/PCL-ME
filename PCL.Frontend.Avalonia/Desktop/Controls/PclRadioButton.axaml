@@ -14,7 +14,6 @@
       RenderTransform="scale(1)">
     <Border.Transitions>
       <Transitions>
-        <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
         <TransformOperationsTransition Property="RenderTransform" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
       </Transitions>
     </Border.Transitions>
