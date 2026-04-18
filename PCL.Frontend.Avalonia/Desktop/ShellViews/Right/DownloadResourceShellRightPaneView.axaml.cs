@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -23,6 +24,8 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
     private FrontendShellViewModel? _observedShell;
     private int _visualStateVersion;
     private string _lastHintText = string.Empty;
+    private bool _isRestoringFilterSelections;
+    private bool _isApplyingShellFilterState;
 
     public DownloadResourceShellRightPaneView()
     {
@@ -47,6 +50,11 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
             ?? throw new InvalidOperationException("The resource download page did not contain the version filter.");
         _loaderComboBox = this.FindControl<ComboBox>("DownloadResourceLoaderComboBox")
             ?? throw new InvalidOperationException("The resource download page did not contain the loader filter.");
+        _sourceComboBox.SelectionChanged += (_, _) => OnFilterSelectionChanged(FilterKind.Source, _sourceComboBox);
+        _tagComboBox.SelectionChanged += (_, _) => OnFilterSelectionChanged(FilterKind.Tag, _tagComboBox);
+        _sortComboBox.SelectionChanged += (_, _) => OnFilterSelectionChanged(FilterKind.Sort, _sortComboBox);
+        _versionComboBox.SelectionChanged += (_, _) => OnFilterSelectionChanged(FilterKind.Version, _versionComboBox);
+        _loaderComboBox.SelectionChanged += (_, _) => OnFilterSelectionChanged(FilterKind.Loader, _loaderComboBox);
         DataContextChanged += OnDataContextChanged;
         DetachedFromVisualTree += (_, _) =>
         {
@@ -108,12 +116,13 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
             return;
         }
 
+        _isApplyingShellFilterState = true;
         ScheduleSelectionRestore();
     }
 
     private void ScheduleSelectionRestore()
     {
-        Dispatcher.UIThread.Post(RestoreFilterSelections, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => RestoreFilterSelections(remainingAttempts: 3), DispatcherPriority.Render);
     }
 
     private void ConfigureSurfaceMotion()
@@ -259,27 +268,126 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         Motion.SetDelay(control, delayMilliseconds);
     }
 
-    private void RestoreFilterSelections()
+    private void RestoreFilterSelections(int remainingAttempts)
     {
         if (_observedShell is null)
         {
+            _isApplyingShellFilterState = false;
             return;
         }
 
-        ApplyComboSelection(_sourceComboBox, _observedShell.SelectedDownloadResourceSourceOption);
-        ApplyComboSelection(_tagComboBox, _observedShell.SelectedDownloadResourceTagOption);
-        ApplyComboSelection(_sortComboBox, _observedShell.SelectedDownloadResourceSortOption);
-        ApplyComboSelection(_versionComboBox, _observedShell.SelectedDownloadResourceVersionOption);
-        ApplyComboSelection(_loaderComboBox, _observedShell.SelectedDownloadResourceLoaderOption);
+        _isRestoringFilterSelections = true;
+        bool restoredAllSelections;
+        try
+        {
+            restoredAllSelections =
+                ApplyComboSelection(_sourceComboBox, _observedShell.SelectedDownloadResourceSourceOption)
+                && ApplyComboSelection(_tagComboBox, _observedShell.SelectedDownloadResourceTagOption)
+                && ApplyComboSelection(_sortComboBox, _observedShell.SelectedDownloadResourceSortOption)
+                && ApplyComboSelection(_versionComboBox, _observedShell.SelectedDownloadResourceVersionOption)
+                && ApplyComboSelection(_loaderComboBox, _observedShell.SelectedDownloadResourceLoaderOption);
+        }
+        finally
+        {
+            _isRestoringFilterSelections = false;
+            _isApplyingShellFilterState = false;
+        }
+
+        // Version options are rebuilt during instance switches, so the target item can lag one UI tick behind.
+        if (!restoredAllSelections && remainingAttempts > 0)
+        {
+            Dispatcher.UIThread.Post(() => RestoreFilterSelections(remainingAttempts - 1), DispatcherPriority.Render);
+        }
     }
 
-    private static void ApplyComboSelection(ComboBox comboBox, object? selectedItem)
+    private void OnFilterSelectionChanged(FilterKind filterKind, ComboBox comboBox)
     {
-        if (selectedItem is null || ReferenceEquals(comboBox.SelectedItem, selectedItem))
+        if (_isRestoringFilterSelections || _isApplyingShellFilterState || _observedShell is null)
         {
             return;
         }
 
-        comboBox.SelectedItem = selectedItem;
+        var selectedOption = comboBox.SelectedItem as DownloadResourceFilterOptionViewModel;
+        switch (filterKind)
+        {
+            case FilterKind.Source:
+                _observedShell.SelectedDownloadResourceSourceOption = selectedOption;
+                break;
+            case FilterKind.Tag:
+                _observedShell.SelectedDownloadResourceTagOption = selectedOption;
+                break;
+            case FilterKind.Sort:
+                _observedShell.SelectedDownloadResourceSortOption = selectedOption;
+                break;
+            case FilterKind.Version:
+                _observedShell.SelectedDownloadResourceVersionOption = selectedOption;
+                break;
+            case FilterKind.Loader:
+                _observedShell.SelectedDownloadResourceLoaderOption = selectedOption;
+                break;
+        }
+    }
+
+    private static bool ApplyComboSelection(ComboBox comboBox, object? selectedItem)
+    {
+        if (selectedItem is null)
+        {
+            if (comboBox.SelectedItem is null)
+            {
+                return true;
+            }
+
+            comboBox.SelectedItem = null;
+            return true;
+        }
+
+        var resolvedSelection = ResolveComboSelection(comboBox, selectedItem);
+        if (resolvedSelection is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(comboBox.SelectedItem, resolvedSelection))
+        {
+            return true;
+        }
+
+        comboBox.SelectedItem = resolvedSelection;
+        return true;
+    }
+
+    private static object? ResolveComboSelection(ComboBox comboBox, object selectedItem)
+    {
+        if (comboBox.ItemsSource is not IEnumerable items)
+        {
+            return selectedItem;
+        }
+
+        foreach (var item in items)
+        {
+            if (ReferenceEquals(item, selectedItem))
+            {
+                return item;
+            }
+
+            if (item is DownloadResourceFilterOptionViewModel option
+                && selectedItem is DownloadResourceFilterOptionViewModel target
+                && string.Equals(option.FilterValue, target.FilterValue, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(option.Label, target.Label, StringComparison.OrdinalIgnoreCase))
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    private enum FilterKind
+    {
+        Source = 0,
+        Tag = 1,
+        Sort = 2,
+        Version = 3,
+        Loader = 4
     }
 }

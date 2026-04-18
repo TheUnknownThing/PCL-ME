@@ -20,7 +20,11 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
-    private void ScheduleDownloadResourceRefresh(bool immediate, bool resetPage, int? targetPageIndex = null)
+    private void ScheduleDownloadResourceRefresh(
+        bool immediate,
+        bool resetPage,
+        int? targetPageIndex = null,
+        FrontendCommunityResourceQuery? queryOverride = null)
     {
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
         {
@@ -32,16 +36,17 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceRefreshCts = cts;
         var refreshVersion = ++_downloadResourceRefreshVersion;
         var route = _currentRoute.Subpage;
-        var query = BuildCurrentDownloadResourceQuery();
+        var query = queryOverride ?? BuildCurrentDownloadResourceQuery();
         var targetResultCount = GetDownloadResourceTargetResultCount(targetPageIndex);
         var communitySourcePreference = SelectedCommunityDownloadSourceIndex;
         var instanceComposition = _instanceComposition;
         var hasVisibleEntries = DownloadResourceEntries.Count > 0 || _allDownloadResourceEntries.Count > 0;
+        var shouldShowLoadingAnimation = resetPage || !hasVisibleEntries;
 
         DownloadResourceLoadingText = T(
             "download.resource.surface.loading",
             ("surface_name", GetLocalizedDownloadResourceSurfaceName(route)));
-        SetDownloadResourceLoading(!hasVisibleEntries);
+        SetDownloadResourceLoading(shouldShowLoadingAnimation);
         if (resetPage)
         {
             _downloadResourcePageIndex = 0;
@@ -121,17 +126,20 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    private FrontendCommunityResourceQuery BuildCurrentDownloadResourceQuery()
+    private FrontendCommunityResourceQuery BuildCurrentDownloadResourceQuery(
+        string? versionOverride = null,
+        string? loaderOverride = null)
     {
         var selectedLoader = ShowDownloadResourceLoaderFilter
-            ? GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex)
+            ? loaderOverride ?? GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex)
             : string.Empty;
+        var selectedVersion = versionOverride ?? GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex);
         return new FrontendCommunityResourceQuery(
             DownloadResourceSearchQuery.Trim(),
             GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex),
             GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex),
             GetSelectedFilterValue(DownloadResourceSortOptions, SelectedDownloadResourceSortIndex),
-            GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex),
+            selectedVersion,
             selectedLoader);
     }
 
@@ -150,7 +158,13 @@ internal sealed partial class FrontendShellViewModel
 
         ApplyCurrentInstanceDownloadResourceFilterSelection();
         RaiseDownloadResourceFilterState();
-        ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
+        var instanceDrivenQuery = BuildCurrentDownloadResourceQuery(
+            ResolveSelectedDownloadResourceVersionFilter(),
+            ResolveSelectedDownloadResourceLoaderFilter());
+        ScheduleDownloadResourceRefresh(
+            immediate: true,
+            resetPage: true,
+            queryOverride: instanceDrivenQuery);
     }
 
     private void ApplyDownloadResourceQueryResult(

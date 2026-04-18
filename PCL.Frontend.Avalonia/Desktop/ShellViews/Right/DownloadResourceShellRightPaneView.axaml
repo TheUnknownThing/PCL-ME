@@ -144,7 +144,7 @@
                 x:Name="DownloadResourceSourceComboBox"
                 ItemsSource="{Binding DownloadResourceSourceOptions}"
                 ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
-                SelectedItem="{Binding SelectedDownloadResourceSourceOption}"
+                SelectedItem="{Binding SelectedDownloadResourceSourceOption, Mode=OneWay}"
                 SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <TextBlock
@@ -161,7 +161,7 @@
                 x:Name="DownloadResourceTagComboBox"
                 ItemsSource="{Binding DownloadResourceTagOptions}"
                 ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
-                SelectedItem="{Binding SelectedDownloadResourceTagOption}"
+                SelectedItem="{Binding SelectedDownloadResourceTagOption, Mode=OneWay}"
                 SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <TextBlock
@@ -178,7 +178,7 @@
                 x:Name="DownloadResourceSortComboBox"
                 ItemsSource="{Binding DownloadResourceSortOptions}"
                 ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
-                SelectedItem="{Binding SelectedDownloadResourceSortOption}"
+                SelectedItem="{Binding SelectedDownloadResourceSortOption, Mode=OneWay}"
                 SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <StackPanel
@@ -208,7 +208,7 @@
                 x:Name="DownloadResourceVersionComboBox"
                 ItemsSource="{Binding DownloadResourceVersionOptions}"
                 ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
-                SelectedItem="{Binding SelectedDownloadResourceVersionOption}"
+                SelectedItem="{Binding SelectedDownloadResourceVersionOption, Mode=OneWay}"
                 SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
 
             <TextBlock
@@ -227,7 +227,7 @@
                 IsVisible="{Binding ShowDownloadResourceLoaderFilter}"
                 ItemsSource="{Binding DownloadResourceLoaderOptions}"
                 ItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}"
-                SelectedItem="{Binding SelectedDownloadResourceLoaderOption}"
+                SelectedItem="{Binding SelectedDownloadResourceLoaderOption, Mode=OneWay}"
                 SelectionBoxItemTemplate="{StaticResource DownloadResourceFilterOptionTemplate}" />
           </Grid>
         </controls:PclCard.CardContent>
