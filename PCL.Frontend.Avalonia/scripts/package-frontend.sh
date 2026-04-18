@@ -98,7 +98,7 @@ build_publish() {
   if [[ "${publish_mode}" == "self-contained" ]]; then
     self_contained="true"
   fi
-  if [[ "$rid" == win-* ]]; then
+  if [[ "$rid" == win-* || "$rid" == linux-* ]]; then
     publish_single_file="true"
     include_all_content_for_self_extract="true"
     enable_single_file_compression="true"
@@ -178,22 +178,17 @@ package_linux() {
   local publish_dir="$2"
   local rid_root="$3"
   local package_dir="${rid_root}/$(echo "${app_name}" | tr ' ' '-')-${rid}"
-  local desktop_template="${repo_root}/PCL.Frontend.Avalonia/packaging/pcl-me.desktop.template"
   local archive_path="${rid_root}/$(basename "$package_dir").tar.gz"
+  local published_executable="${publish_dir}/${executable_name}"
+
+  if [[ ! -f "$published_executable" ]]; then
+    echo "Published executable not found: $published_executable" >&2
+    exit 1
+  fi
 
   prepare_directory "$package_dir"
-  copy_tree "$publish_dir" "$package_dir"
-  cp "$icon_png" "${package_dir}/icon.png"
-  write_text_file "${package_dir}/${linux_launcher_script}" "#!/usr/bin/env bash
-set -euo pipefail
-script_dir=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
-exec \"\${script_dir}/${executable_name}\" app \"\$@\"
-"
-  sed \
-    -e "s|__APP_NAME__|${app_name}|g" \
-    -e "s|__LAUNCHER_SCRIPT__|${linux_launcher_script}|g" \
-    "$desktop_template" > "${package_dir}/PCL-ME.desktop"
-  chmod +x "${package_dir}/${executable_name}" "${package_dir}/${linux_launcher_script}" "${package_dir}/PCL-ME.desktop"
+  cp "$published_executable" "${package_dir}/${executable_name}"
+  chmod +x "${package_dir}/${executable_name}"
   tar -C "$rid_root" -czf "$archive_path" "$(basename "$package_dir")"
   echo "$archive_path"
 }
