@@ -181,6 +181,7 @@ internal static partial class FrontendCommunityProjectService
             "Fabric" => "Fabric",
             "Quilt" => "Quilt",
             "OptiFine" => "OptiFine",
+            "Iris" => "Iris",
             _ => string.Empty
         };
     }

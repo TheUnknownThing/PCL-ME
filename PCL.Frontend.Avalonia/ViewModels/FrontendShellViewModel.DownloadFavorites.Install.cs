@@ -76,7 +76,6 @@ internal sealed partial class FrontendShellViewModel
         var buildResult = BuildCommunityProjectInstallBuildResult(
             roots,
             targetComposition,
-            targetSnapshot.Instance.LoaderLabel,
             includeDependencies: true,
             datapackSaveSelection: targetSnapshot.DatapackSaveSelection);
         return new CommunityProjectInstallBuildResult(
@@ -125,7 +124,6 @@ internal sealed partial class FrontendShellViewModel
     private CommunityProjectInstallBuildResult BuildCommunityProjectInstallBuildResult(
         IReadOnlyList<CommunityProjectInstallRootRequest> roots,
         FrontendInstanceComposition targetComposition,
-        string? preferredLoader,
         bool includeDependencies,
         FrontendVersionSaveSelectionState? datapackSaveSelection = null)
     {
@@ -141,7 +139,7 @@ internal sealed partial class FrontendShellViewModel
         var resolvedAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var preferredVersion = targetComposition.Selection.VanillaVersion;
 
-        foreach (var root in roots)
+        foreach (var root in OrderCommunityProjectInstallRootsForResolution(roots))
         {
             ResolveInstallRoot(root, isDependency: false);
         }
@@ -188,7 +186,7 @@ internal sealed partial class FrontendShellViewModel
                 var release = request.Release ?? SelectPreferredCommunityProjectReleaseForTarget(
                     projectState.Releases.Where(entry => entry.IsDirectDownload && !string.IsNullOrWhiteSpace(entry.Target)),
                     preferredVersion,
-                    preferredLoader,
+                    ResolvePreferredCommunityProjectInstallLoadersForRoute(targetComposition, roots, plans, request.Route),
                     request.Route);
                 var installTargetName = ResolveCommunityProjectInstallTargetName(
                     targetComposition.Selection.InstanceName,
@@ -313,20 +311,158 @@ internal sealed partial class FrontendShellViewModel
     private static FrontendCommunityProjectReleaseEntry? SelectPreferredCommunityProjectReleaseForTarget(
         IEnumerable<FrontendCommunityProjectReleaseEntry> releases,
         string? preferredVersion,
-        string? preferredLoader,
+        IReadOnlyList<string> preferredLoaders,
         LauncherFrontendSubpageKey? originSubpage)
     {
         return releases
-            .Where(release => IsCompatibleCommunityProjectInstallRelease(
+            .Where(release => IsCompatibleCommunityProjectInstallReleaseForTarget(
                 release,
                 preferredVersion,
-                preferredLoader,
+                preferredLoaders,
                 originSubpage))
             .OrderByDescending(release => ReleaseMatchesExactInstanceVersion(release, NormalizeMinecraftVersion(preferredVersion)))
-            .ThenByDescending(release => ReleaseMatchesExactInstanceLoader(release, preferredLoader))
+            .ThenByDescending(release => GetPreferredLoaderMatchPriority(release, preferredLoaders))
             .ThenByDescending(release => release.PublishedUnixTime)
             .ThenBy(release => release.Title, StringComparer.CurrentCultureIgnoreCase)
             .FirstOrDefault();
+    }
+
+    private static CommunityProjectInstallRootRequest[] OrderCommunityProjectInstallRootsForResolution(
+        IEnumerable<CommunityProjectInstallRootRequest> roots)
+    {
+        return roots
+            .OrderBy(root => GetCommunityProjectInstallResolutionPriority(root.Route))
+            .ToArray();
+    }
+
+    private static int GetCommunityProjectInstallResolutionPriority(LauncherFrontendSubpageKey route)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadMod => 0,
+            LauncherFrontendSubpageKey.DownloadShader => 1,
+            _ => 2
+        };
+    }
+
+    private static IReadOnlyList<string> ResolvePreferredCommunityProjectInstallLoadersForRoute(
+        FrontendInstanceComposition composition,
+        IEnumerable<CommunityProjectInstallRootRequest> roots,
+        IEnumerable<CommunityProjectInstallPlan> plans,
+        LauncherFrontendSubpageKey route)
+    {
+        var preferredLoaders = new List<string>();
+        AddPreferredCommunityProjectInstallLoader(preferredLoaders, ResolvePreferredInstanceLoaderLabel(composition, route));
+
+        if (route != LauncherFrontendSubpageKey.DownloadShader)
+        {
+            return preferredLoaders;
+        }
+
+        foreach (var plan in plans)
+        {
+            AddPreferredCommunityProjectInstallLoader(preferredLoaders, TryResolveShaderLoaderFromPlan(plan));
+        }
+
+        foreach (var root in roots)
+        {
+            AddPreferredCommunityProjectInstallLoader(preferredLoaders, TryResolveShaderLoaderFromRoot(root));
+        }
+
+        return preferredLoaders;
+    }
+
+    private static void AddPreferredCommunityProjectInstallLoader(ICollection<string> preferredLoaders, string? loader)
+    {
+        if (string.IsNullOrWhiteSpace(loader)
+            || preferredLoaders.Contains(loader, StringComparer.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        preferredLoaders.Add(loader);
+    }
+
+    private static string? TryResolveShaderLoaderFromPlan(CommunityProjectInstallPlan plan)
+    {
+        return plan.Route != LauncherFrontendSubpageKey.DownloadMod
+            ? null
+            : TryResolveShaderLoaderFromAliases(plan.InstallAliases);
+    }
+
+    private static string? TryResolveShaderLoaderFromRoot(CommunityProjectInstallRootRequest root)
+    {
+        if (root.Route != LauncherFrontendSubpageKey.DownloadMod)
+        {
+            return null;
+        }
+
+        var aliases = BuildCommunityProjectInstallAliases(
+            root.Route,
+            root.ProjectState?.Title ?? root.Title,
+            root.ProjectState?.Website,
+            root.ProjectId,
+            root.Release?.SuggestedFileName);
+        return TryResolveShaderLoaderFromAliases(aliases);
+    }
+
+    private static string? TryResolveShaderLoaderFromAliases(IEnumerable<string> aliases)
+    {
+        foreach (var alias in aliases)
+        {
+            var normalizedAlias = alias[(alias.LastIndexOf(':') + 1)..];
+            if (string.Equals(normalizedAlias, "optifine", StringComparison.OrdinalIgnoreCase))
+            {
+                return "OptiFine";
+            }
+
+            if (string.Equals(normalizedAlias, "iris", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(normalizedAlias, "irisshaders", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Iris";
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsCompatibleCommunityProjectInstallReleaseForTarget(
+        FrontendCommunityProjectReleaseEntry release,
+        string? preferredVersion,
+        IReadOnlyList<string> preferredLoaders,
+        LauncherFrontendSubpageKey? originSubpage)
+    {
+        if (!ReleaseMatchesExactInstanceVersion(release, NormalizeMinecraftVersion(preferredVersion)))
+        {
+            return false;
+        }
+
+        if (!RequiresCommunityProjectInstallLoader(originSubpage))
+        {
+            return true;
+        }
+
+        return GetPreferredLoaderMatchPriority(release, preferredLoaders) > 0;
+    }
+
+    private static int GetPreferredLoaderMatchPriority(
+        FrontendCommunityProjectReleaseEntry release,
+        IReadOnlyList<string> preferredLoaders)
+    {
+        if (preferredLoaders.Count == 0)
+        {
+            return 0;
+        }
+
+        for (var index = 0; index < preferredLoaders.Count; index++)
+        {
+            if (ReleaseMatchesExactInstanceLoader(release, preferredLoaders[index]))
+            {
+                return preferredLoaders.Count - index;
+            }
+        }
+
+        return 0;
     }
 
     private static string? ResolveCommunityProjectInstallDirectory(

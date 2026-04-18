@@ -236,7 +236,9 @@ internal sealed partial class FrontendShellViewModel
                 || entry.SupportedVersions.Any(version => string.Equals(version, versionFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
-        var loaderFilter = GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex);
+        var loaderFilter = ShowDownloadResourceLoaderFilter
+            ? GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex)
+            : string.Empty;
         if (!string.IsNullOrWhiteSpace(loaderFilter))
         {
             entries = entries.Where(entry =>
@@ -425,7 +427,7 @@ internal sealed partial class FrontendShellViewModel
 
     private string? ResolveSelectedDownloadResourceLoaderFilter()
     {
-        return ResolveSelectedInstanceLoaderLabel();
+        return ResolvePreferredInstanceLoaderLabel(_instanceComposition, _currentRoute.Subpage);
     }
 
     private void SyncSelectedDownloadResourceOptions()

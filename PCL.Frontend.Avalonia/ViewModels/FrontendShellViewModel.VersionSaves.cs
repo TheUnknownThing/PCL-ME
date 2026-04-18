@@ -314,9 +314,8 @@ internal sealed partial class FrontendShellViewModel
             Path.GetFileName(sourcePath));
         var targetPath = Path.Combine(_versionSavesComposition.Selection.DatapackDirectory, targetFileName);
         File.Copy(sourcePath, targetPath, true);
-        var installedPath = FrontendDatapackArchiveInstallService.ExtractInstalledDatapackArchive(targetPath);
         ReloadVersionSavesComposition();
-        AddActivity(SD("save_detail.activities.install_datapack"), $"{sourcePath} -> {installedPath}");
+        AddActivity(SD("save_detail.activities.install_datapack"), $"{sourcePath} -> {targetPath}");
     }
 
     private void ExportVersionSaveDatapackInfo()

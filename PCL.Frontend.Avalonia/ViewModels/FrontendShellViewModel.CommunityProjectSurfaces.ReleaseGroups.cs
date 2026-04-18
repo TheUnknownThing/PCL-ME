@@ -30,7 +30,8 @@ internal sealed partial class FrontendShellViewModel
 
     private IReadOnlyList<CommunityProjectReleaseGroupViewModel> BuildCommunityProjectReleaseGroups((bool GroupByDrop, bool FoldOld) versionGrouping)
     {
-        var showLoaderPrefix = BuildCommunityProjectLoaderOptions().Count > 1;
+        var showLoaderPrefix = SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage)
+                               && BuildCommunityProjectLoaderOptions().Count > 1;
         var groups = new Dictionary<string, List<FrontendCommunityProjectReleaseEntry>>(StringComparer.OrdinalIgnoreCase);
         var dedupe = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
 

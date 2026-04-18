@@ -53,21 +53,24 @@ internal sealed partial class FrontendShellViewModel
 
         var targetOriginSubpage = originSubpage ?? _selectedCommunityProjectOriginSubpage;
         var shouldSyncFiltersWithInstance = ShouldAutoSyncCommunityProjectFiltersWithInstance(targetOriginSubpage);
+        var versionFilter = shouldSyncFiltersWithInstance
+            ? NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion)
+                ?? NormalizeMinecraftVersion(initialVersionFilter)
+                ?? initialVersionFilter?.Trim()
+                ?? string.Empty
+            : NormalizeMinecraftVersion(initialVersionFilter) ?? initialVersionFilter?.Trim() ?? string.Empty;
+        var syncedLoaderFilter = SupportsCommunityProjectLoaderFiltering(targetOriginSubpage)
+            ? ResolvePreferredInstanceLoaderLabel(_instanceComposition, targetOriginSubpage)
+            : null;
+        var loaderFilter = shouldSyncFiltersWithInstance
+            ? syncedLoaderFilter ?? initialLoaderFilter?.Trim() ?? string.Empty
+            : initialLoaderFilter?.Trim() ?? string.Empty;
         ApplyCommunityProjectNavigationState(new CommunityProjectNavigationState(
             normalizedProjectId,
             projectTitle?.Trim() ?? string.Empty,
             targetOriginSubpage,
-            shouldSyncFiltersWithInstance
-                ? NormalizeMinecraftVersion(_instanceComposition.Selection.VanillaVersion)
-                    ?? NormalizeMinecraftVersion(initialVersionFilter)
-                    ?? initialVersionFilter?.Trim()
-                    ?? string.Empty
-                : NormalizeMinecraftVersion(initialVersionFilter) ?? initialVersionFilter?.Trim() ?? string.Empty,
-            shouldSyncFiltersWithInstance
-                ? ResolveSelectedInstanceLoaderLabel()
-                    ?? initialLoaderFilter?.Trim()
-                    ?? string.Empty
-                : initialLoaderFilter?.Trim() ?? string.Empty));
+            versionFilter,
+            loaderFilter));
         var activityMessage = string.IsNullOrWhiteSpace(projectTitle)
             ? T("resource_detail.activities.open_detail")
             : T("resource_detail.activities.open_detail_for_project", ("project_title", projectTitle));

@@ -172,7 +172,9 @@ internal sealed partial class FrontendShellViewModel
                 parts.Add($"Minecraft {_instanceComposition.Selection.VanillaVersion}");
             }
 
-            var loader = ResolveSelectedInstanceLoaderLabel();
+            var loader = SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage)
+                ? ResolvePreferredInstanceLoaderLabel(_instanceComposition, _selectedCommunityProjectOriginSubpage)
+                : null;
             if (!string.IsNullOrWhiteSpace(loader))
             {
                 parts.Add(loader);

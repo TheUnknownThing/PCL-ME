@@ -123,13 +123,16 @@ internal sealed partial class FrontendShellViewModel
 
     private FrontendCommunityResourceQuery BuildCurrentDownloadResourceQuery()
     {
+        var selectedLoader = ShowDownloadResourceLoaderFilter
+            ? GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex)
+            : string.Empty;
         return new FrontendCommunityResourceQuery(
             DownloadResourceSearchQuery.Trim(),
             GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex),
             GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex),
             GetSelectedFilterValue(DownloadResourceSortOptions, SelectedDownloadResourceSortIndex),
             GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex),
-            GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex));
+            selectedLoader);
     }
 
     private void RefreshDownloadResourceFiltersForSelectedInstance()
@@ -159,7 +162,7 @@ internal sealed partial class FrontendShellViewModel
         var selectedSource = query.Source;
         var selectedTag = query.Tag;
         var selectedVersion = query.Version;
-        var selectedLoader = query.Loader;
+        var selectedLoader = ShowDownloadResourceLoaderFilter ? query.Loader : string.Empty;
 
         _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
         _downloadResourceHasMoreEntries = result.State.HasMoreEntries;

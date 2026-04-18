@@ -27,6 +27,12 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private static bool SupportsCommunityProjectLoaderFiltering(LauncherFrontendSubpageKey? originSubpage)
+    {
+        return originSubpage is not LauncherFrontendSubpageKey.DownloadWorld
+            and not LauncherFrontendSubpageKey.DownloadDataPack
+            and not LauncherFrontendSubpageKey.DownloadResourcePack;
+    }
 
     private static IReadOnlyList<CommunityProjectFilterButtonViewModel> BuildCommunityProjectFilterButtons(
         IReadOnlyList<string> options,
@@ -106,6 +112,11 @@ internal sealed partial class FrontendShellViewModel
 
     private IReadOnlyList<string> BuildCommunityProjectLoaderOptions()
     {
+        if (!SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage))
+        {
+            return [];
+        }
+
         return FrontendLoaderVisibilityService.FilterVisibleLoaders(
                 _communityProjectState.Releases.SelectMany(release => release.Loaders),
                 IgnoreQuiltLoader)
@@ -149,6 +160,11 @@ internal sealed partial class FrontendShellViewModel
 
     private string ResolveCommunityProjectLoaderFilter(IReadOnlyList<string> loaderOptions)
     {
+        if (!SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage))
+        {
+            return string.Empty;
+        }
+
         return loaderOptions.Any(option => string.Equals(option, _selectedCommunityProjectLoaderFilter, StringComparison.OrdinalIgnoreCase))
             ? _selectedCommunityProjectLoaderFilter
             : string.Empty;
@@ -163,6 +179,14 @@ internal sealed partial class FrontendShellViewModel
 
     private void SelectCommunityProjectLoaderFilter(string filterValue)
     {
+        if (!SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage))
+        {
+            _selectedCommunityProjectLoaderFilter = string.Empty;
+            RebuildCommunityProjectSurfaceCollections();
+            RaiseCommunityProjectProperties();
+            return;
+        }
+
         _selectedCommunityProjectLoaderFilter = filterValue;
         RebuildCommunityProjectSurfaceCollections();
         RaiseCommunityProjectProperties();
@@ -195,7 +219,8 @@ internal sealed partial class FrontendShellViewModel
                 GetGroupedCommunityProjectVersionName(version, versionGrouping.GroupByDrop, versionGrouping.FoldOld),
                 _selectedCommunityProjectVersionFilter,
                 StringComparison.OrdinalIgnoreCase));
-        var matchesLoader = string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
+        var matchesLoader = !SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage)
+            || string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
             || loaders.Any(loader => string.Equals(loader, _selectedCommunityProjectLoaderFilter, StringComparison.OrdinalIgnoreCase));
         return matchesVersion && matchesLoader;
     }
@@ -235,11 +260,18 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var loaderOptions = BuildCommunityProjectLoaderOptions();
-        var preferredLoader = ResolveSelectedInstanceLoaderLabel();
-        _selectedCommunityProjectLoaderFilter = !string.IsNullOrWhiteSpace(preferredLoader)
-            && loaderOptions.Any(option => string.Equals(option, preferredLoader, StringComparison.OrdinalIgnoreCase))
-            ? preferredLoader
-            : string.Empty;
+        if (SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage))
+        {
+            var preferredLoader = ResolvePreferredInstanceLoaderLabel(_instanceComposition, _selectedCommunityProjectOriginSubpage);
+            _selectedCommunityProjectLoaderFilter = !string.IsNullOrWhiteSpace(preferredLoader)
+                && loaderOptions.Any(option => string.Equals(option, preferredLoader, StringComparison.OrdinalIgnoreCase))
+                ? preferredLoader
+                : string.Empty;
+        }
+        else
+        {
+            _selectedCommunityProjectLoaderFilter = string.Empty;
+        }
 
         RebuildCommunityProjectSurfaceCollections();
         RaiseCommunityProjectProperties();
@@ -262,6 +294,11 @@ internal sealed partial class FrontendShellViewModel
         // Version filters are applied before ordering, so boosting the exact filter value here
         // would incorrectly push 1.21 above newer patch groups like 1.21.11.
         var priority = GetCommunityProjectVersionSortPriority(version) * 10;
+        if (!SupportsCommunityProjectLoaderFiltering(_selectedCommunityProjectOriginSubpage))
+        {
+            return priority;
+        }
+
         var loader = ExtractCommunityProjectGroupLoader(groupTitle);
         if (!string.IsNullOrWhiteSpace(_selectedCommunityProjectLoaderFilter)
             && string.Equals(loader, _selectedCommunityProjectLoaderFilter, StringComparison.OrdinalIgnoreCase))

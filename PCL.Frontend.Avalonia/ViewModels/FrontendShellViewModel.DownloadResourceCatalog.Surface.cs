@@ -20,6 +20,13 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private static bool SupportsDownloadResourceLoaderFiltering(LauncherFrontendSubpageKey route)
+    {
+        return route is not LauncherFrontendSubpageKey.DownloadWorld
+            and not LauncherFrontendSubpageKey.DownloadDataPack
+            and not LauncherFrontendSubpageKey.DownloadResourcePack;
+    }
+
     public string DownloadResourceSurfaceTitle
     {
         get => _downloadResourceSurfaceTitle;
@@ -90,7 +97,9 @@ internal sealed partial class FrontendShellViewModel
                 parts.Add($"Minecraft {_instanceComposition.Selection.VanillaVersion}");
             }
 
-            var loader = ResolveSelectedInstanceLoaderLabel();
+            var loader = SupportsDownloadResourceLoaderFiltering(_currentRoute.Subpage)
+                ? ResolvePreferredInstanceLoaderLabel(_instanceComposition, _currentRoute.Subpage)
+                : null;
             if (!string.IsNullOrWhiteSpace(loader))
             {
                 parts.Add(loader);
@@ -117,7 +126,7 @@ internal sealed partial class FrontendShellViewModel
 
     public bool ShowDownloadResourceCurrentInstanceCard => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadPack;
 
-    public bool ShowDownloadResourceLoaderFilter => _currentRoute.Subpage != LauncherFrontendSubpageKey.DownloadWorld;
+    public bool ShowDownloadResourceLoaderFilter => SupportsDownloadResourceLoaderFiltering(_currentRoute.Subpage);
 
     public string DownloadResourceCurrentInstanceActionText => _currentRoute.Subpage == LauncherFrontendSubpageKey.DownloadDataPack
         ? T("download.resource.current_instance.actions.switch_save")

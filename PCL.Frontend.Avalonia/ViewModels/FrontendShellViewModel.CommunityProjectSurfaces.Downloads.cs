@@ -190,7 +190,6 @@ internal sealed partial class FrontendShellViewModel
                         entry)
                 ],
                 _instanceComposition,
-                ResolveSelectedInstanceLoaderLabel(),
                 includeDependencies,
                 datapackSaveSelection));
 
@@ -531,15 +530,102 @@ internal sealed partial class FrontendShellViewModel
 
     private string? ResolveSelectedInstanceLoaderLabel()
     {
-        if (!_instanceComposition.Selection.HasSelection
-            || string.IsNullOrWhiteSpace(_instanceComposition.Selection.InstanceDirectory))
+        return ResolvePreferredInstanceLoaderLabel(_instanceComposition, _selectedCommunityProjectOriginSubpage);
+    }
+
+    private static string? ResolvePreferredInstanceLoaderLabel(
+        FrontendInstanceComposition composition,
+        LauncherFrontendSubpageKey? route)
+    {
+        return route == LauncherFrontendSubpageKey.DownloadShader
+            ? ResolveInstanceShaderLoaderLabel(composition)
+            : ResolveInstancePrimaryLoaderLabel(composition);
+    }
+
+    private static string? ResolveInstancePrimaryLoaderLabel(FrontendInstanceComposition composition)
+    {
+        if (!composition.Selection.HasSelection)
         {
             return null;
         }
 
-        return BuildInstanceSelectionSnapshot(
-            _instanceComposition.Selection.InstanceDirectory,
-            _instanceComposition.Selection.InstanceName)?.LoaderLabel;
+        foreach (var optionTitle in new[]
+                 {
+                     "NeoForge",
+                     "Cleanroom",
+                     "Fabric",
+                     "Legacy Fabric",
+                     "Quilt",
+                     "Forge",
+                     "OptiFine",
+                     "LiteLoader",
+                     "LabyMod"
+                 })
+        {
+            if (HasInstalledManagedOption(composition, optionTitle))
+            {
+                return optionTitle;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ResolveInstanceShaderLoaderLabel(FrontendInstanceComposition composition)
+    {
+        if (!composition.Selection.HasSelection)
+        {
+            return null;
+        }
+
+        if (HasInstalledManagedOption(composition, "OptiFine"))
+        {
+            return "OptiFine";
+        }
+
+        return HasInstalledManagedAddonMod(composition.Mods.Entries, "iris", "irisshaders")
+            ? "Iris"
+            : null;
+    }
+
+    private static bool HasInstalledManagedOption(FrontendInstanceComposition composition, string optionTitle)
+    {
+        return composition.Install.Options.Any(option =>
+            string.Equals(option.Title, optionTitle, StringComparison.Ordinal)
+            && option.SelectionState.HasSelection);
+    }
+
+    private static bool HasInstalledManagedAddonMod(
+        IEnumerable<FrontendInstanceResourceEntry> entries,
+        params string[] identifiers)
+    {
+        return entries.Any(entry =>
+            MatchesManagedAddonIdentity(entry.Identity, identifiers)
+            || MatchesManagedAddonIdentity(entry.Title, identifiers)
+            || identifiers.Any(identifier => NormalizeManagedAddonIdentity(Path.GetFileNameWithoutExtension(entry.Path))
+                .StartsWith(NormalizeManagedAddonIdentity(identifier), StringComparison.Ordinal)));
+    }
+
+    private static bool MatchesManagedAddonIdentity(string? value, IEnumerable<string> identifiers)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = NormalizeManagedAddonIdentity(value);
+        return identifiers.Any(identifier => string.Equals(
+            normalized,
+            NormalizeManagedAddonIdentity(identifier),
+            StringComparison.Ordinal));
+    }
+
+    private static string NormalizeManagedAddonIdentity(string value)
+    {
+        return new string(value
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant)
+            .ToArray());
     }
 
     private IReadOnlyList<InstanceSelectionSnapshot> LoadAvailableDownloadTargetInstances()
@@ -701,165 +787,7 @@ internal sealed partial class FrontendShellViewModel
             return FrontendWorldArchiveInstallService.ExtractInstalledWorldArchive(downloadedPath);
         }
 
-        if (originSubpage == LauncherFrontendSubpageKey.DownloadDataPack)
-        {
-            return FrontendDatapackArchiveInstallService.ExtractInstalledDatapackArchive(downloadedPath, replacedPath);
-        }
-
-        var savesDirectory = Path.GetDirectoryName(downloadedPath)
-            ?? throw new InvalidOperationException("The save installation directory is unavailable.");
-        string? wrapperDirectory;
-        using (var archive = ZipFile.OpenRead(downloadedPath))
-        {
-            var effectiveEntries = archive.Entries
-                .Where(entry => !string.IsNullOrWhiteSpace(entry.FullName))
-                .Where(entry => !IsIgnoredWorldArchiveEntry(entry.FullName))
-                .ToArray();
-            if (effectiveEntries.Length == 0)
-            {
-                throw new InvalidOperationException("The archive does not contain importable world content.");
-            }
-
-            wrapperDirectory = ResolveWorldArchiveWrapperDirectory(effectiveEntries);
-        }
-
-        var finalName = string.IsNullOrWhiteSpace(wrapperDirectory)
-            ? Path.GetFileNameWithoutExtension(downloadedPath)
-            : wrapperDirectory;
-        var finalDirectory = GetUniqueChildPath(savesDirectory, finalName);
-        Directory.CreateDirectory(finalDirectory);
-        string? finalPath = null;
-        try
-        {
-            using var archive = ZipFile.OpenRead(downloadedPath);
-            foreach (var entry in archive.Entries
-                         .Where(entry => !string.IsNullOrWhiteSpace(entry.FullName))
-                         .Where(entry => !IsIgnoredWorldArchiveEntry(entry.FullName)))
-            {
-                var relativePath = BuildWorldArchiveRelativePath(entry.FullName, wrapperDirectory);
-                if (string.IsNullOrWhiteSpace(relativePath))
-                {
-                    continue;
-                }
-
-                var targetPath = Path.GetFullPath(Path.Combine(finalDirectory, relativePath));
-                var rootPath = Path.GetFullPath(finalDirectory + Path.DirectorySeparatorChar);
-                if (!targetPath.StartsWith(rootPath, StringComparison.Ordinal))
-                {
-                    throw new InvalidOperationException($"The archive contains an unsafe path: {entry.FullName}");
-                }
-
-                if (entry.FullName.EndsWith("/", StringComparison.Ordinal) || string.IsNullOrEmpty(entry.Name))
-                {
-                    Directory.CreateDirectory(targetPath);
-                    continue;
-                }
-
-                Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-                using var entryStream = entry.Open();
-                using var targetStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
-                entryStream.CopyTo(targetStream);
-            }
-
-            finalPath = finalDirectory;
-            archive.Dispose();
-            File.Delete(downloadedPath);
-            return finalPath;
-        }
-        catch (Exception ex)
-        {
-            if (!string.IsNullOrWhiteSpace(finalPath) && Directory.Exists(finalPath))
-            {
-                try
-                {
-                    Directory.Delete(finalPath, recursive: true);
-                }
-                catch
-                {
-                    // Best effort cleanup only.
-                }
-            }
-
-            throw new InvalidOperationException($"The world archive was downloaded, but automatic extraction failed: {ex.Message}", ex);
-        }
-    }
-
-    private static bool IsIgnoredWorldArchiveEntry(string fullName)
-    {
-        var normalized = fullName.Replace('\\', '/').Trim('/');
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            return true;
-        }
-
-        return normalized.StartsWith("__MACOSX/", StringComparison.OrdinalIgnoreCase)
-               || string.Equals(normalized, "__MACOSX", StringComparison.OrdinalIgnoreCase)
-               || string.Equals(Path.GetFileName(normalized), ".DS_Store", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string? ResolveWorldArchiveWrapperDirectory(IEnumerable<ZipArchiveEntry> entries)
-    {
-        string? wrapperDirectory = null;
-        foreach (var entry in entries)
-        {
-            var normalized = entry.FullName.Replace('\\', '/').Trim('/');
-            if (string.IsNullOrWhiteSpace(normalized))
-            {
-                continue;
-            }
-
-            var firstSeparatorIndex = normalized.IndexOf('/');
-            if (firstSeparatorIndex < 0)
-            {
-                return null;
-            }
-
-            var firstSegment = normalized[..firstSeparatorIndex];
-            if (string.IsNullOrWhiteSpace(firstSegment))
-            {
-                return null;
-            }
-
-            if (wrapperDirectory is null)
-            {
-                wrapperDirectory = firstSegment;
-                continue;
-            }
-
-            if (!string.Equals(wrapperDirectory, firstSegment, StringComparison.Ordinal))
-            {
-                return null;
-            }
-        }
-
-        return wrapperDirectory;
-    }
-
-    private static string? BuildWorldArchiveRelativePath(string fullName, string? wrapperDirectory)
-    {
-        var normalized = fullName.Replace('\\', '/').Trim('/');
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            return null;
-        }
-
-        if (!string.IsNullOrWhiteSpace(wrapperDirectory))
-        {
-            if (string.Equals(normalized, wrapperDirectory, StringComparison.Ordinal))
-            {
-                return null;
-            }
-
-            var prefix = $"{wrapperDirectory}/";
-            if (normalized.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                normalized = normalized[prefix.Length..];
-            }
-        }
-
-        return string.IsNullOrWhiteSpace(normalized)
-            ? null
-            : normalized.Replace('/', Path.DirectorySeparatorChar);
+        return downloadedPath;
     }
 
     private string? ResolveCommunityProjectDownloadStartDirectory()
