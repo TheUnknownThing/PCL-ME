@@ -59,7 +59,7 @@ internal sealed partial class FrontendShellViewModel
                 await RenameDownloadFavoriteTargetAsync(root, currentTarget, selectedIndex);
                 return;
             case "delete":
-                await DeleteDownloadFavoriteTargetAsync(root, currentTarget);
+                await DeleteDownloadFavoriteTargetAsync(root, currentTarget, selectedIndex);
                 return;
             default:
                 AddFailureActivity(T("download.favorites.targets.manage.failed"), T("download.favorites.targets.manage.unknown_action", ("action_id", actionId)));
@@ -97,8 +97,17 @@ internal sealed partial class FrontendShellViewModel
             WriteIndented = false
         }));
         ReloadDownloadComposition();
-        SelectedDownloadFavoriteTargetIndex = Math.Clamp(selectedIndex, 0, Math.Max(DownloadFavoriteTargetOptions.Count - 1, 0));
-        RefreshDownloadFavoriteSurface();
+        ReapplySelectedDownloadFavoriteTargetIndex(selectedIndex);
+    }
+
+    private void ReapplySelectedDownloadFavoriteTargetIndex(int selectedIndex)
+    {
+        var nextIndex = Math.Clamp(selectedIndex, 0, Math.Max(DownloadFavoriteTargetOptions.Count - 1, 0));
+
+        // Force Avalonia to re-apply the effective selection after the ComboBox clears its index during item updates.
+        _selectedDownloadFavoriteTargetIndex = -1;
+        RaisePropertyChanged(nameof(SelectedDownloadFavoriteTargetIndex));
+        SelectedDownloadFavoriteTargetIndex = nextIndex;
     }
 
     private async Task ShareDownloadFavoriteTargetAsync(JsonObject target)
@@ -276,12 +285,14 @@ internal sealed partial class FrontendShellViewModel
         AddActivity(T("download.favorites.targets.rename.activity"), nextName);
     }
 
-    private async Task DeleteDownloadFavoriteTargetAsync(JsonArray root, JsonObject target)
+    private async Task DeleteDownloadFavoriteTargetAsync(JsonArray root, JsonObject target, int selectedIndex)
     {
         var targets = root.OfType<JsonObject>().ToArray();
         if (targets.Length <= 1)
         {
-            AddActivity(T("download.favorites.targets.delete.activity"), T("download.favorites.targets.delete.blocked_last"));
+            var message = T("download.favorites.targets.delete.blocked_last");
+            AddActivity(T("download.favorites.targets.delete.activity"), message);
+            AvaloniaHintBus.Show(message, AvaloniaHintTheme.Info);
             return;
         }
 
@@ -310,8 +321,9 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
+        var nextSelectedIndex = Math.Clamp(selectedIndex, 0, targets.Length - 2);
         root.Remove(target);
-        PersistDownloadFavoriteTargetRoot(root, 0);
+        PersistDownloadFavoriteTargetRoot(root, nextSelectedIndex);
         AddActivity(T("download.favorites.targets.delete.activity"), T("download.favorites.targets.delete.completed", ("target_name", GetDownloadFavoriteTargetName(target))));
     }
 
