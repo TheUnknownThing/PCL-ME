@@ -8,8 +8,10 @@
   <Grid ClipToBounds="False">
     <Border
         x:Name="CardBorder"
+        Background="{DynamicResource ColorBrushMyCard}"
         BorderBrush="{DynamicResource ColorBrushMyCardEdge}"
         BorderThickness="1"
+        BoxShadow="{DynamicResource ColorShadowCardBase}"
         CornerRadius="6">
       <Border.Transitions>
         <Transitions>
@@ -48,18 +50,24 @@
         <TextBlock
             x:Name="HeaderTextBlock"
             Grid.Row="0"
+            Margin="15,12,0,0"
+            VerticalAlignment="Top"
             IsHitTestVisible="False"
             IsVisible="{Binding HasHeader, ElementName=Root}"
-            FontSize="13" />
+            FontSize="13"
+            Foreground="{DynamicResource ColorBrush1}" />
 
         <Path
             x:Name="ChevronPath"
             Grid.Row="0"
             Width="10"
             Height="6"
+            Margin="0,17,16,0"
             HorizontalAlignment="Right"
+            VerticalAlignment="Top"
             IsHitTestVisible="False"
             Data="M2,4 l-2,2 10,10 10,-10 -2,-2 -8,8 -8,-8 z"
+            Fill="{DynamicResource ColorBrush1}"
             RenderTransformOrigin="0.5,0.5"
             Stretch="Uniform"
             IsVisible="{Binding ShowChevron, ElementName=Root}" />
@@ -96,6 +104,8 @@
     <Border
         x:Name="HoverOutlineBorder"
         Background="Transparent"
+        BorderBrush="{DynamicResource ColorBrushTransparent}"
+        BorderThickness="1"
         CornerRadius="6"
         IsHitTestVisible="False">
       <Border.Transitions>

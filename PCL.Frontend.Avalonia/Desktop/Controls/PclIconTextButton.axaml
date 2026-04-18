@@ -8,6 +8,7 @@
     MaxHeight="27">
   <Border
       x:Name="PanBack"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
       BorderBrush="{DynamicResource ColorBrush6}"
       BorderThickness="1"
       CornerRadius="13.5"

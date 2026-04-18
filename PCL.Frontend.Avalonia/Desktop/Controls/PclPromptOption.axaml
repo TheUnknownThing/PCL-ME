@@ -10,6 +10,7 @@
   <Border
       x:Name="OptionBorder"
       Padding="12"
+      Background="{DynamicResource ColorBrushSemiWhite}"
       BorderBrush="{DynamicResource ColorBrush6}"
       BorderThickness="1"
       CornerRadius="8"
@@ -35,10 +36,12 @@
       <StackPanel Spacing="4">
         <TextBlock
             x:Name="LabelBlock"
+            Foreground="{DynamicResource ColorBrush1}"
             FontSize="13"
             Text="{Binding Label, ElementName=Root}" />
         <TextBlock
             x:Name="DetailBlock"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
             FontSize="12"
             TextWrapping="Wrap"
             Text="{Binding Detail, ElementName=Root}" />

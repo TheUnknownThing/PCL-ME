@@ -8,6 +8,8 @@
       x:Name="PanBack"
       MinHeight="52"
       Padding="0"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
+      BorderBrush="{DynamicResource ColorBrushSemiTransparent}"
       BorderThickness="1"
       CornerRadius="5"
       RenderTransformOrigin="0.5,0.5"
@@ -39,10 +41,12 @@
           <TextBlock
               x:Name="TitleBlock"
               FontSize="14"
-              FontWeight="Medium" />
+              FontWeight="Medium"
+              Foreground="{DynamicResource ColorBrushGray1}" />
           <TextBlock
               x:Name="SummaryBlock"
               FontSize="11.5"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
               TextWrapping="Wrap"
               MaxLines="2" />
         </StackPanel>
@@ -51,6 +55,7 @@
             Grid.Column="2"
             Margin="0,0,14,0"
             VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrushEntryChevronIdle}"
             FontSize="18"
             Text="›" />
       </Grid>

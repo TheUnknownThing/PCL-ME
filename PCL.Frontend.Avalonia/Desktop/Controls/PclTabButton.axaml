@@ -12,7 +12,8 @@
       Padding="0"
       CornerRadius="13.5"
       RenderTransformOrigin="0.5,0.5"
-      RenderTransform="scale(1)">
+      RenderTransform="scale(1)"
+      Background="{DynamicResource ColorBrushSemiTransparent}">
     <Border.Transitions>
       <Transitions>
         <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
@@ -35,12 +36,14 @@
             Height="14"
             Margin="15,0,0,0"
             VerticalAlignment="Center"
+            Fill="{DynamicResource ColorBrushTitleBarForeground}"
             Stretch="Uniform" />
         <TextBlock
             x:Name="LabText"
             Margin="8,0,12,0"
             VerticalAlignment="Center"
-            FontSize="14" />
+            FontSize="14"
+            Foreground="{DynamicResource ColorBrushTitleBarForeground}" />
       </StackPanel>
     </Button>
   </Border>

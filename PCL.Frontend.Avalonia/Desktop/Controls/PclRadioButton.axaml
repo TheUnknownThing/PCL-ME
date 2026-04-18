@@ -8,6 +8,7 @@
     MaxHeight="27">
   <Border
       x:Name="PanBack"
+      Background="{DynamicResource ColorBrushSemiTransparent}"
       CornerRadius="13.5"
       RenderTransformOrigin="0.5,0.5"
       RenderTransform="scale(1)">
@@ -34,6 +35,7 @@
           Margin="12,0,12,0"
           VerticalAlignment="Center"
           FontSize="13"
+          Foreground="{DynamicResource ColorBrush3}"
           Text="{Binding Text, ElementName=Root}" />
     </Button>
   </Border>

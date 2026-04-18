@@ -10,7 +10,9 @@
       CornerRadius="3"
       BorderThickness="1"
       RenderTransformOrigin="0.5,0.5"
-      RenderTransform="scale(1)">
+      RenderTransform="scale(1)"
+      Background="{DynamicResource ColorBrushHalfWhite}"
+      BorderBrush="{DynamicResource ColorBrush1}">
     <Border.Transitions>
       <Transitions>
         <BrushTransition Property="Background" Duration="{Binding InteractiveState, Source={x:Static animation:MotionDurations.Source}}" />
@@ -34,7 +36,8 @@
           HorizontalAlignment="Center"
           VerticalAlignment="Center"
           FontSize="13"
-          Margin="{Binding TextMargin, ElementName=Root}" />
+          Margin="{Binding TextMargin, ElementName=Root}"
+          Foreground="{DynamicResource ColorBrush1}" />
     </Button>
   </Border>
 </UserControl>

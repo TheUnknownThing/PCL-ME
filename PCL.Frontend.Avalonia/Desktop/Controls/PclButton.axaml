@@ -22,6 +22,8 @@
         Padding="0">
       <Border
           x:Name="PanFore"
+          Background="{DynamicResource ColorBrushHalfWhite}"
+          BorderBrush="{DynamicResource ColorBrush1}"
           BorderThickness="1"
           CornerRadius="3"
           Padding="{Binding ContentPadding, ElementName=Root}"
@@ -40,6 +42,7 @@
               HorizontalAlignment="Center"
               VerticalAlignment="Center"
               FontSize="13"
+              Foreground="{DynamicResource ColorBrush1}"
               Margin="{Binding TextMargin, ElementName=Root}" />
         </Grid>
       </Border>

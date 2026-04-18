@@ -32,6 +32,7 @@
   <Border
       x:Name="SearchRowBorder"
       Height="40"
+      Background="{DynamicResource ColorBrushHalfWhite}"
       BorderBrush="{DynamicResource ColorBrush6}"
       BorderThickness="1"
       CornerRadius="5">
@@ -50,6 +51,7 @@
           BorderBrush="Transparent"
           BorderThickness="0"
           FontSize="13.5"
+          Padding="34,0,40,0"
           Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
           VerticalContentAlignment="Center"
           Watermark="{Binding Watermark, ElementName=Root}" />
@@ -66,6 +68,7 @@
 
       <controls:PclIconButton
           x:Name="ClearButton"
+          Margin="0,0,10,0"
           HorizontalAlignment="Right"
           VerticalAlignment="Center"
           HoverBackgroundBrush="{DynamicResource ColorBrush8}"
