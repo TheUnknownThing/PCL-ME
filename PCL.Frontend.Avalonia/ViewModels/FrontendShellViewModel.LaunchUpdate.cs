@@ -66,6 +66,10 @@ internal sealed partial class FrontendShellViewModel
             if (SetProperty(ref _selectedUpdateModeIndex, clampedValue))
             {
                 AddActivity(_i18n.T("setup.update.activities.change_mode"), UpdateModeOptions[clampedValue]);
+                if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate))
+                {
+                    _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
+                }
             }
         }
     }

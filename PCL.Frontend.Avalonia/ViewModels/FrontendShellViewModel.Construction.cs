@@ -380,7 +380,7 @@ internal sealed partial class FrontendShellViewModel
         _cleanLogsCommand = new ActionCommand(CleanLauncherLogs);
         _downloadUpdateCommand = new ActionCommand(DownloadAvailableUpdate);
         _showUpdateDetailCommand = new ActionCommand(ShowAvailableUpdateDetail);
-        _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true));
+        _checkUpdateAgainCommand = new ActionCommand(() => _ = CheckForLauncherUpdatesAsync(forceRefresh: true, isUserInitiated: true));
         _openFullChangelogCommand = CreateLinkCommand("View changelog", "https://github.com/TheUnknownThing/PCL-ME/releases");
         _resetGameManageSettingsCommand = new ActionCommand(ResetGameManageSurface);
         _resetLauncherMiscSettingsCommand = new ActionCommand(ResetLauncherMiscSurface);

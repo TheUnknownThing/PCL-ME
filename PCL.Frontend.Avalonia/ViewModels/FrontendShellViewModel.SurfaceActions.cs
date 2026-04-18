@@ -46,7 +46,7 @@ internal sealed partial class FrontendShellViewModel
 
         if (IsCurrentStandardRightPane(StandardShellRightPaneKind.SetupUpdate) && string.Equals(command, "refresh", StringComparison.Ordinal))
         {
-            _ = CheckForLauncherUpdatesAsync(forceRefresh: true);
+            _ = CheckForLauncherUpdatesAsync(forceRefresh: true, isUserInitiated: true);
             return;
         }
 

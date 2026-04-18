@@ -75,6 +75,7 @@
 
       <StackPanel
           x:Name="SelectionStage"
+          IsVisible="False"
           Spacing="12">
         <controls:PclCard ContentMargin="13,13,16,13">
           <controls:PclCard.CardContent>

@@ -34,3 +34,11 @@ internal enum UpdateSurfaceState
     Latest = 2,
     Error = 3
 }
+
+internal enum LauncherUpdateMode
+{
+    AutoDownloadAndInstall = 0,
+    AutoDownloadAndPrompt = 1,
+    PromptOnly = 2,
+    Disabled = 3
+}
