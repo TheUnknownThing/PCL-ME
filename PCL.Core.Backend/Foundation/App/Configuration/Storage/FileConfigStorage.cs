@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using PCL.Core.Logging;
@@ -20,15 +19,14 @@ public class FileConfigStorage : ConfigStorage
     public IKeyValueFileProvider File { get; }
 
     private readonly Channel<(string, Action)> _writeActionChannel;
-    private readonly ManualResetEventSlim _writeStopEvent = new(true);
+    private readonly Task _writeLoopTask;
 
     public FileConfigStorage(IKeyValueFileProvider file)
     {
         File = file;
         _writeActionChannel = Channel.CreateUnbounded<(string, Action)>();
-        Task.Run(async () =>
+        _writeLoopTask = Task.Run(async () =>
         {
-            _writeStopEvent.Reset();
             const long syncInterval = 10000; // ms
             var lastSyncTick = Environment.TickCount64;
             var writeActionMap = new Dictionary<string, Action>();
@@ -90,7 +88,6 @@ public class FileConfigStorage : ConfigStorage
                     Sync();
                 }
             }
-            _writeStopEvent.Set();
 
             void Sync()
             {
@@ -117,8 +114,7 @@ public class FileConfigStorage : ConfigStorage
     protected override void OnStop()
     {
         _writeActionChannel.Writer.TryComplete();
-        _writeStopEvent.Wait();
-        _writeStopEvent.Dispose();
+        _writeLoopTask.GetAwaiter().GetResult();
     }
 
     protected override bool OnAccess<TKey, TValue>(

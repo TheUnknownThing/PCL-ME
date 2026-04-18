@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Configuration;
 using PCL.Core.App.Configuration.Storage;
@@ -100,7 +98,6 @@ public class ConfigStoragePortabilityTest
 
         var storage = new FileConfigStorage(new ThrowingFileProvider());
         storage.SetValue("alpha", 1);
-        SpinWait.SpinUntil(() => captured is not null, TimeSpan.FromSeconds(1));
         storage.Stop();
 
         Assert.IsNotNull(captured);
@@ -111,18 +108,15 @@ public class ConfigStoragePortabilityTest
     }
 
     [TestMethod]
-    public void FileConfigStorage_Stop_DrainsQueuedWrites()
+    public void FileConfigStorage_Stop_PersistsQueuedWrites()
     {
-        var provider = new BlockingFileProvider();
+        var provider = new RecordingFileProvider();
         var storage = new FileConfigStorage(provider);
 
         storage.SetValue("alpha", 1);
         storage.SetValue("beta", 2);
-        var stopTask = Task.Run(storage.Stop);
+        storage.Stop();
 
-        Assert.IsTrue(provider.FirstWriteStarted.Wait(TimeSpan.FromSeconds(1)));
-        provider.ReleaseFirstWrite.Set();
-        Assert.IsTrue(stopTask.Wait(TimeSpan.FromSeconds(1)));
         Assert.AreEqual(1, provider.Values["alpha"]);
         Assert.AreEqual(2, provider.Values["beta"]);
     }
@@ -152,25 +146,14 @@ public class ConfigStoragePortabilityTest
         public void Sync() => throw new IOException("sync failure");
     }
 
-    private sealed class BlockingFileProvider : IKeyValueFileProvider
+    private sealed class RecordingFileProvider : IKeyValueFileProvider
     {
         public string FilePath => "/virtual/config.yml";
         public Dictionary<string, object?> Values { get; } = new(StringComparer.Ordinal);
-        public ManualResetEventSlim FirstWriteStarted { get; } = new(false);
-        public ManualResetEventSlim ReleaseFirstWrite { get; } = new(false);
 
         public T Get<T>(string key) => (T)Values[key]!;
 
-        public void Set<T>(string key, T value)
-        {
-            if (string.Equals(key, "alpha", StringComparison.Ordinal))
-            {
-                FirstWriteStarted.Set();
-                ReleaseFirstWrite.Wait(TimeSpan.FromSeconds(1));
-            }
-
-            Values[key] = value;
-        }
+        public void Set<T>(string key, T value) => Values[key] = value;
 
         public bool Exists(string key) => Values.ContainsKey(key);
 
