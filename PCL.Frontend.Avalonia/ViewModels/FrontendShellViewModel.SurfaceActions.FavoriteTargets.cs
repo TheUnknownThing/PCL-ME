@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -363,11 +364,11 @@ internal sealed partial class FrontendShellViewModel
 
     private string GetDownloadFavoriteTargetName(JsonObject target)
     {
-        return target["Name"]?.GetValue<string>()?.Trim() switch
-        {
-            { Length: > 0 } value => value,
-            _ => T("download.favorites.targets.default_name")
-        };
+        var name = target["Name"]?.GetValue<string>();
+        return FrontendDownloadCompositionService.ResolveFavoriteTargetDisplayName(
+            name,
+            GetDownloadFavoriteTargetId(target),
+            _i18n);
     }
 
     private static string GetDownloadFavoriteTargetId(JsonObject target)

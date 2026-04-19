@@ -18,7 +18,7 @@ internal static class FrontendDownloadCompositionService
         return new FrontendDownloadComposition(
             BuildInstallState(instanceComposition),
             new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadCatalogState>(),
-            BuildBootstrapFavoritesState(sharedConfig),
+            BuildBootstrapFavoritesState(sharedConfig, i18n),
             new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());
     }
 
@@ -36,7 +36,7 @@ internal static class FrontendDownloadCompositionService
         return new FrontendDownloadComposition(
             BuildInstallState(instanceComposition),
             BuildCatalogStates(versionSourceIndex, preferredMinecraftVersion, i18n),
-            BuildFavoritesState(sharedConfig, communitySourcePreference),
+            BuildFavoritesState(sharedConfig, communitySourcePreference, i18n),
             new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>());
     }
 
@@ -80,6 +80,7 @@ internal static class FrontendDownloadCompositionService
 
     public static Task<FrontendDownloadFavoritesState> LoadFavoritesStateAsync(
         FrontendRuntimePaths runtimePaths,
+        II18nService? i18n = null,
         CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
@@ -87,8 +88,21 @@ internal static class FrontendDownloadCompositionService
             cancellationToken.ThrowIfCancellationRequested();
             var sharedConfig = runtimePaths.OpenSharedConfigProvider();
             var communitySourcePreference = ReadValue(sharedConfig, "ToolDownloadMod", 1);
-            return BuildFavoritesState(sharedConfig, communitySourcePreference);
+            return BuildFavoritesState(sharedConfig, communitySourcePreference, i18n);
         }, cancellationToken);
+    }
+
+    internal static string ResolveFavoriteTargetDisplayName(string? name, string? id, II18nService? i18n = null)
+    {
+        var trimmedName = name?.Trim();
+        if (IsDefaultFavoriteTargetDisplayName(trimmedName, id))
+        {
+            return GetDefaultFavoriteTargetName(i18n);
+        }
+
+        return string.IsNullOrWhiteSpace(trimmedName)
+            ? GetDefaultFavoriteTargetName(i18n)
+            : trimmedName;
     }
 
     private static FrontendDownloadInstallState BuildInstallState(FrontendInstanceComposition instanceComposition)
@@ -116,7 +130,8 @@ internal static class FrontendDownloadCompositionService
 
     private static FrontendDownloadFavoritesState BuildFavoritesState(
         JsonFileProvider sharedConfig,
-        int communitySourcePreference)
+        int communitySourcePreference,
+        II18nService? i18n = null)
     {
         var raw = ReadValue(sharedConfig, "CompFavorites", "[]");
         var targets = ParseFavoriteTargets(raw, out var migratedOldFormat);
@@ -124,10 +139,15 @@ internal static class FrontendDownloadCompositionService
             targets.SelectMany(target => target.Favorites),
             communitySourcePreference);
         var targetStates = targets
-            .Select(target => new FrontendDownloadFavoriteTargetState(
-                target.Name,
-                target.Id,
-                BuildFavoriteSections(target, lookup.Projects)))
+            .Select(target =>
+            {
+                var displayName = ResolveFavoriteTargetDisplayName(target.Name, target.Id, i18n);
+                var displayTarget = target with { Name = displayName };
+                return new FrontendDownloadFavoriteTargetState(
+                    displayName,
+                    target.Id,
+                    BuildFavoriteSections(displayTarget, lookup.Projects));
+            })
             .ToArray();
 
         var unresolvedCount = targets.Sum(target => target.Favorites.Count(favorite => !lookup.Projects.ContainsKey(favorite)));
@@ -149,28 +169,33 @@ internal static class FrontendDownloadCompositionService
 
         return new FrontendDownloadFavoritesState(
             targetStates.Length == 0
-                ? [new FrontendDownloadFavoriteTargetState("Default favorites", "default", [])]
+                ? [new FrontendDownloadFavoriteTargetState(GetDefaultFavoriteTargetName(i18n), "default", [])]
                 : targetStates,
             warningText,
             showWarning);
     }
 
-    private static FrontendDownloadFavoritesState BuildBootstrapFavoritesState(JsonFileProvider sharedConfig)
+    private static FrontendDownloadFavoritesState BuildBootstrapFavoritesState(JsonFileProvider sharedConfig, II18nService? i18n = null)
     {
         var raw = ReadValue(sharedConfig, "CompFavorites", "[]");
         var targets = ParseFavoriteTargets(raw, out var migratedOldFormat);
         var emptyLookup = new Dictionary<string, FrontendCommunityProjectSummary>(StringComparer.OrdinalIgnoreCase);
         var targetStates = targets
-            .Select(target => new FrontendDownloadFavoriteTargetState(
-                target.Name,
-                target.Id,
-                BuildFavoriteSections(target, emptyLookup)))
+            .Select(target =>
+            {
+                var displayName = ResolveFavoriteTargetDisplayName(target.Name, target.Id, i18n);
+                var displayTarget = target with { Name = displayName };
+                return new FrontendDownloadFavoriteTargetState(
+                    displayName,
+                    target.Id,
+                    BuildFavoriteSections(displayTarget, emptyLookup));
+            })
             .ToArray();
         var hasEntries = targetStates.Any(target => target.Sections.Any(section => section.Entries.Count > 0));
 
         return new FrontendDownloadFavoritesState(
             targetStates.Length == 0
-                ? [new FrontendDownloadFavoriteTargetState("Default favorites", "default", [])]
+                ? [new FrontendDownloadFavoriteTargetState(GetDefaultFavoriteTargetName(i18n), "default", [])]
                 : targetStates,
             migratedOldFormat ? "Legacy favorite data was detected and has been read as the default favorites target." : string.Empty,
             migratedOldFormat && hasEntries);
@@ -381,6 +406,36 @@ internal static class FrontendDownloadCompositionService
             ? selectionVersion.Trim()
             : string.Empty;
     }
+
+    private static string GetDefaultFavoriteTargetName(II18nService? i18n)
+    {
+        return i18n?.T("download.favorites.targets.default_name") ?? "Default Favorites";
+    }
+
+    private static bool IsDefaultFavoriteTargetDisplayName(string? name, string? id)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return true;
+        }
+
+        return string.Equals(id?.Trim(), "default", StringComparison.OrdinalIgnoreCase) &&
+               KnownDefaultFavoriteTargetNames.Contains(name.Trim());
+    }
+
+    private static readonly HashSet<string> KnownDefaultFavoriteTargetNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Default favorites",
+        "Default Favorites",
+        "Default favourites",
+        "Default Favourites",
+        "默认收藏夹",
+        "預設收藏夾",
+        "Standardfavoriten",
+        "Favoris par défaut",
+        "Favoritos predeterminados",
+        "기본 즐겨찾기"
+    };
 
     private static T ReadValue<T>(IKeyValueFileProvider provider, string key, T fallback)
     {

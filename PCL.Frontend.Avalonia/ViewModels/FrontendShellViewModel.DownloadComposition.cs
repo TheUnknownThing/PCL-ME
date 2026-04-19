@@ -60,6 +60,7 @@ internal sealed partial class FrontendShellViewModel
         {
             var favoritesState = await FrontendDownloadCompositionService.LoadFavoritesStateAsync(
                 _shellActionService.RuntimePaths,
+                _i18n,
                 cancellationToken);
 
             await Dispatcher.UIThread.InvokeAsync(() =>

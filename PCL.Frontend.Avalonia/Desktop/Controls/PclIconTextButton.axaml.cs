@@ -136,7 +136,7 @@ internal sealed partial class PclIconTextButton : UserControl
         }
         else if (_isHovered)
         {
-            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushBg1");
+            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
             foreground = FrontendThemeResourceResolver.GetBrush("ColorBrush3");
         }
         else
