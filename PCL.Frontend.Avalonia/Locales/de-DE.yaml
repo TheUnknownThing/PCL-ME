@@ -1448,6 +1448,7 @@ setup:
         title_local_detail_file: Lokalen Namen bevorzugen, dann Beschreibung, dann Dateiname
         title_file_detail_local: Dateinamen bevorzugen, dann Beschreibung, dann lokalen Namen
     labels:
+      download_speed_unlimited: Unbegrenzt
       download_timeout_value: "{value} Sekunde(n)"
     activities:
       reset: Spielverwaltungseinstellungen zurücksetzen

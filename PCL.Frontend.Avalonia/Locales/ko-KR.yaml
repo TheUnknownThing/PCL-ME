@@ -1448,6 +1448,7 @@ setup:
         title_local_detail_file: 로컬 이름, 설명, 파일 이름 순으로 선택하세요.
         title_file_detail_local: 파일 이름, 설명, 로컬 이름을 차례로 선택하세요.
     labels:
+      download_speed_unlimited: 무제한
       download_timeout_value: "{value} 초"
     activities:
       reset: 게임 관리 설정 재설정

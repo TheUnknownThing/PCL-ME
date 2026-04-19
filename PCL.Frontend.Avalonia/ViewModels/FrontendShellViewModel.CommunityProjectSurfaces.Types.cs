@@ -122,46 +122,70 @@ internal sealed class FrontendManagedFileDownloadTask(
         try
         {
             using var client = CreateDownloadHttpClient(requestTimeout, userAgent);
-            using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
-            response.EnsureSuccessStatusCode();
-
             var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
                 ? new FrontendDownloadSpeedLimiter(speedLimit)
                 : null;
+            var stalledTransferTimeout = downloadOptions?.StalledTransferTimeout ?? requestTimeout;
+            var maxAttempts = Math.Max(1, downloadOptions?.MaxFileDownloadAttempts ?? 3);
+            var tempPath = targetPath + ".download";
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-            await using (var sourceStream = await response.Content.ReadAsStreamAsync(token))
+            onStarted?.Invoke(targetPath);
+
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
-                var lastReportedBytes = 0L;
-                var lastReportedAt = Environment.TickCount64;
-                StateChanged(TaskState.Running, "Downloading file...");
-                onStarted?.Invoke(targetPath);
+                try
+                {
+                    TryDeleteFile(tempPath);
+                    using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token);
+                    response.EnsureSuccessStatusCode();
 
-                await FrontendDownloadTransferService.CopyToPathAsync(
-                    sourceStream,
-                    targetPath,
-                    totalRead =>
-                    {
-                        var progress = contentLength > 0
-                            ? Math.Clamp(totalRead / (double)contentLength, 0d, 1d)
-                            : 0d;
-                        ProgressChanged(progress);
+                    await using var sourceStream = await response.Content.ReadAsStreamAsync(token);
+                    var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
+                    var lastReportedBytes = 0L;
+                    var lastReportedAt = Environment.TickCount64;
+                    StateChanged(TaskState.Running, attempt == 1
+                        ? "Downloading file..."
+                        : $"Retrying download ({attempt}/{maxAttempts})...");
 
-                        var now = Environment.TickCount64;
-                        if (now - lastReportedAt < 250)
+                    await FrontendDownloadTransferService.CopyToPathAsync(
+                        sourceStream,
+                        tempPath,
+                        totalRead =>
                         {
-                            return;
-                        }
+                            var progress = contentLength > 0
+                                ? Math.Clamp(totalRead / (double)contentLength, 0d, 1d)
+                                : 0d;
+                            ProgressChanged(progress);
 
-                        var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
-                        var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
-                        PublishProgressStatus(progress, speed);
-                        lastReportedAt = now;
-                        lastReportedBytes = totalRead;
-                        StateChanged(TaskState.Running, $"Downloading {Path.GetFileName(targetPath)}...");
-                    },
-                    speedLimiter,
-                    token);
+                            var now = Environment.TickCount64;
+                            if (now - lastReportedAt < 250)
+                            {
+                                return;
+                            }
+
+                            var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                            var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
+                            PublishProgressStatus(progress, speed);
+                            lastReportedAt = now;
+                            lastReportedBytes = totalRead;
+                            StateChanged(TaskState.Running, $"Downloading {Path.GetFileName(targetPath)}...");
+                        },
+                        speedLimiter,
+                        stalledTransferTimeout,
+                        token);
+                    File.Move(tempPath, targetPath, overwrite: true);
+                    break;
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (attempt < maxAttempts)
+                {
+                    TryDeleteFile(tempPath);
+                    PublishProgressStatus(0d, 0d);
+                    StateChanged(TaskState.Running, $"Download stalled or failed; retrying ({attempt + 1}/{maxAttempts}): {ex.Message}");
+                }
             }
 
             ProgressChanged(1d);
@@ -189,7 +213,7 @@ internal sealed class FrontendManagedFileDownloadTask(
 
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout, string? userAgent)
     {
-        var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
+        var safeTimeout = FrontendDownloadTransferService.ResolveDownloadHttpClientTimeout(timeout);
         return FrontendHttpProxyService.CreateLauncherHttpClient(
             safeTimeout,
             userAgent,
@@ -200,9 +224,21 @@ internal sealed class FrontendManagedFileDownloadTask(
     {
         try
         {
-            if (File.Exists(targetPath))
+            TryDeleteFile(targetPath + ".download");
+        }
+        catch
+        {
+            // Best effort cleanup only.
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
             {
-                File.Delete(targetPath);
+                File.Delete(path);
             }
         }
         catch

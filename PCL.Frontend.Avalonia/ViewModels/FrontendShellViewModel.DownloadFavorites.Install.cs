@@ -95,6 +95,7 @@ internal sealed partial class FrontendShellViewModel
             plan.SourceUrl,
             plan.TargetPath,
             ResolveDownloadRequestTimeout(),
+            _shellActionService.GetDownloadTransferOptions(),
             onStarted: _ => AvaloniaHintBus.Show(T("download.favorites.batch_install.task_started", ("instance_name", plan.InstanceName)), AvaloniaHintTheme.Info),
             onCompleted: downloadedPath =>
             {

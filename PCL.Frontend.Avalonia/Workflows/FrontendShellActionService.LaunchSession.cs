@@ -33,12 +33,13 @@ internal sealed partial class FrontendShellActionService
     {
         ArgumentNullException.ThrowIfNull(launchComposition);
 
-        var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+        var transferOptions = GetDownloadTransferOptions();
+        var speedLimiter = transferOptions.MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
         cancellationToken.ThrowIfCancellationRequested();
         onStageChanged?.Invoke("Checking runtime dependencies");
-        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, GetDownloadProvider(), speedLimiter, cancellationToken);
+        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, GetDownloadProvider(), transferOptions, speedLimiter, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         onStageChanged?.Invoke("Synchronizing local game libraries");
         var nativeSyncResult = EnsureNativeLibraries(launchComposition.NativeSyncRequest);
@@ -178,6 +179,7 @@ internal sealed partial class FrontendShellActionService
     private static void EnsureRequiredArtifacts(
         IReadOnlyList<FrontendLaunchArtifactRequirement> requirements,
         FrontendDownloadProvider downloadProvider,
+        FrontendDownloadTransferOptions transferOptions,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
         CancellationToken cancellationToken = default)
     {
@@ -202,7 +204,10 @@ internal sealed partial class FrontendShellActionService
                         JavaRuntimeHttpClient,
                         url,
                         requirement.TargetPath,
-                        speedLimiter: speedLimiter);
+                        speedLimiter: speedLimiter,
+                        stalledTransferTimeout: transferOptions.StalledTransferTimeout,
+                        maxAttempts: transferOptions.MaxFileDownloadAttempts,
+                        cancelToken: cancellationToken);
                     lastError = null;
                     break;
                 }

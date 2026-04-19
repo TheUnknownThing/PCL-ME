@@ -1448,6 +1448,7 @@ setup:
         title_local_detail_file: 先土名，次描述，末檔名
         title_file_detail_local: 先檔名，次描述，末土名
     labels:
+      download_speed_unlimited: 無限
       download_timeout_value: "{value} 秒"
     activities:
       reset: 重置遊戲管理設

@@ -1130,6 +1130,7 @@ internal sealed partial class FrontendShellViewModel
             entry.Target,
             targetPath,
             ResolveDownloadRequestTimeout(),
+            _shellActionService.GetDownloadTransferOptions(),
             onStarted: filePath => AvaloniaHintBus.Show(
                 T("download.catalog.download.hints.started", ("file_name", Path.GetFileName(filePath))),
                 AvaloniaHintTheme.Info),

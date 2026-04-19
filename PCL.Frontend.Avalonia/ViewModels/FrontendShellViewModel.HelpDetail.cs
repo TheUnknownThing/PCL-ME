@@ -422,14 +422,17 @@ internal sealed partial class FrontendShellViewModel
             var fileName = Path.GetFileName(uri.LocalPath);
             fileName = string.IsNullOrWhiteSpace(fileName) ? "help-download.bin" : SanitizeFileSegment(fileName);
             var targetPath = Path.Combine(ToolDownloadFolder, fileName);
-            var speedLimiter = _shellActionService.GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+            var transferOptions = _shellActionService.GetDownloadTransferOptions();
+            var speedLimiter = transferOptions.MaxBytesPerSecond is long speedLimit
                 ? new FrontendDownloadSpeedLimiter(speedLimit)
                 : null;
             await FrontendDownloadTransferService.DownloadToPathAsync(
                 client,
                 uri.ToString(),
                 targetPath,
-                speedLimiter: speedLimiter);
+                speedLimiter: speedLimiter,
+                stalledTransferTimeout: transferOptions.StalledTransferTimeout,
+                maxAttempts: transferOptions.MaxFileDownloadAttempts);
             OpenInstanceTarget(title, targetPath, LT("shell.help_detail.failures.download_target_missing"));
         }
         catch (Exception ex)

@@ -15,6 +15,7 @@ internal static partial class FrontendModpackInstallWorkflowService
         FrontendModpackFileDownloadPlan file,
         int communitySourcePreference,
         HttpClient httpClient,
+        FrontendDownloadTransferOptions? downloadOptions,
         FrontendDownloadSpeedLimiter? speedLimiter,
         CancellationToken cancelToken,
         II18nService? i18n)
@@ -31,13 +32,16 @@ internal static partial class FrontendModpackInstallWorkflowService
             var tempFile = file.TargetPath + ".pcltmp";
             try
             {
-                using var request = new HttpRequestMessage(HttpMethod.Get, url);
-                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-
                 TryDeleteFile(tempFile);
-                await using var sourceStream = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false);
-                await FrontendDownloadTransferService.CopyToPathAsync(sourceStream, tempFile, speedLimiter: speedLimiter, cancelToken: cancelToken).ConfigureAwait(false);
+                await FrontendDownloadTransferService.DownloadToPathAsync(
+                        httpClient,
+                        url,
+                        tempFile,
+                        speedLimiter: speedLimiter,
+                        stalledTransferTimeout: downloadOptions?.StalledTransferTimeout,
+                        maxAttempts: downloadOptions?.MaxFileDownloadAttempts ?? 3,
+                        cancelToken: cancelToken)
+                    .ConfigureAwait(false);
 
                 if (!ValidateDownloadedFile(tempFile, file))
                 {

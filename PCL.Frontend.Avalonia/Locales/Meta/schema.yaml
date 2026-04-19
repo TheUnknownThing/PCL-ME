@@ -1636,6 +1636,7 @@ setup:
         title_local_detail_file: []
         title_file_detail_local: []
     labels:
+      download_speed_unlimited: []
       download_timeout_value:
         - value
     activities:

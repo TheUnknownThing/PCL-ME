@@ -58,7 +58,8 @@ internal sealed partial class FrontendShellActionService
         var effectiveTransferPlan = ResolveEffectiveJavaTransferPlan(manifestPlan, transferPlan);
         var runtimeDirectory = effectiveTransferPlan.WorkflowPlan.DownloadPlan.RuntimeBaseDirectory;
         var downloadProvider = GetDownloadProvider();
-        var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+        var transferOptions = GetDownloadTransferOptions();
+        var speedLimiter = transferOptions.MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
 
@@ -84,6 +85,8 @@ internal sealed partial class FrontendShellActionService
                 file,
                 downloadProvider,
                 speedLimiter,
+                transferOptions.StalledTransferTimeout,
+                transferOptions.MaxFileDownloadAttempts,
                 transferredBytes =>
                 {
                     var now = Environment.TickCount64;
@@ -150,7 +153,8 @@ internal sealed partial class FrontendShellActionService
                           ?? throw new InvalidOperationException("The archive Java download plan is missing archive metadata.");
         var runtimeDirectory = installPlan.RuntimeDirectory;
         var downloadProvider = GetDownloadProvider();
-        var speedLimiter = GetDownloadTransferOptions().MaxBytesPerSecond is long speedLimit
+        var transferOptions = GetDownloadTransferOptions();
+        var speedLimiter = transferOptions.MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
         var stagingDirectory = runtimeDirectory + ".staging";
@@ -177,6 +181,8 @@ internal sealed partial class FrontendShellActionService
                 archivePath,
                 downloadProvider,
                 speedLimiter,
+                transferOptions.StalledTransferTimeout,
+                transferOptions.MaxFileDownloadAttempts,
                 transferredBytes =>
                 {
                     var now = Environment.TickCount64;
@@ -317,6 +323,8 @@ internal sealed partial class FrontendShellActionService
         MinecraftJavaRuntimeDownloadRequestFilePlan file,
         FrontendDownloadProvider downloadProvider,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        TimeSpan? stalledTransferTimeout = null,
+        int maxAttempts = 1,
         Action<long>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
@@ -334,6 +342,8 @@ internal sealed partial class FrontendShellActionService
                     tempPath,
                     onProgress,
                     speedLimiter: speedLimiter,
+                    stalledTransferTimeout: stalledTransferTimeout,
+                    maxAttempts: maxAttempts,
                     cancelToken: cancellationToken);
                 var sha1 = ComputeSha1FromFile(tempPath);
                 if (!string.Equals(sha1, file.Sha1, StringComparison.OrdinalIgnoreCase))
@@ -365,6 +375,8 @@ internal sealed partial class FrontendShellActionService
         string targetPath,
         FrontendDownloadProvider downloadProvider,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        TimeSpan? stalledTransferTimeout = null,
+        int maxAttempts = 1,
         Action<long>? onProgress = null,
         CancellationToken cancellationToken = default)
     {
@@ -382,6 +394,8 @@ internal sealed partial class FrontendShellActionService
                     tempPath,
                     onProgress,
                     speedLimiter: speedLimiter,
+                    stalledTransferTimeout: stalledTransferTimeout,
+                    maxAttempts: maxAttempts,
                     cancelToken: cancellationToken);
                 if (!string.IsNullOrWhiteSpace(archivePlan.Sha256))
                 {

@@ -68,7 +68,7 @@ internal static class FrontendInstanceRepairService
             if (assetIndexPlan is not null)
             {
                 progressTracker?.UpsertPlan(assetIndexPlan);
-                await MaterializeFileAsync(assetIndexPlan, downloadedFiles, reusedFiles, progressTracker, speedLimiter, cancelToken).ConfigureAwait(false);
+                await MaterializeFileAsync(assetIndexPlan, downloadedFiles, reusedFiles, progressTracker, downloadOptions, speedLimiter, cancelToken).ConfigureAwait(false);
             }
 
             AddAssetObjectDownloads(filePlans, request.LauncherDirectory, request.InstanceDirectory, resolvedAssetIndex, downloadProvider);
@@ -78,7 +78,7 @@ internal static class FrontendInstanceRepairService
         await filePlans.Values
             .ToArray()
             .ForEachAsync(
-                (plan, token) => MaterializeFileAsync(plan, downloadedFiles, reusedFiles, progressTracker, speedLimiter, token),
+                (plan, token) => MaterializeFileAsync(plan, downloadedFiles, reusedFiles, progressTracker, downloadOptions, speedLimiter, token),
                 maxConcurrency,
                 cancelToken)
             .ConfigureAwait(false);
@@ -392,6 +392,7 @@ internal static class FrontendInstanceRepairService
         ConcurrentBag<string> downloadedFiles,
         ConcurrentBag<string> reusedFiles,
         FrontendInstanceRepairProgressTracker? progressTracker,
+        FrontendDownloadTransferOptions? downloadOptions,
         FrontendDownloadSpeedLimiter? speedLimiter,
         CancellationToken cancelToken)
     {
@@ -415,7 +416,7 @@ internal static class FrontendInstanceRepairService
             throw new InvalidOperationException($"The instance repair file does not have any available download sources: {filePlan.LocalPath}");
         }
 
-        await DownloadFileAsync(filePlan, progressTracker, speedLimiter, cancelToken).ConfigureAwait(false);
+        await DownloadFileAsync(filePlan, progressTracker, downloadOptions, speedLimiter, cancelToken).ConfigureAwait(false);
         downloadedFiles.Add(filePlan.LocalPath);
         progressTracker?.MarkDownloaded(filePlan);
     }
@@ -423,6 +424,7 @@ internal static class FrontendInstanceRepairService
     private static async Task DownloadFileAsync(
         FrontendInstanceRepairFilePlan filePlan,
         FrontendInstanceRepairProgressTracker? progressTracker,
+        FrontendDownloadTransferOptions? downloadOptions,
         FrontendDownloadSpeedLimiter? speedLimiter,
         CancellationToken cancelToken)
     {
@@ -436,22 +438,22 @@ internal static class FrontendInstanceRepairService
                 cancelToken.ThrowIfCancellationRequested();
                 progressTracker?.StartDownload(filePlan);
 
-                using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-                await using var stream = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false);
-
                 Directory.CreateDirectory(Path.GetDirectoryName(filePlan.LocalPath)!);
                 if (File.Exists(tempPath))
                 {
                     File.Delete(tempPath);
                 }
 
-                await FrontendDownloadTransferService.CopyToPathAsync(
-                    stream,
-                    tempPath,
-                    transferredBytes => progressTracker?.ReportDownloadProgress(filePlan, transferredBytes),
-                    speedLimiter,
-                    cancelToken).ConfigureAwait(false);
+                await FrontendDownloadTransferService.DownloadToPathAsync(
+                        HttpClient,
+                        url,
+                        tempPath,
+                        transferredBytes => progressTracker?.ReportDownloadProgress(filePlan, transferredBytes),
+                        speedLimiter,
+                        downloadOptions?.StalledTransferTimeout,
+                        downloadOptions?.MaxFileDownloadAttempts ?? 3,
+                        cancelToken: cancelToken)
+                    .ConfigureAwait(false);
 
                 if (File.Exists(filePlan.LocalPath))
                 {

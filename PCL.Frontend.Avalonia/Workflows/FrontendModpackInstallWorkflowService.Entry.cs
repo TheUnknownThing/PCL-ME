@@ -138,7 +138,7 @@ internal static partial class FrontendModpackInstallWorkflowService
                             : ModpackText(i18n, "resource_detail.modpack.workflow.status.processing_file", ("file_name", fileName)),
                         RemainingFileCount: resolvedFiles.Length - completedCount);
 
-                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, httpClient, speedLimiter, cancelToken, i18n).ConfigureAwait(false))
+                    if (await EnsurePackFileAsync(file, request.CommunitySourcePreference, httpClient, downloadOptions, speedLimiter, cancelToken, i18n).ConfigureAwait(false))
                     {
                         downloadedFiles.Add(file.TargetPath);
                     }
@@ -270,8 +270,9 @@ internal static partial class FrontendModpackInstallWorkflowService
 
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
     {
+        var safeTimeout = FrontendDownloadTransferService.ResolveDownloadHttpClientTimeout(timeout);
         return FrontendHttpProxyService.CreateLauncherHttpClient(
-            timeout,
+            safeTimeout,
             automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);
     }
 
@@ -431,42 +432,67 @@ internal sealed class FrontendManagedModpackInstallTask(
         var speedLimiter = downloadOptions?.MaxBytesPerSecond is long speedLimit
             ? new FrontendDownloadSpeedLimiter(speedLimit)
             : null;
-        using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        var stalledTransferTimeout = downloadOptions?.StalledTransferTimeout ?? timeout;
+        var maxAttempts = Math.Max(1, downloadOptions?.MaxFileDownloadAttempts ?? 3);
 
-        await using var sourceStream = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
-        var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
-        var lastReportedBytes = 0L;
-        var lastReportedAt = Environment.TickCount64;
-        await FrontendDownloadTransferService.CopyToPathAsync(
-            sourceStream,
-            request.ArchivePath,
-            totalRead =>
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
             {
-                var progress = contentLength > 0
-                    ? Math.Clamp(totalRead / (double)contentLength, 0d, 1d)
-                    : 0d;
-                PublishProgress(progress * 0.35);
+                using var response = await client.GetAsync(sourceUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
 
-                var now = Environment.TickCount64;
-                if (now - lastReportedAt < 250)
-                {
-                    return;
-                }
+                await using var sourceStream = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
+                var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
+                var lastReportedBytes = 0L;
+                var lastReportedAt = Environment.TickCount64;
+                await FrontendDownloadTransferService.CopyToPathAsync(
+                    sourceStream,
+                    request.ArchivePath,
+                    totalRead =>
+                    {
+                        var progress = contentLength > 0
+                            ? Math.Clamp(totalRead / (double)contentLength, 0d, 1d)
+                            : 0d;
+                        PublishProgress(progress * 0.35);
 
-                var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
-                var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
+                        var now = Environment.TickCount64;
+                        if (now - lastReportedAt < 250)
+                        {
+                            return;
+                        }
+
+                        var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                        var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
+                        PublishProgressStatus(
+                            new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
+                                $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
+                                speed > 0d ? $"{FormatBytes(speed)}/s" : "0 B/s",
+                                1,
+                                null));
+                        lastReportedBytes = totalRead;
+                        lastReportedAt = now;
+                    },
+                    speedLimiter,
+                    stalledTransferTimeout,
+                    token).ConfigureAwait(false);
+                break;
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
+            {
+                PublishState(PCL.Core.App.Tasks.TaskState.Running, $"Archive download failed; retrying ({attempt + 1}/{maxAttempts}): {ex.Message}");
                 PublishProgressStatus(
                     new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
                         $"{Math.Round(_progress * 100, 1, MidpointRounding.AwayFromZero)}%",
-                        speed > 0d ? $"{FormatBytes(speed)}/s" : "0 B/s",
+                        "0 B/s",
                         1,
                         null));
-                lastReportedBytes = totalRead;
-                lastReportedAt = now;
-            },
-            speedLimiter,
-            token).ConfigureAwait(false);
+            }
+        }
 
         PublishProgressStatus(
             new PCL.Core.App.Tasks.TaskProgressStatusSnapshot(
@@ -511,7 +537,7 @@ internal sealed class FrontendManagedModpackInstallTask(
 
     private static HttpClient CreateDownloadHttpClient(TimeSpan timeout)
     {
-        var safeTimeout = timeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(8) : timeout;
+        var safeTimeout = FrontendDownloadTransferService.ResolveDownloadHttpClientTimeout(timeout);
         return FrontendHttpProxyService.CreateLauncherHttpClient(
             safeTimeout,
             automaticDecompression: DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli);

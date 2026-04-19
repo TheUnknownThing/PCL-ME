@@ -62,7 +62,9 @@ internal sealed partial class FrontendShellViewModel
         }
     }
 
-    public string DownloadSpeedLimitLabel => FrontendDownloadSettingsService.FormatSpeedLimitLabel(DownloadSpeedLimit);
+    public string DownloadSpeedLimitLabel => FrontendDownloadSettingsService.FormatSpeedLimitLabel(
+        DownloadSpeedLimit,
+        _i18n.T("setup.game_manage.labels.download_speed_unlimited"));
 
     public double DownloadTimeoutSeconds
     {

@@ -1450,6 +1450,7 @@ setup:
         title_local_detail_file: 优先本地名，其次描述，最后文件名
         title_file_detail_local: 优先文件名，其次描述，最后本地名
     labels:
+      download_speed_unlimited: 无限制
       download_timeout_value: "{value} 秒"
     activities:
       reset: 重置游戏管理设置

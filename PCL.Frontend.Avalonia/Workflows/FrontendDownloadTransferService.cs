@@ -82,6 +82,25 @@ internal sealed class FrontendDownloadSpeedLimiter
 internal static class FrontendDownloadTransferService
 {
     private const int DefaultBufferSize = 81920;
+    private static readonly TimeSpan DefaultStalledTransferTimeout = TimeSpan.FromSeconds(8);
+    private static readonly TimeSpan DefaultInitialStalledTransferTimeout = TimeSpan.FromSeconds(30);
+    private const int DefaultMaxAttempts = 3;
+
+    public sealed record RetrySnapshot(
+        int NextAttempt,
+        int MaxAttempts,
+        string Url,
+        Exception LastError);
+
+    public static TimeSpan ResolveDownloadHttpClientTimeout(TimeSpan? configuredTransferTimeout)
+    {
+        if (configuredTransferTimeout is { } timeout && timeout > DefaultInitialStalledTransferTimeout)
+        {
+            return timeout;
+        }
+
+        return DefaultInitialStalledTransferTimeout;
+    }
 
     public static void DownloadToPath(
         HttpClient httpClient,
@@ -89,9 +108,23 @@ internal static class FrontendDownloadTransferService
         string outputPath,
         Action<long>? onProgress = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        TimeSpan? stalledTransferTimeout = null,
+        int maxAttempts = DefaultMaxAttempts,
+        Action<RetrySnapshot>? onRetry = null,
         CancellationToken cancelToken = default)
     {
-        DownloadToPathAsync(httpClient, url, outputPath, onProgress, speedLimiter, cancelToken).GetAwaiter().GetResult();
+        DownloadToPathAsync(
+                httpClient,
+                url,
+                outputPath,
+                onProgress,
+                speedLimiter,
+                stalledTransferTimeout,
+                maxAttempts,
+                onRetry,
+                cancelToken)
+            .GetAwaiter()
+            .GetResult();
     }
 
     public static async Task DownloadToPathAsync(
@@ -100,17 +133,51 @@ internal static class FrontendDownloadTransferService
         string outputPath,
         Action<long>? onProgress = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        TimeSpan? stalledTransferTimeout = null,
+        int maxAttempts = DefaultMaxAttempts,
+        Action<RetrySnapshot>? onRetry = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(httpClient);
         ArgumentException.ThrowIfNullOrWhiteSpace(url);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-        await using var source = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false);
-        await CopyToPathAsync(source, outputPath, onProgress, speedLimiter, cancelToken).ConfigureAwait(false);
+        var attempts = Math.Max(1, maxAttempts);
+        Exception? lastError = null;
+        for (var attempt = 1; attempt <= attempts; attempt++)
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancelToken).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+                await using var source = await response.Content.ReadAsStreamAsync(cancelToken).ConfigureAwait(false);
+                await CopyToPathAsync(
+                        source,
+                        outputPath,
+                        onProgress,
+                        speedLimiter,
+                        stalledTransferTimeout,
+                        cancelToken)
+                    .ConfigureAwait(false);
+                return;
+            }
+            catch (OperationCanceledException) when (cancelToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex) when (attempt < attempts)
+            {
+                lastError = ex;
+                onRetry?.Invoke(new RetrySnapshot(attempt + 1, attempts, url, ex));
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw new InvalidOperationException($"Unable to download file: {url}", lastError);
     }
 
     public static async Task CopyToPathAsync(
@@ -118,6 +185,7 @@ internal static class FrontendDownloadTransferService
         string outputPath,
         Action<long>? onProgress = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        TimeSpan? stalledTransferTimeout = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -125,7 +193,7 @@ internal static class FrontendDownloadTransferService
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         await using var target = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, DefaultBufferSize, true);
-        await CopyAsync(source, target, onProgress, speedLimiter, cancelToken).ConfigureAwait(false);
+        await CopyAsync(source, target, onProgress, speedLimiter, stalledTransferTimeout, cancelToken).ConfigureAwait(false);
     }
 
     public static async Task CopyAsync(
@@ -133,12 +201,15 @@ internal static class FrontendDownloadTransferService
         Stream target,
         Action<long>? onProgress = null,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        TimeSpan? stalledTransferTimeout = null,
         CancellationToken cancelToken = default)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(target);
 
         var buffer = ArrayPool<byte>.Shared.Rent(DefaultBufferSize);
+        var effectiveStallTimeout = NormalizeStalledTransferTimeout(stalledTransferTimeout);
+        var initialStallTimeout = ResolveInitialStalledTransferTimeout(effectiveStallTimeout);
         long transferredBytes = 0;
         try
         {
@@ -147,7 +218,12 @@ internal static class FrontendDownloadTransferService
                 var requestedBytes = speedLimiter is null
                     ? DefaultBufferSize
                     : await speedLimiter.ReserveAsync(DefaultBufferSize, cancelToken).ConfigureAwait(false);
-                var read = await source.ReadAsync(buffer.AsMemory(0, requestedBytes), cancelToken).ConfigureAwait(false);
+                var read = await ReadWithStallTimeoutAsync(
+                        source,
+                        buffer.AsMemory(0, requestedBytes),
+                        transferredBytes == 0 ? initialStallTimeout : effectiveStallTimeout,
+                        cancelToken)
+                    .ConfigureAwait(false);
                 if (read <= 0)
                 {
                     speedLimiter?.Refund(requestedBytes);
@@ -167,6 +243,48 @@ internal static class FrontendDownloadTransferService
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    private static TimeSpan? NormalizeStalledTransferTimeout(TimeSpan? timeout)
+    {
+        return timeout is { } value && value > TimeSpan.Zero
+            ? value
+            : DefaultStalledTransferTimeout;
+    }
+
+    private static TimeSpan ResolveInitialStalledTransferTimeout(TimeSpan? stalledTransferTimeout)
+    {
+        if (stalledTransferTimeout is not { } timeout)
+        {
+            return DefaultInitialStalledTransferTimeout;
+        }
+
+        return timeout > DefaultInitialStalledTransferTimeout
+            ? timeout
+            : DefaultInitialStalledTransferTimeout;
+    }
+
+    private static async ValueTask<int> ReadWithStallTimeoutAsync(
+        Stream source,
+        Memory<byte> buffer,
+        TimeSpan? stalledTransferTimeout,
+        CancellationToken cancelToken)
+    {
+        if (stalledTransferTimeout is not { } timeout)
+        {
+            return await source.ReadAsync(buffer, cancelToken).ConfigureAwait(false);
+        }
+
+        using var stallCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
+        stallCancellation.CancelAfter(timeout);
+        try
+        {
+            return await source.ReadAsync(buffer, stallCancellation.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!cancelToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Download stalled for {timeout.TotalSeconds:0.#} seconds without receiving data.");
         }
     }
 }

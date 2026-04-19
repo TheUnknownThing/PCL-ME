@@ -46,6 +46,19 @@ public sealed class FrontendDownloadSettingsServiceTest
     }
 
     [TestMethod]
+    public void SpeedLimitMapping_UsesLocalizedUnlimitedLabel()
+    {
+        Assert.AreEqual("无限制", FrontendDownloadSettingsService.FormatSpeedLimitLabel(42d, "无限制"));
+    }
+
+    [TestMethod]
+    public void DownloadHttpClientTimeout_HasInitialResponseFloor()
+    {
+        Assert.AreEqual(TimeSpan.FromSeconds(30), FrontendDownloadTransferService.ResolveDownloadHttpClientTimeout(TimeSpan.FromSeconds(8)));
+        Assert.AreEqual(TimeSpan.FromSeconds(45), FrontendDownloadTransferService.ResolveDownloadHttpClientTimeout(TimeSpan.FromSeconds(45)));
+    }
+
+    [TestMethod]
     [DataRow(-5d, 1)]
     [DataRow(1d, 1)]
     [DataRow(63d, 63)]
