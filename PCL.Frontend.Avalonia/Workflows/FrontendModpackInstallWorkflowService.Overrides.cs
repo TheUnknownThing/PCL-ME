@@ -14,7 +14,8 @@ internal static partial class FrontendModpackInstallWorkflowService
     private static void ApplyOverrides(
         FrontendModpackPackage package,
         string extractRoot,
-        string targetDirectory)
+        string targetDirectory,
+        string launcherDirectory)
     {
         var normalizedExtractRoot = NormalizeDirectoryRoot(extractRoot);
         foreach (var source in package.OverrideSources)
@@ -40,7 +41,13 @@ internal static partial class FrontendModpackInstallWorkflowService
                 continue;
             }
 
-            CopyDirectoryContents(sourcePath, targetDirectory);
+            var targetRoot = source.Target == FrontendModpackOverrideTarget.LauncherRoot
+                ? launcherDirectory
+                : targetDirectory;
+            var destinationPath = string.IsNullOrWhiteSpace(source.TargetRelativePath)
+                ? targetRoot
+                : Path.Combine(targetRoot, NormalizeRelativePath(source.TargetRelativePath));
+            CopyDirectoryContents(sourcePath, destinationPath);
         }
     }
     private static void CopyDirectoryContents(string sourceDirectory, string targetDirectory)

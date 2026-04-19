@@ -133,8 +133,8 @@ internal static partial class FrontendLaunchCompositionService
         var currentVersion = selectedInstanceName;
         while (!string.IsNullOrWhiteSpace(currentVersion) && visited.Add(currentVersion))
         {
-            var manifestPath = Path.Combine(launcherFolder, "versions", currentVersion, $"{currentVersion}.json");
-            if (!File.Exists(manifestPath))
+            var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, currentVersion);
+            if (string.IsNullOrWhiteSpace(manifestPath))
             {
                 yield break;
             }

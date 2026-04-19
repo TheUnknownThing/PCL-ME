@@ -34,12 +34,18 @@ internal static partial class FrontendModpackInstallWorkflowService
             FrontendModpackPackageKind.Modrinth => BuildModrinthPackage(archive, baseFolder, i18n),
             FrontendModpackPackageKind.CurseForge => BuildCurseForgePackage(archive, baseFolder, communitySourcePreference, httpClient, cancelToken, i18n),
             FrontendModpackPackageKind.Mcbbs => BuildMcbbsPackage(archive, baseFolder, i18n),
+            FrontendModpackPackageKind.Mmc => BuildMmcPackage(archive, baseFolder, i18n),
             _ => throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.unsupported_package_kind"))
         };
     }
 
     private static (FrontendModpackPackageKind Kind, string BaseFolder) DetectPackageKind(ZipArchive archive)
     {
+        if (archive.GetEntry("mmc-pack.json") is not null)
+        {
+            return (FrontendModpackPackageKind.Mmc, string.Empty);
+        }
+
         if (archive.GetEntry("mcbbs.packmeta") is not null)
         {
             return (FrontendModpackPackageKind.Mcbbs, string.Empty);
@@ -67,6 +73,11 @@ internal static partial class FrontendModpackInstallWorkflowService
             }
 
             var baseFolder = parts[0] + "/";
+            if (string.Equals(parts[1], "mmc-pack.json", StringComparison.OrdinalIgnoreCase))
+            {
+                return (FrontendModpackPackageKind.Mmc, baseFolder);
+            }
+
             if (string.Equals(parts[1], "mcbbs.packmeta", StringComparison.OrdinalIgnoreCase))
             {
                 return (FrontendModpackPackageKind.Mcbbs, baseFolder);
@@ -214,6 +225,74 @@ internal static partial class FrontendModpackInstallWorkflowService
             []);
     }
 
+    private static FrontendModpackPackage BuildMmcPackage(ZipArchive archive, string baseFolder, II18nService? i18n)
+    {
+        var root = ReadJsonObjectFromEntry(archive, baseFolder + "mmc-pack.json", i18n);
+        if (root["components"] is not JsonArray components)
+        {
+            throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.pcl_missing_game_version"));
+        }
+
+        var componentVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var node in components)
+        {
+            if (node is not JsonObject component)
+            {
+                continue;
+            }
+
+            var uid = component["uid"]?.GetValue<string>()?.Trim();
+            var version = component["version"]?.GetValue<string>()?.Trim();
+            if (string.IsNullOrWhiteSpace(uid) || string.IsNullOrWhiteSpace(version))
+            {
+                continue;
+            }
+
+            componentVersions[uid] = version;
+        }
+
+        if (!componentVersions.TryGetValue("net.minecraft", out var minecraftVersion) || string.IsNullOrWhiteSpace(minecraftVersion))
+        {
+            throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.pcl_missing_game_version"));
+        }
+
+        var instanceConfig = ParseMmcInstanceConfig(ReadEntryTextOrEmpty(archive, baseFolder + "instance.cfg"));
+        var extraConfigValues = BuildMmcInstanceConfigValues(instanceConfig);
+        var forgeVersion = componentVersions.TryGetValue("net.minecraftforge", out var forgeLikeVersion)
+            ? forgeLikeVersion
+            : null;
+        var cleanroomVersion = !string.IsNullOrWhiteSpace(forgeVersion) && forgeVersion.StartsWith("0.", StringComparison.Ordinal)
+            ? forgeVersion
+            : null;
+        if (!string.IsNullOrWhiteSpace(cleanroomVersion))
+        {
+            forgeVersion = null;
+        }
+
+        return new FrontendModpackPackage(
+            FrontendModpackPackageKind.Mmc,
+            minecraftVersion,
+            forgeVersion,
+            componentVersions.TryGetValue("net.neoforged", out var neoForgeVersion) ? neoForgeVersion : null,
+            cleanroomVersion,
+            componentVersions.TryGetValue("net.fabricmc.fabric-loader", out var fabricVersion) ? fabricVersion : null,
+            null,
+            componentVersions.TryGetValue("org.quiltmc.quilt-loader", out var quiltVersion) ? quiltVersion : null,
+            componentVersions.TryGetValue("com.mumfrey.liteloader", out var liteLoaderVersion) ? liteLoaderVersion : null,
+            null,
+            null,
+            root["formatVersion"]?.ToString(),
+            extraConfigValues.TryGetValue("VersionAdvanceJvm", out var jvmArgs) ? Convert.ToString(jvmArgs, CultureInfo.InvariantCulture) : null,
+            null,
+            [
+                new FrontendModpackOverrideSource(baseFolder + ".minecraft"),
+                new FrontendModpackOverrideSource(baseFolder + "libraries", FrontendModpackOverrideTarget.LauncherRoot, "libraries")
+            ],
+            [],
+            BuildMmcManifestPatch(archive, baseFolder, root),
+            extraConfigValues);
+    }
+
     private static string ResolveMcbbsMetadataEntryPath(ZipArchive archive, string baseFolder, II18nService? i18n)
     {
         var packMetaPath = baseFolder + "mcbbs.packmeta";
@@ -239,6 +318,97 @@ internal static partial class FrontendModpackInstallWorkflowService
         var content = reader.ReadToEnd();
         return JsonNode.Parse(content)?.AsObject()
                ?? throw new InvalidOperationException(ModpackText(i18n, "resource_detail.modpack.workflow.errors.json_parse_failed", ("entry_path", entryPath)));
+    }
+
+    private static string ReadEntryTextOrEmpty(ZipArchive archive, string entryPath)
+    {
+        var entry = archive.GetEntry(entryPath);
+        if (entry is null)
+        {
+            return string.Empty;
+        }
+
+        using var stream = entry.Open();
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: false);
+        return reader.ReadToEnd();
+    }
+
+    private static Dictionary<string, string> ParseMmcInstanceConfig(string content)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rawLine in content.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (rawLine.StartsWith('#') || rawLine.StartsWith(';'))
+            {
+                continue;
+            }
+
+            var separatorIndex = rawLine.IndexOf('=');
+            if (separatorIndex <= 0)
+            {
+                continue;
+            }
+
+            var key = rawLine[..separatorIndex].Trim();
+            var value = rawLine[(separatorIndex + 1)..].Trim().Replace("\\\"", "\"", StringComparison.Ordinal);
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                result[key] = value;
+            }
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, object?> BuildMmcInstanceConfigValues(IReadOnlyDictionary<string, string> config)
+    {
+        var values = new Dictionary<string, object?>(StringComparer.Ordinal);
+        if (ReadMmcBool(config, "OverrideCommands") &&
+            config.TryGetValue("PreLaunchCommand", out var preLaunchCommand) &&
+            !string.IsNullOrWhiteSpace(preLaunchCommand))
+        {
+            values["VersionAdvanceRun"] = NormalizeMmcCommand(preLaunchCommand);
+        }
+
+        if (ReadMmcBool(config, "JoinServerOnLaunch") &&
+            config.TryGetValue("JoinServerOnLaunchAddress", out var serverAddress) &&
+            !string.IsNullOrWhiteSpace(serverAddress))
+        {
+            values["VersionServerEnter"] = serverAddress;
+        }
+
+        if (ReadMmcBool(config, "IgnoreJavaCompatibility"))
+        {
+            values["VersionAdvanceJava"] = true;
+        }
+
+        if (config.TryGetValue("JvmArgs", out var jvmArgs) && !string.IsNullOrWhiteSpace(jvmArgs))
+        {
+            values["VersionAdvanceJvm"] = jvmArgs;
+        }
+
+        return values;
+    }
+
+    private static bool ReadMmcBool(IReadOnlyDictionary<string, string> config, string key)
+    {
+        return config.TryGetValue(key, out var value) &&
+               (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value, "1", StringComparison.Ordinal));
+    }
+
+    private static string NormalizeMmcCommand(string command)
+    {
+        return command
+            .Replace("$INST_JAVA", "{java}java", StringComparison.Ordinal)
+            .Replace("$INST_MC_DIR\\", "{minecraft}", StringComparison.Ordinal)
+            .Replace("$INST_MC_DIR/", "{minecraft}", StringComparison.Ordinal)
+            .Replace("$INST_MC_DIR", "{minecraft}", StringComparison.Ordinal)
+            .Replace("$INST_DIR\\", "{verpath}", StringComparison.Ordinal)
+            .Replace("$INST_DIR/", "{verpath}", StringComparison.Ordinal)
+            .Replace("$INST_DIR", "{verpath}", StringComparison.Ordinal)
+            .Replace("$INST_ID", "{name}", StringComparison.Ordinal)
+            .Replace("$INST_NAME", "{name}", StringComparison.Ordinal);
     }
 
     private static string? ReadJoinedText(JsonNode? node)

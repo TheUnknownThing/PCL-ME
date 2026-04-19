@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using PCL.Core.App.Configuration.Storage;
 
@@ -98,6 +99,14 @@ internal static partial class FrontendModpackInstallWorkflowService
             provider.Set("VersionAdvanceGame", package.LaunchGameArguments);
         }
 
+        if (package.InstanceConfigValues is not null)
+        {
+            foreach (var (key, value) in package.InstanceConfigValues)
+            {
+                SetInstanceConfigValue(provider, key, value);
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(request.IconPath) && File.Exists(request.IconPath))
         {
             var logoDirectory = Path.Combine(request.TargetDirectory, "PCL");
@@ -108,6 +117,114 @@ internal static partial class FrontendModpackInstallWorkflowService
         }
 
         provider.Sync();
+    }
+
+    private static void SetInstanceConfigValue(YamlFileProvider provider, string key, object? value)
+    {
+        switch (value)
+        {
+            case bool boolValue:
+                provider.Set(key, boolValue);
+                break;
+            case int intValue:
+                provider.Set(key, intValue);
+                break;
+            case long longValue:
+                provider.Set(key, longValue);
+                break;
+            case double doubleValue:
+                provider.Set(key, doubleValue);
+                break;
+            default:
+                provider.Set(key, Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
+                break;
+        }
+    }
+
+    private static bool ApplyPackageManifestPatch(FrontendModpackPackage package, string manifestPath)
+    {
+        if (package.ManifestPatch is not { } patch || string.IsNullOrWhiteSpace(manifestPath) || !File.Exists(manifestPath))
+        {
+            return false;
+        }
+
+        var root = JsonNode.Parse(File.ReadAllText(manifestPath)) as JsonObject;
+        if (root is null)
+        {
+            return false;
+        }
+
+        if (patch.RemoveLegacyMinecraftArguments)
+        {
+            root.Remove("minecraftArguments");
+        }
+
+        AppendManifestLibraries(root, patch.Libraries);
+        AppendManifestArguments(root, "game", patch.GameArguments);
+        AppendManifestArguments(root, "jvm", patch.JvmArguments);
+        foreach (var (key, value) in patch.ExtraProperties)
+        {
+            if (value is not null)
+            {
+                root[key] = value.DeepClone();
+            }
+        }
+
+        File.WriteAllText(manifestPath, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), Utf8NoBom);
+        return true;
+    }
+
+    private static void AppendManifestLibraries(JsonObject root, JsonArray patchLibraries)
+    {
+        if (patchLibraries.Count == 0)
+        {
+            return;
+        }
+
+        var libraries = root["libraries"] as JsonArray ?? new JsonArray();
+        var seen = libraries
+            .Select(node => node?["name"]?.GetValue<string>())
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Cast<string>()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var node in patchLibraries)
+        {
+            if (node is not JsonObject library)
+            {
+                continue;
+            }
+
+            var name = library["name"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(name) && !seen.Add(name))
+            {
+                continue;
+            }
+
+            libraries.Add(library.DeepClone());
+        }
+
+        root["libraries"] = libraries;
+    }
+
+    private static void AppendManifestArguments(JsonObject root, string key, JsonArray patchArguments)
+    {
+        if (patchArguments.Count == 0)
+        {
+            return;
+        }
+
+        var arguments = root["arguments"] as JsonObject ?? new JsonObject();
+        var values = arguments[key] as JsonArray ?? new JsonArray();
+        foreach (var node in patchArguments)
+        {
+            if (node is not null)
+            {
+                values.Add(node.DeepClone());
+            }
+        }
+
+        arguments[key] = values;
+        root["arguments"] = arguments;
     }
 
     private static void PersistKnownMinecraftVersion(YamlFileProvider provider, string? minecraftVersion)

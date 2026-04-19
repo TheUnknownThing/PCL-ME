@@ -76,7 +76,7 @@ internal sealed record FrontendRuntimePaths(
             return false;
         }
 
-        return File.Exists(Path.Combine(normalizedDirectory, $"{instanceName}.json"))
+        return FrontendVersionManifestPathResolver.ResolveManifestPathFromInstanceDirectory(normalizedDirectory, instanceName) is not null
                || File.Exists(Path.Combine(normalizedDirectory, $"{instanceName}.jar"))
                || File.Exists(Path.Combine(normalizedDirectory, "PCL", "config.v1.yml"))
                || File.Exists(Path.Combine(normalizedDirectory, "PCL", "setup.ini"))

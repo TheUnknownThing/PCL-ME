@@ -152,6 +152,105 @@ public sealed class FrontendModpackExportWorkflowServiceTest
         Assert.AreEqual("4.0.0", package.LabyModVersion);
     }
 
+    [TestMethod]
+    public void InspectPackage_ReadsMmcPackage()
+    {
+        using var workspace = new TempLauncherWorkspace();
+        var archivePath = Path.Combine(workspace.RootPath, "mmc-pack.zip");
+        using (var archive = ZipFile.Open(archivePath, ZipArchiveMode.Create))
+        {
+            WriteTextEntry(
+                archive,
+                "mmc-pack.json",
+                """
+                {
+                  "formatVersion": 1,
+                  "components": [
+                    { "uid": "net.minecraft", "version": "1.20.1" },
+                    { "uid": "net.fabricmc.fabric-loader", "version": "0.15.11" }
+                  ]
+                }
+                """);
+            WriteTextEntry(
+                archive,
+                "instance.cfg",
+                """
+                name=Prism Demo
+                OverrideCommands=true
+                PreLaunchCommand=$INST_DIR/run-before.sh
+                JoinServerOnLaunch=true
+                JoinServerOnLaunchAddress=example.org
+                IgnoreJavaCompatibility=true
+                JvmArgs=-Ddemo=true
+                """);
+            WriteTextEntry(archive, ".minecraft/options.txt", "lang:en_us");
+            WriteTextEntry(archive, "libraries/com/example/local/1.0/local-1.0.jar", "local");
+            WriteTextEntry(
+                archive,
+                "patches/fabric-loader.json",
+                """
+                {
+                  "uid": "net.fabricmc.fabric-loader",
+                  "order": 10,
+                  "+jvmArgs": ["-Dpatch=true"],
+                  "minecraftArguments": "--demo value",
+                  "libraries": [
+                    { "name": "com.example:patch-lib:1.0", "MMC-hint": "local" }
+                  ],
+                  "compatibleJavaMajors": [8, 17]
+                }
+                """);
+        }
+
+        Assert.AreEqual("Prism Demo", FrontendModpackInstallWorkflowService.SuggestInstanceName(archivePath));
+
+        using var httpClient = new HttpClient();
+        var package = FrontendModpackInstallWorkflowService.InspectPackage(
+            archivePath,
+            0,
+            httpClient,
+            CancellationToken.None);
+
+        Assert.AreEqual(FrontendModpackPackageKind.Mmc, package.Kind);
+        Assert.AreEqual("1.20.1", package.MinecraftVersion);
+        Assert.AreEqual("0.15.11", package.FabricVersion);
+        Assert.AreEqual("-Ddemo=true", package.LaunchJvmArguments);
+        Assert.IsNotNull(package.ManifestPatch);
+        Assert.AreEqual(1, package.ManifestPatch!.Libraries.Count);
+        Assert.AreEqual("local", package.ManifestPatch.Libraries[0]?["hint"]?.GetValue<string>());
+        Assert.AreEqual(2, package.ManifestPatch.GameArguments.Count);
+        Assert.AreEqual(1, package.ManifestPatch.JvmArguments.Count);
+        Assert.AreEqual(17, package.ManifestPatch.ExtraProperties["javaVersion"]?["majorVersion"]?.GetValue<int>());
+        Assert.AreEqual("{verpath}run-before.sh", package.InstanceConfigValues?["VersionAdvanceRun"]);
+        Assert.AreEqual("example.org", package.InstanceConfigValues?["VersionServerEnter"]);
+        Assert.AreEqual(true, package.InstanceConfigValues?["VersionAdvanceJava"]);
+        Assert.IsTrue(package.OverrideSources.Any(source =>
+            source.Target == FrontendModpackOverrideTarget.LauncherRoot &&
+            string.Equals(source.TargetRelativePath, "libraries", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public void ManifestInspector_ReadsSingleJsonFileWhenNameDiffersFromFolder()
+    {
+        using var workspace = new TempLauncherWorkspace();
+        var instanceDirectory = Path.Combine(workspace.LauncherFolder, "versions", "Prism Demo");
+        Directory.CreateDirectory(instanceDirectory);
+        File.WriteAllText(
+            Path.Combine(instanceDirectory, "custom-version.json"),
+            new JsonObject
+            {
+                ["id"] = "custom-version",
+                ["clientVersion"] = "1.20.1",
+                ["libraries"] = new JsonArray(CreateLibrary("net.fabricmc:fabric-loader:0.15.11"))
+            }.ToJsonString());
+
+        Assert.IsTrue(FrontendRuntimePaths.IsRecognizedInstanceDirectory(instanceDirectory));
+        var profile = FrontendVersionManifestInspector.ReadProfile(workspace.LauncherFolder, "Prism Demo");
+        Assert.IsTrue(profile.IsManifestValid);
+        Assert.AreEqual("1.20.1", profile.VanillaVersion);
+        Assert.AreEqual("0.15.11", profile.FabricVersion);
+    }
+
     private static JsonObject CreateLibrary(string name)
     {
         return new JsonObject
@@ -167,6 +266,14 @@ public sealed class FrontendModpackExportWorkflowServiceTest
         using var reader = new StreamReader(stream);
         return JsonNode.Parse(reader.ReadToEnd())?.AsObject()
                ?? throw new AssertFailedException($"Invalid JSON entry: {entryPath}");
+    }
+
+    private static void WriteTextEntry(ZipArchive archive, string entryPath, string content)
+    {
+        var entry = archive.CreateEntry(entryPath);
+        using var stream = entry.Open();
+        using var writer = new StreamWriter(stream);
+        writer.Write(content);
     }
 
     private sealed class TempLauncherWorkspace : IDisposable

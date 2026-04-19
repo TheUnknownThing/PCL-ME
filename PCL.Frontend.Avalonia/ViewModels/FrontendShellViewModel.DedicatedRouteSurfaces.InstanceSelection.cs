@@ -399,7 +399,7 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var instanceConfig = FrontendRuntimePaths.OpenInstanceConfigProvider(directory, createDirectoryIfMissing: false);
-        var manifestPath = Path.Combine(directory, $"{name}.json");
+        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPathFromInstanceDirectory(directory, name);
         var manifest = ParseInstanceManifest(manifestPath);
         var tags = new List<string>();
         if (ReadValue(instanceConfig, "IsStar", false))
@@ -833,9 +833,9 @@ internal sealed partial class FrontendShellViewModel
         return new InstanceSelectionShortcutEntryViewModel(title, description, iconPath, command);
     }
 
-    private static InstanceManifestSnapshot ParseInstanceManifest(string manifestPath)
+    private static InstanceManifestSnapshot ParseInstanceManifest(string? manifestPath)
     {
-        if (!File.Exists(manifestPath))
+        if (string.IsNullOrWhiteSpace(manifestPath) || !File.Exists(manifestPath))
         {
             return new InstanceManifestSnapshot(string.Empty, null, true);
         }

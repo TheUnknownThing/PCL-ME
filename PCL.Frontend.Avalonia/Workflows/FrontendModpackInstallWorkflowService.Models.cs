@@ -52,9 +52,27 @@ internal sealed record FrontendModpackPackage(
     string? LaunchJvmArguments,
     string? LaunchGameArguments,
     IReadOnlyList<FrontendModpackOverrideSource> OverrideSources,
-    IReadOnlyList<FrontendModpackFilePlan> Files);
+    IReadOnlyList<FrontendModpackFilePlan> Files,
+    FrontendMmcManifestPatch? ManifestPatch = null,
+    IReadOnlyDictionary<string, object?>? InstanceConfigValues = null);
 
-internal sealed record FrontendModpackOverrideSource(string RelativePath);
+internal sealed record FrontendModpackOverrideSource(
+    string RelativePath,
+    FrontendModpackOverrideTarget Target = FrontendModpackOverrideTarget.InstanceRoot,
+    string? TargetRelativePath = null);
+
+internal enum FrontendModpackOverrideTarget
+{
+    InstanceRoot,
+    LauncherRoot
+}
+
+internal sealed record FrontendMmcManifestPatch(
+    JsonArray Libraries,
+    JsonArray GameArguments,
+    JsonArray JvmArguments,
+    JsonObject ExtraProperties,
+    bool RemoveLegacyMinecraftArguments);
 
 internal sealed record FrontendModpackFilePlan(
     string RelativeTargetPath,
@@ -88,5 +106,6 @@ internal enum FrontendModpackPackageKind
     Unknown,
     CurseForge,
     Modrinth,
-    Mcbbs
+    Mcbbs,
+    Mmc
 }

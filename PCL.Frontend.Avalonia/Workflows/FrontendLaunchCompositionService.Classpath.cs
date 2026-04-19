@@ -33,7 +33,7 @@ internal static partial class FrontendLaunchCompositionService
         var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
         var instanceJarPath = string.IsNullOrWhiteSpace(selectedInstanceName)
             ? null
-            : Path.Combine(launcherFolder, "versions", selectedInstanceName, $"{selectedInstanceName}.jar");
+            : Path.Combine(FrontendVersionManifestPathResolver.GetInstanceDirectory(launcherFolder, selectedInstanceName), $"{selectedInstanceName}.jar");
         var customHeadEntries = BuildClasspathHeadEntries(instanceConfig, instanceJarPath);
 
         return new MinecraftLaunchClasspathRequest(
@@ -146,8 +146,8 @@ internal static partial class FrontendLaunchCompositionService
             return;
         }
 
-        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
-        if (!File.Exists(manifestPath))
+        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
+        if (string.IsNullOrWhiteSpace(manifestPath))
         {
             return;
         }
@@ -215,8 +215,8 @@ internal static partial class FrontendLaunchCompositionService
             return [];
         }
 
-        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
-        if (!File.Exists(manifestPath))
+        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
+        if (string.IsNullOrWhiteSpace(manifestPath))
         {
             return [];
         }

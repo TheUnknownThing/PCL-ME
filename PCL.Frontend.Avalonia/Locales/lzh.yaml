@@ -2831,7 +2831,7 @@ resource_detail:
         finalizing_instance: 方整理實例目錄…
         completed: 整合包安裝完成。
       errors:
-        unsupported_package_kind: 僅支援自動安裝 PCL 標準、Modrinth 和 CurseForge 整合包。
+        unsupported_package_kind: 僅支援自動安裝 PCL 標準、Modrinth、CurseForge 和 MMC 整合包。
         modrinth_missing_minecraft_version: Modrinth 整合包缺少 Minecraft 版本訊。
         curseforge_missing_minecraft_version: CurseForge 整合包缺少 Minecraft 版本訊。
         curseforge_recommended_forge_unsupported: 該 CurseForge 整合包用了 recommended Forge，暫不支援自動安裝。

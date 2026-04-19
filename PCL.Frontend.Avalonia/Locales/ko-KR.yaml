@@ -2831,7 +2831,7 @@ resource_detail:
         finalizing_instance: 인스턴스 디렉터리를 마무리하는 중...
         completed: 모드팩 설치가 완료되었습니다.
       errors:
-        unsupported_package_kind: 자동 설치에는 PCL Standard, Modrinth 및 CurseForge 모드팩만 지원됩니다.
+        unsupported_package_kind: 자동 설치에는 PCL Standard, Modrinth, CurseForge 및 MMC 모드팩만 지원됩니다.
         modrinth_missing_minecraft_version: Modrinth 모드팩에 Minecraft 버전 정보가 없습니다.
         curseforge_missing_minecraft_version: CurseForge 모드팩에 Minecraft 버전 정보가 없습니다.
         curseforge_recommended_forge_unsupported: 이 CurseForge 모드팩은 아직 자동 설치가 지원되지 않는 권장 Forge를 사용합니다.

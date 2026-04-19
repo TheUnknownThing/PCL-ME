@@ -38,7 +38,7 @@ internal static partial class FrontendModpackInstallWorkflowService
             "resource_detail.modpack.workflow.status.repairing_game_files" => "Completing game files...",
             "resource_detail.modpack.workflow.status.finalizing_instance" => "Finalizing instance directory...",
             "resource_detail.modpack.workflow.status.completed" => "Modpack installation completed.",
-            "resource_detail.modpack.workflow.errors.unsupported_package_kind" => "Only PCL Standard, Modrinth, and CurseForge modpacks are supported for automatic installation.",
+            "resource_detail.modpack.workflow.errors.unsupported_package_kind" => "Only PCL Standard, Modrinth, CurseForge, and MMC modpacks are supported for automatic installation.",
             "resource_detail.modpack.workflow.errors.modrinth_missing_minecraft_version" => "The Modrinth modpack is missing Minecraft version information.",
             "resource_detail.modpack.workflow.errors.curseforge_missing_minecraft_version" => "The CurseForge modpack is missing Minecraft version information.",
             "resource_detail.modpack.workflow.errors.curseforge_recommended_forge_unsupported" => "This CurseForge modpack uses recommended Forge, which is not supported for automatic installation yet.",
@@ -118,7 +118,7 @@ internal static partial class FrontendModpackInstallWorkflowService
                 progress => ReportStatus(onStatusChanged, 0.16 + progress * 0.16, ModpackText(i18n, "resource_detail.modpack.workflow.status.extracting_overrides")),
                 cancelToken);
 
-            ApplyOverrides(package, extractRoot, request.TargetDirectory);
+            ApplyOverrides(package, extractRoot, request.TargetDirectory, request.LauncherDirectory);
             cancelToken.ThrowIfCancellationRequested();
 
             if (resolvedFiles.Length > 0)
@@ -195,6 +195,35 @@ internal static partial class FrontendModpackInstallWorkflowService
             downloadedFiles.AddRange(applyResult.DownloadedFiles);
             reusedFiles.AddRange(applyResult.ReusedFiles);
 
+            if (ApplyPackageManifestPatch(package, applyResult.ManifestPath))
+            {
+                cancelToken.ThrowIfCancellationRequested();
+                ReportStatus(onStatusChanged, 0.955, ModpackText(i18n, "resource_detail.modpack.workflow.status.repairing_game_files"));
+                var patchRepairResult = FrontendInstanceRepairService.Repair(
+                    new FrontendInstanceRepairRequest(
+                        request.LauncherDirectory,
+                        request.TargetDirectory,
+                        request.InstanceName,
+                        ForceCoreRefresh: false),
+                    snapshot =>
+                    {
+                        ReportStatus(
+                            onStatusChanged,
+                            0.955 + snapshot.Progress * 0.015,
+                            string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
+                                ? ModpackText(i18n, "resource_detail.modpack.workflow.status.repairing_game_files")
+                                : ModpackText(i18n, "resource_detail.modpack.workflow.status.processing_file", ("file_name", snapshot.CurrentFileName)),
+                            snapshot.SpeedBytesPerSecond,
+                            snapshot.RemainingFileCount,
+                            snapshot.CurrentFileName);
+                    },
+                    FrontendDownloadProvider.FromPreference(request.DownloadSourceIndex),
+                    downloadOptions,
+                    cancelToken);
+                downloadedFiles.AddRange(patchRepairResult.DownloadedFiles);
+                reusedFiles.AddRange(patchRepairResult.ReusedFiles);
+            }
+
             ReportStatus(onStatusChanged, 0.97, ModpackText(i18n, "resource_detail.modpack.workflow.status.finalizing_instance"));
             FinalizeInstalledInstance(package, request);
             TryDeleteFile(request.ArchivePath);
@@ -229,6 +258,7 @@ internal static partial class FrontendModpackInstallWorkflowService
                 FrontendModpackPackageKind.Modrinth => baseFolder + "modrinth.index.json",
                 FrontendModpackPackageKind.CurseForge => baseFolder + "manifest.json",
                 FrontendModpackPackageKind.Mcbbs => ResolveMcbbsMetadataEntryPath(archive, baseFolder, i18n: null),
+                FrontendModpackPackageKind.Mmc => baseFolder + "instance.cfg",
                 _ => null
             };
             if (string.IsNullOrWhiteSpace(entryPath))
@@ -236,8 +266,9 @@ internal static partial class FrontendModpackInstallWorkflowService
                 return fallbackName;
             }
 
-            var root = ReadJsonObjectFromEntry(archive, entryPath);
-            var packageName = root["name"]?.GetValue<string>()?.Trim();
+            var packageName = kind == FrontendModpackPackageKind.Mmc
+                ? ParseMmcInstanceConfig(ReadEntryTextOrEmpty(archive, entryPath)).GetValueOrDefault("name")?.Trim()
+                : ReadJsonObjectFromEntry(archive, entryPath)["name"]?.GetValue<string>()?.Trim();
             return string.IsNullOrWhiteSpace(packageName) ? fallbackName : packageName;
         }
         catch

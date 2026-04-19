@@ -2831,7 +2831,7 @@ resource_detail:
         finalizing_instance: Finalisation du répertoire d'instance...
         completed: Installation du modpack terminée.
       errors:
-        unsupported_package_kind: Seuls les modpacks PCL Standard, Modrinth et CurseForge sont pris en charge pour l'installation automatique.
+        unsupported_package_kind: Seuls les modpacks PCL Standard, Modrinth, CurseForge et MMC sont pris en charge pour l'installation automatique.
         modrinth_missing_minecraft_version: Il manque des informations sur la version de Minecraft dans le modpack Modrinth.
         curseforge_missing_minecraft_version: Il manque des informations sur la version de Minecraft dans le modpack CurseForge.
         curseforge_recommended_forge_unsupported: Ce modpack CurseForge utilise Forge recommandé, qui n'est pas encore pris en charge pour l'installation automatique.

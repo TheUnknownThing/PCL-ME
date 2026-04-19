@@ -94,8 +94,8 @@ internal static class FrontendInstanceRepairService
 
         while (!string.IsNullOrWhiteSpace(currentVersion) && visited.Add(currentVersion))
         {
-            var manifestPath = Path.Combine(launcherDirectory, "versions", currentVersion, $"{currentVersion}.json");
-            if (!File.Exists(manifestPath))
+            var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherDirectory, currentVersion);
+            if (string.IsNullOrWhiteSpace(manifestPath))
             {
                 break;
             }

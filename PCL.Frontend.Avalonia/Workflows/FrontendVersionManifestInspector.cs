@@ -31,7 +31,7 @@ internal static class FrontendVersionManifestInspector
         var versionDirectory = Path.GetDirectoryName(manifestPath);
         var versionsDirectory = versionDirectory is null ? null : Path.GetDirectoryName(versionDirectory);
         var launcherFolder = versionsDirectory is null ? null : Path.GetDirectoryName(versionsDirectory);
-        var versionName = Path.GetFileNameWithoutExtension(manifestPath);
+        var versionName = Path.GetFileName(versionDirectory);
 
         if (string.IsNullOrWhiteSpace(versionDirectory) ||
             string.IsNullOrWhiteSpace(versionsDirectory) ||
@@ -100,8 +100,8 @@ internal static class FrontendVersionManifestInspector
             return FrontendVersionManifestProfile.Empty;
         }
 
-        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
-        if (!File.Exists(manifestPath))
+        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
+        if (string.IsNullOrWhiteSpace(manifestPath))
         {
             return FrontendVersionManifestProfile.Empty;
         }

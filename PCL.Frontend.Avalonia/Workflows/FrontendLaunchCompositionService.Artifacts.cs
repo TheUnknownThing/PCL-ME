@@ -83,8 +83,8 @@ internal static partial class FrontendLaunchCompositionService
             return;
         }
 
-        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
-        if (!File.Exists(manifestPath))
+        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
+        if (string.IsNullOrWhiteSpace(manifestPath))
         {
             return;
         }
@@ -156,8 +156,8 @@ internal static partial class FrontendLaunchCompositionService
             return;
         }
 
-        var manifestPath = Path.Combine(launcherFolder, "versions", versionName, $"{versionName}.json");
-        if (!File.Exists(manifestPath))
+        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
+        if (string.IsNullOrWhiteSpace(manifestPath))
         {
             return;
         }
