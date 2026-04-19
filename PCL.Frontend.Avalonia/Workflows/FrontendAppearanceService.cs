@@ -616,6 +616,18 @@ internal static class FrontendAppearanceService
         var sliderTrackFill = useDarkPalette
             ? WithAlpha(palette.SurfaceBorder, 0x78)
             : WithAlpha(palette.SurfaceBorder, 0xCC);
+        var checkBoxActiveFill = useDarkPalette
+            ? Mix(accent, Colors.White, 0.18)
+            : accent;
+        var checkBoxActiveFillPointerOver = useDarkPalette
+            ? Mix(accent, Colors.White, 0.28)
+            : accentLight1;
+        var checkBoxActiveFillPressed = useDarkPalette
+            ? Mix(accent, Colors.White, 0.12)
+            : accentDark1;
+        var checkBoxActiveGlyph = useDarkPalette
+            ? Color.Parse("#FF09141C")
+            : ChooseOverlayForeground(checkBoxActiveFill, preferWhite: true);
 
         SetColorResource(application, "SystemAccentColor", accent);
         SetColorResource(application, "SystemAccentColorDark1", accentDark1);
@@ -639,6 +651,24 @@ internal static class FrontendAppearanceService
         SetBrushResource(application, "SystemControlHighlightAccentRevealBackgroundBrush", accent);
         SetBrushResource(application, "SystemControlHighlightAccent2RevealBackgroundBrush", accentLight1);
         SetBrushResource(application, "SystemControlHighlightAccent3RevealBackgroundBrush", accentLight2);
+        SetBrushResource(application, "CheckBoxCheckBackgroundFillChecked", checkBoxActiveFill);
+        SetBrushResource(application, "CheckBoxCheckBackgroundFillCheckedPointerOver", checkBoxActiveFillPointerOver);
+        SetBrushResource(application, "CheckBoxCheckBackgroundFillCheckedPressed", checkBoxActiveFillPressed);
+        SetBrushResource(application, "CheckBoxCheckBackgroundFillIndeterminate", checkBoxActiveFill);
+        SetBrushResource(application, "CheckBoxCheckBackgroundFillIndeterminatePointerOver", checkBoxActiveFillPointerOver);
+        SetBrushResource(application, "CheckBoxCheckBackgroundFillIndeterminatePressed", checkBoxActiveFillPressed);
+        SetBrushResource(application, "CheckBoxCheckBackgroundStrokeChecked", checkBoxActiveFill);
+        SetBrushResource(application, "CheckBoxCheckBackgroundStrokeCheckedPointerOver", checkBoxActiveFillPointerOver);
+        SetBrushResource(application, "CheckBoxCheckBackgroundStrokeCheckedPressed", checkBoxActiveFillPressed);
+        SetBrushResource(application, "CheckBoxCheckBackgroundStrokeIndeterminate", checkBoxActiveFill);
+        SetBrushResource(application, "CheckBoxCheckBackgroundStrokeIndeterminatePointerOver", checkBoxActiveFillPointerOver);
+        SetBrushResource(application, "CheckBoxCheckBackgroundStrokeIndeterminatePressed", checkBoxActiveFillPressed);
+        SetBrushResource(application, "CheckBoxCheckGlyphForegroundChecked", checkBoxActiveGlyph);
+        SetBrushResource(application, "CheckBoxCheckGlyphForegroundCheckedPointerOver", checkBoxActiveGlyph);
+        SetBrushResource(application, "CheckBoxCheckGlyphForegroundCheckedPressed", checkBoxActiveGlyph);
+        SetBrushResource(application, "CheckBoxCheckGlyphForegroundIndeterminate", checkBoxActiveGlyph);
+        SetBrushResource(application, "CheckBoxCheckGlyphForegroundIndeterminatePointerOver", checkBoxActiveGlyph);
+        SetBrushResource(application, "CheckBoxCheckGlyphForegroundIndeterminatePressed", checkBoxActiveGlyph);
 
         SetBrushResource(application, "SliderThumbBackground", accent);
         SetBrushResource(application, "SliderThumbBackgroundPointerOver", accentLight1);

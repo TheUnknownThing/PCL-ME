@@ -130,6 +130,24 @@
       <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle" Color="{DynamicResource BaseColor_Blue820}" />
       <SolidColorBrush x:Key="ColorBrushEntryChevronIdle" Color="{DynamicResource BaseColor_Blue760}" />
       <SolidColorBrush x:Key="ColorBrushRadioButtonCheckedForeground" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="{DynamicResource BaseColor_Blue840}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="{DynamicResource BaseColor_Blue770}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="{DynamicResource BaseColor_Blue870}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillIndeterminate" Color="{DynamicResource BaseColor_Blue840}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillIndeterminatePointerOver" Color="{DynamicResource BaseColor_Blue770}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillIndeterminatePressed" Color="{DynamicResource BaseColor_Blue870}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="{DynamicResource BaseColor_Blue840}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="{DynamicResource BaseColor_Blue770}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="{DynamicResource BaseColor_Blue870}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeIndeterminate" Color="{DynamicResource BaseColor_Blue840}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeIndeterminatePointerOver" Color="{DynamicResource BaseColor_Blue770}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeIndeterminatePressed" Color="{DynamicResource BaseColor_Blue870}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundIndeterminate" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundIndeterminatePointerOver" Color="{DynamicResource BaseColor_Neutral570}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundIndeterminatePressed" Color="{DynamicResource BaseColor_Neutral570}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarBackground" Color="{DynamicResource BaseColor_Blue870}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarForeground" Color="{DynamicResource BaseColor_Neutral570}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarHoverBackground" Color="{DynamicResource BaseColor_Neutral640Alpha20}" />
@@ -364,6 +382,24 @@
       <SolidColorBrush x:Key="ColorBrushEntrySecondaryIdle" Color="{DynamicResource BaseColor_Blue820}" />
       <SolidColorBrush x:Key="ColorBrushEntryChevronIdle" Color="{DynamicResource BaseColor_Blue760}" />
       <SolidColorBrush x:Key="ColorBrushRadioButtonCheckedForeground" Color="{DynamicResource BaseColor_Blue950}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="{DynamicResource BaseColor_Cyan880}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="{DynamicResource BaseColor_Cyan910}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="{DynamicResource BaseColor_Cyan920}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillIndeterminate" Color="{DynamicResource BaseColor_Cyan880}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillIndeterminatePointerOver" Color="{DynamicResource BaseColor_Cyan910}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillIndeterminatePressed" Color="{DynamicResource BaseColor_Cyan920}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="{DynamicResource BaseColor_Cyan880}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="{DynamicResource BaseColor_Cyan910}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="{DynamicResource BaseColor_Cyan920}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeIndeterminate" Color="{DynamicResource BaseColor_Cyan880}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeIndeterminatePointerOver" Color="{DynamicResource BaseColor_Cyan910}" />
+      <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeIndeterminatePressed" Color="{DynamicResource BaseColor_Cyan920}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="{DynamicResource BaseColor_Blue950}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="{DynamicResource BaseColor_Blue950}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="{DynamicResource BaseColor_Blue950}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundIndeterminate" Color="{DynamicResource BaseColor_Blue950}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundIndeterminatePointerOver" Color="{DynamicResource BaseColor_Blue950}" />
+      <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundIndeterminatePressed" Color="{DynamicResource BaseColor_Blue950}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarBackground" Color="{DynamicResource BaseColor_Blue950}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarForeground" Color="{DynamicResource BaseColor_Cyan880}" />
       <SolidColorBrush x:Key="ColorBrushTitleBarHoverBackground" Color="{DynamicResource BaseColor_Cyan900Alpha10}" />
