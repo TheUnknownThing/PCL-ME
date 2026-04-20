@@ -11,9 +11,17 @@ internal static class FrontendUpdateInstallWorkflowService
 
     public static async Task<FrontendPreparedUpdateInstall> PrepareAsync(
         FrontendUpdateInstallRequest request,
+        Action<FrontendUpdateInstallProgressSnapshot>? progressReporter = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+            FrontendUpdateInstallProgressPhase.Prepare,
+            string.Empty,
+            0L,
+            0L,
+            0d));
 
         var platform = DetectCurrentPlatform();
         var layout = ResolveInstallLayout(platform, request.ExecutableDirectory, request.ProcessPath);
@@ -26,7 +34,14 @@ internal static class FrontendUpdateInstallWorkflowService
         var archivePath = Path.Combine(
             artifactDirectory,
             $"{request.ReleaseFileStem}{archiveExtension}");
-        await DownloadArchiveAsync(request.DownloadUrl, archivePath, cancellationToken);
+        await DownloadArchiveAsync(request.DownloadUrl, archivePath, progressReporter, cancellationToken);
+        var archiveLength = new FileInfo(archivePath).Length;
+        progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+            FrontendUpdateInstallProgressPhase.Verify,
+            archivePath,
+            archiveLength,
+            archiveLength,
+            0d));
         if (!string.IsNullOrWhiteSpace(request.ExpectedSha256))
         {
             VerifyArchiveHash(archivePath, request.ExpectedSha256);
@@ -34,17 +49,36 @@ internal static class FrontendUpdateInstallWorkflowService
 
         var extractedRoot = Path.Combine(tempRoot, "extracted");
         Directory.CreateDirectory(extractedRoot);
+        progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+            FrontendUpdateInstallProgressPhase.Extract,
+            archivePath,
+            archiveLength,
+            archiveLength,
+            0d));
         ExtractArchive(archivePath, extractedRoot);
 
         var packageRoot = ResolveExtractedPackageRoot(platform, extractedRoot, layout.CurrentPackageName);
         var scriptPath = Path.Combine(
             artifactDirectory,
             $"{request.ReleaseFileStem}-apply{GetScriptExtension(platform)}");
+        progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+            FrontendUpdateInstallProgressPhase.Finalize,
+            archivePath,
+            archiveLength,
+            archiveLength,
+            0d));
         WriteInstallerScript(scriptPath, BuildInstallerScript(platform, layout, packageRoot, request.ProcessId));
         if (platform is not FrontendUpdateInstallPlatform.Windows)
         {
             request.PlatformAdapter.EnsureFileExecutable(scriptPath);
         }
+
+        progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+            FrontendUpdateInstallProgressPhase.Completed,
+            archivePath,
+            archiveLength,
+            archiveLength,
+            0d));
 
         return new FrontendPreparedUpdateInstall(
             ArchivePath: archivePath,
@@ -153,14 +187,56 @@ internal static class FrontendUpdateInstallWorkflowService
         };
     }
 
-    private static async Task DownloadArchiveAsync(string url, string archivePath, CancellationToken cancellationToken)
+    private static async Task DownloadArchiveAsync(
+        string url,
+        string archivePath,
+        Action<FrontendUpdateInstallProgressSnapshot>? progressReporter,
+        CancellationToken cancellationToken)
     {
         using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
+        var contentLength = response.Content.Headers.ContentLength.GetValueOrDefault();
         await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var fileStream = File.Create(archivePath);
-        await responseStream.CopyToAsync(fileStream, cancellationToken);
+        var lastReportedBytes = 0L;
+        var lastReportedAt = Environment.TickCount64;
+        progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+            FrontendUpdateInstallProgressPhase.Download,
+            archivePath,
+            0L,
+            contentLength,
+            0d));
+        await FrontendDownloadTransferService.CopyAsync(
+            responseStream,
+            fileStream,
+            totalRead =>
+            {
+                var now = Environment.TickCount64;
+                if (now - lastReportedAt < 250)
+                {
+                    return;
+                }
+
+                var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                var speed = (totalRead - lastReportedBytes) / elapsedSeconds;
+                lastReportedAt = now;
+                lastReportedBytes = totalRead;
+                progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+                    FrontendUpdateInstallProgressPhase.Download,
+                    archivePath,
+                    totalRead,
+                    contentLength,
+                    speed));
+            },
+            stalledTransferTimeout: TimeSpan.FromMinutes(5),
+            cancelToken: cancellationToken);
+        progressReporter?.Invoke(new FrontendUpdateInstallProgressSnapshot(
+            FrontendUpdateInstallProgressPhase.Download,
+            archivePath,
+            new FileInfo(archivePath).Length,
+            contentLength,
+            0d));
     }
 
     private static void VerifyArchiveHash(string archivePath, string expectedSha256)
@@ -370,3 +446,20 @@ internal sealed record FrontendPreparedUpdateInstall(
     string ExtractedPackagePath,
     string InstallerScriptPath,
     FrontendUpdateInstallLayout Layout);
+
+internal enum FrontendUpdateInstallProgressPhase
+{
+    Prepare = 0,
+    Download = 1,
+    Verify = 2,
+    Extract = 3,
+    Finalize = 4,
+    Completed = 5
+}
+
+internal sealed record FrontendUpdateInstallProgressSnapshot(
+    FrontendUpdateInstallProgressPhase Phase,
+    string ArchivePath,
+    long DownloadedBytes,
+    long TotalBytes,
+    double SpeedBytesPerSecond);

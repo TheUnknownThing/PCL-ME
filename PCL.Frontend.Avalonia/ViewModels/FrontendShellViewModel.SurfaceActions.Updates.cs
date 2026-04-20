@@ -1,5 +1,6 @@
 using System.Text;
 using Avalonia;
+using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
@@ -70,6 +71,11 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task DownloadAvailableUpdateAsync()
     {
+        if (_isDownloadingLauncherUpdate)
+        {
+            return;
+        }
+
         if (_updateStatus.SurfaceState != UpdateSurfaceState.Available)
         {
             AddActivity(
@@ -89,12 +95,23 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
+            _isDownloadingLauncherUpdate = true;
             var preparedInstall = await PrepareAvailableUpdateAsync(target);
             await ApplyPreparedUpdateAsync(preparedInstall);
+        }
+        catch (OperationCanceledException)
+        {
+            AddActivity(
+                LT("setup.update.activities.download_install"),
+                LT("download.install.workflow.tasks.canceled"));
         }
         catch (Exception ex)
         {
             AddFailureActivity(LT("setup.update.activities.download_install_failed"), ex.Message);
+        }
+        finally
+        {
+            _isDownloadingLauncherUpdate = false;
         }
     }
 
@@ -179,6 +196,11 @@ internal sealed partial class FrontendShellViewModel
 
     private async Task PrepareAndPromptAvailableUpdateAsync()
     {
+        if (_isDownloadingLauncherUpdate)
+        {
+            return;
+        }
+
         var target = _updateStatus.AvailableUpdateDownloadUrl ?? _updateStatus.AvailableUpdateReleaseUrl;
         if (string.IsNullOrWhiteSpace(target))
         {
@@ -190,19 +212,11 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
+            _isDownloadingLauncherUpdate = true;
             var preparedInstall = await PrepareAvailableUpdateAsync(target);
-            var promptMessage = string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateChangelog)
-                ? _updateStatus.AvailableUpdateSummary
-                : _updateStatus.AvailableUpdateChangelog;
-            if (string.IsNullOrWhiteSpace(promptMessage))
-            {
-                promptMessage = LT("setup.update.states.available", ("version", _updateStatus.AvailableUpdateName));
-            }
-
             var confirmed = await ShowToolboxConfirmationAsync(
                 LT("setup.update.activities.view_detail_title", ("version", _updateStatus.AvailableUpdateName)),
-                promptMessage,
-                LT("setup.update.actions.download_and_install"));
+                BuildPreparedUpdateApplyPromptMessage());
             if (confirmed is not true)
             {
                 return;
@@ -210,27 +224,74 @@ internal sealed partial class FrontendShellViewModel
 
             await ApplyPreparedUpdateAsync(preparedInstall);
         }
+        catch (OperationCanceledException)
+        {
+            AddActivity(
+                LT("setup.update.activities.download_install"),
+                LT("download.install.workflow.tasks.canceled"));
+        }
         catch (Exception ex)
         {
             AddFailureActivity(LT("setup.update.activities.download_install_failed"), ex.Message);
         }
+        finally
+        {
+            _isDownloadingLauncherUpdate = false;
+        }
+    }
+
+    private string BuildPreparedUpdateApplyPromptMessage()
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(LT("setup.update.activities.package_ready", ("version", _updateStatus.AvailableUpdateName)));
+
+        var detail = string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateChangelog)
+            ? _updateStatus.AvailableUpdateSummary
+            : _updateStatus.AvailableUpdateChangelog;
+        if (!string.IsNullOrWhiteSpace(detail))
+        {
+            builder.AppendLine();
+            builder.AppendLine(detail.Trim());
+        }
+
+        return builder.ToString().Trim();
     }
 
     private async Task<FrontendPreparedUpdateInstall> PrepareAvailableUpdateAsync(string target)
     {
-        var preparedInstall = await FrontendUpdateInstallWorkflowService.PrepareAsync(
-            new FrontendUpdateInstallRequest(
-                DownloadUrl: target,
-                ReleaseFileStem: SanitizeFileSegment(_updateStatus.AvailableUpdateName),
-                ExpectedSha256: string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateSha256)
-                    ? null
-                    : _updateStatus.AvailableUpdateSha256,
-                ArtifactDirectory: _shellActionService.RuntimePaths.FrontendArtifactDirectory,
-                TempDirectory: _shellActionService.RuntimePaths.FrontendTempDirectory,
-                ExecutableDirectory: _shellActionService.RuntimePaths.ExecutableDirectory,
-                ProcessPath: Environment.ProcessPath,
-                ProcessId: Environment.ProcessId,
-                PlatformAdapter: _shellActionService.PlatformAdapter));
+        var request = new FrontendUpdateInstallRequest(
+            DownloadUrl: target,
+            ReleaseFileStem: SanitizeFileSegment(_updateStatus.AvailableUpdateName),
+            ExpectedSha256: string.IsNullOrWhiteSpace(_updateStatus.AvailableUpdateSha256)
+                ? null
+                : _updateStatus.AvailableUpdateSha256,
+            ArtifactDirectory: _shellActionService.RuntimePaths.FrontendArtifactDirectory,
+            TempDirectory: _shellActionService.RuntimePaths.FrontendTempDirectory,
+            ExecutableDirectory: _shellActionService.RuntimePaths.ExecutableDirectory,
+            ProcessPath: Environment.ProcessPath,
+            ProcessId: Environment.ProcessId,
+            PlatformAdapter: _shellActionService.PlatformAdapter);
+        var updateTask = new FrontendManagedUpdateInstallTask(
+            _i18n,
+            $"{LT("setup.update.activities.download_install")}: {_updateStatus.AvailableUpdateName}",
+            async (progressReporter, cancellationToken) =>
+            {
+                var preparedInstall = await FrontendUpdateInstallWorkflowService.PrepareAsync(
+                    request,
+                    progressReporter,
+                    cancellationToken);
+                WritePreparedUpdateRecord(target, preparedInstall);
+                return preparedInstall;
+            });
+
+        TaskCenter.Register(updateTask, start: false);
+        AddActivity(LT("setup.update.activities.download_install"), updateTask.Title);
+        await updateTask.ExecuteAsync();
+        return updateTask.Result ?? throw new InvalidOperationException(LT("setup.update.activities.download_install_failed"));
+    }
+
+    private void WritePreparedUpdateRecord(string target, FrontendPreparedUpdateInstall preparedInstall)
+    {
         var outputPath = Path.Combine(
             _shellActionService.RuntimePaths.FrontendArtifactDirectory,
             "update-downloads",
@@ -246,7 +307,6 @@ internal sealed partial class FrontendShellViewModel
             Extracted: {preparedInstall.ExtractedPackagePath}
             Script: {preparedInstall.InstallerScriptPath}
             """, new UTF8Encoding(false));
-        return preparedInstall;
     }
 
     private async Task ApplyPreparedUpdateAsync(FrontendPreparedUpdateInstall preparedInstall)

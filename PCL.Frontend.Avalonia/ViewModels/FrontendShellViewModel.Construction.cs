@@ -164,6 +164,7 @@ internal sealed partial class FrontendShellViewModel
     private int _selectedUpdateChannelIndex;
     private int _selectedUpdateModeIndex;
     private bool _isCheckingUpdate;
+    private bool _isDownloadingLauncherUpdate;
     private string _lastUpdateCheckSignature = string.Empty;
     private bool _isRefreshingFeedback;
     private DateTimeOffset _lastFeedbackRefreshUtc;
