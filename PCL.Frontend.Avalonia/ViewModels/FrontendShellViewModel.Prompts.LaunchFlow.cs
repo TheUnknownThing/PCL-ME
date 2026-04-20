@@ -25,32 +25,9 @@ internal sealed partial class FrontendShellViewModel
             return;
         }
 
-        await AwaitLatestSelectedInstanceRefreshAsync();
-        RefreshLaunchState();
-
         if (_isLaunchBlockedByPrompt)
         {
             AddActivity(T("shell.prompts.activities.launch_blocked.title"), T("shell.prompts.activities.launch_blocked.body"));
-            return;
-        }
-
-        if (!_launchComposition.PrecheckResult.IsSuccess)
-        {
-            AddFailureActivity(T("shell.prompts.activities.precheck_failed.title"), GetLaunchPrecheckFailureMessage());
-            return;
-        }
-
-        _dismissedLaunchPromptIds.Clear();
-        EnsureLaunchPromptLane();
-        if (_promptCatalog[AvaloniaPromptLaneKind.Launch].Count > 0)
-        {
-            _pendingLaunchAfterPrompt = true;
-            RebuildPromptLanes();
-            SetPromptOverlayOpen(true);
-            SelectPromptLane(AvaloniaPromptLaneKind.Launch, updateActivity: false);
-            AddActivity(
-                T("shell.prompts.activities.pending_launch_prompts.title"),
-                T("shell.prompts.activities.pending_launch_prompts.body", ("instance", LaunchVersionSubtitle), ("count", _promptCatalog[AvaloniaPromptLaneKind.Launch].Count)));
             return;
         }
 
@@ -128,7 +105,7 @@ internal sealed partial class FrontendShellViewModel
                 {
                     _pendingLaunchAfterPrompt = false;
                     AddActivity(T("shell.prompts.activities.java_runtime_ready.title"), T("shell.prompts.activities.java_runtime_resume.body"));
-                    _ = StartLaunchAsync();
+                    _ = StartLaunchAsync(resumeAfterPrompt: true);
                     return;
                 }
 
@@ -253,6 +230,9 @@ internal sealed partial class FrontendShellViewModel
             _showLaunchLog = true;
             ClearLaunchLogBuffer();
             RaiseLaunchSessionProperties();
+
+            await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+
             RefreshGameLogSurface();
 
             SetLaunchDialogRunningState(
@@ -278,6 +258,11 @@ internal sealed partial class FrontendShellViewModel
                 AddFailureActivity(T("shell.prompts.activities.precheck_failed.title"), failureMessage);
                 SetLaunchDialogStoppedState(T("shell.prompts.activities.precheck_failed.title"), failureMessage, isError: true);
                 return;
+            }
+
+            if (!resumeAfterPrompt)
+            {
+                _dismissedLaunchPromptIds.Clear();
             }
 
             EnsureLaunchPromptLane();
