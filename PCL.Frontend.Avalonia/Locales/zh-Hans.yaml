@@ -635,7 +635,7 @@ shell:
         title: 导入整合包
       trash:
         description: 打开系统回收站或废纸篓。
-        title: 回收站 / 废纸篓
+        title: 回收站
     subtitle:
       unknown_version: 未知版本
     tags:

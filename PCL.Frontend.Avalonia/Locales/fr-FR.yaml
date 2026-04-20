@@ -635,7 +635,7 @@ shell:
         title: Importer un modpack
       trash:
         description: Ouvrez la corbeille ou la corbeille du système.
-        title: Corbeille / Corbeille
+        title: Corbeille
     subtitle:
       unknown_version: Version inconnue
     tags:

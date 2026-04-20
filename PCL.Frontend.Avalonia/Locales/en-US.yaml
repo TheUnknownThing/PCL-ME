@@ -635,7 +635,7 @@ shell:
         title: Import Modpack
       trash:
         description: Open the system recycle bin or trash.
-        title: Recycle Bin / Trash
+        title: Recycle Bin
     subtitle:
       unknown_version: Unknown Version
     tags:

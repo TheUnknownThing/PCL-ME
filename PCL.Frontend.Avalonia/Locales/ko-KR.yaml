@@ -635,7 +635,7 @@ shell:
         title: 모드팩 가져오기
       trash:
         description: 시스템 휴지통이나 휴지통을 엽니다.
-        title: 휴지통/쓰레기통
+        title: 휴지통
     subtitle:
       unknown_version: 알 수 없는 버전
     tags:

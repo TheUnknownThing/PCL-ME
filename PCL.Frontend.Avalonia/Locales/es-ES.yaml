@@ -635,7 +635,7 @@ shell:
         title: Importar paquete de modificaciones
       trash:
         description: Abrir la papelera o papelera de reciclaje del sistema.
-        title: Papelera de reciclaje/Papelera
+        title: Papelera de reciclaje
     subtitle:
       unknown_version: Versión desconocida
     tags:
