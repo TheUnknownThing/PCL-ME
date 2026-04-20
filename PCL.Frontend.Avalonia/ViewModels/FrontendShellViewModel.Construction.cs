@@ -154,6 +154,9 @@ internal sealed partial class FrontendShellViewModel
     private string _launchLogVisibleText = string.Empty;
     private int _launchLogVisibleStartIndex;
     private bool _isLaunchLogViewportPinned = true;
+    private readonly object _pendingLaunchLogLock = new();
+    private readonly List<string> _pendingLaunchLogLines = [];
+    private int _pendingLaunchLogFlushScheduled;
     private string? _latestLaunchScriptPath;
     private string? _latestLaunchSessionSummaryPath;
     private string? _latestLaunchRawOutputLogPath;

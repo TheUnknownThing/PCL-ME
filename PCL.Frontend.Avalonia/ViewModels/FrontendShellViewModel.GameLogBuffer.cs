@@ -38,6 +38,12 @@ internal sealed partial class FrontendShellViewModel
 
     private void ClearLaunchLogBuffer()
     {
+        lock (_pendingLaunchLogLock)
+        {
+            _pendingLaunchLogLines.Clear();
+            _pendingLaunchLogFlushScheduled = 0;
+        }
+
         _launchLogLines.Clear();
         _launchLogVisibleStartIndex = 0;
         _isLaunchLogViewportPinned = true;
@@ -45,8 +51,16 @@ internal sealed partial class FrontendShellViewModel
     }
 
     private void AppendLaunchLogEntry(string line)
+        => AppendLaunchLogEntries([line]);
+
+    private void AppendLaunchLogEntries(IReadOnlyList<string> lines)
     {
-        _launchLogLines.Add(line);
+        if (lines.Count == 0)
+        {
+            return;
+        }
+
+        _launchLogLines.AddRange(lines);
         var removedCount = TrimLaunchLogBufferToRetentionLimit();
         if (_isLaunchLogViewportPinned)
         {
