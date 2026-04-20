@@ -29,17 +29,27 @@ internal sealed partial class FrontendShellActionService
         FrontendLaunchComposition launchComposition,
         string? instanceDirectory,
         Action<string>? onStageChanged = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool ensureRequiredArtifacts = true)
     {
         ArgumentNullException.ThrowIfNull(launchComposition);
 
-        var transferOptions = GetDownloadTransferOptions();
-        var speedLimiter = transferOptions.MaxBytesPerSecond is long speedLimit
-            ? new FrontendDownloadSpeedLimiter(speedLimit)
-            : null;
         cancellationToken.ThrowIfCancellationRequested();
-        onStageChanged?.Invoke("Checking runtime dependencies");
-        EnsureRequiredArtifacts(launchComposition.RequiredArtifacts, GetDownloadProvider(), transferOptions, speedLimiter, cancellationToken);
+        if (ensureRequiredArtifacts)
+        {
+            onStageChanged?.Invoke("Checking runtime dependencies");
+            EnsureRequiredLaunchArtifacts(
+                launchComposition.RequiredArtifacts,
+                snapshot =>
+                {
+                    if (!string.IsNullOrWhiteSpace(snapshot.CurrentFileName))
+                    {
+                        onStageChanged?.Invoke($"Downloading {snapshot.CurrentFileName}");
+                    }
+                },
+                cancellationToken);
+        }
+
         cancellationToken.ThrowIfCancellationRequested();
         onStageChanged?.Invoke("Synchronizing local game libraries");
         var nativeSyncResult = EnsureNativeLibraries(launchComposition.NativeSyncRequest);
@@ -176,43 +186,110 @@ internal sealed partial class FrontendShellActionService
         }
     }
 
+    public void EnsureRequiredLaunchArtifacts(
+        IReadOnlyList<FrontendLaunchArtifactRequirement> requirements,
+        Action<FrontendLaunchArtifactProgressSnapshot>? progressReporter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var transferOptions = GetDownloadTransferOptions();
+        var speedLimiter = transferOptions.MaxBytesPerSecond is long speedLimit
+            ? new FrontendDownloadSpeedLimiter(speedLimit)
+            : null;
+        EnsureRequiredArtifacts(
+            requirements,
+            GetDownloadProvider(),
+            transferOptions,
+            speedLimiter,
+            progressReporter,
+            cancellationToken);
+    }
+
     private static void EnsureRequiredArtifacts(
         IReadOnlyList<FrontendLaunchArtifactRequirement> requirements,
         FrontendDownloadProvider downloadProvider,
         FrontendDownloadTransferOptions transferOptions,
         FrontendDownloadSpeedLimiter? speedLimiter = null,
+        Action<FrontendLaunchArtifactProgressSnapshot>? progressReporter = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(requirements);
 
-        foreach (var requirement in requirements)
+        var missingRequirements = requirements
+            .Where(requirement => !File.Exists(requirement.TargetPath))
+            .ToArray();
+        var completedCount = 0;
+        progressReporter?.Invoke(new FrontendLaunchArtifactProgressSnapshot(0, missingRequirements.Length, string.Empty, 0L, 0d));
+
+        foreach (var requirement in missingRequirements)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (File.Exists(requirement.TargetPath))
-            {
-                continue;
-            }
 
             Directory.CreateDirectory(Path.GetDirectoryName(requirement.TargetPath)!);
             Exception? lastError = null;
             foreach (var url in downloadProvider.GetPreferredUrls(requirement.DownloadUrl))
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                var tempPath = requirement.TargetPath + ".download";
+                var lastReportedBytes = 0L;
+                var lastReportedAt = Environment.TickCount64;
                 try
                 {
+                    TryDeleteFile(tempPath);
                     FrontendDownloadTransferService.DownloadToPath(
                         JavaRuntimeHttpClient,
                         url,
-                        requirement.TargetPath,
+                        tempPath,
+                        transferredBytes =>
+                        {
+                            var now = Environment.TickCount64;
+                            if (now - lastReportedAt < 250)
+                            {
+                                return;
+                            }
+
+                            var elapsedSeconds = Math.Max((now - lastReportedAt) / 1000d, 0.001d);
+                            var speed = (transferredBytes - lastReportedBytes) / elapsedSeconds;
+                            lastReportedAt = now;
+                            lastReportedBytes = transferredBytes;
+                            progressReporter?.Invoke(new FrontendLaunchArtifactProgressSnapshot(
+                                completedCount,
+                                missingRequirements.Length,
+                                Path.GetFileName(requirement.TargetPath),
+                                transferredBytes,
+                                speed));
+                        },
                         speedLimiter: speedLimiter,
                         stalledTransferTimeout: transferOptions.StalledTransferTimeout,
                         maxAttempts: transferOptions.MaxFileDownloadAttempts,
                         cancelToken: cancellationToken);
+                    if (!string.IsNullOrWhiteSpace(requirement.Sha1))
+                    {
+                        var actualSha1 = ComputeSha1FromFile(tempPath);
+                        if (!string.Equals(actualSha1, requirement.Sha1, StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new InvalidOperationException($"Launch file verification failed: {Path.GetFileName(requirement.TargetPath)}");
+                        }
+                    }
+
+                    File.Move(tempPath, requirement.TargetPath, overwrite: true);
+                    completedCount++;
+                    progressReporter?.Invoke(new FrontendLaunchArtifactProgressSnapshot(
+                        completedCount,
+                        missingRequirements.Length,
+                        Path.GetFileName(requirement.TargetPath),
+                        0L,
+                        0d));
                     lastError = null;
                     break;
                 }
+                catch (OperationCanceledException)
+                {
+                    TryDeleteFile(tempPath);
+                    throw;
+                }
                 catch (Exception ex)
                 {
+                    TryDeleteFile(tempPath);
                     lastError = ex;
                 }
             }
@@ -242,6 +319,13 @@ internal sealed partial class FrontendShellActionService
     public string GetLatestLaunchScriptPath() => FrontendLauncherPathService.GetLatestLaunchScriptPath(RuntimePaths, PlatformAdapter);
 
     public void EnsureFileExecutable(string path) => PlatformAdapter.EnsureFileExecutable(path);
+
+    public sealed record FrontendLaunchArtifactProgressSnapshot(
+        int CompletedFileCount,
+        int TotalFileCount,
+        string CurrentFileName,
+        long CurrentFileBytes,
+        double SpeedBytesPerSecond);
 
     private void CleanupLegacyLaunchScripts(string launcherDataDirectory, string retainedPath)
     {

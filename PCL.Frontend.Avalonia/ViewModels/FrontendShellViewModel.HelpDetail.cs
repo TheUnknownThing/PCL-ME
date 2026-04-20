@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Net;
 using System.Text;
 using System.Xml.Linq;
+using Avalonia.Threading;
+using PCL.Core.App.Tasks;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
@@ -417,23 +419,21 @@ internal sealed partial class FrontendShellViewModel
 
         try
         {
-            using var client = CreateToolHttpClient();
             Directory.CreateDirectory(ToolDownloadFolder);
             var fileName = Path.GetFileName(uri.LocalPath);
             fileName = string.IsNullOrWhiteSpace(fileName) ? "help-download.bin" : SanitizeFileSegment(fileName);
             var targetPath = Path.Combine(ToolDownloadFolder, fileName);
-            var transferOptions = _shellActionService.GetDownloadTransferOptions();
-            var speedLimiter = transferOptions.MaxBytesPerSecond is long speedLimit
-                ? new FrontendDownloadSpeedLimiter(speedLimit)
-                : null;
-            await FrontendDownloadTransferService.DownloadToPathAsync(
-                client,
+            TaskCenter.Register(new FrontendManagedFileDownloadTask(
+                title,
                 uri.ToString(),
                 targetPath,
-                speedLimiter: speedLimiter,
-                stalledTransferTimeout: transferOptions.StalledTransferTimeout,
-                maxAttempts: transferOptions.MaxFileDownloadAttempts);
-            OpenInstanceTarget(title, targetPath, LT("shell.help_detail.failures.download_target_missing"));
+                ResolveDownloadRequestTimeout(),
+                _shellActionService.GetDownloadTransferOptions(),
+                onCompleted: filePath => Dispatcher.UIThread.Post(() =>
+                    OpenInstanceTarget(title, filePath, LT("shell.help_detail.failures.download_target_missing"))),
+                onFailed: message => Dispatcher.UIThread.Post(() =>
+                    AddFailureActivity(LT("shell.help_detail.failures.action", ("title", title)), message))));
+            AddActivity(title, targetPath);
         }
         catch (Exception ex)
         {

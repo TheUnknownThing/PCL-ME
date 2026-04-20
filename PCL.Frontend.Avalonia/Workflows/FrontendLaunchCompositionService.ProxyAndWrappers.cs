@@ -488,9 +488,12 @@ internal static partial class FrontendLaunchCompositionService
                 return null;
             }
 
-            var bytes = JavaRuntimeHttpClient.GetByteArrayAsync(downloadUrl)
-                .GetAwaiter()
-                .GetResult();
+            var tempPath = targetPath + ".download";
+            TryDeleteFile(tempPath);
+            FrontendDownloadTransferService.DownloadToPath(
+                JavaRuntimeHttpClient,
+                downloadUrl,
+                tempPath);
 
             if (root.TryGetProperty("checksums", out var checksums) &&
                 checksums.TryGetProperty("sha256", out var sha256Element))
@@ -498,22 +501,39 @@ internal static partial class FrontendLaunchCompositionService
                 var expectedSha256 = sha256Element.GetString();
                 if (!string.IsNullOrWhiteSpace(expectedSha256))
                 {
-                    var actualSha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
+                    using var tempStream = File.OpenRead(tempPath);
+                    var actualSha256 = Convert.ToHexStringLower(SHA256.HashData(tempStream));
                     if (!string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
                     {
+                        TryDeleteFile(tempPath);
                         LogWrapper.Warn("Launch", $"Downloaded authlib-injector checksum mismatch: expected={expectedSha256}, actual={actualSha256}");
                         return null;
                     }
                 }
             }
 
-            File.WriteAllBytes(targetPath, bytes);
+            File.Move(tempPath, targetPath, overwrite: true);
             return IsJavaAgentJar(targetPath) ? targetPath : null;
         }
         catch (Exception ex)
         {
             LogWrapper.Warn(ex, "Launch", "Failed to download authlib-injector jar.");
             return null;
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup for temporary launch composition files.
         }
     }
 

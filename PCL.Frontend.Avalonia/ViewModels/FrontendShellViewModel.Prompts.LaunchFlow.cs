@@ -320,6 +320,7 @@ internal sealed partial class FrontendShellViewModel
                 isError: false);
 
             await EnsureLaunchFilesAsync(launchCancellation.Token);
+            await EnsureLaunchRequiredArtifactsAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
 
             SetLaunchDialogRunningState(
@@ -338,7 +339,8 @@ internal sealed partial class FrontendShellViewModel
                     ResolveLaunchDialogStartupProgress(stage),
                     showDownload: false,
                     isError: false)),
-                launchCancellation.Token));
+                launchCancellation.Token,
+                ensureRequiredArtifacts: false));
             _activeLaunchProcess = startResult.Process;
             _latestLaunchScriptPath = startResult.LaunchScriptPath;
             _latestLaunchSessionSummaryPath = startResult.SessionSummaryPath;
@@ -492,6 +494,53 @@ internal sealed partial class FrontendShellViewModel
         {
             throw new InvalidOperationException(T("launch.status.errors.instance_verification_failed", ("message", ex.Message)), ex);
         }
+    }
+
+    private async Task EnsureLaunchRequiredArtifactsAsync(CancellationToken cancellationToken)
+    {
+        var missingRequirements = _launchComposition.RequiredArtifacts
+            .Where(requirement => !File.Exists(requirement.TargetPath))
+            .ToArray();
+        if (missingRequirements.Length == 0)
+        {
+            return;
+        }
+
+        AppendLaunchLogLine(T("launch.status.logs.task_manager_progress"));
+        var task = new FrontendManagedLaunchArtifactDownloadTask(
+            _i18n,
+            T("download.install.workflow.tasks.downloading_dependencies"),
+            (progressReporter, taskCancellationToken) => Task.Run(
+                () => _shellActionService.EnsureRequiredLaunchArtifacts(
+                    missingRequirements,
+                    snapshot =>
+                    {
+                        progressReporter(snapshot);
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            var detail = string.IsNullOrWhiteSpace(snapshot.CurrentFileName)
+                                ? T("download.install.workflow.tasks.downloading_dependencies")
+                                : snapshot.CurrentFileName;
+                            SetLaunchDialogRunningState(
+                                T("launch.dialog.state.running.title"),
+                                detail,
+                                Math.Clamp(0.74d + ResolveLaunchArtifactProgress(snapshot) * 0.1d, 0.74d, 0.84d),
+                                showDownload: true,
+                                isError: false);
+                        });
+                    },
+                    taskCancellationToken),
+                taskCancellationToken));
+
+        TaskCenter.Register(task, start: false);
+        await task.ExecuteAsync(cancellationToken);
+    }
+
+    private static double ResolveLaunchArtifactProgress(FrontendShellActionService.FrontendLaunchArtifactProgressSnapshot snapshot)
+    {
+        return snapshot.TotalFileCount <= 0
+            ? 1d
+            : Math.Clamp(snapshot.CompletedFileCount / (double)snapshot.TotalFileCount, 0d, 1d);
     }
 
     private async Task MonitorLaunchSessionAsync(FrontendLaunchStartResult startResult)
