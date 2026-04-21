@@ -63,6 +63,7 @@ internal sealed class App : Application
     {
         try
         {
+            FrontendAppearanceService.ReapplyCurrentAppearance(this);
             FrontendLinuxDesktopEntryService.EnsureRegistered();
             var localeDirectory = Path.Combine(AppContext.BaseDirectory, "Locales");
             var availableLocales = Directory.EnumerateFiles(localeDirectory, "*.yaml", SearchOption.TopDirectoryOnly)
@@ -79,9 +80,10 @@ internal sealed class App : Application
                 platformAdapter,
                 () => desktop.Shutdown(),
                 _i18nService);
+            var shellViewModel = FrontendShellViewModel.CreateBootstrap(_options, shellActionService, _i18nService);
             var mainWindow = new MainWindow
             {
-                DataContext = FrontendShellViewModel.CreateBootstrap(_options, shellActionService, _i18nService)
+                DataContext = shellViewModel
             };
 
             mainWindow.Opened += async (_, _) =>
