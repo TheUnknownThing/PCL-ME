@@ -23,7 +23,7 @@
       <Setter Property="Foreground" Value="{DynamicResource ColorBrush3}" />
     </Style>
   </UserControl.Styles>
-  <Border Background="{DynamicResource ColorBrushBackground}">
+  <Border Background="{DynamicResource ColorBrushTransparent}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <StackPanel Margin="0,12,0,0">
         <StackPanel>
