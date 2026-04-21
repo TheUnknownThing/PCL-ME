@@ -34,9 +34,9 @@ internal sealed partial class FrontendShellViewModel
             T("shell.prompts.activities.crash_report_exported.body", ("path", exportResult.ArchivePath), ("count", exportResult.ArchivedFileCount)));
     }
 
-    private void ShowCrashPromptForLaunchFailure(FrontendLaunchStartResult startResult)
+    private void ShowCrashPromptForLaunchFailure(CrashAvaloniaPlan crashPlan)
     {
-        _activeCrashPlan = BuildCrashPlanForLaunchFailure(startResult);
+        _activeCrashPlan = crashPlan;
         EnsureCrashPromptLane();
         RebuildPromptLanes();
         SetPromptOverlayOpen(true);

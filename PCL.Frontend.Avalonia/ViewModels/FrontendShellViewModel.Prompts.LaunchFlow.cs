@@ -17,6 +17,16 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class FrontendShellViewModel
 {
+    private sealed record LaunchStateRefreshSnapshot(
+        FrontendSetupComposition SetupComposition,
+        FrontendInstanceComposition InstanceComposition,
+        FrontendInstanceCompositionService.LoadMode InstanceLoadMode,
+        FrontendToolsComposition ToolsComposition,
+        FrontendVersionSavesComposition VersionSavesComposition,
+        FrontendDownloadComposition DownloadComposition,
+        bool DownloadCompositionHasRemoteState,
+        FrontendLaunchComposition LaunchComposition);
+
     private async Task HandleLaunchRequestedAsync()
     {
         if (_isLaunchInProgress)
@@ -568,12 +578,13 @@ internal sealed partial class FrontendShellViewModel
             }
 
             await startResult.Process.WaitForExitAsync();
-            _shellActionService.ApplyWatcherStopShellPlan(_launchComposition);
+            await Dispatcher.UIThread.InvokeAsync(() => _shellActionService.ApplyWatcherStopShellPlan(_launchComposition));
             AppendLaunchLogLine(T("shell.prompts.launch_logs.process_exited", ("exit_code", startResult.Process.ExitCode)));
             AddActivity(T("shell.prompts.activities.game_process_ended.title"), T("shell.prompts.activities.game_process_ended.body", ("instance", LaunchVersionSubtitle), ("exit_code", startResult.Process.ExitCode)));
             if (startResult.Process.ExitCode != 0 && !_launchProcessTerminationRequested)
             {
-                await Dispatcher.UIThread.InvokeAsync(() => ShowCrashPromptForLaunchFailure(startResult));
+                var crashPlan = await Task.Run(() => BuildCrashPlanForLaunchFailure(startResult));
+                await Dispatcher.UIThread.InvokeAsync(() => ShowCrashPromptForLaunchFailure(crashPlan));
             }
         }
         catch (Exception ex)
@@ -584,19 +595,36 @@ internal sealed partial class FrontendShellViewModel
         }
         finally
         {
+            var refreshTask = BuildLaunchStateRefreshSnapshotAsync();
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 _activeLaunchProcess = null;
                 _launchProcessTerminationRequested = false;
                 _isLaunchInProgress = false;
                 RaiseLaunchSessionProperties();
-                RefreshLaunchState();
-                RefreshGameLogSurface();
                 if (IsLaunchDialogVisible)
                 {
                     HideLaunchDialog();
                 }
             });
+
+            try
+            {
+                var snapshot = await refreshTask;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    ApplyLaunchStateRefreshSnapshot(snapshot);
+                    RefreshGameLogSurface();
+                });
+            }
+            catch (Exception ex)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    AddFailureActivity(T("shell.prompts.activities.monitor_exception.title"), ex.Message);
+                    RefreshGameLogSurface();
+                });
+            }
         }
     }
 
@@ -607,6 +635,79 @@ internal sealed partial class FrontendShellViewModel
         ApplyLaunchComposition(
             FrontendLaunchCompositionService.Compose(_options, _shellActionService.RuntimePaths, i18n: _i18n),
             normalizeLaunchProfileSurface: true);
+    }
+
+    private Task<LaunchStateRefreshSnapshot> BuildLaunchStateRefreshSnapshotAsync()
+    {
+        var options = _options;
+        var runtimePaths = _shellActionService.RuntimePaths;
+        var i18n = _i18n;
+        var loadMode = ResolveInstanceCompositionLoadMode(_currentRoute);
+        var selectedVersionSavePath = _selectedVersionSavePath;
+        var includeDownloadRemoteState = _downloadCompositionHasRemoteState;
+
+        return Task.Run(() =>
+        {
+            FrontendHttpProxyService.ApplyStoredProxySettings(runtimePaths);
+            FrontendHttpProxyService.ApplyStoredDnsSettings(runtimePaths);
+
+            var setupComposition = FrontendSetupCompositionService.Compose(runtimePaths, i18n);
+            var instanceComposition = FrontendInstanceCompositionService.Compose(runtimePaths, loadMode, i18n);
+            var toolsComposition = FrontendToolsCompositionService.Compose(runtimePaths, i18n);
+            var versionSavesComposition = FrontendVersionSavesCompositionService.Compose(
+                instanceComposition,
+                selectedVersionSavePath);
+            var downloadComposition = includeDownloadRemoteState
+                ? FrontendDownloadCompositionService.Compose(
+                    runtimePaths,
+                    instanceComposition,
+                    versionSavesComposition,
+                    i18n)
+                : FrontendDownloadCompositionService.ComposeBootstrap(
+                    runtimePaths,
+                    instanceComposition,
+                    i18n);
+            var launchComposition = FrontendLaunchCompositionService.Compose(options, runtimePaths, i18n: i18n);
+
+            return new LaunchStateRefreshSnapshot(
+                setupComposition,
+                instanceComposition,
+                loadMode,
+                toolsComposition,
+                versionSavesComposition,
+                downloadComposition,
+                includeDownloadRemoteState,
+                launchComposition);
+        });
+    }
+
+    private void ApplyLaunchStateRefreshSnapshot(LaunchStateRefreshSnapshot snapshot)
+    {
+        ApplySetupComposition(snapshot.SetupComposition);
+        _instanceCompositionLoadMode = snapshot.InstanceLoadMode;
+        ApplyInstanceComposition(snapshot.InstanceComposition);
+        ApplyToolsComposition(snapshot.ToolsComposition);
+
+        _versionSavesComposition = snapshot.VersionSavesComposition;
+        _versionSaveDatapackSortMethod = VersionSaveDatapackSortMethod.ResourceName;
+        if (_versionSavesComposition.Selection.HasSelection)
+        {
+            _selectedVersionSavePath = _versionSavesComposition.Selection.SavePath;
+        }
+
+        RefreshVersionSaveSurfaces();
+        RaiseDownloadResourceFilterState();
+        RaiseCommunityProjectProperties();
+
+        _downloadFavoriteRefreshCts?.Cancel();
+        _downloadFavoriteRefreshCts = null;
+        _downloadFavoriteRefreshVersion++;
+        _isDownloadFavoriteLoading = false;
+        _downloadComposition = snapshot.DownloadComposition;
+        _downloadCompositionHasRemoteState = snapshot.DownloadCompositionHasRemoteState;
+        SyncDownloadFavoriteTargets();
+
+        ApplyLaunchComposition(snapshot.LaunchComposition, normalizeLaunchProfileSurface: true);
     }
 
     private async Task RefreshLaunchProfileCompositionAsync()
@@ -649,16 +750,47 @@ internal sealed partial class FrontendShellViewModel
 
     private void AppendLaunchLogLine(string line)
     {
-        Dispatcher.UIThread.Post(() =>
+        if (string.IsNullOrWhiteSpace(line))
         {
-            AppendLaunchLogEntry(line);
-            RaiseGameLogSurfaceProperties();
-            if (!_showLaunchLog)
+            return;
+        }
+
+        lock (_pendingLaunchLogLock)
+        {
+            _pendingLaunchLogLines.Add(line);
+            if (_pendingLaunchLogFlushScheduled != 0)
             {
-                _showLaunchLog = true;
-                RaisePropertyChanged(nameof(ShowLaunchLog));
+                return;
             }
-        });
+
+            _pendingLaunchLogFlushScheduled = 1;
+        }
+
+        Dispatcher.UIThread.Post(FlushPendingLaunchLogLines, DispatcherPriority.Background);
+    }
+
+    private void FlushPendingLaunchLogLines()
+    {
+        string[] lines;
+        lock (_pendingLaunchLogLock)
+        {
+            lines = _pendingLaunchLogLines.ToArray();
+            _pendingLaunchLogLines.Clear();
+            _pendingLaunchLogFlushScheduled = 0;
+        }
+
+        if (lines.Length == 0)
+        {
+            return;
+        }
+
+        AppendLaunchLogEntries(lines);
+        RaiseGameLogSurfaceProperties();
+        if (!_showLaunchLog)
+        {
+            _showLaunchLog = true;
+            RaisePropertyChanged(nameof(ShowLaunchLog));
+        }
     }
 
     private void ShowLaunchCompletionNotification()
