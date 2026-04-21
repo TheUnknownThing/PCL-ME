@@ -165,14 +165,16 @@ internal sealed partial class FrontendShellViewModel
         }
 
         var succeededEntries = new List<string>();
+        var movedEntries = new List<(string OldPath, string NewPath, bool IsEnabled)>();
         var failedEntries = new List<string>();
 
         foreach (var entry in candidates)
         {
             try
             {
-                SetInstanceResourceEnabled(entry.Path, isEnabled);
+                var newPath = SetInstanceResourceEnabled(entry.Path, isEnabled);
                 succeededEntries.Add(entry.Title);
+                movedEntries.Add((entry.Path, newPath, isEnabled));
             }
             catch (Exception ex)
             {
@@ -180,7 +182,7 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        ReloadInstanceComposition();
+        ApplyInstanceResourceToggleResults(movedEntries);
         if (succeededEntries.Count > 0)
         {
             AddActivity(
@@ -261,6 +263,7 @@ internal sealed partial class FrontendShellViewModel
         Directory.CreateDirectory(trashDirectory);
 
         var succeededEntries = new List<string>();
+        var deletedPaths = new List<string>();
         var failedEntries = new List<string>();
         foreach (var entry in entries)
         {
@@ -268,6 +271,7 @@ internal sealed partial class FrontendShellViewModel
             {
                 MoveInstanceResourceToTrash(entry.Path, trashDirectory);
                 succeededEntries.Add(entry.Title);
+                deletedPaths.Add(entry.Path);
             }
             catch (Exception ex)
             {
@@ -275,7 +279,7 @@ internal sealed partial class FrontendShellViewModel
             }
         }
 
-        ReloadInstanceComposition();
+        ApplyInstanceResourceDeleteResults(deletedPaths);
         if (succeededEntries.Count > 0)
         {
             AddActivity(activityTitle, SD("instance.content.resource.messages.deleted_completed", ("count", succeededEntries.Count)));
@@ -309,7 +313,7 @@ internal sealed partial class FrontendShellViewModel
         OpenInstanceTarget(activityTitle, outputPath, SD("instance.content.resource.messages.export_missing"));
     }
 
-    private void SetInstanceResourceEnabled(string path, bool isEnabled)
+    private string SetInstanceResourceEnabled(string path, bool isEnabled)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -335,12 +339,114 @@ internal sealed partial class FrontendShellViewModel
 
             var enabledPath = GetUniqueChildPath(Path.GetDirectoryName(path)!, enabledFileName);
             File.Move(path, enabledPath);
-            return;
+            return enabledPath;
         }
 
         var disabledFileName = $"{Path.GetFileName(path)}.disabled";
         var disabledPath = GetUniqueChildPath(Path.GetDirectoryName(path)!, disabledFileName);
         File.Move(path, disabledPath);
+        return disabledPath;
+    }
+
+    private void ApplyInstanceResourceToggleResults(IReadOnlyList<(string OldPath, string NewPath, bool IsEnabled)> movedEntries)
+    {
+        if (movedEntries.Count == 0)
+        {
+            return;
+        }
+
+        var enabledEntries = _instanceComposition.Mods.Entries.ToList();
+        var disabledEntries = _instanceComposition.DisabledMods.Entries.ToList();
+
+        foreach (var move in movedEntries)
+        {
+            var sourceEntries = move.IsEnabled ? disabledEntries : enabledEntries;
+            var targetEntries = move.IsEnabled ? enabledEntries : disabledEntries;
+            var entry = RemoveInstanceResourceEntry(sourceEntries, move.OldPath)
+                        ?? RemoveInstanceResourceEntry(targetEntries, move.OldPath);
+            if (entry is null)
+            {
+                continue;
+            }
+
+            targetEntries.Add(entry with
+            {
+                Path = move.NewPath,
+                IsEnabled = move.IsEnabled
+            });
+
+            if (_instanceResourceSelectedPaths.Remove(move.OldPath))
+            {
+                _instanceResourceSelectedPaths.Add(move.NewPath);
+            }
+        }
+
+        _instanceComposition = _instanceComposition with
+        {
+            Mods = new FrontendInstanceResourceState(SortInstanceResourceEntriesByFileName(enabledEntries)),
+            DisabledMods = new FrontendInstanceResourceState(SortInstanceResourceEntriesByFileName(disabledEntries))
+        };
+
+        RefreshInstanceResourceEntries();
+    }
+
+    private static FrontendInstanceResourceEntry? RemoveInstanceResourceEntry(
+        IList<FrontendInstanceResourceEntry> entries,
+        string path)
+    {
+        for (var i = 0; i < entries.Count; i++)
+        {
+            if (!string.Equals(entries[i].Path, path, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var entry = entries[i];
+            entries.RemoveAt(i);
+            return entry;
+        }
+
+        return null;
+    }
+
+    private static FrontendInstanceResourceEntry[] SortInstanceResourceEntriesByFileName(
+        IEnumerable<FrontendInstanceResourceEntry> entries)
+    {
+        return entries
+            .OrderBy(entry => Path.GetFileName(entry.Path), StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private void ApplyInstanceResourceDeleteResults(IReadOnlyCollection<string> deletedPaths)
+    {
+        if (deletedPaths.Count == 0)
+        {
+            return;
+        }
+
+        var deletedPathSet = new HashSet<string>(deletedPaths, StringComparer.OrdinalIgnoreCase);
+        _instanceResourceSelectedPaths.ExceptWith(deletedPathSet);
+
+        _instanceComposition = _instanceComposition with
+        {
+            Mods = RemoveInstanceResourceEntries(_instanceComposition.Mods, deletedPathSet),
+            DisabledMods = RemoveInstanceResourceEntries(_instanceComposition.DisabledMods, deletedPathSet),
+            ResourcePacks = RemoveInstanceResourceEntries(_instanceComposition.ResourcePacks, deletedPathSet),
+            Shaders = RemoveInstanceResourceEntries(_instanceComposition.Shaders, deletedPathSet),
+            Schematics = RemoveInstanceResourceEntries(_instanceComposition.Schematics, deletedPathSet)
+        };
+
+        RefreshInstanceResourceEntries();
+    }
+
+    private static FrontendInstanceResourceState RemoveInstanceResourceEntries(
+        FrontendInstanceResourceState state,
+        ISet<string> deletedPaths)
+    {
+        return new FrontendInstanceResourceState(
+            state.Entries
+                .Where(entry => !deletedPaths.Contains(entry.Path))
+                .ToArray());
     }
 
     private void CheckInstanceMods() => _ = CheckInstanceModsAsync();
