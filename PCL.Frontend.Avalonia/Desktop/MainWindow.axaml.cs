@@ -92,7 +92,7 @@ internal sealed partial class MainWindow : Window
         };
         Closed += OnWindowClosed;
         Deactivated += OnWindowDeactivated;
-        KeyDown += OnWindowKeyDown;
+        AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Bubble, handledEventsToo: true);
         KeyUp += OnWindowKeyUp;
         TextInput += OnWindowTextInput;
         PropertyChanged += OnWindowPropertyChanged;
@@ -261,7 +261,7 @@ internal sealed partial class MainWindow : Window
         ResourcesChanged -= OnWindowResourcesChanged;
         Closed -= OnWindowClosed;
         Deactivated -= OnWindowDeactivated;
-        KeyDown -= OnWindowKeyDown;
+        RemoveHandler(KeyDownEvent, OnWindowKeyDown);
         KeyUp -= OnWindowKeyUp;
         TextInput -= OnWindowTextInput;
 
@@ -290,6 +290,12 @@ internal sealed partial class MainWindow : Window
     {
         var shellViewModel = _shellViewModel;
         shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+
+        if (e.Key == Key.Escape && TryClearFocusedElement())
+        {
+            e.Handled = true;
+            return;
+        }
 
         if (shellViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
         {
@@ -342,6 +348,23 @@ internal sealed partial class MainWindow : Window
             shellViewModel.BackCommand.Execute(null);
             e.Handled = true;
         }
+    }
+
+    private bool TryClearFocusedElement()
+    {
+        if (TopLevel.GetTopLevel(this)?.FocusManager is not { } focusManager)
+        {
+            return false;
+        }
+
+        var focusedElement = focusManager.GetFocusedElement();
+        if (focusedElement is null || ReferenceEquals(focusedElement, this))
+        {
+            return false;
+        }
+
+        focusManager.ClearFocus();
+        return true;
     }
 
     private void OnWindowKeyUp(object? sender, KeyEventArgs e)
