@@ -228,29 +228,13 @@ internal sealed partial class FrontendShellViewModel
         {
             var launchCancellation = new CancellationTokenSource();
             _launchSessionCancellation = launchCancellation;
-            ShowLaunchDialog();
-            SetLaunchDialogRunningState(
-                T("launch.dialog.state.running.title"),
-                T("launch.dialog.state.running.initializing"),
-                0d,
-                showDownload: false,
-                isError: false);
 
             _isLaunchInProgress = true;
             _showLaunchLog = true;
             ClearLaunchLogBuffer();
             RaiseLaunchSessionProperties();
 
-            await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-
             RefreshGameLogSurface();
-
-            SetLaunchDialogRunningState(
-                "Launching game",
-                "Synchronizing instance state",
-                0.01d,
-                showDownload: false,
-                isError: false);
 
             await AwaitLatestSelectedInstanceRefreshAsync();
             launchCancellation.Token.ThrowIfCancellationRequested();
@@ -288,6 +272,16 @@ internal sealed partial class FrontendShellViewModel
                 RaiseLaunchSessionProperties();
                 return;
             }
+
+            ShowLaunchDialog();
+            SetLaunchDialogRunningState(
+                T("launch.dialog.state.running.title"),
+                T("launch.dialog.state.running.initializing"),
+                0d,
+                showDownload: false,
+                isError: false);
+
+            await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
 
             if (_launchComposition.SelectedJavaRuntime is null)
             {
