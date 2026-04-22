@@ -40,6 +40,12 @@
           <controls:PclButton
               MinWidth="130"
               Margin="5,0"
+              Command="{Binding RefreshInstanceResourceCommand}"
+              IsVisible="{Binding ShowInstanceResourceEmptyInstallActions}"
+              Text="{Binding InstanceResourceRefreshText}" />
+          <controls:PclButton
+              MinWidth="130"
+              Margin="5,0"
               Command="{Binding VersionSelectCommand}"
               IsVisible="{Binding ShowInstanceResourceInstanceSelectAction}"
               Text="{Binding InstanceResourceInstanceSelectText}" />

@@ -11,17 +11,70 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static partial class FrontendInstanceCompositionService
 {
+    private const int MaxLocalModMetadataCacheEntries = 2048;
+    private static readonly object LocalModMetadataCacheLock = new();
+    private static readonly Dictionary<string, LocalModMetadataCacheEntry> LocalModMetadataCache = new(StringComparer.OrdinalIgnoreCase);
+
     private static RecognizedModMetadata? TryReadLocalModMetadata(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        FileInfo file;
+        try
+        {
+            file = new FileInfo(path);
+            if (!file.Exists)
+            {
+                return null;
+            }
+        }
+        catch
+        {
+            return null;
+        }
+
+        var cacheKey = file.FullName;
+        lock (LocalModMetadataCacheLock)
+        {
+            if (LocalModMetadataCache.TryGetValue(cacheKey, out var cached)
+                && cached.Length == file.Length
+                && cached.LastWriteTimeUtc == file.LastWriteTimeUtc)
+            {
+                return cached.Metadata;
+            }
+        }
+
+        var metadata = ReadLocalModMetadataUncached(file.FullName);
+        lock (LocalModMetadataCacheLock)
+        {
+            if (LocalModMetadataCache.Count >= MaxLocalModMetadataCacheEntries)
+            {
+                LocalModMetadataCache.Clear();
+            }
+
+            LocalModMetadataCache[cacheKey] = new LocalModMetadataCacheEntry(
+                file.Length,
+                file.LastWriteTimeUtc,
+                metadata);
+        }
+
+        return metadata;
+    }
+
+    private static RecognizedModMetadata? ReadLocalModMetadataUncached(string path)
     {
         try
         {
             using var archive = ZipFile.OpenRead(path);
             return TryReadFabricModMetadata(archive)
-                ?? TryReadQuiltModMetadata(archive)
-                ?? TryReadForgeModMetadata(archive, neoforge: true)
-                ?? TryReadForgeModMetadata(archive, neoforge: false)
-                ?? TryReadForgeLegacyMetadata(archive)
-                ?? TryReadLiteLoaderMetadata(archive);
+                   ?? TryReadQuiltModMetadata(archive)
+                   ?? TryReadForgeModMetadata(archive, neoforge: true)
+                   ?? TryReadForgeModMetadata(archive, neoforge: false)
+                   ?? TryReadForgeLegacyMetadata(archive)
+                   ?? TryReadLiteLoaderMetadata(archive);
         }
         catch
         {

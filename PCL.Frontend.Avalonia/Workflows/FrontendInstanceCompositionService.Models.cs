@@ -21,6 +21,11 @@ internal static partial class FrontendInstanceCompositionService
         string Loader,
         byte[]? IconBytes);
 
+    private sealed record LocalModMetadataCacheEntry(
+        long Length,
+        DateTime LastWriteTimeUtc,
+        RecognizedModMetadata? Metadata);
+
     private sealed record FrontendJavaEntry(
         string ExecutablePath,
         string DisplayName,

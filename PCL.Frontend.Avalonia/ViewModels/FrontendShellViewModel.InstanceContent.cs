@@ -46,6 +46,9 @@ internal sealed partial class FrontendShellViewModel
         public string RefreshSearchQuery { get; set; } = string.Empty;
         public InstanceResourceFilter RefreshFilter { get; set; } = InstanceResourceFilter.All;
         public InstanceResourceSortMethod RefreshSortMethod { get; set; } = InstanceResourceSortMethod.ResourceName;
+        public IReadOnlyList<FrontendInstanceResourceEntry>? CachedModSourceEntries { get; set; }
+        public IReadOnlyList<FrontendInstanceResourceEntry>? CachedEnabledModEntries { get; set; }
+        public IReadOnlyList<FrontendInstanceResourceEntry>? CachedDisabledModEntries { get; set; }
     }
 
     private string _instanceWorldSearchQuery = string.Empty;
@@ -284,6 +287,8 @@ internal sealed partial class FrontendShellViewModel
             SD("instance.content.resource.actions.open_folder"),
             GetCurrentInstanceResourceDirectory(),
             SD("instance.content.resource.errors.directory_missing", ("surface", InstanceResourceSurfaceTitle))));
+
+    public ActionCommand RefreshInstanceResourceCommand => new(RefreshInstanceResources);
 
     public ActionCommand InstallInstanceResourceFromFileCommand => new(() => _ = InstallInstanceResourceFromFileAsync());
 

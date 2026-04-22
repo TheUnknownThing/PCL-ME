@@ -158,13 +158,31 @@ internal sealed partial class FrontendShellViewModel
     {
         return _currentRoute.Subpage switch
         {
-            LauncherFrontendSubpageKey.VersionMod => _instanceComposition.Mods.Entries.Concat(_instanceComposition.DisabledMods.Entries).ToArray(),
+            LauncherFrontendSubpageKey.VersionMod => GetCachedModSourceEntries(),
             LauncherFrontendSubpageKey.VersionModDisabled => _instanceComposition.DisabledMods.Entries,
             LauncherFrontendSubpageKey.VersionResourcePack => _instanceComposition.ResourcePacks.Entries,
             LauncherFrontendSubpageKey.VersionShader => _instanceComposition.Shaders.Entries,
             LauncherFrontendSubpageKey.VersionSchematic => _instanceComposition.Schematics.Entries,
             _ => _instanceComposition.Mods.Entries
         };
+    }
+
+    private IReadOnlyList<FrontendInstanceResourceEntry> GetCachedModSourceEntries()
+    {
+        var state = GetCurrentInstanceResourceSurfaceState();
+        if (state.CachedModSourceEntries is not null
+            && ReferenceEquals(state.CachedEnabledModEntries, _instanceComposition.Mods.Entries)
+            && ReferenceEquals(state.CachedDisabledModEntries, _instanceComposition.DisabledMods.Entries))
+        {
+            return state.CachedModSourceEntries;
+        }
+
+        state.CachedEnabledModEntries = _instanceComposition.Mods.Entries;
+        state.CachedDisabledModEntries = _instanceComposition.DisabledMods.Entries;
+        state.CachedModSourceEntries = _instanceComposition.Mods.Entries
+            .Concat(_instanceComposition.DisabledMods.Entries)
+            .ToArray();
+        return state.CachedModSourceEntries;
     }
 
     private void SetInstanceResourceFilter(InstanceResourceFilter filter)

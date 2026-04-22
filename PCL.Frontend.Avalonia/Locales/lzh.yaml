@@ -1950,6 +1950,7 @@ common:
     confirm: 定
     open: 啟
     open_website: 啟其站
+    refresh: 更新
     search: 尋
     select_all: 全擇
     continue: 續

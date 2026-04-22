@@ -2184,6 +2184,7 @@ common:
     confirm: []
     open: []
     open_website: []
+    refresh: []
     search: []
     select_all: []
     continue: []

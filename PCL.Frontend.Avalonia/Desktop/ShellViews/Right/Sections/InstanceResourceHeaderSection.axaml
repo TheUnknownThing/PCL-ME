@@ -20,6 +20,11 @@
           <controls:PclButton
               MinWidth="110"
               Margin="0,7,15,0"
+              Command="{Binding RefreshInstanceResourceCommand}"
+              Text="{Binding InstanceResourceRefreshText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
               Command="{Binding InstallInstanceResourceFromFileCommand}"
               Text="{Binding InstanceResourceInstallFromFileText}" />
           <controls:PclButton

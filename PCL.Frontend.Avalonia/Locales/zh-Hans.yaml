@@ -1954,6 +1954,7 @@ common:
     confirm: 确认
     open: 打开
     open_website: 打开官网
+    refresh: 刷新
     search: 搜索
     select_all: 全选
     continue: 继续

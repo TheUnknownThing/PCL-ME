@@ -1954,6 +1954,7 @@ common:
     confirm: 確認
     open: 開啟
     open_website: 打開官網
+    refresh: 重新整理
     search: 搜尋
     select_all: 全選
     continue: 繼續

@@ -1957,6 +1957,7 @@ common:
     confirm: Confirmar
     open: Abrir
     open_website: Abrir sitio web
+    refresh: Actualizar
     search: Buscar
     select_all: Seleccionar todo
     continue: Continuar

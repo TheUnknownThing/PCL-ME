@@ -1950,6 +1950,7 @@ common:
     confirm: 확인
     open: 열기
     open_website: 웹사이트 열기
+    refresh: 새로고침
     search: 검색
     select_all: 모두 선택
     continue: 계속

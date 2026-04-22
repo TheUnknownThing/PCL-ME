@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Avalonia.Media.Imaging;
 using fNbt;
 using PCL.Core.App.Essentials;
@@ -114,6 +115,20 @@ internal sealed partial class FrontendShellViewModel
         NavigateTo(
             new LauncherFrontendRoute(LauncherFrontendPageKey.Download, ResolveInstanceDownloadSubpage()),
             SD("instance.content.resource.messages.open_download_route", ("surface_title", InstanceResourceSurfaceTitle)));
+    }
+
+    private void RefreshInstanceResources()
+    {
+        var activityTitle = SD("common.actions.refresh");
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity(activityTitle, SD("instance.content.resource.messages.no_instance_selected"));
+            return;
+        }
+
+        var refreshVersion = Interlocked.Increment(ref _instanceSelectionRefreshVersion);
+        AddActivity(activityTitle, InstanceResourceSurfaceTitle);
+        QueueSelectedInstanceStateRefresh(refreshVersion);
     }
 
     private async Task SetSelectedInstanceResourcesEnabledAsync(bool isEnabled)

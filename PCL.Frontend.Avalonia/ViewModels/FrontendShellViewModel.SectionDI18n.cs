@@ -125,6 +125,7 @@ internal sealed partial class FrontendShellViewModel
     public string InstanceServerEmptyDescription => SD("instance.content.server.empty.description");
 
     public string InstanceResourceOpenFolderText => SD("instance.content.resource.actions.open_folder");
+    public string InstanceResourceRefreshText => SD("common.actions.refresh");
     public string InstanceResourceInstallFromFileText => SD("instance.content.resource.actions.install_from_file");
     public string InstanceResourceInstallFromFileInEmptyStateText => SD("instance.content.resource.actions.install_from_file_empty");
     public string InstanceResourceSelectAllText => SD("instance.content.resource.actions.select_all");

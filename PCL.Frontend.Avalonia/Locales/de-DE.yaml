@@ -1950,6 +1950,7 @@ common:
     confirm: Bestätigen
     open: Öffnen
     open_website: Webseite öffnen
+    refresh: Aktualisieren
     search: Suchen
     select_all: Alle auswählen
     continue: Weiter
