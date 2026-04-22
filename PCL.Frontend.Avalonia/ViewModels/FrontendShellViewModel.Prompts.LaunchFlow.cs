@@ -367,7 +367,8 @@ internal sealed partial class FrontendShellViewModel
             RaiseLaunchSessionProperties();
             AppendLaunchLogLine(T("launch.status.logs.canceled"));
             AddActivity(T("launch.status.activities.canceled"), T("launch.status.messages.canceled"));
-            SetLaunchDialogStoppedState(T("launch.status.stopped.canceled_title"), T("launch.status.messages.canceled"), isError: false);
+            HideLaunchDialog();
+            AvaloniaHintBus.Show(T("launch.status.messages.canceled"), AvaloniaHintTheme.Info);
         }
         catch (Exception ex)
         {
