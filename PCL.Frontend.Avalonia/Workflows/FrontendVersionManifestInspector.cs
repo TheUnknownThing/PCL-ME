@@ -108,6 +108,11 @@ internal static class FrontendVersionManifestInspector
 
         try
         {
+            if (string.Equals(Path.GetFileName(manifestPath), "mmc-pack.json", StringComparison.OrdinalIgnoreCase))
+            {
+                return ReadProfileFromMmcPack(manifestPath);
+            }
+
             using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
             var root = document.RootElement;
             var parentVersion = GetString(root, "inheritsFrom");
@@ -168,6 +173,107 @@ internal static class FrontendVersionManifestInspector
         {
             return FrontendVersionManifestProfile.Empty;
         }
+    }
+
+    private static FrontendVersionManifestProfile ReadProfileFromMmcPack(string manifestPath)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        var root = document.RootElement;
+        if (!root.TryGetProperty("components", out var components) || components.ValueKind != JsonValueKind.Array)
+        {
+            return FrontendVersionManifestProfile.Empty;
+        }
+
+        string? minecraftVersion = null;
+        string? forgeVersion = null;
+        string? neoForgeVersion = null;
+        string? cleanroomVersion = null;
+        string? fabricVersion = null;
+        string? quiltVersion = null;
+        string? liteLoaderVersion = null;
+
+        foreach (var component in components.EnumerateArray())
+        {
+            var uid = GetString(component, "uid");
+            var version = GetString(component, "version") ?? GetString(component, "cachedVersion");
+            if (string.IsNullOrWhiteSpace(uid) || string.IsNullOrWhiteSpace(version))
+            {
+                continue;
+            }
+
+            if (string.Equals(uid, "net.minecraft", StringComparison.OrdinalIgnoreCase))
+            {
+                minecraftVersion ??= version;
+            }
+            else if (string.Equals(uid, "net.minecraftforge", StringComparison.OrdinalIgnoreCase))
+            {
+                forgeVersion ??= version;
+            }
+            else if (string.Equals(uid, "net.neoforged", StringComparison.OrdinalIgnoreCase)
+                     || string.Equals(uid, "net.neoforged.neoforge", StringComparison.OrdinalIgnoreCase))
+            {
+                neoForgeVersion ??= version;
+            }
+            else if (string.Equals(uid, "net.fabricmc.fabric-loader", StringComparison.OrdinalIgnoreCase))
+            {
+                fabricVersion ??= version;
+            }
+            else if (string.Equals(uid, "org.quiltmc.quilt-loader", StringComparison.OrdinalIgnoreCase))
+            {
+                quiltVersion ??= version;
+            }
+            else if (string.Equals(uid, "com.mumfrey.liteloader", StringComparison.OrdinalIgnoreCase))
+            {
+                liteLoaderVersion ??= version;
+            }
+            else if (string.Equals(uid, "com.cleanroommc", StringComparison.OrdinalIgnoreCase))
+            {
+                cleanroomVersion ??= version;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(cleanroomVersion) &&
+            !string.IsNullOrWhiteSpace(forgeVersion) &&
+            forgeVersion.StartsWith("0.", StringComparison.Ordinal))
+        {
+            cleanroomVersion = forgeVersion;
+            forgeVersion = null;
+        }
+
+        if (string.IsNullOrWhiteSpace(minecraftVersion))
+        {
+            return FrontendVersionManifestProfile.Empty;
+        }
+
+        return new FrontendVersionManifestProfile(
+            IsManifestValid: true,
+            VanillaVersion: NormalizeVanillaVersionName(minecraftVersion),
+            ParsedVanillaVersion: ParseComparableVanillaVersion(minecraftVersion),
+            VersionType: null,
+            ReleaseTime: null,
+            AssetsIndexName: null,
+            HasForge: !string.IsNullOrWhiteSpace(forgeVersion),
+            ForgeVersion: forgeVersion,
+            NeoForgeVersion: neoForgeVersion,
+            CleanroomVersion: cleanroomVersion,
+            FabricVersion: fabricVersion,
+            LegacyFabricVersion: null,
+            QuiltVersion: quiltVersion,
+            OptiFineVersion: null,
+            HasLiteLoader: !string.IsNullOrWhiteSpace(liteLoaderVersion),
+            LiteLoaderVersion: liteLoaderVersion,
+            LabyModVersion: null,
+            HasLabyMod: false,
+            HasFabricApi: false,
+            FabricApiVersion: null,
+            HasQsl: false,
+            QslVersion: null,
+            HasOptiFabric: false,
+            OptiFabricVersion: null,
+            JsonRequiredMajorVersion: null,
+            MojangRecommendedMajorVersion: null,
+            MojangRecommendedComponent: null,
+            LibraryNames: []);
     }
 
     private static IReadOnlyList<string> ParseLibraryNames(JsonElement root)
