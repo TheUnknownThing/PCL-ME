@@ -263,7 +263,7 @@ internal sealed partial class FrontendShellViewModel
     private bool _disableHardwareAcceleration;
     private bool _isLaunchBlockedByPrompt;
     private bool _ignoreJavaCompatibilityWarningOnce;
-    private int _selectedSecureDnsModeIndex = (int)FrontendSecureDnsMode.DnsOverHttps;
+    private int _selectedSecureDnsModeIndex = (int)FrontendSecureDnsMode.System;
     private int _selectedSecureDnsProviderIndex;
     private int _selectedHttpProxyTypeIndex;
     private string _httpProxyAddress = string.Empty;

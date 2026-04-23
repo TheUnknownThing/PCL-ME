@@ -20,7 +20,7 @@ internal readonly record struct FrontendSecureDnsConfiguration(
     FrontendSecureDnsProvider Provider)
 {
     public static FrontendSecureDnsConfiguration Default => new(
-        FrontendSecureDnsMode.DnsOverHttps,
+        FrontendSecureDnsMode.System,
         FrontendSecureDnsProvider.Auto);
 
     public bool IsSecureTransportEnabled => Mode != FrontendSecureDnsMode.System;

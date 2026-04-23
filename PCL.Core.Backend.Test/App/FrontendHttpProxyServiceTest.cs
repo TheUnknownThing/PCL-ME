@@ -105,14 +105,14 @@ public sealed class FrontendHttpProxyServiceTest
     }
 
     [TestMethod]
-    public void ReadConfiguredDnsOverHttpsEnabled_DefaultsToTrue()
+    public void ReadConfiguredDnsOverHttpsEnabled_DefaultsToFalse()
     {
         using var environment = new FrontendRuntimePathTestEnvironment();
         var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
 
         var isEnabled = FrontendHttpProxyService.ReadConfiguredDnsOverHttpsEnabled(runtimePaths);
 
-        Assert.IsTrue(isEnabled);
+        Assert.IsFalse(isEnabled);
     }
 
     [TestMethod]

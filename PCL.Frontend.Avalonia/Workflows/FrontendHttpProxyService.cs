@@ -447,7 +447,7 @@ internal static class FrontendHttpProxyService
 
         if (!sharedConfig.Exists(LegacyDnsOverHttpsKey))
         {
-            return FrontendSecureDnsMode.DnsOverHttps;
+            return FrontendSecureDnsMode.System;
         }
 
         return sharedConfig.Get<bool>(LegacyDnsOverHttpsKey)
@@ -468,7 +468,8 @@ internal static class FrontendHttpProxyService
         {
             (int)FrontendSecureDnsMode.System => FrontendSecureDnsMode.System,
             (int)FrontendSecureDnsMode.DnsOverTls => FrontendSecureDnsMode.DnsOverTls,
-            _ => FrontendSecureDnsMode.DnsOverHttps
+            (int)FrontendSecureDnsMode.DnsOverHttps => FrontendSecureDnsMode.DnsOverHttps,
+            _ => FrontendSecureDnsMode.System
         };
     }
 
