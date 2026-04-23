@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
 using PCL.Core.App.Essentials;
 using PCL.Frontend.Avalonia.Models;
 
@@ -9,7 +10,45 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static partial class FrontendCommunityResourceCatalogService
 {
 
+    private static readonly ConcurrentDictionary<string, CacheEntry<CachedQueryResult>> QueryResultCache = new(StringComparer.Ordinal);
+
     private static CacheEntry<IReadOnlyList<string>>? MinecraftVersionOptionsCache;
+
+    private static bool TryGetFreshQueryResult(
+        string cacheKey,
+        int targetResultCount,
+        out FrontendCommunityResourceQueryResult result)
+    {
+        if (QueryResultCache.TryGetValue(cacheKey, out var entry)
+            && DateTimeOffset.UtcNow - entry.CreatedAt < TimeSpan.FromMinutes(10)
+            && entry.State.TargetResultCount >= targetResultCount)
+        {
+            result = entry.State.Result;
+            return true;
+        }
+
+        result = default!;
+        return false;
+    }
+
+    private static string BuildQueryCacheKey(
+        LauncherFrontendSubpageKey route,
+        FrontendCommunityResourceQuery query,
+        string preferredVersion,
+        int communitySourcePreference)
+    {
+        return string.Join(
+            "|",
+            route,
+            Uri.EscapeDataString(query.SearchText),
+            Uri.EscapeDataString(query.Source),
+            Uri.EscapeDataString(query.Tag),
+            Uri.EscapeDataString(query.Sort),
+            Uri.EscapeDataString(query.Version),
+            Uri.EscapeDataString(query.Loader),
+            Uri.EscapeDataString(preferredVersion),
+            communitySourcePreference.ToString());
+    }
 
     private static string ResolvePreferredMinecraftVersion(FrontendInstanceComposition instanceComposition)
     {

@@ -21,6 +21,10 @@ internal static partial class FrontendCommunityResourceCatalogService
 
     private sealed record CacheEntry<TState>(TState State, DateTimeOffset CreatedAt);
 
+    private sealed record CachedQueryResult(
+        FrontendCommunityResourceQueryResult Result,
+        int TargetResultCount);
+
     private sealed record FetchResult(
         IReadOnlyList<FrontendDownloadResourceEntry> Entries,
         IReadOnlyList<string> SourceErrors,

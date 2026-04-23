@@ -58,7 +58,17 @@ internal sealed partial class FrontendShellViewModel
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceVersionOptions = [];
     private IReadOnlyList<DownloadResourceFilterOptionViewModel> _downloadResourceLoaderOptions = [];
     private IReadOnlyList<DownloadResourceEntryViewModel> _allDownloadResourceEntries = [];
+    private readonly Dictionary<LauncherFrontendSubpageKey, DownloadResourceSurfaceViewState> _downloadResourceViewStates = new();
 
     public ObservableCollection<DownloadResourceEntryViewModel> DownloadResourceEntries { get; } = [];
     public ObservableCollection<DownloadResourcePaginationItemViewModel> DownloadResourcePaginationItems { get; } = [];
+
+    private sealed record DownloadResourceSurfaceViewState(
+        string SearchQuery,
+        string Source,
+        string Tag,
+        string Sort,
+        string Version,
+        string Loader,
+        int PageIndex);
 }

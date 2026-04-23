@@ -101,7 +101,7 @@ internal sealed partial class FrontendShellViewModel
                     return;
                 }
 
-                ApplyDownloadResourceQueryResult(result, query, resetPage, targetPageIndex);
+                ApplyDownloadResourceRuntimeState(result.State, query, resetPage, targetPageIndex);
             });
         }
         catch (OperationCanceledException)
@@ -117,7 +117,6 @@ internal sealed partial class FrontendShellViewModel
                     return;
                 }
 
-                _downloadResourceRuntimeStates.Remove(route);
                 DownloadResourceHintText = T("download.resource.hints.search_failed", ("message", ex.Message));
                 ShowDownloadResourceHint = true;
                 DownloadResourceEmptyStateHintText = T("download.resource.hints.retry_later");
@@ -167,49 +166,88 @@ internal sealed partial class FrontendShellViewModel
             queryOverride: instanceDrivenQuery);
     }
 
-    private void ApplyDownloadResourceQueryResult(
-        FrontendCommunityResourceQueryResult result,
+    private void ApplyDownloadResourceRuntimeState(
+        FrontendDownloadResourceState runtimeState,
         FrontendCommunityResourceQuery query,
         bool resetPage,
         int? targetPageIndex)
     {
         var selectedSource = query.Source;
         var selectedTag = query.Tag;
+        var selectedSort = query.Sort;
         var selectedVersion = query.Version;
         var selectedLoader = ShowDownloadResourceLoaderFilter ? query.Loader : string.Empty;
 
-        _downloadResourceRuntimeStates[_currentRoute.Subpage] = result.State;
-        _downloadResourceHasMoreEntries = result.State.HasMoreEntries;
-        _downloadResourceTotalEntryCount = result.State.TotalEntryCount;
-        DownloadResourceHintText = LocalizeDownloadResourceHintText(result.State.HintText);
+        _downloadResourceRuntimeStates[_currentRoute.Subpage] = runtimeState;
+        _downloadResourceHasMoreEntries = runtimeState.HasMoreEntries;
+        _downloadResourceTotalEntryCount = runtimeState.TotalEntryCount;
+        DownloadResourceHintText = LocalizeDownloadResourceHintText(runtimeState.HintText);
         // Keep the loading card copy stable until it has fully transitioned out.
         DownloadResourceEmptyStateHintText = string.Empty;
         ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(DownloadResourceHintText);
 
-        _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(result.State, selectedSource);
+        _downloadResourceSourceOptions = BuildDownloadResourceSourceOptions(runtimeState, selectedSource);
         _downloadResourceTagOptions = MergeFilterOptions(
             BuildFallbackDownloadResourceTagOptions(),
-            result.State.TagOptions.Select(option => CreateDownloadResourceFilterOption(option.Label, option.FilterValue)),
+            runtimeState.TagOptions.Select(option => CreateDownloadResourceFilterOption(option.Label, option.FilterValue)),
             selectedTag);
         _downloadResourceVersionOptions =
             MergeFilterOptions(
                 [CreateDownloadResourceFilterOption(T("common.filters.any"), string.Empty)],
-                result.VersionOptions.Select(version => CreateDownloadResourceFilterOption(version, version)),
+                BuildDownloadResourceVersionValues(runtimeState, selectedVersion)
+                    .Select(version => CreateDownloadResourceFilterOption(version, version)),
                 selectedVersion);
 
         _selectedDownloadResourceSourceIndex = FindFilterOptionIndex(DownloadResourceSourceOptions, selectedSource);
         _selectedDownloadResourceTagIndex = FindFilterOptionIndex(DownloadResourceTagOptions, selectedTag);
+        _selectedDownloadResourceSortIndex = FindFilterOptionIndex(DownloadResourceSortOptions, selectedSort);
         _selectedDownloadResourceVersionIndex = FindFilterOptionIndex(DownloadResourceVersionOptions, selectedVersion);
         _selectedDownloadResourceLoaderIndex = FindFilterOptionIndex(DownloadResourceLoaderOptions, selectedLoader);
-        _allDownloadResourceEntries = CreateDownloadResourceEntries(result.State.Entries);
-        if (!resetPage && targetPageIndex is not null)
+        _downloadResourceSearchQuery = query.SearchText;
+        _allDownloadResourceEntries = CreateDownloadResourceEntries(runtimeState.Entries);
+        if (targetPageIndex is not null)
         {
-            _downloadResourcePageIndex = Math.Max(_downloadResourcePageIndex, targetPageIndex.Value);
+            _downloadResourcePageIndex = Math.Max(0, targetPageIndex.Value);
         }
 
         RaiseDownloadResourceFilterState();
         ApplyDownloadResourceFilters(resetPage);
         SetDownloadResourceLoading(false);
+    }
+
+    private IReadOnlyList<string> BuildDownloadResourceVersionValues(
+        FrontendDownloadResourceState runtimeState,
+        string? selectedVersion)
+    {
+        var preferredVersion = ResolveSelectedDownloadResourceVersionFilter();
+        var versions = new List<string>();
+        AddDownloadResourceVersionIfMissing(versions, preferredVersion);
+        AddDownloadResourceVersionIfMissing(versions, selectedVersion);
+
+        foreach (var option in BuildDefaultDownloadResourceVersionOptions(preferredVersion).Skip(1))
+        {
+            AddDownloadResourceVersionIfMissing(versions, option.FilterValue);
+        }
+
+        foreach (var version in runtimeState.Entries.SelectMany(
+                     entry => entry.SupportedVersions.Count == 0 ? [entry.Version] : entry.SupportedVersions))
+        {
+            AddDownloadResourceVersionIfMissing(versions, version);
+        }
+
+        return versions
+            .OrderByDescending(ParseVersion)
+            .ToArray();
+    }
+
+    private static void AddDownloadResourceVersionIfMissing(ICollection<string> versions, string? version)
+    {
+        var normalizedVersion = NormalizeMinecraftVersion(version);
+        if (!string.IsNullOrWhiteSpace(normalizedVersion)
+            && !versions.Contains(normalizedVersion, StringComparer.OrdinalIgnoreCase))
+        {
+            versions.Add(normalizedVersion);
+        }
     }
 
     private static int GetDownloadResourceTargetResultCount(int? targetPageIndex)

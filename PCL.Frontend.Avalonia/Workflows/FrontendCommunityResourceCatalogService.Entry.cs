@@ -68,14 +68,24 @@ internal static partial class FrontendCommunityResourceCatalogService
             Version = normalizedVersion ?? string.Empty,
             Loader = normalizedLoader
         };
+        var cacheKey = BuildQueryCacheKey(route, effectiveQuery, preferredVersion, communitySourcePreference);
+        if (TryGetFreshQueryResult(cacheKey, effectiveTargetResultCount, out var cachedResult))
+        {
+            return cachedResult;
+        }
+
         var state = BuildState(config, communitySourcePreference, effectiveQuery, effectiveTargetResultCount);
-        return new FrontendCommunityResourceQueryResult(
+        var result = new FrontendCommunityResourceQueryResult(
             state,
             GetMinecraftVersionOptions(
                 preferredVersion,
                 normalizedVersion,
                 state.Entries.SelectMany(entry => entry.SupportedVersions.Count == 0 ? [entry.Version] : entry.SupportedVersions)),
             GetSourceOptions(config));
+        QueryResultCache[cacheKey] = new CacheEntry<CachedQueryResult>(
+            new CachedQueryResult(result, effectiveTargetResultCount),
+            DateTimeOffset.UtcNow);
+        return result;
     }
 
     private static FrontendDownloadResourceState BuildState(

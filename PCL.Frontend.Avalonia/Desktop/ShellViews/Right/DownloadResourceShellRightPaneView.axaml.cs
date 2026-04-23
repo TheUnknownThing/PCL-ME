@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.Desktop.Controls;
@@ -56,6 +57,11 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         _versionComboBox.SelectionChanged += (_, _) => OnFilterSelectionChanged(FilterKind.Version, _versionComboBox);
         _loaderComboBox.SelectionChanged += (_, _) => OnFilterSelectionChanged(FilterKind.Loader, _loaderComboBox);
         DataContextChanged += OnDataContextChanged;
+        AttachedToVisualTree += (_, _) =>
+        {
+            PrimeLoadingMask();
+            ScheduleVisualStateSync();
+        };
         DetachedFromVisualTree += (_, _) =>
         {
             ObserveShell(null);
@@ -139,7 +145,19 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         var version = ++_visualStateVersion;
         Dispatcher.UIThread.Post(
             async () => await SyncVisualStateAsync(version),
-            DispatcherPriority.Background);
+            DispatcherPriority.Render);
+    }
+
+    private void PrimeLoadingMask()
+    {
+        if (_contentHost.IsVisible || _loadingCard.IsVisible)
+        {
+            return;
+        }
+
+        _loadingCard.IsVisible = true;
+        _loadingCard.Opacity = 1d;
+        _loadingCard.RenderTransform = new TranslateTransform(0, 0);
     }
 
     private async Task SyncVisualStateAsync(int version)
@@ -183,8 +201,6 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
         {
             return;
         }
-
-        await HideAnimatedAsync(_loadingCard, version);
         await ShowAnimatedAsync(_searchRow, version);
         await ShowAnimatedAsync(_filterCard, version);
 
@@ -204,10 +220,28 @@ internal sealed partial class DownloadResourceShellRightPaneView : UserControl
 
         if (showContent)
         {
-            await ShowAnimatedAsync(_contentHost, version);
+            var shouldMaskReveal = _loadingCard.IsVisible && !_contentHost.IsVisible;
+            if (shouldMaskReveal)
+            {
+                await Task.Delay(MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(180)));
+                if (version != _visualStateVersion)
+                {
+                    return;
+                }
+
+                await Task.WhenAll(
+                    ShowAnimatedAsync(_contentHost, version),
+                    HideAnimatedAsync(_loadingCard, version));
+            }
+            else
+            {
+                await HideAnimatedAsync(_loadingCard, version);
+                await ShowAnimatedAsync(_contentHost, version);
+            }
         }
         else
         {
+            await HideAnimatedAsync(_loadingCard, version);
             await HideAnimatedAsync(_contentHost, version);
         }
     }

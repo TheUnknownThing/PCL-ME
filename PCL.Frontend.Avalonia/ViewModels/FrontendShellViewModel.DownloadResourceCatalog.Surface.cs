@@ -179,27 +179,26 @@ internal sealed partial class FrontendShellViewModel
     }
     private void RefreshDownloadResourceSurface()
     {
-        DownloadResourceSurfaceTitle = string.Empty;
-        DownloadResourceLoadingText = string.Empty;
-        DownloadResourceEmptyStateText = T("download.resource.empty.default");
-        DownloadResourceEmptyStateHintText = string.Empty;
-        DownloadResourceHintText = string.Empty;
-        ShowDownloadResourceHint = false;
-        ShowDownloadResourceInstallModPackAction = false;
-        _downloadResourceHasMoreEntries = false;
-        _downloadResourceTotalEntryCount = 0;
-        _downloadResourceSupportsModrinth = true;
-        _downloadResourceSourceOptions = [];
-        _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
-        _downloadResourceSortOptions = BuildDownloadResourceSortOptions();
-        _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions();
-        _downloadResourceLoaderOptions = BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
-        _allDownloadResourceEntries = [];
-        ReplaceItems(DownloadResourceEntries, []);
-        SetDownloadResourceLoading(false);
-
         if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
         {
+            DownloadResourceSurfaceTitle = string.Empty;
+            DownloadResourceLoadingText = string.Empty;
+            DownloadResourceEmptyStateText = T("download.resource.empty.default");
+            DownloadResourceEmptyStateHintText = string.Empty;
+            DownloadResourceHintText = string.Empty;
+            ShowDownloadResourceHint = false;
+            ShowDownloadResourceInstallModPackAction = false;
+            _downloadResourceHasMoreEntries = false;
+            _downloadResourceTotalEntryCount = 0;
+            _downloadResourceSupportsModrinth = true;
+            _downloadResourceSourceOptions = [];
+            _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
+            _downloadResourceSortOptions = BuildDownloadResourceSortOptions();
+            _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions();
+            _downloadResourceLoaderOptions = BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
+            _allDownloadResourceEntries = [];
+            ReplaceItems(DownloadResourceEntries, []);
+            SetDownloadResourceLoading(false);
             RaisePropertyChanged(nameof(DownloadResourceSearchWatermark));
             RaisePropertyChanged(nameof(DownloadResourceSourceOptions));
             RaisePropertyChanged(nameof(DownloadResourceTagOptions));
@@ -241,13 +240,65 @@ internal sealed partial class FrontendShellViewModel
         _downloadResourceLoaderOptions = useShaderLoaderOptions
             ? BuildDefaultShaderLoaderOptions()
             : BuildDefaultResourceLoaderOptions(IgnoreQuiltLoader);
-        _downloadResourceRuntimeStates.Remove(_currentRoute.Subpage);
-        ResetDownloadResourceFilterState();
-        RaiseDownloadResourceFilterState();
-        SetDownloadResourceLoading(true);
-        RaisePropertyChanged(nameof(HasDownloadResourceEntries));
-        RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
-        ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
+        if (TryRestoreDownloadResourceSurface(_currentRoute.Subpage))
+        {
+            ScheduleDownloadResourceRefresh(
+                immediate: true,
+                resetPage: false,
+                targetPageIndex: _downloadResourcePageIndex,
+                queryOverride: BuildCurrentDownloadResourceQuery());
+        }
+        else
+        {
+            _downloadResourceHasMoreEntries = false;
+            _downloadResourceTotalEntryCount = 0;
+            _allDownloadResourceEntries = [];
+            ReplaceItems(DownloadResourceEntries, []);
+            ResetDownloadResourceFilterState();
+            RaiseDownloadResourceFilterState();
+            SetDownloadResourceLoading(true);
+            RaisePropertyChanged(nameof(HasDownloadResourceEntries));
+            RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
+            ScheduleDownloadResourceRefresh(immediate: true, resetPage: true);
+        }
+    }
+
+    private bool TryRestoreDownloadResourceSurface(LauncherFrontendSubpageKey route)
+    {
+        if (!_downloadResourceRuntimeStates.TryGetValue(route, out var runtimeState))
+        {
+            return false;
+        }
+
+        var defaultVersion = ShouldAutoSyncDownloadResourceFiltersWithInstance()
+            ? ResolveSelectedDownloadResourceVersionFilter() ?? string.Empty
+            : string.Empty;
+        var defaultLoader = ShowDownloadResourceLoaderFilter && ShouldAutoSyncDownloadResourceFiltersWithInstance()
+            ? ResolveSelectedDownloadResourceLoaderFilter() ?? string.Empty
+            : string.Empty;
+        var viewState = _downloadResourceViewStates.TryGetValue(route, out var cachedState)
+            ? cachedState
+            : new DownloadResourceSurfaceViewState(
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                defaultVersion,
+                defaultLoader,
+                0);
+
+        ApplyDownloadResourceRuntimeState(
+            runtimeState,
+            new FrontendCommunityResourceQuery(
+                viewState.SearchQuery,
+                viewState.Source,
+                viewState.Tag,
+                viewState.Sort,
+                viewState.Version,
+                viewState.Loader),
+            resetPage: false,
+            targetPageIndex: viewState.PageIndex);
+        return true;
     }
 
     private void ConfigureDownloadResourceSurface(

@@ -271,6 +271,7 @@ internal sealed partial class FrontendShellViewModel
 
         ReplaceItems(DownloadResourceEntries, pagedEntries);
         QueueDownloadResourceIconLoad(pagedEntries);
+        RememberCurrentDownloadResourceViewState();
         RaisePropertyChanged(nameof(HasDownloadResourceEntries));
         RaisePropertyChanged(nameof(HasNoDownloadResourceEntries));
         RaisePropertyChanged(nameof(DownloadResourcePageLabel));
@@ -312,6 +313,25 @@ internal sealed partial class FrontendShellViewModel
     private void UpdateDownloadResourceHint()
     {
         ShowDownloadResourceHint = !string.IsNullOrWhiteSpace(DownloadResourceHintText);
+    }
+
+    private void RememberCurrentDownloadResourceViewState()
+    {
+        if (!IsCurrentStandardRightPane(StandardShellRightPaneKind.DownloadResource))
+        {
+            return;
+        }
+
+        _downloadResourceViewStates[_currentRoute.Subpage] = new DownloadResourceSurfaceViewState(
+            DownloadResourceSearchQuery.Trim(),
+            GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex),
+            GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex),
+            GetSelectedFilterValue(DownloadResourceSortOptions, SelectedDownloadResourceSortIndex),
+            GetSelectedFilterValue(DownloadResourceVersionOptions, SelectedDownloadResourceVersionIndex),
+            ShowDownloadResourceLoaderFilter
+                ? GetSelectedFilterValue(DownloadResourceLoaderOptions, SelectedDownloadResourceLoaderIndex)
+                : string.Empty,
+            _downloadResourcePageIndex);
     }
 
     private void PreviewDownloadResourceFilters(bool resetPage)
