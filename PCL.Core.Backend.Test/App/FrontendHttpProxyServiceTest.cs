@@ -38,16 +38,16 @@ public sealed class FrontendHttpProxyServiceTest
     {
         using var environment = new FrontendRuntimePathTestEnvironment();
         var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
-        var shellActionService = new FrontendShellActionService(
+        var launcherActionService = new LauncherActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
             () => { },
             new DictionaryI18nService());
 
-        shellActionService.PersistSharedValue("SystemHttpProxyType", 2);
-        shellActionService.PersistProtectedSharedValue("SystemHttpProxy", "http://proxy.example:8080");
-        shellActionService.PersistProtectedSharedValue("SystemHttpProxyCustomUsername", "proxy-user");
-        shellActionService.PersistProtectedSharedValue("SystemHttpProxyCustomPassword", "proxy-pass");
+        launcherActionService.PersistSharedValue("SystemHttpProxyType", 2);
+        launcherActionService.PersistProtectedSharedValue("SystemHttpProxy", "http://proxy.example:8080");
+        launcherActionService.PersistProtectedSharedValue("SystemHttpProxyCustomUsername", "proxy-user");
+        launcherActionService.PersistProtectedSharedValue("SystemHttpProxyCustomPassword", "proxy-pass");
 
         FrontendHttpProxyService.ApplyStoredProxySettings(runtimePaths);
 
@@ -66,14 +66,14 @@ public sealed class FrontendHttpProxyServiceTest
     {
         using var environment = new FrontendRuntimePathTestEnvironment();
         var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
-        var shellActionService = new FrontendShellActionService(
+        var launcherActionService = new LauncherActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
             () => { },
             new DictionaryI18nService());
 
-        shellActionService.PersistSharedValue("SystemHttpProxyType", 2);
-        shellActionService.PersistProtectedSharedValue("SystemHttpProxy", "proxy.example:9090");
+        launcherActionService.PersistSharedValue("SystemHttpProxyType", 2);
+        launcherActionService.PersistProtectedSharedValue("SystemHttpProxy", "proxy.example:9090");
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         sharedConfig.Set("SystemHttpProxyCustomUsername", "legacy-user");
         sharedConfig.Set("SystemHttpProxyCustomPassword", "legacy-pass");
@@ -120,13 +120,13 @@ public sealed class FrontendHttpProxyServiceTest
     {
         using var environment = new FrontendRuntimePathTestEnvironment();
         var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
-        var shellActionService = new FrontendShellActionService(
+        var launcherActionService = new LauncherActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
             () => { },
             new DictionaryI18nService());
 
-        shellActionService.PersistSharedValue("SystemNetEnableDoH", false);
+        launcherActionService.PersistSharedValue("SystemNetEnableDoH", false);
 
         FrontendHttpProxyService.ApplyStoredDnsSettings(runtimePaths);
 
@@ -138,14 +138,14 @@ public sealed class FrontendHttpProxyServiceTest
     {
         using var environment = new FrontendRuntimePathTestEnvironment();
         var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
-        var shellActionService = new FrontendShellActionService(
+        var launcherActionService = new LauncherActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
             () => { },
             new DictionaryI18nService());
 
-        shellActionService.PersistSharedValue("SystemNetDnsMode", (int)FrontendSecureDnsMode.DnsOverTls);
-        shellActionService.PersistSharedValue("SystemNetDnsProvider", (int)FrontendSecureDnsProvider.Cloudflare);
+        launcherActionService.PersistSharedValue("SystemNetDnsMode", (int)FrontendSecureDnsMode.DnsOverTls);
+        launcherActionService.PersistSharedValue("SystemNetDnsProvider", (int)FrontendSecureDnsProvider.Cloudflare);
 
         var configuration = FrontendHttpProxyService.ReadConfiguredSecureDnsConfiguration(runtimePaths);
 
@@ -158,14 +158,14 @@ public sealed class FrontendHttpProxyServiceTest
     {
         using var environment = new FrontendRuntimePathTestEnvironment();
         var runtimePaths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
-        var shellActionService = new FrontendShellActionService(
+        var launcherActionService = new LauncherActionService(
             runtimePaths,
             new FrontendPlatformAdapter(),
             () => { },
             new DictionaryI18nService());
 
-        shellActionService.PersistSharedValue("SystemNetDnsMode", (int)FrontendSecureDnsMode.DnsOverTls);
-        shellActionService.PersistSharedValue("SystemNetDnsProvider", (int)FrontendSecureDnsProvider.Google);
+        launcherActionService.PersistSharedValue("SystemNetDnsMode", (int)FrontendSecureDnsMode.DnsOverTls);
+        launcherActionService.PersistSharedValue("SystemNetDnsProvider", (int)FrontendSecureDnsProvider.Google);
 
         FrontendHttpProxyService.ApplyStoredDnsSettings(runtimePaths);
 

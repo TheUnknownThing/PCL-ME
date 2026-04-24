@@ -1,0 +1,48 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceOverviewAdvancedActionsSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard Header="{Binding InstanceOverviewAdvancedHeaderText}" ContentMargin="20,40,20,18">
+    <controls:PclCard.CardContent>
+      <WrapPanel ItemWidth="150">
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding CreateDirectLaunchShortcutCommand}"
+            Text="{Binding InstanceOverviewDirectLaunchEntryText}" />
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding ExportInstanceScriptCommand}"
+            Text="{Binding InstanceOverviewExportScriptText}" />
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding TestInstanceCommand}"
+            Text="{Binding InstanceOverviewTestGameText}" />
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding CheckInstanceFilesCommand}"
+            Text="{Binding InstanceOverviewRepairFilesText}" />
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding RestoreInstanceCommand}"
+            Text="{Binding InstanceOverviewResetText}" />
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding DeleteInstanceCommand}"
+            ColorType="Red"
+            Text="{Binding InstanceOverviewDeleteText}" />
+        <controls:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding PatchInstanceCoreCommand}"
+            Text="{Binding InstanceOverviewPatchCoreText}" />
+      </WrapPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

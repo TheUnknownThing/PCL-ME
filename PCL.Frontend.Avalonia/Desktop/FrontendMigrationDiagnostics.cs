@@ -6,11 +6,11 @@ namespace PCL.Frontend.Avalonia.Desktop;
 internal static class FrontendMigrationDiagnostics
 {
     public static async Task ShowMigrationWarningsAsync(
-        FrontendShellActionService shellActionService,
+        LauncherActionService launcherActionService,
         FrontendRuntimePaths runtimePaths,
         II18nService i18n)
     {
-        ArgumentNullException.ThrowIfNull(shellActionService);
+        ArgumentNullException.ThrowIfNull(launcherActionService);
         ArgumentNullException.ThrowIfNull(runtimePaths);
         ArgumentNullException.ThrowIfNull(i18n);
 
@@ -29,7 +29,7 @@ internal static class FrontendMigrationDiagnostics
                 ["warnings"] = message
             });
 
-        await shellActionService.ConfirmAsync(
+        await launcherActionService.ConfirmAsync(
             i18n.T("shell.startup.migration_warnings.title"),
             message,
             i18n.T("common.actions.continue"),

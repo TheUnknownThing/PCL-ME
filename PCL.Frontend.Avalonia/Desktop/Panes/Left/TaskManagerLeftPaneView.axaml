@@ -1,0 +1,25 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Left.TaskManagerLeftPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    DataContext="{Binding Launcher}">
+  <Border
+      Padding="26,24"
+      Background="{DynamicResource ColorBrush8}"
+      BorderBrush="{DynamicResource ColorBrush6}"
+      BorderThickness="0,0,1,0">
+    <Grid RowDefinitions="1*,Auto,Auto,Auto,0.7*,Auto,Auto,Auto,0.7*,Auto,Auto,Auto,1*">
+      <TextBlock Grid.Row="1" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush4}" Text="{Binding TaskManagerLeftOverallProgressLabel}" />
+      <Border Grid.Row="2" Height="2" Margin="8,8,8,10" Background="{DynamicResource ColorBrush3}" />
+      <TextBlock Grid.Row="3" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush1}" Text="{Binding TaskManagerOverallProgressText}" />
+
+      <TextBlock Grid.Row="5" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush4}" Text="{Binding TaskManagerLeftDownloadSpeedLabel}" />
+      <Border Grid.Row="6" Height="2" Margin="8,8,8,10" Background="{DynamicResource ColorBrush3}" />
+      <TextBlock Grid.Row="7" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush1}" Text="{Binding TaskManagerDownloadSpeedText}" />
+
+      <TextBlock Grid.Row="9" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush4}" Text="{Binding TaskManagerLeftRemainingFilesLabel}" />
+      <Border Grid.Row="10" Height="2" Margin="8,8,8,10" Background="{DynamicResource ColorBrush3}" />
+      <TextBlock Grid.Row="11" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush1}" Text="{Binding TaskManagerRemainingFilesText}" />
+    </Grid>
+  </Border>
+</UserControl>

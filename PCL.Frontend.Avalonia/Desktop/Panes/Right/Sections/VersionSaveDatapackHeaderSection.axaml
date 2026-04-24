@@ -1,0 +1,39 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.VersionSaveDatapackHeaderSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <StackPanel Spacing="15">
+    <controls:PclSearchBox
+        Text="{Binding VersionSaveDatapackSearchQuery, Mode=TwoWay}"
+        Watermark="{Binding VersionSaveDatapackSearchWatermark}" />
+
+    <controls:PclCard ContentMargin="15,8,0,15">
+      <controls:PclCard.CardContent>
+        <WrapPanel>
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+              ColorType="Highlight"
+              Text="{Binding VersionSaveDatapackOpenFolderText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+              Text="{Binding VersionSaveDatapackInstallFromFileText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding DownloadVersionSaveDatapackCommand}"
+              Text="{Binding VersionSaveDatapackDownloadText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding ExportVersionSaveDatapackInfoCommand}"
+              Text="{Binding VersionSaveDatapackExportInfoText}" />
+        </WrapPanel>
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
+  </StackPanel>
+</UserControl>

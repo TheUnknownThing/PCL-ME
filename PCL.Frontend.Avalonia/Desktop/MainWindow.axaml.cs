@@ -38,7 +38,7 @@ internal sealed partial class MainWindow : Window
     private const int PromptOverlayChoiceRowIndex = 5;
     private static readonly GridLength PromptOverlayFlexibleRowHeight = new(1, GridUnitType.Star);
     private static readonly GridLength PromptOverlayHiddenRowHeight = new(0);
-    private FrontendShellViewModel? _shellViewModel;
+    private LauncherViewModel? _launcherViewModel;
     private CompositionVisual? _gridRootVisual;
     private CompositionVisual? _launchLeftContentHostVisual;
     private CompositionVisual? _launchRightContentHostVisual;
@@ -55,7 +55,7 @@ internal sealed partial class MainWindow : Window
         FrontendWindowIdentity.Apply(this);
         _defaultMainBackgroundBrush = MainBorder.Background ?? Brushes.Transparent;
         _defaultTitleBarBackgroundBrush = NavBackgroundBorder.Background ?? Brushes.Transparent;
-        ConfigureShellDividerTransitions();
+        ConfigurePaneDividerTransitions();
         UpdatePromptOverlayRowHeights();
         PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
         PromptOverlayBackdrop.IsVisible = false;
@@ -106,13 +106,13 @@ internal sealed partial class MainWindow : Window
         ApplyWindowSizingState();
     }
 
-    private void ConfigureShellDividerTransitions()
+    private void ConfigurePaneDividerTransitions()
     {
-        ShellLeftBackdrop.Transitions = CreateShellDividerTransitions();
-        StandardLeftHost.Transitions = CreateShellDividerTransitions();
+        LeftPaneBackdrop.Transitions = CreatePaneDividerTransitions();
+        StandardLeftHost.Transitions = CreatePaneDividerTransitions();
     }
 
-    private static Transitions CreateShellDividerTransitions()
+    private static Transitions CreatePaneDividerTransitions()
     {
         return new Transitions
         {
@@ -169,7 +169,7 @@ internal sealed partial class MainWindow : Window
 
     private void ToggleMaximize()
     {
-        if (!IsWindowResizeAllowed(_shellViewModel?.LockWindowSizeSetting == true))
+        if (!IsWindowResizeAllowed(_launcherViewModel?.LockWindowSizeSetting == true))
         {
             return;
         }
@@ -278,7 +278,7 @@ internal sealed partial class MainWindow : Window
     {
         Dispatcher.UIThread.Post(() =>
         {
-            ConfigureShellDividerTransitions();
+            ConfigurePaneDividerTransitions();
             foreach (var state in _activeHints.Values)
             {
                 state.Border.Transitions = CreateHintTransitions();
@@ -288,8 +288,8 @@ internal sealed partial class MainWindow : Window
 
     private void OnWindowKeyDown(object? sender, KeyEventArgs e)
     {
-        var shellViewModel = _shellViewModel;
-        shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+        var launcherViewModel = _launcherViewModel;
+        launcherViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
 
         if (e.Key == Key.Escape && TryClearFocusedElement())
         {
@@ -297,20 +297,20 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        if (shellViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
+        if (launcherViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
         {
             e.Handled = true;
             return;
         }
 
-        if (shellViewModel is null || e.Handled)
+        if (launcherViewModel is null || e.Handled)
         {
             return;
         }
 
         if (e.Key == Key.F12)
         {
-            shellViewModel.ToggleHiddenItemsOverride();
+            launcherViewModel.ToggleHiddenItemsOverride();
             e.Handled = true;
             return;
         }
@@ -324,7 +324,7 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        if (shellViewModel.TryHandleTopLevelNavigationShortcut(e.Key))
+        if (launcherViewModel.TryHandleTopLevelNavigationShortcut(e.Key))
         {
             e.Handled = true;
             return;
@@ -332,7 +332,7 @@ internal sealed partial class MainWindow : Window
 
         if (e.Key == Key.Enter
             && !ShouldSuppressPrimaryEnterShortcut(e.Source)
-            && shellViewModel.TryHandlePrimaryEnterShortcut())
+            && launcherViewModel.TryHandlePrimaryEnterShortcut())
         {
             e.Handled = true;
             return;
@@ -343,9 +343,9 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        if (shellViewModel.BackCommand.CanExecute(null))
+        if (launcherViewModel.BackCommand.CanExecute(null))
         {
-            shellViewModel.BackCommand.Execute(null);
+            launcherViewModel.BackCommand.Execute(null);
             e.Handled = true;
         }
     }
@@ -369,7 +369,7 @@ internal sealed partial class MainWindow : Window
 
     private void OnWindowKeyUp(object? sender, KeyEventArgs e)
     {
-        _shellViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+        _launcherViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
     }
 
     private void OnWindowTextInput(object? sender, TextInputEventArgs e)
@@ -400,10 +400,10 @@ internal sealed partial class MainWindow : Window
 
     private bool ShouldSuppressSearchShortcut(object? eventSource, KeyModifiers modifiers = KeyModifiers.None)
     {
-        if (_shellViewModel is null
-            || _shellViewModel.IsWelcomeOverlayVisible
-            || _shellViewModel.IsPromptOverlayVisible
-            || _shellViewModel.IsLaunchDialogVisible)
+        if (_launcherViewModel is null
+            || _launcherViewModel.IsWelcomeOverlayVisible
+            || _launcherViewModel.IsPromptOverlayVisible
+            || _launcherViewModel.IsLaunchDialogVisible)
         {
             return true;
         }
@@ -478,7 +478,7 @@ internal sealed partial class MainWindow : Window
 
     private void OnWindowDeactivated(object? sender, EventArgs e)
     {
-        _shellViewModel?.UpdateKeyboardModifiers(KeyModifiers.None);
+        _launcherViewModel?.UpdateKeyboardModifiers(KeyModifiers.None);
     }
 
     private void OnActualThemeVariantChanged(object? sender, EventArgs e)
@@ -497,19 +497,19 @@ internal sealed partial class MainWindow : Window
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (_shellViewModel is not null)
+        if (_launcherViewModel is not null)
         {
-            _shellViewModel.NavigationTransitionRequested -= OnNavigationTransitionRequested;
-            _shellViewModel.PropertyChanged -= OnShellViewModelPropertyChanged;
+            _launcherViewModel.NavigationTransitionRequested -= OnNavigationTransitionRequested;
+            _launcherViewModel.PropertyChanged -= OnLauncherViewModelPropertyChanged;
         }
 
-        _shellViewModel = DataContext as FrontendShellViewModel;
+        _launcherViewModel = DataContext as LauncherViewModel;
 
-        if (_shellViewModel is not null)
+        if (_launcherViewModel is not null)
         {
-            _shellViewModel.UpdateKeyboardModifiers(KeyModifiers.None);
-            _shellViewModel.NavigationTransitionRequested += OnNavigationTransitionRequested;
-            _shellViewModel.PropertyChanged += OnShellViewModelPropertyChanged;
+            _launcherViewModel.UpdateKeyboardModifiers(KeyModifiers.None);
+            _launcherViewModel.NavigationTransitionRequested += OnNavigationTransitionRequested;
+            _launcherViewModel.PropertyChanged += OnLauncherViewModelPropertyChanged;
         }
 
         ApplyWindowOpacity();
@@ -518,56 +518,56 @@ internal sealed partial class MainWindow : Window
         QueuePromptOverlaySync();
     }
 
-    private void OnNavigationTransitionRequested(object? sender, ShellNavigationTransitionEventArgs e)
+    private void OnNavigationTransitionRequested(object? sender, NavigationTransitionEventArgs e)
     {
         Dispatcher.UIThread.Post(
             () => PlayRouteTransition(e),
             DispatcherPriority.Render);
     }
 
-    private void OnShellViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnLauncherViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayVisible))
+        if (e.PropertyName == nameof(LauncherViewModel.IsPromptOverlayVisible))
         {
             UpdatePromptOverlayRowHeights();
             QueuePromptOverlaySync();
             return;
         }
 
-        if (e.PropertyName == nameof(FrontendShellViewModel.IsPromptOverlayWarning))
+        if (e.PropertyName == nameof(LauncherViewModel.IsPromptOverlayWarning))
         {
             UpdatePromptOverlayBackdropBrush();
             return;
         }
 
-        if (e.PropertyName == nameof(FrontendShellViewModel.LauncherOpacity))
+        if (e.PropertyName == nameof(LauncherViewModel.LauncherOpacity))
         {
             ApplyWindowOpacity();
             return;
         }
 
-        if (e.PropertyName == nameof(FrontendShellViewModel.LockWindowSizeSetting)
-            || e.PropertyName == nameof(FrontendShellViewModel.ShowMaximizeButton))
+        if (e.PropertyName == nameof(LauncherViewModel.LockWindowSizeSetting)
+            || e.PropertyName == nameof(LauncherViewModel.ShowMaximizeButton))
         {
             ApplyWindowSizingState();
             return;
         }
 
-        if (e.PropertyName is nameof(FrontendShellViewModel.CurrentBackgroundBitmap)
-            or nameof(FrontendShellViewModel.BackgroundOpacity)
-            or nameof(FrontendShellViewModel.BackgroundBlur)
-            or nameof(FrontendShellViewModel.BackgroundColorful)
-            or nameof(FrontendShellViewModel.SelectedBackgroundSuitIndex)
-            or nameof(FrontendShellViewModel.CurrentBackgroundSourcePixelWidth)
-            or nameof(FrontendShellViewModel.CurrentBackgroundSourcePixelHeight))
+        if (e.PropertyName is nameof(LauncherViewModel.CurrentBackgroundBitmap)
+            or nameof(LauncherViewModel.BackgroundOpacity)
+            or nameof(LauncherViewModel.BackgroundBlur)
+            or nameof(LauncherViewModel.BackgroundColorful)
+            or nameof(LauncherViewModel.SelectedBackgroundSuitIndex)
+            or nameof(LauncherViewModel.CurrentBackgroundSourcePixelWidth)
+            or nameof(LauncherViewModel.CurrentBackgroundSourcePixelHeight))
         {
             ApplyDynamicBackgroundState();
             return;
         }
 
-        if (e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayTextInput)
-            || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayChoiceList)
-            || e.PropertyName == nameof(FrontendShellViewModel.ShowPromptOverlayMessage))
+        if (e.PropertyName == nameof(LauncherViewModel.ShowPromptOverlayTextInput)
+            || e.PropertyName == nameof(LauncherViewModel.ShowPromptOverlayChoiceList)
+            || e.PropertyName == nameof(LauncherViewModel.ShowPromptOverlayMessage))
         {
             UpdatePromptOverlayRowHeights();
             QueuePromptOverlayFocus();
@@ -576,7 +576,7 @@ internal sealed partial class MainWindow : Window
 
     private void ApplyWindowOpacity()
     {
-        var configuredOpacity = _shellViewModel?.LauncherOpacity ?? 600d;
+        var configuredOpacity = _launcherViewModel?.LauncherOpacity ?? 600d;
         Opacity = FrontendAppearanceService.MapLauncherOpacityToWindowOpacity(configuredOpacity);
     }
 
@@ -594,7 +594,7 @@ internal sealed partial class MainWindow : Window
     {
         UpdatePromptOverlayRowHeights();
 
-        var shouldShow = _shellViewModel?.IsPromptOverlayVisible == true;
+        var shouldShow = _launcherViewModel?.IsPromptOverlayVisible == true;
         if (shouldShow == _isPromptOverlayRenderedOpen)
         {
             if (shouldShow)
@@ -642,12 +642,12 @@ internal sealed partial class MainWindow : Window
     {
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
 
-        if (_shellViewModel?.IsPromptOverlayVisible != true || !PromptOverlayHost.IsVisible)
+        if (_launcherViewModel?.IsPromptOverlayVisible != true || !PromptOverlayHost.IsVisible)
         {
             return;
         }
 
-        if (_shellViewModel?.ShowPromptOverlayTextInput == true && PromptOverlayInputTextBox.IsVisible)
+        if (_launcherViewModel?.ShowPromptOverlayTextInput == true && PromptOverlayInputTextBox.IsVisible)
         {
             PromptOverlayInputTextBox.Focus();
             PromptOverlayInputTextBox.SelectionStart = 0;
@@ -655,7 +655,7 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        if (_shellViewModel?.ShowPromptOverlayChoiceList == true && PromptOverlayChoiceListBox.IsVisible)
+        if (_launcherViewModel?.ShowPromptOverlayChoiceList == true && PromptOverlayChoiceListBox.IsVisible)
         {
             PromptOverlayChoiceListBox.Focus();
             return;
@@ -681,7 +681,7 @@ internal sealed partial class MainWindow : Window
 
     private void UpdatePromptOverlayBackdropBrush()
     {
-        var isWarning = _shellViewModel?.IsPromptOverlayWarning == true;
+        var isWarning = _launcherViewModel?.IsPromptOverlayWarning == true;
         PromptOverlayBackdrop.Background = isWarning
             ? FrontendThemeResourceResolver.GetBrush("ColorBrushPromptOverlayWarningBackdrop")
             : FrontendThemeResourceResolver.GetBrush("ColorBrushPromptOverlayBackdrop");
@@ -695,7 +695,7 @@ internal sealed partial class MainWindow : Window
             if (_darkMainBackgroundBrush is null || _darkMainBackgroundBaseColor != darkBaseColor)
             {
                 _darkMainBackgroundBaseColor = darkBaseColor;
-                _darkMainBackgroundBrush = CreateDarkShellBackgroundBrush(darkBaseColor);
+                _darkMainBackgroundBrush = CreateDarkMainBackgroundBrush(darkBaseColor);
             }
 
             MainBorder.Background = _darkMainBackgroundBrush;
@@ -718,7 +718,7 @@ internal sealed partial class MainWindow : Window
 
     private void ApplyDynamicBackgroundState()
     {
-        var bitmap = _shellViewModel?.CurrentBackgroundBitmap;
+        var bitmap = _launcherViewModel?.CurrentBackgroundBitmap;
         if (bitmap is null)
         {
             DynamicBackgroundHost.IsVisible = false;
@@ -736,15 +736,15 @@ internal sealed partial class MainWindow : Window
 
         ConfigureBackgroundHostLayout(bitmap);
         DynamicBackgroundHost.Background = CreateDynamicBackgroundBrush(bitmap);
-        DynamicBackgroundHost.Opacity = Math.Clamp((_shellViewModel?.BackgroundOpacity ?? 1000d) / 1000d, 0d, 1d);
-        var blur = Math.Clamp(_shellViewModel?.BackgroundBlur ?? 0d, 0d, 40d);
+        DynamicBackgroundHost.Opacity = Math.Clamp((_launcherViewModel?.BackgroundOpacity ?? 1000d) / 1000d, 0d, 1d);
+        var blur = Math.Clamp(_launcherViewModel?.BackgroundBlur ?? 0d, 0d, 40d);
         DynamicBackgroundHost.Effect = CreateDynamicBackgroundEffect(blur);
         DynamicBackgroundHost.Margin = blur <= 0.5d
             ? default
             : new Thickness(-((blur + 1d) / 1.8d));
         DynamicBackgroundHost.IsVisible = true;
 
-        var showColorfulOverlay = _shellViewModel?.BackgroundColorful == true;
+        var showColorfulOverlay = _launcherViewModel?.BackgroundColorful == true;
         DynamicBackgroundOverlay.IsVisible = showColorfulOverlay;
         DynamicBackgroundOverlay.Background = showColorfulOverlay
             ? CreateDynamicBackgroundOverlayBrush()
@@ -848,7 +848,7 @@ internal sealed partial class MainWindow : Window
 
     private int ResolveBackgroundSuitMode(Bitmap bitmap)
     {
-        var configuredSuit = _shellViewModel?.SelectedBackgroundSuitIndex ?? 0;
+        var configuredSuit = _launcherViewModel?.SelectedBackgroundSuitIndex ?? 0;
         if (configuredSuit != 0)
         {
             return configuredSuit;
@@ -884,8 +884,8 @@ internal sealed partial class MainWindow : Window
     {
         return ResolveBackgroundAssetPixelSize(
             renderedPixelSize,
-            _shellViewModel?.CurrentBackgroundSourcePixelWidth ?? 0,
-            _shellViewModel?.CurrentBackgroundSourcePixelHeight ?? 0);
+            _launcherViewModel?.CurrentBackgroundSourcePixelWidth ?? 0,
+            _launcherViewModel?.CurrentBackgroundSourcePixelHeight ?? 0);
     }
 
     private IBrush CreateDynamicBackgroundOverlayBrush()
@@ -919,9 +919,9 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        var showMessage = _shellViewModel?.ShowPromptOverlayMessage == true;
-        var showTextInput = _shellViewModel?.ShowPromptOverlayTextInput == true;
-        var showChoiceList = _shellViewModel?.ShowPromptOverlayChoiceList == true;
+        var showMessage = _launcherViewModel?.ShowPromptOverlayMessage == true;
+        var showTextInput = _launcherViewModel?.ShowPromptOverlayTextInput == true;
+        var showChoiceList = _launcherViewModel?.ShowPromptOverlayChoiceList == true;
 
         PromptOverlayContentGrid.RowDefinitions[PromptOverlayMessageRowIndex].Height = showMessage
             ? showChoiceList || showTextInput ? GridLength.Auto : PromptOverlayFlexibleRowHeight
@@ -933,13 +933,13 @@ internal sealed partial class MainWindow : Window
 
     private void PromptOverlayChoiceListBox_OnDoubleTapped(object? sender, TappedEventArgs e)
     {
-        _shellViewModel?.ConfirmPromptOverlayChoice();
+        _launcherViewModel?.ConfirmPromptOverlayChoice();
     }
 
     private void UpdateWindowChromeState()
     {
         var isMaximized = WindowState == WindowState.Maximized;
-        GridResize.IsVisible = ShouldShowResizeChrome(isMaximized, _shellViewModel?.LockWindowSizeSetting == true);
+        GridResize.IsVisible = ShouldShowResizeChrome(isMaximized, _launcherViewModel?.LockWindowSizeSetting == true);
         MainBorder.Margin = isMaximized ? new Thickness(0) : new Thickness(18);
         MainBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(15, 15, 8, 8);
         MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
@@ -947,7 +947,7 @@ internal sealed partial class MainWindow : Window
 
     private void ApplyWindowSizingState()
     {
-        var lockWindowSize = _shellViewModel?.LockWindowSizeSetting == true;
+        var lockWindowSize = _launcherViewModel?.LockWindowSizeSetting == true;
         var canResizeWindow = IsWindowResizeAllowed(lockWindowSize);
         CanResize = canResizeWindow;
         GridResize.IsHitTestVisible = canResizeWindow;
@@ -966,7 +966,7 @@ internal sealed partial class MainWindow : Window
         return !isMaximized && IsWindowResizeAllowed(lockWindowSize);
     }
 
-    private static IBrush CreateDarkShellBackgroundBrush(Color baseColor)
+    private static IBrush CreateDarkMainBackgroundBrush(Color baseColor)
     {
         const int textureSize = 512;
         var pixels = new byte[textureSize * textureSize * 4];
@@ -1213,7 +1213,7 @@ internal sealed partial class MainWindow : Window
         };
     }
 
-    private void PlayRouteTransition(ShellNavigationTransitionEventArgs transition)
+    private void PlayRouteTransition(NavigationTransitionEventArgs transition)
     {
         InitializeCompositionVisuals();
         if (_compositor is null)
@@ -1230,7 +1230,7 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        var leftOffset = transition.Direction == ShellNavigationTransitionDirection.Forward ? -50f : 50f;
+        var leftOffset = transition.Direction == NavigationTransitionDirection.Forward ? -50f : 50f;
         if (transition.AnimateLeftPane)
         {
             StartRouteAnimation(leftVisual, leftOffset);
@@ -1239,7 +1239,7 @@ internal sealed partial class MainWindow : Window
         PlayRightPaneRouteTransition(transition);
     }
 
-    private void PlayRightPaneRouteTransition(ShellNavigationTransitionEventArgs transition)
+    private void PlayRightPaneRouteTransition(NavigationTransitionEventArgs transition)
     {
         if (!transition.AnimateRightPane)
         {

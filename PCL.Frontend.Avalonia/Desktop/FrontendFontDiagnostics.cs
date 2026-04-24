@@ -33,9 +33,9 @@ internal static class FrontendFontDiagnostics
             out _);
     }
 
-    public static async Task ShowMissingCjkFontWarningAsync(FrontendShellActionService shellActionService)
+    public static async Task ShowMissingCjkFontWarningAsync(LauncherActionService launcherActionService)
     {
-        await shellActionService.ConfirmAsync(
+        await launcherActionService.ConfirmAsync(
             "Missing CJK System Font",
             "No suitable localized CJK system font was found. Install a Chinese, Japanese, or Korean UI font for text rendering, then restart the launcher. Until this is resolved, CJK text may render incorrectly or with missing glyphs.",
             "Continue",

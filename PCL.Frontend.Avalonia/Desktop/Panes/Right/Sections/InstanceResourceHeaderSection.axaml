@@ -1,0 +1,56 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceResourceHeaderSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <StackPanel Spacing="15">
+    <controls:PclSearchBox
+        Text="{Binding InstanceResourceSearchQuery, Mode=TwoWay}"
+        Watermark="{Binding InstanceResourceSearchWatermark}" />
+
+    <controls:PclCard ContentMargin="15,8,0,15">
+      <controls:PclCard.CardContent>
+        <WrapPanel>
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding OpenInstanceResourceFolderCommand}"
+              ColorType="Highlight"
+              Text="{Binding InstanceResourceOpenFolderText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding RefreshInstanceResourceCommand}"
+              Text="{Binding InstanceResourceRefreshText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding InstallInstanceResourceFromFileCommand}"
+              Text="{Binding InstanceResourceInstallFromFileText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding DownloadInstanceResourceCommand}"
+              Text="{Binding InstanceResourceDownloadButtonText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding SelectAllInstanceResourcesCommand}"
+              IsEnabled="{Binding CanSelectAllInstanceResources}"
+              Text="{Binding InstanceResourceSelectAllText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding ExportInstanceResourceInfoCommand}"
+              Text="{Binding InstanceResourceExportInfoText}" />
+          <controls:PclButton
+              MinWidth="110"
+              Margin="0,7,15,0"
+              Command="{Binding CheckInstanceModsCommand}"
+              IsVisible="{Binding ShowInstanceResourceCheckButton}"
+              Text="{Binding InstanceResourceCheckModsText}" />
+        </WrapPanel>
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
+  </StackPanel>
+</UserControl>

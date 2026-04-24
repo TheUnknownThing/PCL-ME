@@ -1,0 +1,46 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Left.StandardNavigationListPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:left="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Left"
+    xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
+    x:Name="Root"
+    DataContext="{Binding Launcher}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="0,12,0,0">
+      <ItemsControl x:Name="SidebarRowsHost" ItemsSource="{Binding RenderRows, ElementName=Root}">
+        <ItemsControl.DataTemplates>
+          <DataTemplate DataType="left:SidebarHeaderRenderRow">
+            <TextBlock
+                Margin="13,5,5,3"
+                Opacity="0.6"
+                FontSize="12"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.Delay="{Binding EnterDelay}"
+                motion:Motion.OffsetX="-14"
+                motion:Motion.OvershootTranslation="True"
+                Text="{Binding Title}" />
+          </DataTemplate>
+          <DataTemplate DataType="left:SidebarItemRenderRow">
+            <controls:PclListItem
+                Height="36"
+                Margin="0"
+                AccessoryCommand="{Binding Item.AccessoryCommand}"
+                AccessoryIconData="{Binding Item.AccessoryIconPath}"
+                AccessoryToolTip="{Binding Item.AccessoryToolTip}"
+                Command="{Binding Item.Command}"
+                IconData="{Binding Item.IconPath}"
+                IconScale="{Binding Item.IconScale}"
+                IsSelected="{Binding Item.IsSelected}"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.Delay="{Binding EnterDelay}"
+                motion:Motion.OffsetX="-18"
+                motion:Motion.OvershootTranslation="True"
+                Title="{Binding Item.Title}" />
+          </DataTemplate>
+        </ItemsControl.DataTemplates>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -215,8 +215,8 @@
       <SolidColorBrush x:Key="ColorBrushSemanticNeutralForeground" Color="{DynamicResource BaseColor_Blue790}" />
       <SolidColorBrush x:Key="ColorBrushPromptOverlayBackdrop" Color="{DynamicResource BaseColor_Neutral920Alpha35}" />
       <SolidColorBrush x:Key="ColorBrushPromptOverlayWarningBackdrop" Color="{DynamicResource BaseColor_Red950Alpha55}" />
-      <SolidColorBrush x:Key="ColorBrushShellDividerHighlight" Color="{DynamicResource BaseColor_Neutral660Alpha08}" />
-      <SolidColorBrush x:Key="ColorBrushShellPaneOverlay" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushPaneDividerHighlight" Color="{DynamicResource BaseColor_Neutral660Alpha08}" />
+      <SolidColorBrush x:Key="ColorBrushPaneOverlay" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
       <SolidColorBrush x:Key="ColorBrushPromptOverlayChoiceSummary" Color="{DynamicResource BaseColor_Blue850}" />
       <SolidColorBrush x:Key="ColorBrushLaunchProfileTagBorder" Color="{DynamicResource BaseColor_Neutral950Alpha07}" />
       <SolidColorBrush x:Key="ColorBrushLaunchStatusError" Color="{DynamicResource BaseColor_Red880}" />
@@ -467,8 +467,8 @@
       <SolidColorBrush x:Key="ColorBrushSemanticNeutralForeground" Color="{DynamicResource BaseColor_Blue730}" />
       <SolidColorBrush x:Key="ColorBrushPromptOverlayBackdrop" Color="{DynamicResource BaseColor_Neutral920Alpha35}" />
       <SolidColorBrush x:Key="ColorBrushPromptOverlayWarningBackdrop" Color="{DynamicResource BaseColor_Red950Alpha55}" />
-      <SolidColorBrush x:Key="ColorBrushShellDividerHighlight" Color="{DynamicResource BaseColor_Neutral660Alpha08}" />
-      <SolidColorBrush x:Key="ColorBrushShellPaneOverlay" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
+      <SolidColorBrush x:Key="ColorBrushPaneDividerHighlight" Color="{DynamicResource BaseColor_Neutral660Alpha08}" />
+      <SolidColorBrush x:Key="ColorBrushPaneOverlay" Color="{DynamicResource BaseColor_Neutral670Alpha00}" />
       <SolidColorBrush x:Key="ColorBrushPromptOverlayChoiceSummary" Color="{DynamicResource BaseColor_Blue850}" />
       <SolidColorBrush x:Key="ColorBrushLaunchProfileTagBorder" Color="{DynamicResource BaseColor_Neutral950Alpha07}" />
       <SolidColorBrush x:Key="ColorBrushLaunchStatusError" Color="{DynamicResource BaseColor_Red880}" />

@@ -23,7 +23,7 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 
     private readonly ComboBox _launcherLocaleComboBox;
     private readonly ComboBox _themeModeComboBox;
-    private FrontendShellViewModel? _shell;
+    private LauncherViewModel? _launcher;
     private bool _isRenderedOpen;
     private int _overlayAnimationVersion;
     private int _stepAnimationVersion;
@@ -44,56 +44,56 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
         WelcomeLicenseBodyHost.PointerExited += OnWelcomeLicenseBodyPointerExited;
         DataContextChanged += OnDataContextChanged;
         AttachedToVisualTree += (_, _) => QueueOverlaySync();
-        DetachedFromVisualTree += (_, _) => ObserveShell(null);
+        DetachedFromVisualTree += (_, _) => ObserveLauncher(null);
         ScheduleSelectionRestore();
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        ObserveShell(DataContext as FrontendShellViewModel);
+        ObserveLauncher(DataContext as LauncherViewModel);
         QueueOverlaySync();
         ScheduleSelectionRestore();
     }
 
-    private void ObserveShell(FrontendShellViewModel? shell)
+    private void ObserveLauncher(LauncherViewModel? launcher)
     {
-        if (ReferenceEquals(_shell, shell))
+        if (ReferenceEquals(_launcher, launcher))
         {
             return;
         }
 
-        if (_shell is not null)
+        if (_launcher is not null)
         {
-            _shell.PropertyChanged -= OnShellPropertyChanged;
+            _launcher.PropertyChanged -= OnLauncherPropertyChanged;
         }
 
-        _shell = shell;
-        if (_shell is not null)
+        _launcher = launcher;
+        if (_launcher is not null)
         {
-            _shell.PropertyChanged += OnShellPropertyChanged;
+            _launcher.PropertyChanged += OnLauncherPropertyChanged;
         }
 
-        _lastWelcomeStepIndex = _shell?.WelcomeCurrentStep ?? -1;
+        _lastWelcomeStepIndex = _launcher?.WelcomeCurrentStep ?? -1;
     }
 
-    private void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnLauncherPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FrontendShellViewModel.IsWelcomeOverlayVisible))
+        if (e.PropertyName == nameof(LauncherViewModel.IsWelcomeOverlayVisible))
         {
             QueueOverlaySync();
             return;
         }
 
-        if (e.PropertyName == nameof(FrontendShellViewModel.WelcomeCurrentStep))
+        if (e.PropertyName == nameof(LauncherViewModel.WelcomeCurrentStep))
         {
             QueueStepTransition();
             return;
         }
 
-        if (e.PropertyName is nameof(FrontendShellViewModel.LauncherLocaleOptions)
-            or nameof(FrontendShellViewModel.SelectedLauncherLocaleIndex)
-            or nameof(FrontendShellViewModel.DarkModeOptions)
-            or nameof(FrontendShellViewModel.SelectedDarkModeIndex))
+        if (e.PropertyName is nameof(LauncherViewModel.LauncherLocaleOptions)
+            or nameof(LauncherViewModel.SelectedLauncherLocaleIndex)
+            or nameof(LauncherViewModel.DarkModeOptions)
+            or nameof(LauncherViewModel.SelectedDarkModeIndex))
         {
             ScheduleSelectionRestore();
         }
@@ -106,13 +106,13 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 
     private void RestoreSelections()
     {
-        if (_shell is null)
+        if (_launcher is null)
         {
             return;
         }
 
-        ApplySelectedIndex(_launcherLocaleComboBox, _shell.SelectedLauncherLocaleIndex);
-        ApplySelectedIndex(_themeModeComboBox, _shell.SelectedDarkModeIndex);
+        ApplySelectedIndex(_launcherLocaleComboBox, _launcher.SelectedLauncherLocaleIndex);
+        ApplySelectedIndex(_themeModeComboBox, _launcher.SelectedDarkModeIndex);
     }
 
     private static void ApplySelectedIndex(ComboBox comboBox, int selectedIndex)
@@ -137,7 +137,7 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 
     private async Task SyncOverlayAsync()
     {
-        var shouldShow = _shell?.IsWelcomeOverlayVisible == true;
+        var shouldShow = _launcher?.IsWelcomeOverlayVisible == true;
         if (shouldShow == _isRenderedOpen)
         {
             return;
@@ -155,7 +155,7 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
                 WelcomeBackdrop,
                 WelcomeCard,
                 () => version == _overlayAnimationVersion && _isRenderedOpen);
-            _lastWelcomeStepIndex = _shell?.WelcomeCurrentStep ?? -1;
+            _lastWelcomeStepIndex = _launcher?.WelcomeCurrentStep ?? -1;
             return;
         }
 
@@ -175,13 +175,13 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 
     private async Task PlayStepTransitionAsync()
     {
-        if (_shell is null || !_isRenderedOpen)
+        if (_launcher is null || !_isRenderedOpen)
         {
-            _lastWelcomeStepIndex = _shell?.WelcomeCurrentStep ?? -1;
+            _lastWelcomeStepIndex = _launcher?.WelcomeCurrentStep ?? -1;
             return;
         }
 
-        var currentStep = _shell.WelcomeCurrentStep;
+        var currentStep = _launcher.WelcomeCurrentStep;
         if (_lastWelcomeStepIndex < 0)
         {
             _lastWelcomeStepIndex = currentStep;
@@ -262,7 +262,7 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 
     private void OnWelcomeLicenseBodyPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (_shell is null || !e.GetCurrentPoint(WelcomeLicenseBodyHost).Properties.IsLeftButtonPressed)
+        if (_launcher is null || !e.GetCurrentPoint(WelcomeLicenseBodyHost).Properties.IsLeftButtonPressed)
         {
             return;
         }
@@ -276,11 +276,11 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 
         if (linkKind == TermsLinkKind)
         {
-            _shell.WelcomeOpenTermsCommand.Execute(null);
+            _launcher.WelcomeOpenTermsCommand.Execute(null);
         }
         else if (linkKind == ReadmeLinkKind)
         {
-            _shell.WelcomeOpenReadmeCommand.Execute(null);
+            _launcher.WelcomeOpenReadmeCommand.Execute(null);
         }
 
         e.Handled = true;
@@ -300,7 +300,7 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
 
     private string? HitTestWelcomeLicenseLink(Point point)
     {
-        if (_shell is null || WelcomeLicenseBodyText.Bounds.Width <= 0)
+        if (_launcher is null || WelcomeLicenseBodyText.Bounds.Width <= 0)
         {
             return null;
         }
@@ -311,10 +311,10 @@ internal sealed partial class WelcomeOnboardingOverlay : UserControl
             return null;
         }
 
-        var prefix = _shell.WelcomeTermsBodyPrefix;
-        var terms = _shell.WelcomeTermsLinkText;
-        var middle = _shell.WelcomeTermsBodyMiddle;
-        var readme = _shell.WelcomeReadmeLinkText;
+        var prefix = _launcher.WelcomeTermsBodyPrefix;
+        var terms = _launcher.WelcomeTermsLinkText;
+        var middle = _launcher.WelcomeTermsBodyMiddle;
+        var readme = _launcher.WelcomeReadmeLinkText;
 
         var termsStart = prefix.Length;
         if (ContainsPoint(layout.HitTestTextRange(termsStart, terms.Length), point))

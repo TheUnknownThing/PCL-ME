@@ -1,0 +1,158 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceSetupAdvancedLaunchSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard Header="{Binding InstanceSetupAdvancedHeaderText}" ContentMargin="20,40,20,18">
+    <controls:PclCard.CardContent>
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,100,9,28,9,100,9,28,9,28,9,100,9,Auto">
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupRendererLabelText}" />
+        <ComboBox
+            Grid.Row="0"
+            Grid.Column="1"
+            ItemsSource="{Binding InstanceRendererOptions}"
+            SelectedIndex="{Binding SelectedInstanceRendererIndex}" />
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="0,0,25,3"
+            VerticalAlignment="Top"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupPreLaunchCommandLabelText}" />
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="1"
+            AcceptsReturn="True"
+            Text="{Binding InstanceLaunchBeforeCommand}"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top" />
+
+        <TextBlock
+            Grid.Row="4"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupWrapperCommandLabelText}" />
+        <TextBox
+            Grid.Row="4"
+            Grid.Column="1"
+            Text="{Binding InstanceLaunchWrapperCommand}" />
+
+        <TextBlock
+            Grid.Row="6"
+            Margin="0,0,25,0"
+            VerticalAlignment="Top"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupJvmArgumentsLabelText}" />
+        <TextBox
+            Grid.Row="6"
+            Grid.Column="1"
+            AcceptsReturn="True"
+            Text="{Binding InstanceLaunchJvmArguments}"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top" />
+
+        <TextBlock
+            Grid.Row="8"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupGameArgumentsLabelText}" />
+        <TextBox
+            Grid.Row="8"
+            Grid.Column="1"
+            Text="{Binding InstanceLaunchGameArguments}" />
+
+        <TextBlock
+            Grid.Row="10"
+            Margin="0,0,25,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupClasspathHeadLabelText}" />
+        <TextBox
+            Grid.Row="10"
+            Grid.Column="1"
+            Text="{Binding InstanceClasspathHead}" />
+
+        <TextBlock
+            Grid.Row="12"
+            Margin="0,0,25,3"
+            VerticalAlignment="Top"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="13"
+            Text="{Binding InstanceSetupEnvironmentVariablesLabelText}" />
+        <StackPanel Grid.Row="12" Grid.Column="1" Spacing="6">
+          <TextBox
+              AcceptsReturn="True"
+              Text="{Binding InstanceEnvironmentVariables}"
+              TextWrapping="Wrap"
+              VerticalContentAlignment="Top" />
+          <TextBlock
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+              FontSize="12"
+              Text="{Binding InstanceSetupEnvironmentVariablesHintText}"
+              TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="14" Grid.ColumnSpan="2" Margin="0,8,0,0" Spacing="8">
+          <Grid ColumnDefinitions="Auto,*">
+            <TextBlock
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13"
+                Text="{Binding InstanceSetupLinuxDisplayBackendLabelText}" />
+            <ComboBox
+                Grid.Column="1"
+                ItemsSource="{Binding InstanceForceX11OnWaylandOptions}"
+                SelectedIndex="{Binding SelectedInstanceForceX11OnWaylandIndex}" />
+          </Grid>
+          <TextBlock
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+              FontSize="12"
+              Text="{Binding InstanceSetupLinuxDisplayBackendHintText}"
+              TextWrapping="Wrap" />
+          <CheckBox
+              Foreground="{DynamicResource ColorBrush1}"
+              Content="{Binding InstanceSetupWaitForPreLaunchCommandText}"
+              IsChecked="{Binding WaitForInstanceLaunchBeforeCommand}" />
+          <CheckBox
+              Foreground="{DynamicResource ColorBrush1}"
+              Content="{Binding InstanceSetupIgnoreJavaCompatibilityText}"
+              IsChecked="{Binding IgnoreInstanceJavaCompatibilityWarning}" />
+          <CheckBox
+              Foreground="{DynamicResource ColorBrush1}"
+              Content="{Binding InstanceSetupDisableFileValidationText}"
+              IsChecked="{Binding DisableInstanceFileValidation}" />
+          <CheckBox
+              Foreground="{DynamicResource ColorBrush1}"
+              Content="{Binding InstanceSetupFollowLauncherProxyText}"
+              IsChecked="{Binding FollowInstanceLauncherProxy}" />
+          <CheckBox
+              Foreground="{DynamicResource ColorBrush1}"
+              Content="{Binding InstanceSetupDisableJavaLaunchWrapperText}"
+              IsChecked="{Binding DisableInstanceJavaLaunchWrapper}" />
+          <CheckBox
+              Foreground="{DynamicResource ColorBrush1}"
+              Content="{Binding InstanceSetupDisableRetroWrapperText}"
+              IsChecked="{Binding DisableInstanceRetroWrapper}" />
+          <CheckBox
+              Foreground="{DynamicResource ColorBrush1}"
+              Content="{Binding InstanceSetupUseDebugLog4jText}"
+              IsChecked="{Binding UseInstanceDebugLog4jConfig}" />
+        </StackPanel>
+      </Grid>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

@@ -15,7 +15,7 @@ internal sealed partial class PclLaunchLeftPanel : UserControl
     private static readonly Easing ScaleInEasing = new BackEaseOut();
     private static readonly Easing ScaleOutEasing = new CubicEaseOut();
 
-    private FrontendShellViewModel? _shell;
+    private LauncherViewModel? _launcher;
     private int _launchStateAnimationVersion;
     private bool _isShowingLaunchPage;
     private bool _hasSynchronizedInitialState;
@@ -36,23 +36,23 @@ internal sealed partial class PclLaunchLeftPanel : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (_shell is not null)
+        if (_launcher is not null)
         {
-            _shell.PropertyChanged -= OnShellPropertyChanged;
+            _launcher.PropertyChanged -= OnLauncherPropertyChanged;
         }
 
-        _shell = DataContext as FrontendShellViewModel;
-        if (_shell is not null)
+        _launcher = DataContext as LauncherViewModel;
+        if (_launcher is not null)
         {
-            _shell.PropertyChanged += OnShellPropertyChanged;
+            _launcher.PropertyChanged += OnLauncherPropertyChanged;
         }
 
         QueueLaunchStateSync(animate: false);
     }
 
-    private void OnShellPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnLauncherPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FrontendShellViewModel.IsLaunchDialogVisible))
+        if (e.PropertyName == nameof(LauncherViewModel.IsLaunchDialogVisible))
         {
             QueueLaunchStateSync(animate: true);
         }
@@ -76,7 +76,7 @@ internal sealed partial class PclLaunchLeftPanel : UserControl
 
     private async Task SyncLaunchStateAsync(bool animate, int version)
     {
-        var shouldShowLaunchPage = _shell?.IsLaunchDialogVisible == true;
+        var shouldShowLaunchPage = _launcher?.IsLaunchDialogVisible == true;
         if (!_hasSynchronizedInitialState)
         {
             ApplyLaunchStateImmediately(shouldShowLaunchPage);

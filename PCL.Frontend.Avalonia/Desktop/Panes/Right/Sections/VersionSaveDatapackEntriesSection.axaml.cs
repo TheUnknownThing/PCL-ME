@@ -1,0 +1,47 @@
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
+using PCL.Frontend.Avalonia.ViewModels;
+
+namespace PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections;
+
+internal sealed partial class VersionSaveDatapackEntriesSection : UserControl
+{
+    public VersionSaveDatapackEntriesSection()
+    {
+        InitializeComponent();
+    }
+
+    private void OnSortButtonClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control control || DataContext is not LauncherViewModel shell)
+        {
+            return;
+        }
+
+        var menu = new ContextMenu
+        {
+            Placement = PlacementMode.Bottom,
+            PlacementTarget = control,
+            ItemsSource = new object[]
+            {
+                CreateMenuItem(shell.SD("instance.content.sort.file_name"), shell.SetVersionSaveDatapackFileNameSort),
+                CreateMenuItem(shell.SD("instance.content.sort.resource_name"), shell.SetVersionSaveDatapackNameSort),
+                CreateMenuItem(shell.SD("instance.content.sort.added_time"), shell.SetVersionSaveDatapackCreateTimeSort),
+                CreateMenuItem(shell.SD("instance.content.sort.file_size"), shell.SetVersionSaveDatapackFileSizeSort)
+            }
+        };
+
+        menu.Open(control);
+    }
+
+    private static MenuItem CreateMenuItem(string title, Action onClick)
+    {
+        var item = new MenuItem
+        {
+            Header = title
+        };
+        item.Click += (_, _) => onClick();
+        return item;
+    }
+}

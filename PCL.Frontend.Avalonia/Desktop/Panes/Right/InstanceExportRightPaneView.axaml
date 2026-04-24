@@ -1,0 +1,27 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.InstanceExportRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections"
+    DataContext="{Binding Launcher}">
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="25,10,25,65">
+        <sections:InstanceExportHeaderSection />
+        <sections:InstanceExportOptionsSection />
+        <sections:InstanceExportAdvancedSection />
+      </StackPanel>
+    </ScrollViewer>
+
+    <controls:PclButton
+        Width="160"
+        Height="38"
+        Margin="0,0,0,15"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Bottom"
+        Command="{Binding StartInstanceExportCommand}"
+        ColorType="Highlight"
+        Text="{Binding InstanceExportStartText}" />
+  </Grid>
+</UserControl>
