@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
@@ -24,6 +25,9 @@ internal sealed partial class PclIconTextButton : UserControl
     public static readonly StyledProperty<PclIconTextButtonColorState> ColorTypeProperty =
         AvaloniaProperty.Register<PclIconTextButton, PclIconTextButtonColorState>(nameof(ColorType), PclIconTextButtonColorState.Normal);
 
+    public static readonly StyledProperty<bool> UseFloatingSurfaceProperty =
+        AvaloniaProperty.Register<PclIconTextButton, bool>(nameof(UseFloatingSurface));
+
     private bool _isHovered;
     private bool _isPressed;
 
@@ -33,6 +37,11 @@ internal sealed partial class PclIconTextButton : UserControl
     {
         InitializeComponent();
 
+        AttachedToVisualTree += (_, _) =>
+        {
+            RefreshVisualState();
+            QueueRefreshVisualState();
+        };
         ButtonHost.PointerEntered += (_, _) =>
         {
             _isHovered = true;
@@ -93,6 +102,12 @@ internal sealed partial class PclIconTextButton : UserControl
         set => SetValue(ColorTypeProperty, value);
     }
 
+    public bool UseFloatingSurface
+    {
+        get => GetValue(UseFloatingSurfaceProperty);
+        set => SetValue(UseFloatingSurfaceProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -101,7 +116,9 @@ internal sealed partial class PclIconTextButton : UserControl
         {
             UpdateIcon();
         }
-        else if (change.Property == ColorTypeProperty || change.Property == IsEnabledProperty)
+        else if (change.Property == ColorTypeProperty ||
+                 change.Property == IsEnabledProperty ||
+                 change.Property == UseFloatingSurfaceProperty)
         {
             RefreshVisualState();
         }
@@ -119,7 +136,7 @@ internal sealed partial class PclIconTextButton : UserControl
     {
         if (!IsEnabled)
         {
-            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
+            PanBack.Background = ResolveIdleBackgroundBrush();
             ShapeIcon.Fill = FrontendThemeResourceResolver.GetBrush("ColorBrushGray5");
             LabText.Foreground = FrontendThemeResourceResolver.GetBrush("ColorBrushGray5");
             PanBack.RenderTransform = new ScaleTransform(1, 1);
@@ -136,12 +153,14 @@ internal sealed partial class PclIconTextButton : UserControl
         }
         else if (_isHovered)
         {
-            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
+            PanBack.Background = UseFloatingSurface
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrushMyCardMouseOver")
+                : FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
             foreground = FrontendThemeResourceResolver.GetBrush("ColorBrush3");
         }
         else
         {
-            PanBack.Background = FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
+            PanBack.Background = ResolveIdleBackgroundBrush();
         }
 
         ShapeIcon.Fill = foreground;
@@ -149,6 +168,18 @@ internal sealed partial class PclIconTextButton : UserControl
         PanBack.RenderTransform = _isPressed
             ? new ScaleTransform(0.97, 0.97)
             : new ScaleTransform(1, 1);
+    }
+
+    private void QueueRefreshVisualState()
+    {
+        Dispatcher.UIThread.Post(RefreshVisualState, DispatcherPriority.Render);
+    }
+
+    private IBrush ResolveIdleBackgroundBrush()
+    {
+        return UseFloatingSurface
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrushMyCard")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushSemiTransparent");
     }
 }
 

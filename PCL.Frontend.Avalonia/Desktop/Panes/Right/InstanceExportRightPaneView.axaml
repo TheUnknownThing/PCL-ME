@@ -14,14 +14,31 @@
       </StackPanel>
     </ScrollViewer>
 
-    <controls:PclButton
-        Width="160"
-        Height="38"
+    <controls:PclIconTextButton
         Margin="0,0,0,15"
         HorizontalAlignment="Center"
         VerticalAlignment="Bottom"
         Command="{Binding StartInstanceExportCommand}"
         ColorType="Highlight"
+        IsEnabled="{Binding CanStartInstanceExport}"
+        IsVisible="{Binding ShowInstanceExportStartButton}"
+        UseFloatingSurface="True"
+        IconData="{Binding InstanceExportStartIconData}"
+        IconScale="{Binding InstanceExportStartIconScale}"
         Text="{Binding InstanceExportStartText}" />
+    <controls:PclCard
+        Width="180"
+        Margin="0,0,0,15"
+        ContentMargin="14,12,14,11"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Bottom"
+        IsVisible="{Binding IsInstanceExportRunning}">
+      <controls:PclCard.CardContent>
+        <controls:PclLoading
+            HorizontalAlignment="Center"
+            IsRunning="{Binding IsInstanceExportRunning}"
+            Text="{Binding InstanceExportStartText}" />
+      </controls:PclCard.CardContent>
+    </controls:PclCard>
   </Grid>
 </UserControl>

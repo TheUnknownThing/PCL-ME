@@ -25,6 +25,9 @@ internal sealed partial class PclButton : UserControl
     public static readonly StyledProperty<Thickness> TextMarginProperty =
         AvaloniaProperty.Register<PclButton, Thickness>(nameof(TextMargin), default);
 
+    public static readonly StyledProperty<bool> UseFloatingSurfaceProperty =
+        AvaloniaProperty.Register<PclButton, bool>(nameof(UseFloatingSurface));
+
     private bool _isPressed;
     private bool _isAppearanceSubscribed;
 
@@ -98,6 +101,12 @@ internal sealed partial class PclButton : UserControl
         set => SetValue(TextMarginProperty, value);
     }
 
+    public bool UseFloatingSurface
+    {
+        get => GetValue(UseFloatingSurfaceProperty);
+        set => SetValue(UseFloatingSurfaceProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -106,7 +115,9 @@ internal sealed partial class PclButton : UserControl
         {
             LabText.Text = change.GetNewValue<string>();
         }
-        else if (change.Property == IsEnabledProperty || change.Property == ColorTypeProperty)
+        else if (change.Property == IsEnabledProperty ||
+                 change.Property == ColorTypeProperty ||
+                 change.Property == UseFloatingSurfaceProperty)
         {
             RefreshVisualState();
         }
@@ -201,17 +212,29 @@ internal sealed partial class PclButton : UserControl
     {
         if (!IsEnabled)
         {
-            return FrontendThemeResourceResolver.GetBrush("ColorBrushHalfWhite");
+            return ResolveIdleBackgroundBrush();
         }
 
         if (isHovered)
         {
-            return ColorType == PclButtonColorState.Red
-                ? FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticDangerBackground")
+            if (ColorType == PclButtonColorState.Red)
+            {
+                return FrontendThemeResourceResolver.GetBrush("ColorBrushSemanticDangerBackground");
+            }
+
+            return UseFloatingSurface
+                ? FrontendThemeResourceResolver.GetBrush("ColorBrushMyCardMouseOver")
                 : FrontendThemeResourceResolver.GetBrush("ColorBrush7");
         }
 
-        return FrontendThemeResourceResolver.GetBrush("ColorBrushHalfWhite");
+        return ResolveIdleBackgroundBrush();
+    }
+
+    private IBrush ResolveIdleBackgroundBrush()
+    {
+        return UseFloatingSurface
+            ? FrontendThemeResourceResolver.GetBrush("ColorBrushMyCard")
+            : FrontendThemeResourceResolver.GetBrush("ColorBrushHalfWhite");
     }
 }
 

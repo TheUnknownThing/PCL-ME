@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
+using PCL.Frontend.Avalonia.Icons;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 using PCL.Frontend.Avalonia.ViewModels.Panes;
@@ -17,6 +19,7 @@ internal sealed partial class LauncherViewModel
     private string _instanceExportVersion = string.Empty;
     private bool _instanceExportIncludeResources;
     private bool _instanceExportModrinthMode;
+    private bool _isInstanceExportRunning;
 
     public ObservableCollection<ExportOptionGroupViewModel> InstanceExportOptionGroups { get; } = [];
 
@@ -62,6 +65,28 @@ internal sealed partial class LauncherViewModel
 
     public bool HasInstanceExportOptionGroups => InstanceExportOptionGroups.Count > 0;
 
+    public bool IsInstanceExportRunning
+    {
+        get => _isInstanceExportRunning;
+        private set
+        {
+            if (SetProperty(ref _isInstanceExportRunning, value))
+            {
+                RaisePropertyChanged(nameof(CanStartInstanceExport));
+                RaisePropertyChanged(nameof(ShowInstanceExportStartButton));
+                StartInstanceExportCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool CanStartInstanceExport => !IsInstanceExportRunning;
+
+    public bool ShowInstanceExportStartButton => !IsInstanceExportRunning;
+
+    public string InstanceExportStartIconData => FrontendIconCatalog.GetNavigationIcon("download").Data;
+
+    public double InstanceExportStartIconScale => 0.95;
+
     private void InitializeInstanceExportSurface()
     {
         var exportState = _instanceComposition.Export;
@@ -94,6 +119,9 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(ShowInstanceExportIncludeWarning));
         RaisePropertyChanged(nameof(ShowInstanceExportOptiFineWarning));
         RaisePropertyChanged(nameof(HasInstanceExportOptionGroups));
+        RaisePropertyChanged(nameof(IsInstanceExportRunning));
+        RaisePropertyChanged(nameof(CanStartInstanceExport));
+        RaisePropertyChanged(nameof(ShowInstanceExportStartButton));
     }
 
     private void ResetInstanceExportOptions()
@@ -256,8 +284,13 @@ internal sealed partial class LauncherViewModel
         AddActivity(T("instance.export.activities.guide"), T("instance.export.messages.guide_shown"));
     }
 
-    private void StartInstanceExport()
+    private async Task StartInstanceExportAsync()
     {
+        if (IsInstanceExportRunning)
+        {
+            return;
+        }
+
         if (!_instanceComposition.Selection.HasSelection)
         {
             AddActivity(T("instance.export.activities.start"), T("instance.export.messages.no_instance_selected"));
@@ -265,32 +298,38 @@ internal sealed partial class LauncherViewModel
         }
 
         var exportDirectory = Path.Combine(_launcherActionService.RuntimePaths.FrontendArtifactDirectory, "instance-exports");
-        Directory.CreateDirectory(exportDirectory);
         var archiveName = $"{GetEffectiveInstanceExportName()} {GetEffectiveInstanceExportVersion()}{(InstanceExportModrinthMode ? ".mrpack" : ".zip")}";
         var archivePath = Path.Combine(exportDirectory, archiveName);
-        if (File.Exists(archivePath))
-        {
-            File.Delete(archivePath);
-        }
-
         var sources = CollectInstanceExportSources()
             .GroupBy(entry => entry.SourcePath, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .Select(entry => new FrontendModpackExportSource(entry.SourcePath, entry.ArchivePath))
             .ToArray();
+        var request = new FrontendModpackExportRequest(
+            archivePath,
+            InstanceExportModrinthMode ? FrontendModpackExportPackageKind.Modrinth : FrontendModpackExportPackageKind.Mcbbs,
+            _instanceComposition.Selection.LauncherDirectory,
+            _instanceComposition.Selection.InstanceName,
+            GetEffectiveInstanceExportName(),
+            GetEffectiveInstanceExportVersion(),
+            sources,
+            InstanceLaunchJvmArguments,
+            InstanceLaunchGameArguments);
 
+        IsInstanceExportRunning = true;
         try
         {
-            FrontendModpackExportWorkflowService.CreateArchive(new FrontendModpackExportRequest(
-                archivePath,
-                InstanceExportModrinthMode ? FrontendModpackExportPackageKind.Modrinth : FrontendModpackExportPackageKind.Mcbbs,
-                _instanceComposition.Selection.LauncherDirectory,
-                _instanceComposition.Selection.InstanceName,
-                GetEffectiveInstanceExportName(),
-                GetEffectiveInstanceExportVersion(),
-                sources,
-                InstanceLaunchJvmArguments,
-                InstanceLaunchGameArguments));
+            await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+            await Task.Run(() =>
+            {
+                Directory.CreateDirectory(exportDirectory);
+                if (File.Exists(archivePath))
+                {
+                    File.Delete(archivePath);
+                }
+
+                FrontendModpackExportWorkflowService.CreateArchive(request);
+            });
         }
         catch (Exception ex)
         {
@@ -301,6 +340,10 @@ internal sealed partial class LauncherViewModel
 
             AddFailureActivity("开始导出", ex.Message);
             return;
+        }
+        finally
+        {
+            IsInstanceExportRunning = false;
         }
 
         OpenInstanceTarget(T("instance.export.activities.start"), archivePath, T("instance.export.messages.archive_missing"));

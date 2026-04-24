@@ -428,7 +428,7 @@ internal sealed partial class LauncherViewModel
         _importInstanceExportConfigCommand = new ActionCommand(() => _ = ImportInstanceExportConfigAsync());
         _saveInstanceExportConfigCommand = new ActionCommand(() => _ = SaveInstanceExportConfigAsync());
         _openInstanceExportGuideCommand = new ActionCommand(() => _ = OpenInstanceExportGuideAsync());
-        _startInstanceExportCommand = new ActionCommand(StartInstanceExport);
+        _startInstanceExportCommand = new ActionCommand(() => _ = StartInstanceExportAsync(), () => CanStartInstanceExport);
         _setLittleSkinCommand = new ActionCommand(() =>
         {
             SelectedInstanceServerLoginRequireIndex = 2;

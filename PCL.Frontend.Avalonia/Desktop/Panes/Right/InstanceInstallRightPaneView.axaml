@@ -22,6 +22,7 @@
         Command="{Binding ApplyInstanceInstallCommand}"
         IsEnabled="{Binding CanApplyInstanceInstall}"
         ColorType="Highlight"
+        UseFloatingSurface="True"
         IconData="{Binding InstanceInstallApplyButtonIconData}"
         IconScale="{Binding InstanceInstallApplyButtonIconScale}"
         Text="{Binding InstanceInstallApplyButtonText}" />
