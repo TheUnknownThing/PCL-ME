@@ -41,6 +41,7 @@ internal sealed class InstanceServerEntryViewModel(
     ActionCommand inspectCommand) : ViewModelBase
 {
     private Bitmap? _logo = logo;
+    private string _address = address;
     private string _statusText = "Saved server";
     private IBrush _statusBrush = Brushes.White;
     private string _playerCount = "-/-";
@@ -55,7 +56,11 @@ internal sealed class InstanceServerEntryViewModel(
 
     public string Title { get; } = title;
 
-    public string Address { get; } = address;
+    public string Address
+    {
+        get => _address;
+        set => SetProperty(ref _address, value);
+    }
 
     public Bitmap? BackgroundImage { get; } = backgroundImage;
 

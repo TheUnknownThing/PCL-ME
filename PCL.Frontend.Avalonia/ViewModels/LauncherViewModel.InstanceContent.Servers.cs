@@ -61,7 +61,13 @@ internal sealed partial class LauncherViewModel
                     _ = ConnectInstanceServerAsync(viewModel);
                 }
             }),
-            new ActionCommand(() => ViewInstanceServer(entry)));
+            new ActionCommand(() =>
+            {
+                if (viewModel is not null)
+                {
+                    ViewInstanceServer(viewModel);
+                }
+            }));
         ApplyInstanceServerIdleState(viewModel, entry.Status);
         return viewModel;
     }
@@ -280,9 +286,9 @@ internal sealed partial class LauncherViewModel
         NbtList? serverList;
         try
         {
-            serverList = File.Exists(serversPath)
+            serverList = await Task.Run(() => File.Exists(serversPath)
                 ? LoadInstanceServerList(serversPath)
-                : null;
+                : null);
         }
         catch (Exception ex)
         {
@@ -325,8 +331,7 @@ internal sealed partial class LauncherViewModel
 
         try
         {
-            var clonedServerList = (NbtList)serverList.Clone();
-            if (!TryWriteInstanceServerList(serversPath, clonedServerList))
+            if (!await Task.Run(() => TryWriteInstanceServerList(serversPath, (NbtList)serverList.Clone())))
             {
                 AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), SD("instance.content.server.messages.write_list_failed"));
                 return;
@@ -338,7 +343,7 @@ internal sealed partial class LauncherViewModel
             return;
         }
 
-        ReloadInstanceComposition();
+        entry.Address = address;
         AddActivity(activityTitle, SD("instance.content.server.messages.address_updated", ("entry_title", entry.Title), ("address", address)));
     }
 
@@ -486,7 +491,7 @@ internal sealed partial class LauncherViewModel
         return true;
     }
 
-    private void ViewInstanceServer(FrontendInstanceServerEntry entry)
+    private void ViewInstanceServer(InstanceServerEntryViewModel entry)
     {
         OpenMinecraftServerInspector(entry.Address);
     }
