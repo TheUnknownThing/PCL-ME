@@ -100,6 +100,21 @@ internal sealed partial class FrontendShellViewModel
             onCompleted: downloadedPath =>
             {
                 var installedPath = FinalizeCommunityProjectInstalledArtifact(plan.Route, downloadedPath, plan.ReplacedPath);
+                FrontendInstanceDownloadedResourceIndexService.RecordInstalledResource(
+                    plan.InstanceIndieDirectory,
+                    new FrontendDownloadedResourceInstallRecord(
+                        ResolveDownloadedResourceKind(plan.Route),
+                        plan.ProjectSource,
+                        plan.ProjectId,
+                        plan.Title,
+                        plan.ReleaseTitle,
+                        plan.ReleaseId,
+                        plan.FileId,
+                        plan.SuggestedFileName,
+                        plan.Sha1,
+                        plan.Sha512,
+                        installedPath,
+                        DateTimeOffset.Now));
                 Dispatcher.UIThread.Post(() =>
                 {
                     CleanupReplacedDownloadFavoriteResource(plan.ReplacedPath);
@@ -110,6 +125,8 @@ internal sealed partial class FrontendShellViewModel
                         {
                             ReloadVersionSavesComposition();
                         }
+
+                        RaiseCommunityProjectInstalledModProperties();
                     }
 
                     AddActivity(activityTitle, T("download.favorites.batch_install.task_completed", ("title", plan.Title), ("path", installedPath)));
@@ -260,9 +277,16 @@ internal sealed partial class FrontendShellViewModel
                     string.IsNullOrWhiteSpace(release.Meta) ? release.Info : release.Meta,
                     release.Target!,
                     targetPath,
+                    targetComposition.Selection.IndieDirectory,
                     targetComposition.Selection.InstanceName,
                     installTargetName,
                     request.Route,
+                    projectState.Source,
+                    release.ReleaseId,
+                    release.FileId,
+                    release.SuggestedFileName,
+                    release.Sha1,
+                    release.Sha512,
                     installed is not null && !string.Equals(installed.Path, targetPath, StringComparison.OrdinalIgnoreCase)
                         ? installed.Path
                         : null,
@@ -283,6 +307,18 @@ internal sealed partial class FrontendShellViewModel
                 resolvingKeys.Remove(requestKey);
             }
         }
+    }
+
+    private static string ResolveDownloadedResourceKind(LauncherFrontendSubpageKey route)
+    {
+        return route switch
+        {
+            LauncherFrontendSubpageKey.DownloadResourcePack => "resource_pack",
+            LauncherFrontendSubpageKey.DownloadShader => "shader",
+            LauncherFrontendSubpageKey.DownloadDataPack => "datapack",
+            LauncherFrontendSubpageKey.DownloadWorld => "world",
+            _ => "mod"
+        };
     }
 
     private static void CleanupReplacedDownloadFavoriteResource(string? path)

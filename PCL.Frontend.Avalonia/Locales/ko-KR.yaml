@@ -2884,6 +2884,21 @@ resource_detail:
       resource_pack: resource pack
       shader: shader pack
       world: save
+  installed_mod:
+    title_enabled: Installed in Current Instance
+    title_disabled: Disabled in Current Instance
+    title_different_version: Different Version Installed
+    summary: "{source} • {file_name} • {release}"
+    actions:
+      enable: Enable
+      disable: Disable
+      uninstall: Uninstall
+    activities:
+      enable: Enable installed mod
+      disable: Disable installed mod
+      uninstall: Uninstall installed mod
+    messages:
+      not_found: No matching installed mod was found in the current instance.
   translate_description:
     empty: 번역할 설명이 없습니다.
   values:
@@ -3199,6 +3214,8 @@ instance:
         file: "{parent_directory} • {modified_at}"
         archive: "{modified_at} • {file_size}"
         folder: "{modified_at} • {folder_kind}"
+        downloaded_from: "Downloaded from {source}"
+        with_download_source: "{summary} • Downloaded from {source}"
       messages:
         no_instance_selected: 현재 선택된 인스턴스가 없습니다.
         list_empty: "{surface_title} 목록이 비어 있습니다."
@@ -3240,6 +3257,7 @@ instance:
           status: 상태
           type: 유형
           loader: 짐을 싣는 사람
+          download_source: Download Source
           version: 버전
           authors: 저자
           description: 설명

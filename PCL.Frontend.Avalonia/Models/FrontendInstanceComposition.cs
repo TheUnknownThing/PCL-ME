@@ -159,4 +159,8 @@ internal sealed record FrontendInstanceResourceEntry(
     string Authors = "",
     string Version = "",
     string Loader = "",
+    string DownloadSource = "",
+    string DownloadProjectId = "",
+    string DownloadReleaseId = "",
+    string DownloadFileId = "",
     byte[]? IconBytes = null);

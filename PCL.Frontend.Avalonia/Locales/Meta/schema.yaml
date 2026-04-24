@@ -3315,6 +3315,24 @@ resource_detail:
       resource_pack: []
       shader: []
       world: []
+  installed_mod:
+    title_enabled: []
+    title_disabled: []
+    title_different_version: []
+    summary:
+      - source
+      - file_name
+      - release
+    actions:
+      enable: []
+      disable: []
+      uninstall: []
+    activities:
+      enable: []
+      disable: []
+      uninstall: []
+    messages:
+      not_found: []
   translate_description:
     empty: []
   values:
@@ -3692,6 +3710,11 @@ instance:
         folder:
           - modified_at
           - folder_kind
+        downloaded_from:
+          - source
+        with_download_source:
+          - summary
+          - source
       messages:
         no_instance_selected: []
         list_empty:
@@ -3757,6 +3780,7 @@ instance:
           status: []
           type: []
           loader: []
+          download_source: []
           version: []
           authors: []
           description: []

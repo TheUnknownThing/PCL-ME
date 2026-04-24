@@ -547,6 +547,48 @@
 
             <controls:PclCard
                 Margin="0,0,0,15"
+                Header="{Binding CommunityProjectInstalledModTitle}"
+                IsVisible="{Binding ShowCommunityProjectInstalledModCard}"
+                ContentMargin="20,18,20,18">
+              <controls:PclCard.CardContent>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                  <TextBlock
+                      Grid.Column="0"
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="11.5"
+                      Text="{Binding CommunityProjectInstalledModSummary}"
+                      TextWrapping="Wrap" />
+                  <StackPanel
+                      Grid.Column="1"
+                      Orientation="Horizontal"
+                      HorizontalAlignment="Right"
+                      Spacing="8">
+                    <controls:PclButton
+                        Width="82"
+                        Height="35"
+                        Command="{Binding EnableCommunityProjectInstalledModCommand}"
+                        IsVisible="{Binding CanEnableCommunityProjectInstalledMod}"
+                        Text="{Binding CommunityProjectInstalledModEnableText}" />
+                    <controls:PclButton
+                        Width="82"
+                        Height="35"
+                        Command="{Binding DisableCommunityProjectInstalledModCommand}"
+                        IsVisible="{Binding CanDisableCommunityProjectInstalledMod}"
+                        Text="{Binding CommunityProjectInstalledModDisableText}" />
+                    <controls:PclButton
+                        Width="82"
+                        Height="35"
+                        Command="{Binding UninstallCommunityProjectInstalledModCommand}"
+                        IsVisible="{Binding CanUninstallCommunityProjectInstalledMod}"
+                        Text="{Binding CommunityProjectInstalledModUninstallText}" />
+                  </StackPanel>
+                </Grid>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+
+            <controls:PclCard
+                Margin="0,0,0,15"
                 IsVisible="{Binding ShowCommunityProjectInstallSuggestionWarning}"
                 ContentMargin="0">
               <controls:PclCard.CardContent>

@@ -2884,6 +2884,21 @@ resource_detail:
       resource_pack: resource pack
       shader: shader pack
       world: save
+  installed_mod:
+    title_enabled: Installed in Current Instance
+    title_disabled: Disabled in Current Instance
+    title_different_version: Different Version Installed
+    summary: "{source} • {file_name} • {release}"
+    actions:
+      enable: Enable
+      disable: Disable
+      uninstall: Uninstall
+    activities:
+      enable: Enable installed mod
+      disable: Disable installed mod
+      uninstall: Uninstall installed mod
+    messages:
+      not_found: No matching installed mod was found in the current instance.
   translate_description:
     empty: Il n'y a pas de description à traduire
   values:
@@ -3199,6 +3214,8 @@ instance:
         file: "{parent_directory} • {modified_at}"
         archive: "{modified_at} • {file_size}"
         folder: "{modified_at} • {folder_kind}"
+        downloaded_from: "Downloaded from {source}"
+        with_download_source: "{summary} • Downloaded from {source}"
       messages:
         no_instance_selected: Aucune instance n'est actuellement sélectionnée.
         list_empty: La liste {surface_title} est vide.
@@ -3240,6 +3257,7 @@ instance:
           status: Statut
           type: Type
           loader: Chargeur
+          download_source: Download Source
           version: Version
           authors: Auteurs
           description: Descriptif

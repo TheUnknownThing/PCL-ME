@@ -188,6 +188,9 @@ internal sealed partial class FrontendShellViewModel
             try
             {
                 var newPath = SetInstanceResourceEnabled(entry.Path, isEnabled);
+                FrontendInstanceDownloadedResourceIndexService.RecordResourceMoved(
+                    _instanceComposition.Selection.IndieDirectory,
+                    new FrontendDownloadedResourceMoveRecord(entry.Path, newPath));
                 succeededEntries.Add(entry.Title);
                 movedEntries.Add((entry.Path, newPath, isEnabled));
             }
@@ -285,6 +288,9 @@ internal sealed partial class FrontendShellViewModel
             try
             {
                 MoveInstanceResourceToTrash(entry.Path, trashDirectory);
+                FrontendInstanceDownloadedResourceIndexService.RemoveResourceRecord(
+                    _instanceComposition.Selection.IndieDirectory,
+                    entry.Path);
                 succeededEntries.Add(entry.Title);
                 deletedPaths.Add(entry.Path);
             }

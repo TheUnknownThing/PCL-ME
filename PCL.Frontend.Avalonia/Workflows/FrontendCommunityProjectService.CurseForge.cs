@@ -187,6 +187,7 @@ internal static partial class FrontendCommunityProjectService
         var fileName = GetString(file, "fileName");
         var fileId = GetInt(file, "id");
         var downloadUrl = GetString(file, "downloadUrl");
+        var sha1 = ResolveCurseForgeFileHash(file["hashes"] as JsonArray, 1);
         if (string.IsNullOrWhiteSpace(downloadUrl) && fileId > 0 && !string.IsNullOrWhiteSpace(fileName))
         {
             downloadUrl = BuildCurseForgeMediaUrl(fileId, fileName);
@@ -208,7 +209,35 @@ internal static partial class FrontendCommunityProjectService
             loaders,
             dependencies,
             publishedAt?.ToUnixTimeSeconds() ?? 0,
-            TranslateCurseForgeReleaseChannel(GetInt(file, "releaseType")));
+            TranslateCurseForgeReleaseChannel(GetInt(file, "releaseType")),
+            fileId > 0 ? fileId.ToString() : null,
+            fileId > 0 ? fileId.ToString() : null,
+            sha1,
+            null);
+    }
+
+    private static string? ResolveCurseForgeFileHash(JsonArray? hashes, int algo)
+    {
+        if (hashes is null)
+        {
+            return null;
+        }
+
+        foreach (var node in hashes)
+        {
+            if (node is not JsonObject hash || GetInt(hash, "algo") != algo)
+            {
+                continue;
+            }
+
+            var value = GetString(hash, "value");
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 
     private static string BuildCurseForgeMediaUrl(int fileId, string fileName)

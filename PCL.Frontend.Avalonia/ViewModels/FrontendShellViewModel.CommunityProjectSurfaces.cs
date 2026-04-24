@@ -230,6 +230,61 @@ internal sealed partial class FrontendShellViewModel
             "resource_detail.suggested_release.not_found_for_current_instance",
             ("resource_type", GetCommunityProjectSuggestedReleaseResourceTypeText()));
 
+    public bool ShowCommunityProjectInstalledModCard => GetCurrentCommunityProjectInstalledModMatch() is not null;
+
+    public string CommunityProjectInstalledModTitle
+    {
+        get
+        {
+            var match = GetCurrentCommunityProjectInstalledModMatch();
+            return match is null
+                ? string.Empty
+                : match.Kind == FrontendDownloadedResourceMatchKind.DifferentVersion
+                    ? T("resource_detail.installed_mod.title_different_version")
+                    : match.Entry.IsEnabled
+                        ? T("resource_detail.installed_mod.title_enabled")
+                        : T("resource_detail.installed_mod.title_disabled");
+        }
+    }
+
+    public string CommunityProjectInstalledModSummary
+    {
+        get
+        {
+            var match = GetCurrentCommunityProjectInstalledModMatch();
+            if (match is null)
+            {
+                return string.Empty;
+            }
+
+            var source = string.IsNullOrWhiteSpace(match.IndexEntry.Source) ? CommunityProjectSource : match.IndexEntry.Source;
+            var release = string.IsNullOrWhiteSpace(match.IndexEntry.ReleaseTitle) ? match.Entry.Version : match.IndexEntry.ReleaseTitle;
+            return T(
+                "resource_detail.installed_mod.summary",
+                ("source", source),
+                ("file_name", Path.GetFileName(match.Entry.Path)),
+                ("release", string.IsNullOrWhiteSpace(release) ? T("download.catalog.remote.labels.unknown_version") : release));
+        }
+    }
+
+    public bool CanEnableCommunityProjectInstalledMod => GetCurrentCommunityProjectInstalledModMatch()?.Entry.IsEnabled == false;
+
+    public bool CanDisableCommunityProjectInstalledMod => GetCurrentCommunityProjectInstalledModMatch()?.Entry.IsEnabled == true;
+
+    public bool CanUninstallCommunityProjectInstalledMod => GetCurrentCommunityProjectInstalledModMatch() is not null;
+
+    public string CommunityProjectInstalledModEnableText => T("resource_detail.installed_mod.actions.enable");
+
+    public string CommunityProjectInstalledModDisableText => T("resource_detail.installed_mod.actions.disable");
+
+    public string CommunityProjectInstalledModUninstallText => T("resource_detail.installed_mod.actions.uninstall");
+
+    public ActionCommand EnableCommunityProjectInstalledModCommand => new(() => _ = SetCommunityProjectInstalledModEnabledAsync(true));
+
+    public ActionCommand DisableCommunityProjectInstalledModCommand => new(() => _ = SetCommunityProjectInstalledModEnabledAsync(false));
+
+    public ActionCommand UninstallCommunityProjectInstalledModCommand => new(() => _ = DeleteCommunityProjectInstalledModAsync());
+
     public ActionCommand InstallCommunityProjectToCurrentInstanceCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());
 
     public ActionCommand ExecuteCommunityProjectInstallSuggestionCommand => new(() => _ = InstallCommunityProjectToCurrentInstanceAsync());

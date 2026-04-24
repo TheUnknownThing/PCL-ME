@@ -58,7 +58,11 @@ internal sealed record FrontendCommunityProjectReleaseEntry(
     IReadOnlyList<string> Loaders,
     IReadOnlyList<FrontendCommunityProjectDependencyEntry> Dependencies,
     long PublishedUnixTime,
-    FrontendCommunityProjectReleaseChannel Channel);
+    FrontendCommunityProjectReleaseChannel Channel,
+    string? ReleaseId = null,
+    string? FileId = null,
+    string? Sha1 = null,
+    string? Sha512 = null);
 
 internal sealed record FrontendCommunityProjectState(
     string ProjectId,

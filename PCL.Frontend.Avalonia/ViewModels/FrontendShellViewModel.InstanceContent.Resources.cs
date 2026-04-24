@@ -408,6 +408,11 @@ internal sealed partial class FrontendShellViewModel
             lines.Add($"{SD("instance.content.resource.details.fields.loader")}: {entry.Loader}");
         }
 
+        if (!string.IsNullOrWhiteSpace(entry.DownloadSource))
+        {
+            lines.Add($"{SD("instance.content.resource.details.fields.download_source")}: {entry.DownloadSource}");
+        }
+
         if (!string.IsNullOrWhiteSpace(entry.Version))
         {
             lines.Add($"{SD("instance.content.resource.details.fields.version")}: {entry.Version}");

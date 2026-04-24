@@ -155,6 +155,7 @@ internal static partial class FrontendCommunityProjectService
         var file = (version["files"] as JsonArray ?? [])
             .Select(node => node as JsonObject)
             .FirstOrDefault(node => node is not null && GetBool(node, "primary"));
+        var hashes = file?["hashes"] as JsonObject;
         var target = GetString(file, "url") ?? website;
         var downloads = GetInt(version, "downloads");
         var publishedAt = ParseDateTimeOffset(version["date_published"]);
@@ -176,7 +177,11 @@ internal static partial class FrontendCommunityProjectService
             loaders,
             dependencies,
             publishedAt?.ToUnixTimeSeconds() ?? 0,
-            TranslateModrinthReleaseChannel(GetString(version, "version_type")));
+            TranslateModrinthReleaseChannel(GetString(version, "version_type")),
+            GetString(version, "id"),
+            null,
+            GetString(hashes, "sha1"),
+            GetString(hashes, "sha512"));
     }
 
     private static FrontendCommunityProjectReleaseChannel TranslateModrinthReleaseChannel(string? value)

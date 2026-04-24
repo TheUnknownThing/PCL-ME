@@ -2884,6 +2884,21 @@ resource_detail:
       resource_pack: 資源包
       shader: 光影包
       world: 存檔
+  installed_mod:
+    title_enabled: 已安於今實例
+    title_disabled: 已於今實例停用
+    title_different_version: 已安他版
+    summary: "{source} • {file_name} • {release}"
+    actions:
+      enable: 啟用
+      disable: 停用
+      uninstall: 卸載
+    activities:
+      enable: 啟用已安 Mod
+      disable: 停用已安 Mod
+      uninstall: 卸載已安 Mod
+    messages:
+      not_found: 今實例中未尋得相符之已安 Mod。
   translate_description:
     empty: 無可翻譯的簡介
   values:
@@ -3199,6 +3214,8 @@ instance:
         file: "{parent_directory} • {modified_at}"
         archive: "{modified_at} • {file_size}"
         folder: "{modified_at} • {folder_kind}"
+        downloaded_from: "來自 {source}"
+        with_download_source: "{summary} • 來自 {source}"
       messages:
         no_instance_selected: 今未擇實例。
         list_empty: "{surface_title} 之列為虛。"
@@ -3240,6 +3257,7 @@ instance:
           status: 狀態
           type: 類
           loader: 載入器
+          download_source: 下載來源
           version: 版本
           authors: 作人
           description: 敘

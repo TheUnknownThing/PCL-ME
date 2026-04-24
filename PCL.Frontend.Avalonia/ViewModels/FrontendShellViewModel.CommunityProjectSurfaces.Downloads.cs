@@ -119,6 +119,67 @@ internal sealed partial class FrontendShellViewModel
         return TryGetCommunityProjectInstallRelease(out _);
     }
 
+    private FrontendInstalledCommunityResourceMatch? GetCurrentCommunityProjectInstalledModMatch()
+    {
+        if (_selectedCommunityProjectOriginSubpage != LauncherFrontendSubpageKey.DownloadMod
+            || !_instanceComposition.Selection.HasSelection
+            || string.IsNullOrWhiteSpace(_communityProjectState.ProjectId))
+        {
+            return null;
+        }
+
+        var release = GetSuggestedCommunityProjectInstallRelease();
+        return FrontendInstanceDownloadedResourceIndexService.FindInstalledMod(
+            _instanceComposition,
+            _communityProjectState,
+            release);
+    }
+
+    private async Task SetCommunityProjectInstalledModEnabledAsync(bool isEnabled)
+    {
+        var match = GetCurrentCommunityProjectInstalledModMatch();
+        if (match is null)
+        {
+            AddActivity(
+                T(isEnabled ? "resource_detail.installed_mod.activities.enable" : "resource_detail.installed_mod.activities.disable"),
+                T("resource_detail.installed_mod.messages.not_found"));
+            return;
+        }
+
+        await SetInstanceResourceEntriesEnabledAsync(
+            new[] { (Title: match.Entry.Title, Path: match.Entry.Path, IsEnabledState: match.Entry.IsEnabled) },
+            isEnabled,
+            T("resource_detail.installed_mod.messages.not_found"));
+        RaiseCommunityProjectInstalledModProperties();
+    }
+
+    private async Task DeleteCommunityProjectInstalledModAsync()
+    {
+        var match = GetCurrentCommunityProjectInstalledModMatch();
+        if (match is null)
+        {
+            AddActivity(
+                T("resource_detail.installed_mod.activities.uninstall"),
+                T("resource_detail.installed_mod.messages.not_found"));
+            return;
+        }
+
+        await DeleteInstanceResourcesAsync(
+            new[] { (Title: match.Entry.Title, Path: match.Entry.Path) },
+            T("resource_detail.installed_mod.messages.not_found"));
+        RaiseCommunityProjectInstalledModProperties();
+    }
+
+    private void RaiseCommunityProjectInstalledModProperties()
+    {
+        RaisePropertyChanged(nameof(ShowCommunityProjectInstalledModCard));
+        RaisePropertyChanged(nameof(CommunityProjectInstalledModTitle));
+        RaisePropertyChanged(nameof(CommunityProjectInstalledModSummary));
+        RaisePropertyChanged(nameof(CanEnableCommunityProjectInstalledMod));
+        RaisePropertyChanged(nameof(CanDisableCommunityProjectInstalledMod));
+        RaisePropertyChanged(nameof(CanUninstallCommunityProjectInstalledMod));
+    }
+
     private FrontendVersionSaveSelectionState? ResolveCurrentDatapackInstallSelection()
     {
         return _versionSavesComposition.Selection.HasSelection

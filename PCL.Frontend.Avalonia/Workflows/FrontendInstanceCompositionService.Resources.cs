@@ -90,12 +90,14 @@ internal static partial class FrontendInstanceCompositionService
         return kind switch
         {
             ResourceKind.Mods => BuildModResourceEntries(
+                selection,
                 ResolveResourceDirectory(selection, kind),
                 fileFilter: path => EnabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
                 defaultIconName: DetermineInstallIconNameFromExtension("mods", selection),
                 isEnabled: true,
                 i18n: i18n),
             ResourceKind.DisabledMods => BuildModResourceEntries(
+                selection,
                 ResolveResourceDirectory(selection, ResourceKind.Mods),
                 fileFilter: path => DisabledModExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase),
                 defaultIconName: "RedstoneBlock.png",
@@ -115,6 +117,7 @@ internal static partial class FrontendInstanceCompositionService
     }
 
     private static IReadOnlyList<FrontendInstanceResourceEntry> BuildModResourceEntries(
+        FrontendInstanceSelectionState selection,
         string directory,
         Func<string, bool> fileFilter,
         string defaultIconName,
@@ -130,7 +133,7 @@ internal static partial class FrontendInstanceCompositionService
             .Where(fileFilter)
             .Select(path => new FileInfo(path))
             .OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(file => BuildModResourceEntry(directory, file, defaultIconName, isEnabled, i18n))
+            .Select(file => BuildModResourceEntry(selection, directory, file, defaultIconName, isEnabled, i18n))
             .ToArray();
     }
 
@@ -164,6 +167,7 @@ internal static partial class FrontendInstanceCompositionService
     }
 
     private static FrontendInstanceResourceEntry BuildModResourceEntry(
+        FrontendInstanceSelectionState selection,
         string directory,
         FileInfo file,
         string defaultIconName,
@@ -171,10 +175,25 @@ internal static partial class FrontendInstanceCompositionService
         II18nService? i18n)
     {
         var metadata = TryReadLocalModMetadata(file.FullName);
+        var downloadMatch = FrontendInstanceDownloadedResourceIndexService.FindRecordForArtifact(
+            selection.IndieDirectory,
+            file.FullName,
+            "mod");
         var title = !string.IsNullOrWhiteSpace(metadata?.Title)
             ? metadata.Title!
             : GetFallbackModTitle(file.Name);
         var summary = BuildModSummary(file, metadata, i18n);
+        if (downloadMatch is not null)
+        {
+            summary = string.IsNullOrWhiteSpace(summary)
+                ? Text(i18n, "instance.content.resource.summary.downloaded_from", "Downloaded from {source}", ("source", downloadMatch.Entry.Source))
+                : Text(
+                    i18n,
+                    "instance.content.resource.summary.with_download_source",
+                    "{summary} • Downloaded from {source}",
+                    ("summary", summary),
+                    ("source", downloadMatch.Entry.Source));
+        }
         var meta = BuildModMeta(file, metadata, i18n);
         var iconName = DetermineModIconName(metadata?.Loader, defaultIconName);
 
@@ -191,6 +210,10 @@ internal static partial class FrontendInstanceCompositionService
             Authors: metadata?.Authors ?? string.Empty,
             Version: metadata?.Version ?? string.Empty,
             Loader: metadata?.Loader ?? string.Empty,
+            DownloadSource: downloadMatch?.Entry.Source ?? string.Empty,
+            DownloadProjectId: downloadMatch?.Entry.ProjectId ?? string.Empty,
+            DownloadReleaseId: downloadMatch?.Entry.ReleaseId ?? string.Empty,
+            DownloadFileId: downloadMatch?.Entry.FileId ?? string.Empty,
             IconBytes: metadata?.IconBytes);
     }
 
