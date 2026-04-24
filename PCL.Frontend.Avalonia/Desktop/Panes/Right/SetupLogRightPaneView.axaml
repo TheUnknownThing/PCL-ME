@@ -1,0 +1,94 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.SetupLogRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{Binding Launcher}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,25" Spacing="10">
+      <controls:PclCard Header="Debug diagnostics" IsVisible="{Binding ShowDebugModeSummaryCard}" ContentMargin="20,18,20,16">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="10">
+            <TextBlock
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13.5"
+                Text="{Binding DebugModeSummaryTitle}" />
+            <TextBlock
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                FontSize="12"
+                Text="{Binding DebugModeSummaryDescription}"
+                TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding DebugInfoEntries}" IsVisible="{Binding HasDebugInfoEntries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,0,0,6" ColumnDefinitions="110,*">
+                    <TextBlock
+                        VerticalAlignment="Top"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        FontSize="11.5"
+                        Text="{Binding Label}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontFamily="{DynamicResource LaunchFontFamily}"
+                        FontSize="11.5"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="{Binding SetupText.Log.ActionsCardHeader}" ContentMargin="25,40,20,20">
+        <controls:PclCard.CardContent>
+          <WrapPanel>
+            <controls:PclButton
+                Width="100"
+                Height="35"
+                Margin="0,0,15,0"
+                Command="{Binding ExportLogCommand}"
+                ColorType="Highlight"
+                Text="{Binding SetupText.Log.ExportLogButton}" />
+            <controls:PclButton
+                Width="120"
+                Height="35"
+                Margin="0,0,15,0"
+                Command="{Binding ExportAllLogsCommand}"
+                Text="{Binding SetupText.Log.ExportAllLogsButton}" />
+            <controls:PclButton
+                Width="120"
+                Height="35"
+                Margin="0,0,15,0"
+                Command="{Binding OpenLogDirectoryCommand}"
+                Text="{Binding SetupText.Log.OpenDirectoryButton}" />
+            <controls:PclButton
+                Width="120"
+                Height="35"
+                Command="{Binding CleanLogsCommand}"
+                ColorType="Red"
+                Text="{Binding SetupText.Log.CleanHistoryButton}" />
+          </WrapPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="{Binding SetupText.Log.AllLogsCardHeader}" ContentMargin="20,36,18,18">
+        <controls:PclCard.CardContent>
+          <ItemsControl ItemsSource="{Binding LogEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <controls:PclListItem
+                    Margin="0,0,0,8"
+                    Command="{Binding Command}"
+                    Info="{Binding Info}"
+                    Title="{Binding Title}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

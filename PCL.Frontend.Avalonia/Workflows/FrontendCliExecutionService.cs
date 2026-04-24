@@ -63,7 +63,7 @@ internal static class FrontendCliExecutionService
             return 1;
         }
 
-        var shellActionService = new FrontendShellActionService(
+        var launcherActionService = new LauncherActionService(
             runtimePaths,
             platformAdapter,
             exitLauncher: static () => { },
@@ -117,7 +117,7 @@ internal static class FrontendCliExecutionService
                 launchComposition.JavaRuntimeInstallPlan is not null)
             {
                 WriteStatusLine($"Installing Java runtime: {launchComposition.JavaRuntimeInstallPlan.DisplayName}");
-                var installResult = await Task.Run(() => shellActionService.MaterializeJavaRuntime(
+                var installResult = await Task.Run(() => launcherActionService.MaterializeJavaRuntime(
                     launchComposition.JavaRuntimeInstallPlan,
                     onProgress: snapshot =>
                     {
@@ -156,7 +156,7 @@ internal static class FrontendCliExecutionService
         if (!instanceComposition.Setup.DisableFileValidation)
         {
             WriteStatusLine(i18n.T("launch.status.logs.verifying_instance_files"));
-            _ = await Task.Run(() => shellActionService.RepairInstance(
+            _ = await Task.Run(() => launcherActionService.RepairInstance(
                 new FrontendInstanceRepairRequest(
                     instanceComposition.Selection.LauncherDirectory,
                     instanceComposition.Selection.InstanceDirectory,
@@ -165,7 +165,7 @@ internal static class FrontendCliExecutionService
         }
 
         var effectiveComposition = PrepareHeadlessLaunchComposition(launchComposition);
-        var startResult = await Task.Run(() => shellActionService.StartLaunchSession(
+        var startResult = await Task.Run(() => launcherActionService.StartLaunchSession(
             effectiveComposition,
             instanceComposition.Selection.InstanceDirectory,
             WriteStatusLine));

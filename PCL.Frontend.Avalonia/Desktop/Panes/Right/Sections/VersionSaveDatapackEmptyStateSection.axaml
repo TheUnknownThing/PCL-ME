@@ -1,0 +1,42 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.VersionSaveDatapackEmptyStateSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <controls:PclCard IsVisible="{Binding HasNoVersionSaveDatapackEntries}" ContentMargin="20,17,20,17">
+    <controls:PclCard.CardContent>
+      <StackPanel Spacing="10">
+        <TextBlock
+            HorizontalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="19"
+            Text="{Binding VersionSaveDatapackEmptyTitle}" />
+        <Border Height="2" Background="{DynamicResource ColorBrush6}" />
+        <TextBlock
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+            FontSize="12.5"
+            Text="{Binding VersionSaveDatapackEmptyDescription}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+        <WrapPanel HorizontalAlignment="Center">
+          <controls:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+              ColorType="Highlight"
+              Text="{Binding VersionSaveDatapackInstallFromFileText}" />
+          <controls:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding DownloadVersionSaveDatapackCommand}"
+              Text="{Binding VersionSaveDatapackDownloadNewText}" />
+          <controls:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+              Text="{Binding VersionSaveDatapackOpenFolderText}" />
+        </WrapPanel>
+      </StackPanel>
+    </controls:PclCard.CardContent>
+  </controls:PclCard>
+</UserControl>

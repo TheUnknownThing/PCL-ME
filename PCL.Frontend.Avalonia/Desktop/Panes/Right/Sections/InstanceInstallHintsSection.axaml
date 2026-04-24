@@ -1,0 +1,24 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceInstallHintsSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ItemsControl ItemsSource="{Binding InstanceInstallHints}">
+    <ItemsControl.ItemTemplate>
+      <DataTemplate>
+        <Border
+            Margin="{Binding Margin}"
+            Padding="12,10"
+            Background="{Binding BackgroundBrush}"
+            BorderBrush="{Binding BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="4">
+          <TextBlock
+              Foreground="{Binding ForegroundBrush}"
+              FontSize="12.5"
+              Text="{Binding Text}"
+              TextWrapping="Wrap" />
+        </Border>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

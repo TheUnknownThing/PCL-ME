@@ -6,7 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using PCL.Core.App.I18n;
 using PCL.Frontend.Avalonia.Cli;
-using PCL.Frontend.Avalonia.Desktop.ShellViews;
+using PCL.Frontend.Avalonia.Desktop.Panes;
 using PCL.Frontend.Avalonia.ViewModels;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -34,10 +34,10 @@ internal sealed class App : Application
         FrontendLoggingBootstrap.Initialize(_runtimePaths);
         FrontendHttpProxyService.ApplyStoredProxySettings(_runtimePaths);
         FrontendHttpProxyService.ApplyStoredDnsSettings(_runtimePaths);
-        FrontendShellActionService.ApplyStoredAnimationPreferences(_runtimePaths);
+        LauncherActionService.ApplyStoredAnimationPreferences(_runtimePaths);
         AvaloniaXamlLoader.Load(this);
         FrontendAppearanceService.ApplyStoredAppearance(this, _runtimePaths);
-        ShellPaneTemplateRegistry.Register(this);
+        PaneTemplateRegistry.Register(this);
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -75,25 +75,25 @@ internal sealed class App : Application
                 initialLocaleProvider: () => CultureInfo.CurrentUICulture.Name,
                 availableLocales: availableLocales);
             _i18nService = new I18nService(settingsManager);
-            var shellActionService = new FrontendShellActionService(
+            var launcherActionService = new LauncherActionService(
                 runtimePaths,
                 platformAdapter,
                 () => desktop.Shutdown(),
                 _i18nService);
-            var shellViewModel = FrontendShellViewModel.CreateBootstrap(_options, shellActionService, _i18nService);
+            var launcherViewModel = LauncherViewModel.CreateBootstrap(_options, launcherActionService, _i18nService);
             var mainWindow = new MainWindow
             {
-                DataContext = shellViewModel
+                DataContext = launcherViewModel
             };
 
             mainWindow.Opened += async (_, _) =>
             {
                 await CloseSplashScreenAsync(splashSession);
-                await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(shellActionService, runtimePaths, _i18nService!);
+                await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(launcherActionService, runtimePaths, _i18nService!);
 
                 if (FrontendFontDiagnostics.ShouldWarnAboutMissingCjkFont(this, _options.ForceCjkFontWarning))
                 {
-                    await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(shellActionService);
+                    await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(launcherActionService);
                 }
             };
 

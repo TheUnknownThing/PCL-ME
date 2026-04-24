@@ -69,15 +69,15 @@ public sealed class LauncherFrontendPageContentServiceTest
         var navigation = LauncherFrontendNavigationService.BuildView(new LauncherFrontendNavigationViewRequest(
             route,
             ParentRoute: parentRoute));
-        var shellPlan = new LauncherFrontendShellPlan(
+        var launcherPlan = new LauncherFrontendPlan(
             BuildStartupPlan(),
             BuildConsent(),
             [],
             LauncherFrontendNavigationService.GetCatalog(),
             navigation);
 
-        return FrontendShellLocalizationService.BuildPageContent(
-            shellPlan,
+        return LauncherLocalizationService.BuildPageContent(
+            launcherPlan,
             navigation,
             BuildPromptLanes(),
             includeLaunchData

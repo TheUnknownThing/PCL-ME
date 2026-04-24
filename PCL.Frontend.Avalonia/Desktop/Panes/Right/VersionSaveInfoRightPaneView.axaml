@@ -1,0 +1,56 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.VersionSaveInfoRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{Binding Launcher}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,10" Spacing="15">
+      <controls:PclCard Header="{Binding VersionSaveInfoHeaderText}" ContentMargin="18,40,18,16">
+        <controls:PclCard.CardContent>
+          <ItemsControl ItemsSource="{Binding VersionSaveInfoEntries}" IsVisible="{Binding HasVersionSaveInfoEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="12.5"
+                      Text="{Binding Label}" />
+                  <TextBlock
+                      Grid.Column="2"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="13"
+                      Text="{Binding Value}"
+                      TextWrapping="Wrap" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <controls:PclCard Header="{Binding VersionSaveSettingsHeaderText}" ContentMargin="18,40,18,16" IsVisible="{Binding HasVersionSaveSettingEntries}">
+        <controls:PclCard.CardContent>
+          <ItemsControl ItemsSource="{Binding VersionSaveSettingEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,0,0,10" ColumnDefinitions="Auto,24,*">
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="12.5"
+                      Text="{Binding Label}" />
+                  <TextBlock
+                      Grid.Column="2"
+                      Foreground="{DynamicResource ColorBrush1}"
+                      FontSize="13"
+                      Text="{Binding Value}"
+                      TextWrapping="Wrap" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

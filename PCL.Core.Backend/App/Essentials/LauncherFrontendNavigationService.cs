@@ -277,16 +277,16 @@ public static class LauncherFrontendNavigationService
 
 }
 
-public static class LauncherFrontendShellService
+public static class LauncherFrontendPlanService
 {
-    public static LauncherFrontendShellPlan BuildPlan(LauncherFrontendShellRequest request)
+    public static LauncherFrontendPlan BuildPlan(LauncherFrontendPlanRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var startupPlan = LauncherStartupWorkflowService.BuildPlan(request.StartupWorkflowRequest);
         var consent = LauncherStartupConsentService.Evaluate(request.StartupConsentRequest);
 
-        return new LauncherFrontendShellPlan(
+        return new LauncherFrontendPlan(
             startupPlan,
             consent,
             LauncherFrontendPromptService.BuildStartupPromptQueue(startupPlan, consent),
@@ -295,12 +295,12 @@ public static class LauncherFrontendShellService
     }
 }
 
-public sealed record LauncherFrontendShellRequest(
+public sealed record LauncherFrontendPlanRequest(
     LauncherStartupWorkflowRequest StartupWorkflowRequest,
     LauncherStartupConsentRequest StartupConsentRequest,
     LauncherFrontendNavigationViewRequest Navigation);
 
-public sealed record LauncherFrontendShellPlan(
+public sealed record LauncherFrontendPlan(
     LauncherStartupWorkflowPlan StartupPlan,
     LauncherStartupConsentResult Consent,
     IReadOnlyList<LauncherFrontendPrompt> Prompts,

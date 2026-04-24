@@ -15,7 +15,7 @@
     TransparencyLevelHint="Transparent"
     WindowStartupLocation="CenterScreen">
   <Window.Resources>
-    <LinearGradientBrush x:Key="ShellMainBackgroundBrush" StartPoint="90%,0%" EndPoint="10%,100%">
+    <LinearGradientBrush x:Key="MainBackgroundBrush" StartPoint="90%,0%" EndPoint="10%,100%">
       <GradientStop Color="{DynamicResource ColorObjectBg0}" Offset="-0.1" />
       <GradientStop Color="{DynamicResource ColorObject7}" Offset="0.4" />
       <GradientStop Color="{DynamicResource ColorObject6}" Offset="1.1" />
@@ -175,7 +175,7 @@
       </Border>
     </Grid>
 
-    <Border x:Name="MainBorder" Margin="18" CornerRadius="15,15,8,8" Background="{DynamicResource ShellMainBackgroundBrush}">
+    <Border x:Name="MainBorder" Margin="18" CornerRadius="15,15,8,8" Background="{DynamicResource MainBackgroundBrush}">
       <Border.Transitions>
         <Transitions>
           <BrushTransition Property="Background" Duration="{Binding SurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
@@ -409,7 +409,7 @@
                       Command="{Binding BackCommand}"
                       IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
                       HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
-                      ToolTip.Tip="{Binding ShellBackTooltip}" />
+                      ToolTip.Tip="{Binding BackTooltip}" />
                   <controls:PclIconButton
                       Grid.Column="1"
                       Width="27"
@@ -421,7 +421,7 @@
                       HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
                       IconData="M12 3.172 3 10v10h5v-6h8v6h5V10l-9-6.828zm0-2.5 11 8.344V22h-9v-6h-4v6H1V9.016L12 .672z"
                       IsVisible="{Binding ShowHomeNavigation}"
-                      ToolTip.Tip="{Binding ShellHomeTooltip}" />
+                      ToolTip.Tip="{Binding HomeTooltip}" />
                   <TextBlock
                       Grid.Column="2"
                       Margin="12,0,0,0"
@@ -436,8 +436,8 @@
 
           <Grid Grid.Row="1">
             <Border
-                x:Name="ShellLeftBackdrop"
-                Width="{Binding CurrentShellLeftPaneWidth}"
+                x:Name="LeftPaneBackdrop"
+                Width="{Binding CurrentLeftPaneWidth}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Stretch"
                 Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}"
@@ -446,7 +446,7 @@
                   Width="1"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Stretch"
-                  Background="{DynamicResource ColorBrushShellDividerHighlight}" />
+                  Background="{DynamicResource ColorBrushPaneDividerHighlight}" />
             </Border>
 
             <Grid
@@ -468,7 +468,7 @@
                 </Grid>
               </Border>
 
-              <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushShellPaneOverlay}">
+              <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushPaneOverlay}">
                 <Grid x:Name="LaunchRightContentHost">
                   <controls:PclLaunchRightPanel x:Name="LaunchRightPanel" />
                 </Grid>
@@ -477,7 +477,7 @@
 
             <Grid
                 x:Name="StandardRouteGrid"
-                IsVisible="{Binding IsStandardShellRoute}"
+                IsVisible="{Binding IsStandardRoute}"
                 motion:Motion.AnimateOnVisible="True"
                 motion:Motion.InitialOpacity="0"
                 motion:Motion.OffsetX="0"
@@ -486,8 +486,8 @@
               <Border
                   x:Name="StandardLeftHost"
                   Grid.Column="0"
-                  IsVisible="{Binding ShowStandardShellLeftPane}"
-                  Width="{Binding StandardShellLeftPaneWidth}"
+                  IsVisible="{Binding ShowStandardLeftPane}"
+                  Width="{Binding StandardLeftPaneWidth}"
                   ClipToBounds="True"
                   Background="Transparent">
                 <Grid x:Name="StandardLeftContentHost">
@@ -498,7 +498,7 @@
                 </Grid>
               </Border>
 
-              <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushShellPaneOverlay}">
+              <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushPaneOverlay}">
                 <Grid x:Name="StandardRightContentHost">
                   <controls:PclAnimatedRightPaneHost PaneContent="{Binding CurrentStandardRightPane}" />
                 </Grid>
@@ -527,7 +527,7 @@
                   Command="{Binding OpenTaskManagerShortcutCommand}"
                   IconData="M955 610h-59c-15 0-29 13-29 29v196c0 15-13 29-29 29h-649c-15 0-29-13-29-29v-196c0-15-13-29-29-29h-59c-15 0-29 13-29 29V905c0 43 35 78 78 78h787c43 0 78-35 78-78V640c0-15-13-29-29-29zM492 740c11 11 29 11 41 0l265-265c11-11 11-29 0-41l-41-41c-11-11-29-11-41 0l-110 110c-11 11-33 3-33-13V68C571 53 555 39 541 39h-59c-15 0-29 13-29 29v417c0 17-21 25-33 13l-110-110c-11-11-29-11-41 0L226 433c-11 11-11 29 0 41L492 740z"
                   IsVisible="{Binding ShowTaskManagerShortcutButton}"
-                  ToolTip.Tip="{Binding ShellTaskManagerTooltip}" />
+                  ToolTip.Tip="{Binding TaskManagerTooltip}" />
             </StackPanel>
 
             <StackPanel

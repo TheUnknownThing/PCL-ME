@@ -184,9 +184,9 @@ public sealed class FrontendJavaInventoryServiceTest
     [TestMethod]
     public void RequiresUnixExecutableBits_MatchesNestedJavaBundleBinaries()
     {
-        Assert.IsTrue(FrontendShellActionService.RequiresUnixExecutableBits("bin/java"));
-        Assert.IsTrue(FrontendShellActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/bin/java"));
-        Assert.IsTrue(FrontendShellActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/lib/jspawnhelper"));
-        Assert.IsFalse(FrontendShellActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/lib/server/libjvm.dylib"));
+        Assert.IsTrue(LauncherActionService.RequiresUnixExecutableBits("bin/java"));
+        Assert.IsTrue(LauncherActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/bin/java"));
+        Assert.IsTrue(LauncherActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/lib/jspawnhelper"));
+        Assert.IsFalse(LauncherActionService.RequiresUnixExecutableBits("jre.bundle/Contents/Home/lib/server/libjvm.dylib"));
     }
 }

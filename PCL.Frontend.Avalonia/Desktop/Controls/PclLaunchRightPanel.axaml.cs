@@ -16,7 +16,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
     private const double EnterOffsetY = -16d;
     private const double ExitOffsetY = -10d;
 
-    private FrontendShellViewModel? _shell;
+    private LauncherViewModel? _launcher;
     private int _launchAnnouncementAnimationVersion;
     private int _routeEnterAnimationVersion;
     private bool _isLaunchHintRendered;
@@ -36,23 +36,23 @@ internal sealed partial class PclLaunchRightPanel : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (_shell is not null)
+        if (_launcher is not null)
         {
-            _shell.PropertyChanged -= OnShellPropertyChanged;
+            _launcher.PropertyChanged -= OnLauncherPropertyChanged;
         }
 
-        _shell = DataContext as FrontendShellViewModel;
-        if (_shell is not null)
+        _launcher = DataContext as LauncherViewModel;
+        if (_launcher is not null)
         {
-            _shell.PropertyChanged += OnShellPropertyChanged;
+            _launcher.PropertyChanged += OnLauncherPropertyChanged;
         }
 
         QueueLaunchAnnouncementSync();
     }
 
-    private void OnShellPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnLauncherPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(FrontendShellViewModel.ShowLaunchAnnouncement))
+        if (e.PropertyName == nameof(LauncherViewModel.ShowLaunchAnnouncement))
         {
             QueueLaunchAnnouncementSync();
         }
@@ -76,7 +76,7 @@ internal sealed partial class PclLaunchRightPanel : UserControl
 
     private void SyncLaunchAnnouncement()
     {
-        var shouldShow = _shell?.ShowLaunchAnnouncement == true;
+        var shouldShow = _launcher?.ShowLaunchAnnouncement == true;
         if (shouldShow == _isLaunchHintRendered)
         {
             return;

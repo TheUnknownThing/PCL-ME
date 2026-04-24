@@ -1,0 +1,58 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.SetupFeedbackRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{Binding Launcher}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,25" Spacing="15">
+      <controls:PclCard Header="{Binding SetupText.Feedback.SubmitCardHeader}" ContentMargin="20,40,18,22">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="15">
+            <TextBlock
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                FontSize="13"
+                Text="{Binding SetupText.Feedback.SubmitHint}"
+                TextWrapping="Wrap" />
+            <controls:PclButton
+                Width="140"
+                Height="35"
+                HorizontalAlignment="Left"
+                Command="{Binding OpenFeedbackCommand}"
+                ColorType="Highlight"
+                ContentPadding="13,0"
+                Text="{Binding SetupText.Feedback.OpenFeedbackButton}" />
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
+
+      <ItemsControl ItemsSource="{Binding FeedbackSections}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <controls:PclCard
+                Margin="0,0,0,15"
+                Header="{Binding Title}"
+                ShowChevron="True"
+                IsChevronExpanded="{Binding IsExpanded}"
+                HeaderCommand="{Binding ToggleCommand}"
+                ContentMargin="20,36,18,18">
+              <controls:PclCard.CardContent>
+                <ItemsControl ItemsSource="{Binding Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PclListItem
+                          Margin="0,0,0,8"
+                          Command="{Binding Command}"
+                          Info="{Binding Info}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </controls:PclCard.CardContent>
+            </controls:PclCard>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

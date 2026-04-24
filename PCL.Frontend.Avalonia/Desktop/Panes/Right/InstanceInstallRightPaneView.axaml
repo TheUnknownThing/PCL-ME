@@ -1,0 +1,29 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.InstanceInstallRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections"
+    DataContext="{Binding Launcher}">
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="25,10,25,75" Spacing="0">
+        <sections:InstanceInstallHintsSection />
+        <sections:InstanceInstallSelectionSummarySection />
+        <sections:InstanceInstallMinecraftSection />
+        <sections:InstanceInstallOptionsSection />
+      </StackPanel>
+    </ScrollViewer>
+
+    <controls:PclIconTextButton
+        HorizontalAlignment="Center"
+        VerticalAlignment="Bottom"
+        Margin="0,0,0,18"
+        Command="{Binding ApplyInstanceInstallCommand}"
+        IsEnabled="{Binding CanApplyInstanceInstall}"
+        ColorType="Highlight"
+        IconData="{Binding InstanceInstallApplyButtonIconData}"
+        IconScale="{Binding InstanceInstallApplyButtonIconScale}"
+        Text="{Binding InstanceInstallApplyButtonText}" />
+  </Grid>
+</UserControl>
