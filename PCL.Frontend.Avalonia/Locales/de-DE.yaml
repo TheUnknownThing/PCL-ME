@@ -3114,6 +3114,7 @@ instance:
         refresh_all: Refresh All
         add: Add Server
         refresh: Refresh
+        edit_address: "Adresse bearbeiten"
         copy_address: Copy Address
         connect: Connect
       status:
@@ -3139,6 +3140,9 @@ instance:
         no_connectable_address: "{entry_title} has no usable server address."
         added: "{name} • {address}"
         address_required: Server address cannot be empty.
+        address_updated: "{entry_title} aktualisiert • {address}"
+        address_unchanged: "{entry_title} verwendet diese Adresse bereits."
+        server_not_found: "Der gespeicherte Servereintrag wurde nicht gefunden."
         read_list_failed: |-
           Unable to read the current instance server list.
           {error}

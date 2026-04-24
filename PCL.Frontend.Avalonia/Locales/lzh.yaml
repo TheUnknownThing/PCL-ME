@@ -3114,6 +3114,7 @@ instance:
         refresh_all: 盡刷
         add: 增伺服器
         refresh: 刷
+        edit_address: "改位址"
         copy_address: 複製位址
         connect: 連線
       status:
@@ -3139,6 +3140,9 @@ instance:
         no_connectable_address: "{entry_title} 無可用之伺服器位址。"
         added: "{name} • {address}"
         address_required: 伺服器位址不可為空。
+        address_updated: "已改 {entry_title} • {address}"
+        address_unchanged: "{entry_title} 已用此位址。"
+        server_not_found: "未尋得已儲伺服器項。"
         read_list_failed: |-
           不能讀今實例之伺服器列。
           {error}

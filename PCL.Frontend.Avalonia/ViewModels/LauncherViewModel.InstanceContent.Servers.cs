@@ -28,6 +28,7 @@ internal sealed partial class LauncherViewModel
     {
         InstanceServerEntryViewModel? viewModel = null;
         viewModel = new InstanceServerEntryViewModel(
+            entry.Index,
             entry.Title,
             entry.Address,
             LoadLauncherBitmap("Images", "Backgrounds", "server_bg.png"),
@@ -37,6 +38,13 @@ internal sealed partial class LauncherViewModel
                 if (viewModel is not null)
                 {
                     _ = RefreshInstanceServerAsync(viewModel);
+                }
+            }),
+            new ActionCommand(() =>
+            {
+                if (viewModel is not null)
+                {
+                    _ = EditInstanceServerAddressAsync(viewModel);
                 }
             }),
             new ActionCommand(() =>
@@ -223,6 +231,115 @@ internal sealed partial class LauncherViewModel
         {
             AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
         }
+    }
+
+    private async Task EditInstanceServerAddressAsync(InstanceServerEntryViewModel entry)
+    {
+        var activityTitle = SD("instance.content.server.actions.edit_address");
+        if (!_instanceComposition.Selection.HasSelection)
+        {
+            AddActivity(activityTitle, SD("instance.content.server.messages.no_instance_selected"));
+            return;
+        }
+
+        var currentAddress = (entry.Address ?? string.Empty).Trim();
+        string? resolvedAddress;
+        try
+        {
+            resolvedAddress = await _launcherActionService.PromptForTextAsync(
+                SD("instance.content.server.dialogs.edit.title"),
+                SD("instance.content.server.dialogs.edit.address_prompt"),
+                currentAddress,
+                activityTitle);
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), ex.Message);
+            return;
+        }
+
+        if (resolvedAddress is null)
+        {
+            return;
+        }
+
+        var address = resolvedAddress.Trim();
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            AddActivity(activityTitle, SD("instance.content.server.messages.address_required"));
+            return;
+        }
+
+        if (string.Equals(currentAddress, address, StringComparison.Ordinal))
+        {
+            AddActivity(activityTitle, SD("instance.content.server.messages.address_unchanged", ("entry_title", entry.Title)));
+            return;
+        }
+
+        var serversPath = Path.Combine(_instanceComposition.Selection.IndieDirectory, "servers.dat");
+        NbtList? serverList;
+        try
+        {
+            serverList = File.Exists(serversPath)
+                ? LoadInstanceServerList(serversPath)
+                : null;
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity(
+                T("common.activities.failed", ("title", activityTitle)),
+                SD("instance.content.server.messages.read_list_failed", ("error", ex.Message)));
+            return;
+        }
+
+        if (serverList is null
+            || entry.SourceIndex < 0
+            || entry.SourceIndex >= serverList.Count
+            || serverList[entry.SourceIndex] is not NbtCompound server)
+        {
+            AddFailureActivity(
+                T("common.activities.failed", ("title", activityTitle)),
+                SD("instance.content.server.messages.server_not_found"));
+            return;
+        }
+
+        try
+        {
+            var addressTag = server.Get<NbtString>("ip");
+            if (addressTag is null)
+            {
+                server.Add(new NbtString("ip", address));
+            }
+            else
+            {
+                addressTag.Value = address;
+            }
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity(
+                T("common.activities.failed", ("title", activityTitle)),
+                SD("instance.content.server.messages.update_list_failed", ("error", ex.Message)));
+            return;
+        }
+
+        try
+        {
+            var clonedServerList = (NbtList)serverList.Clone();
+            if (!TryWriteInstanceServerList(serversPath, clonedServerList))
+            {
+                AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), SD("instance.content.server.messages.write_list_failed"));
+                return;
+            }
+        }
+        catch
+        {
+            AddFailureActivity(T("common.activities.failed", ("title", activityTitle)), SD("instance.content.server.messages.write_list_failed"));
+            return;
+        }
+
+        ReloadInstanceComposition();
+        AddActivity(activityTitle, SD("instance.content.server.messages.address_updated", ("entry_title", entry.Title), ("address", address)));
     }
 
     private async Task AddInstanceServerAsync()

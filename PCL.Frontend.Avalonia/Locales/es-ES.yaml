@@ -3130,6 +3130,7 @@ instance:
         refresh_all: Actualizar todo
         add: Agregar servidor
         refresh: Actualizar
+        edit_address: "Editar dirección"
         copy_address: Copiar dirección
         connect: Conectar
       status:
@@ -3155,6 +3156,9 @@ instance:
         no_connectable_address: "{entry_title} no tiene una dirección de servidor utilizable."
         added: "{name} • {address}"
         address_required: La dirección del servidor no puede estar vacía.
+        address_updated: "{entry_title} actualizado • {address}"
+        address_unchanged: "{entry_title} ya usa esta dirección."
+        server_not_found: "No se pudo encontrar la entrada de servidor guardada."
         read_list_failed: >-
           No se puede leer la lista de servidores de instancias actuales.
 

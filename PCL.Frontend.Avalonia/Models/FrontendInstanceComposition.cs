@@ -139,6 +139,7 @@ internal sealed record FrontendInstanceServerState(
     IReadOnlyList<FrontendInstanceServerEntry> Entries);
 
 internal sealed record FrontendInstanceServerEntry(
+    int Index,
     string Title,
     string Address,
     string Status);

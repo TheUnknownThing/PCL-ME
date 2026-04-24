@@ -118,7 +118,7 @@
                       </Grid>
                     </Border>
 
-                    <Grid ColumnDefinitions="Auto,Auto,Auto,*">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*">
                       <controls:PclButton
                           Grid.Column="0"
                           Width="88"
@@ -128,13 +128,20 @@
                           Text="{Binding DataContext.InstanceServerRefreshText, ElementName=Root}" />
                       <controls:PclButton
                           Grid.Column="1"
+                          Width="108"
+                          Height="35"
+                          Margin="0,0,10,0"
+                          Command="{Binding EditAddressCommand}"
+                          Text="{Binding DataContext.InstanceServerEditAddressText, ElementName=Root}" />
+                      <controls:PclButton
+                          Grid.Column="2"
                           Width="88"
                           Height="35"
                           Margin="0,0,10,0"
                           Command="{Binding CopyCommand}"
                           Text="{Binding DataContext.InstanceServerCopyAddressText, ElementName=Root}" />
                       <controls:PclButton
-                          Grid.Column="2"
+                          Grid.Column="3"
                           Width="88"
                           Height="35"
                           Margin="0,0,10,0"

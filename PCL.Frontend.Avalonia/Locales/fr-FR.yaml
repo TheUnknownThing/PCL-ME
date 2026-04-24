@@ -3114,6 +3114,7 @@ instance:
         refresh_all: Actualiser tout
         add: Ajouter un serveur
         refresh: Actualiser
+        edit_address: "Modifier l'adresse"
         copy_address: Copier l'adresse
         connect: Se connecter
       status:
@@ -3139,6 +3140,9 @@ instance:
         no_connectable_address: "{entry_title} n'a pas d'adresse de serveur utilisable."
         added: "{name} • {address}"
         address_required: L'adresse du serveur ne peut pas être vide.
+        address_updated: "{entry_title} mis à jour • {address}"
+        address_unchanged: "{entry_title} utilise déjà cette adresse."
+        server_not_found: "L'entrée de serveur enregistrée est introuvable."
         read_list_failed: |-
           Impossible de lire la liste actuelle des serveurs d'instance.
           {error}

@@ -3114,6 +3114,7 @@ instance:
         refresh_all: 모두 새로 고침
         add: 서버 추가
         refresh: 새로 고치다
+        edit_address: "주소 편집"
         copy_address: 주소 복사
         connect: 연결하다
       status:
@@ -3139,6 +3140,9 @@ instance:
         no_connectable_address: "{entry_title}에는 사용 가능한 서버 주소가 없습니다."
         added: "{name} • {address}"
         address_required: 서버 주소는 비워둘 수 없습니다.
+        address_updated: "{entry_title} 업데이트됨 • {address}"
+        address_unchanged: "{entry_title}은(는) 이미 이 주소를 사용합니다."
+        server_not_found: "저장된 서버 항목을 찾을 수 없습니다."
         read_list_failed: |-
           현재 인스턴스 서버 목록을 읽을 수 없습니다.
           {error}

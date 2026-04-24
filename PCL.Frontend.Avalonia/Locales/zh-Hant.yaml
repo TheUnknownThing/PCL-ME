@@ -3124,6 +3124,7 @@ instance:
         refresh_all: 全部重新整理
         add: 新增伺服器
         refresh: 重新整理
+        edit_address: "編輯地址"
         copy_address: 複製地址
         connect: 連線
       status:
@@ -3149,6 +3150,9 @@ instance:
         no_connectable_address: "{entry_title} 沒有可用的伺服器地址。"
         added: "{name} • {address}"
         address_required: 伺服器地址不能為空。
+        address_updated: "已更新 {entry_title} • {address}"
+        address_unchanged: "{entry_title} 已使用此地址。"
+        server_not_found: "找不到已儲存的伺服器項目。"
         read_list_failed: |-
           無法讀取目前實例的伺服器列表。
           {error}

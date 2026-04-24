@@ -119,6 +119,7 @@ internal sealed partial class LauncherViewModel
     public string InstanceServerRefreshAllText => SD("instance.content.server.actions.refresh_all");
     public string InstanceServerAddText => SD("instance.content.server.actions.add");
     public string InstanceServerRefreshText => SD("instance.content.server.actions.refresh");
+    public string InstanceServerEditAddressText => SD("instance.content.server.actions.edit_address");
     public string InstanceServerCopyAddressText => SD("instance.content.server.actions.copy_address");
     public string InstanceServerConnectText => SD("instance.content.server.actions.connect");
     public string InstanceServerEmptyTitle => SD("instance.content.server.empty.title");

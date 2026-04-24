@@ -29,11 +29,13 @@ internal sealed class InstanceScreenshotEntryViewModel(
 }
 
 internal sealed class InstanceServerEntryViewModel(
+    int sourceIndex,
     string title,
     string address,
     Bitmap? backgroundImage,
     Bitmap? logo,
     ActionCommand refreshCommand,
+    ActionCommand editAddressCommand,
     ActionCommand copyCommand,
     ActionCommand connectCommand,
     ActionCommand inspectCommand) : ViewModelBase
@@ -48,6 +50,8 @@ internal sealed class InstanceServerEntryViewModel(
     private IReadOnlyList<MinecraftServerQueryMotdLineViewModel> _motdLines = [];
     private bool _hasMotd;
     private bool _hasLatency;
+
+    public int SourceIndex { get; } = sourceIndex;
 
     public string Title { get; } = title;
 
@@ -128,6 +132,8 @@ internal sealed class InstanceServerEntryViewModel(
     }
 
     public ActionCommand RefreshCommand { get; } = refreshCommand;
+
+    public ActionCommand EditAddressCommand { get; } = editAddressCommand;
 
     public ActionCommand CopyCommand { get; } = copyCommand;
 

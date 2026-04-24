@@ -3587,6 +3587,7 @@ instance:
         refresh_all: []
         add: []
         refresh: []
+        edit_address: []
         copy_address: []
         connect: []
       status:
@@ -3620,6 +3621,12 @@ instance:
           - name
           - address
         address_required: []
+        address_updated:
+          - entry_title
+          - address
+        address_unchanged:
+          - entry_title
+        server_not_found: []
         read_list_failed:
           - error
         launch_route_prepared:

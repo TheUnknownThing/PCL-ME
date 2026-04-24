@@ -68,13 +68,22 @@ internal static partial class FrontendInstanceCompositionService
                 return [];
             }
 
-            return list
-                .OfType<NbtCompound>()
-                .Select(server => new FrontendInstanceServerEntry(
+            var entries = new List<FrontendInstanceServerEntry>();
+            for (var index = 0; index < list.Count; index++)
+            {
+                if (list[index] is not NbtCompound server)
+                {
+                    continue;
+                }
+
+                entries.Add(new FrontendInstanceServerEntry(
+                    Index: index,
                     Title: server.Get<NbtString>("name")?.Value ?? Text(i18n, "instance.content.server.dialogs.edit.name_default", "Minecraft Server"),
                     Address: server.Get<NbtString>("ip")?.Value ?? string.Empty,
-                    Status: Text(i18n, "instance.content.server.status.saved", "Saved server")))
-                .ToArray();
+                    Status: Text(i18n, "instance.content.server.status.saved", "Saved server")));
+            }
+
+            return entries;
         }
         catch
         {
