@@ -28,6 +28,9 @@ internal sealed partial class PclIconTextButton : UserControl
     public static readonly StyledProperty<bool> UseFloatingSurfaceProperty =
         AvaloniaProperty.Register<PclIconTextButton, bool>(nameof(UseFloatingSurface));
 
+    public static readonly StyledProperty<PclIconTextButtonIconPlacement> IconPlacementProperty =
+        AvaloniaProperty.Register<PclIconTextButton, PclIconTextButtonIconPlacement>(nameof(IconPlacement), PclIconTextButtonIconPlacement.Left);
+
     private bool _isHovered;
     private bool _isPressed;
 
@@ -69,6 +72,7 @@ internal sealed partial class PclIconTextButton : UserControl
         ButtonHost.Click += (_, args) => Click?.Invoke(this, args);
 
         UpdateIcon();
+        UpdateIconPlacement();
         RefreshVisualState();
     }
 
@@ -108,6 +112,12 @@ internal sealed partial class PclIconTextButton : UserControl
         set => SetValue(UseFloatingSurfaceProperty, value);
     }
 
+    public PclIconTextButtonIconPlacement IconPlacement
+    {
+        get => GetValue(IconPlacementProperty);
+        set => SetValue(IconPlacementProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -122,6 +132,10 @@ internal sealed partial class PclIconTextButton : UserControl
         {
             RefreshVisualState();
         }
+        else if (change.Property == IconPlacementProperty)
+        {
+            UpdateIconPlacement();
+        }
     }
 
     private void UpdateIcon()
@@ -130,6 +144,25 @@ internal sealed partial class PclIconTextButton : UserControl
         ShapeIcon.IsVisible = hasIcon;
         ShapeIcon.Data = hasIcon ? Geometry.Parse(IconData) : null;
         ShapeIcon.RenderTransform = new ScaleTransform(IconScale, IconScale);
+    }
+
+    private void UpdateIconPlacement()
+    {
+        ContentHost.Children.Clear();
+
+        if (IconPlacement == PclIconTextButtonIconPlacement.Right)
+        {
+            LabText.Margin = new Thickness(12, 0, 7, 1);
+            ShapeIcon.Margin = new Thickness(0, 0, 12, 0);
+            ContentHost.Children.Add(LabText);
+            ContentHost.Children.Add(ShapeIcon);
+            return;
+        }
+
+        ShapeIcon.Margin = new Thickness(12, 0, 0, 0);
+        LabText.Margin = new Thickness(7, 0, 12, 1);
+        ContentHost.Children.Add(ShapeIcon);
+        ContentHost.Children.Add(LabText);
     }
 
     private void RefreshVisualState()
@@ -187,4 +220,10 @@ internal enum PclIconTextButtonColorState
 {
     Normal = 0,
     Highlight = 1
+}
+
+internal enum PclIconTextButtonIconPlacement
+{
+    Left = 0,
+    Right = 1
 }

@@ -32,7 +32,9 @@
         VerticalAlignment="Stretch"
         VerticalContentAlignment="Stretch"
         Padding="0">
-      <StackPanel Orientation="Horizontal">
+      <StackPanel
+          x:Name="ContentHost"
+          Orientation="Horizontal">
         <Path
             x:Name="ShapeIcon"
             Margin="12,0,0,0"

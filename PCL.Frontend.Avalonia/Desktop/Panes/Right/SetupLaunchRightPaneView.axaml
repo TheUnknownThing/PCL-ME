@@ -374,28 +374,15 @@
         </controls:PclCard.CardContent>
       </controls:PclCard>
 
-      <Button
-          Padding="0"
+      <controls:PclIconTextButton
           HorizontalAlignment="Center"
-          Background="Transparent"
-          BorderBrush="Transparent"
-          BorderThickness="0"
           Command="{Binding VersionSetupCommand}"
-          IsVisible="{Binding ShowLaunchVersionSetupButton}">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock
-              Foreground="{DynamicResource ColorBrush3}"
-              FontSize="13.5"
-              Text="{Binding SetupText.Launch.InstanceSettingsButton}" />
-          <Path
-              Width="10"
-              Height="10"
-              VerticalAlignment="Center"
-              Fill="{DynamicResource ColorBrush3}"
-              Stretch="Uniform"
-              Data="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z" />
-        </StackPanel>
-      </Button>
+          ColorType="Highlight"
+          IconData="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z"
+          IconPlacement="Right"
+          IconScale="0.75"
+          IsVisible="{Binding ShowLaunchVersionSetupButton}"
+          Text="{Binding SetupText.Launch.InstanceSettingsButton}" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

@@ -25,10 +25,13 @@
       <sections:InstanceSetupServerSection />
       <sections:InstanceSetupAdvancedLaunchSection />
 
-      <controls:PclButton
-          Width="140"
+      <controls:PclIconTextButton
           HorizontalAlignment="Center"
           Command="{Binding OpenGlobalLaunchSettingsCommand}"
+          ColorType="Highlight"
+          IconData="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z"
+          IconPlacement="Right"
+          IconScale="0.75"
           Text="{Binding InstanceSetupOpenGlobalSettingsText}" />
     </StackPanel>
   </ScrollViewer>

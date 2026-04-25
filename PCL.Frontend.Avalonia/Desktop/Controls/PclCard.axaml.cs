@@ -22,6 +22,13 @@ internal sealed partial class PclCard : UserControl
     private static readonly Thickness CollapsibleHeaderTextMargin = new(15, 0, 40, 0);
     private static readonly Thickness StandardChevronMargin = new(0, 17, 16, 0);
     private static readonly Thickness CollapsibleChevronMargin = new(0, 12, 16, 0);
+    private const double ShortHeightAnimationThreshold = 800;
+    private const double LongHeightAnimationThreshold = 3000;
+    private const double HeightAnimationEaseDistance = 150;
+    private const double ExpandHeightPixelsPerSecond = 4000;
+    private const double CollapseHeightPixelsPerSecond = 6500;
+    private const double LongExpandHeightPixelsPerSecond = 6000;
+    private const double LongCollapseHeightPixelsPerSecond = 8000;
     private readonly RotateTransform _chevronTransform = new();
 
     public static readonly StyledProperty<string> HeaderProperty =
@@ -566,54 +573,47 @@ internal sealed partial class PclCard : UserControl
     private static HeightAnimationPlan CreateHeightAnimationPlan(double delta)
     {
         var absDelta = Math.Abs(delta);
-        if (absDelta <= 800)
+        var isCollapsing = delta < 0;
+        if (absDelta <= ShortHeightAnimationThreshold)
         {
             return new HeightAnimationPlan(
                 absDelta,
                 0,
                 TimeSpan.Zero,
                 absDelta,
-                MotionDurations.HintSettle,
+                isCollapsing ? MotionDurations.QuickState : MotionDurations.HintSettle,
                 0,
                 UseSimpleEase: true);
         }
 
-        if (delta < 0 && absDelta > 500)
+        if (absDelta > LongHeightAnimationThreshold)
         {
-            const double easeDistance = 200;
-            var constantDistance = Math.Max(0, absDelta - easeDistance);
-            return new HeightAnimationPlan(
+            return CreateTravelHeightAnimationPlan(
                 absDelta,
-                constantDistance,
-                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(100)),
-                Math.Min(easeDistance, absDelta),
-                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(150)),
-                constantDistance / 0.1,
-                UseSimpleEase: false);
+                isCollapsing ? LongCollapseHeightPixelsPerSecond : LongExpandHeightPixelsPerSecond,
+                isCollapsing ? 180 : 250);
         }
 
-        if (delta > 0 && absDelta > 3000)
-        {
-            const double constantDistance = 1500;
-            return new HeightAnimationPlan(
-                absDelta,
-                Math.Min(constantDistance, absDelta),
-                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(300)),
-                Math.Max(0, absDelta - constantDistance),
-                MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(400)),
-                5000,
-                UseSimpleEase: false);
-        }
-
-        var easeSegmentDistance = Math.Min(150, absDelta);
-        var constantSegmentDistance = Math.Max(0, absDelta - easeSegmentDistance);
-        return new HeightAnimationPlan(
+        return CreateTravelHeightAnimationPlan(
             absDelta,
+            isCollapsing ? CollapseHeightPixelsPerSecond : ExpandHeightPixelsPerSecond,
+            isCollapsing ? 140 : 200);
+    }
+
+    private static HeightAnimationPlan CreateTravelHeightAnimationPlan(
+        double distance,
+        double pixelsPerSecond,
+        double easeMilliseconds)
+    {
+        var easeSegmentDistance = Math.Min(HeightAnimationEaseDistance, distance);
+        var constantSegmentDistance = Math.Max(0, distance - easeSegmentDistance);
+        return new HeightAnimationPlan(
+            distance,
             constantSegmentDistance,
-            MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(constantSegmentDistance / 4000 * 1000)),
+            MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(constantSegmentDistance / pixelsPerSecond * 1000)),
             easeSegmentDistance,
-            MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(200)),
-            4000,
+            MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(easeMilliseconds)),
+            pixelsPerSecond,
             UseSimpleEase: false);
     }
 
