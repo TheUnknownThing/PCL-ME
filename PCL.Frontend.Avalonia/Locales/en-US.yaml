@@ -1897,7 +1897,6 @@ setup:
       announcements: Launcher announcements
       debug_animation_speed: Animation speed
       http_proxy: HTTP proxy
-      max_animation_fps: Max animation FPS
       realtime_log_lines: Real-time log lines
       secure_dns_mode: Secure DNS mode
       secure_dns_provider: Secure DNS provider

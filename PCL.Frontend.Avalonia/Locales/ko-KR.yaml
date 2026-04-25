@@ -1893,7 +1893,6 @@ setup:
       announcements: 런처 공지
       debug_animation_speed: 애니메이션 속도
       http_proxy: HTTP 프록시
-      max_animation_fps: 최대 애니메이션 FPS
       realtime_log_lines: 실시간 로그 라인
       secure_dns_mode: 보안 DNS 모드
       secure_dns_provider: 보안 DNS 공급자

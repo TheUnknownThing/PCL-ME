@@ -2122,7 +2122,6 @@ setup:
       announcements: []
       debug_animation_speed: []
       http_proxy: []
-      max_animation_fps: []
       realtime_log_lines: []
       secure_dns_mode: []
       secure_dns_provider: []

@@ -276,7 +276,6 @@ internal sealed partial class LauncherViewModel
             {
                 SystemCardHeader = _i18n.T("setup.launcher_misc.cards.system.header"),
                 LauncherAnnouncementsLabel = _i18n.T("setup.launcher_misc.fields.announcements"),
-                MaxAnimationFpsLabel = _i18n.T("setup.launcher_misc.fields.max_animation_fps"),
                 RealTimeLogLinesLabel = _i18n.T("setup.launcher_misc.fields.realtime_log_lines"),
                 DisableHardwareAccelerationLabel = _i18n.T("setup.launcher_misc.flags.disable_hardware_acceleration"),
                 DisableHardwareAccelerationHint = _i18n.T("setup.launcher_misc.hints.disable_hardware_acceleration_restart"),
@@ -551,7 +550,6 @@ internal sealed class SetupLauncherMiscLocalization
 {
     public required string SystemCardHeader { get; init; }
     public required string LauncherAnnouncementsLabel { get; init; }
-    public required string MaxAnimationFpsLabel { get; init; }
     public required string RealTimeLogLinesLabel { get; init; }
     public required string DisableHardwareAccelerationLabel { get; init; }
     public required string DisableHardwareAccelerationHint { get; init; }

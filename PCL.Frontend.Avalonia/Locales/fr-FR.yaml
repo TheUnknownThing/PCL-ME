@@ -1893,7 +1893,6 @@ setup:
       announcements: Annonces du lanceur
       debug_animation_speed: Vitesse d'animation
       http_proxy: proxy HTTP
-      max_animation_fps: FPS d'animation maximum
       realtime_log_lines: Lignes de journalisation en temps réel
       secure_dns_mode: Mode DNS sécurisé
       secure_dns_provider: Fournisseur DNS sécurisé

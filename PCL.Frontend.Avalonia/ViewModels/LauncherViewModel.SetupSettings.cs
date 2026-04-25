@@ -185,20 +185,6 @@ internal sealed partial class LauncherViewModel
         }
     }
 
-    public double AnimationFpsLimit
-    {
-        get => _animationFpsLimit;
-        set
-        {
-            if (SetProperty(ref _animationFpsLimit, value))
-            {
-                RaisePropertyChanged(nameof(AnimationFpsLabel));
-            }
-        }
-    }
-
-    public string AnimationFpsLabel => $"{Math.Round(AnimationFpsLimit) + 1} FPS";
-
     public double MaxRealTimeLogValue
     {
         get => _maxRealTimeLogValue;

@@ -267,7 +267,6 @@ internal static class FrontendSetupCompositionService
 
         return new FrontendSetupLauncherMiscState(
             SystemActivityIndex: ReadValue(localConfig, "SystemSystemActivity", 0),
-            AnimationFpsLimit: ReadValue(sharedConfig, "UiAniFPS", 59),
             MaxRealTimeLogValue: ReadValue(sharedConfig, "SystemMaxLog", 13),
             IsHardwareAccelerationToggleAvailable: renderingConfiguration.IsHardwareAccelerationToggleAvailable,
             DisableHardwareAcceleration: renderingConfiguration.DisableHardwareAcceleration,

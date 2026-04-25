@@ -8,7 +8,7 @@
     <StackPanel Margin="25,10,25,10" Spacing="15">
       <controls:PclCard Header="{Binding SetupText.LauncherMisc.SystemCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,Auto,5,Auto,5,20,8,35">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,Auto,5,20,8,35">
             <TextBlock
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource ColorBrush1}"
@@ -27,30 +27,8 @@
                 Foreground="{DynamicResource ColorBrush1}"
                 FontSize="13.5"
                 Margin="0,0,25,0"
-                Text="{Binding SetupText.LauncherMisc.MaxAnimationFpsLabel}" />
-            <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,58">
-              <Slider
-                  VerticalAlignment="Center"
-                  Minimum="0"
-                  Maximum="59"
-                  Value="{Binding AnimationFpsLimit}" />
-              <TextBlock
-                  Grid.Column="1"
-                  HorizontalAlignment="Right"
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                  FontSize="12"
-                  Text="{Binding AnimationFpsLabel}" />
-            </Grid>
-
-            <TextBlock
-                Grid.Row="4"
-                VerticalAlignment="Center"
-                Foreground="{DynamicResource ColorBrush1}"
-                FontSize="13.5"
-                Margin="0,0,25,0"
                 Text="{Binding SetupText.LauncherMisc.RealTimeLogLinesLabel}" />
-            <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,58">
+            <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,58">
               <Slider
                   VerticalAlignment="Center"
                   Minimum="0"
@@ -66,7 +44,7 @@
             </Grid>
 
             <StackPanel
-                Grid.Row="6"
+                Grid.Row="4"
                 Grid.ColumnSpan="2"
                 IsVisible="{Binding IsHardwareAccelerationToggleVisible}"
                 Orientation="Horizontal"
@@ -84,7 +62,7 @@
                   TextWrapping="Wrap" />
             </StackPanel>
 
-            <Grid Grid.Row="8" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,Auto">
+            <Grid Grid.Row="6" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,Auto">
               <controls:PclButton
                   Grid.Column="0"
                   Margin="0,0,20,0"

@@ -63,7 +63,6 @@ internal sealed partial class LauncherViewModel
     private static readonly string[] LauncherMiscSharedResetKeys =
     [
         "SystemLocale",
-        "UiAniFPS",
         "SystemMaxLog",
         FrontendStartupRenderingService.DisableHardwareAccelerationConfigKey,
         "SystemNetDnsMode",
@@ -300,8 +299,6 @@ internal sealed partial class LauncherViewModel
                 break;
             case LauncherFrontendSubpageKey.SetupLauncherMisc:
                 RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
-                RaisePropertyChanged(nameof(AnimationFpsLimit));
-                RaisePropertyChanged(nameof(AnimationFpsLabel));
                 RaisePropertyChanged(nameof(MaxRealTimeLogValue));
                 RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
                 RaisePropertyChanged(nameof(IsHardwareAccelerationToggleVisible));
@@ -558,10 +555,6 @@ internal sealed partial class LauncherViewModel
                 _launcherActionService.PersistLocalValue("SystemSystemActivity", SelectedSystemActivityIndex);
                 RefreshLaunchAnnouncements();
                 break;
-            case nameof(AnimationFpsLimit):
-                _launcherActionService.PersistSharedValue("UiAniFPS", (int)Math.Round(AnimationFpsLimit));
-                LauncherActionService.ApplyAnimationPreferences((int)Math.Round(AnimationFpsLimit), DebugAnimationSpeed);
-                break;
             case nameof(MaxRealTimeLogValue):
                 _launcherActionService.PersistSharedValue("SystemMaxLog", (int)Math.Round(MaxRealTimeLogValue));
                 break;
@@ -598,7 +591,7 @@ internal sealed partial class LauncherViewModel
                 break;
             case nameof(DebugAnimationSpeed):
                 _launcherActionService.PersistSharedValue("SystemDebugAnim", (int)Math.Round(DebugAnimationSpeed));
-                LauncherActionService.ApplyAnimationPreferences((int)Math.Round(AnimationFpsLimit), DebugAnimationSpeed);
+                LauncherActionService.ApplyAnimationPreferences(DebugAnimationSpeed);
                 break;
             case nameof(DebugModeEnabled):
                 _launcherActionService.PersistSharedValue("SystemDebugMode", DebugModeEnabled);
@@ -803,8 +796,6 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(LauncherLocaleOptions));
         RaisePropertyChanged(nameof(SelectedLauncherLocaleIndex));
         RaisePropertyChanged(nameof(SelectedSystemActivityIndex));
-        RaisePropertyChanged(nameof(AnimationFpsLimit));
-        RaisePropertyChanged(nameof(AnimationFpsLabel));
         RaisePropertyChanged(nameof(MaxRealTimeLogValue));
         RaisePropertyChanged(nameof(MaxRealTimeLogLabel));
         RaisePropertyChanged(nameof(DisableHardwareAcceleration));

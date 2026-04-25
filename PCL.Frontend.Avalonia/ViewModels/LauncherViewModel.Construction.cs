@@ -258,7 +258,6 @@ internal sealed partial class LauncherViewModel
     private bool _detectClipboardResourceLinks = true;
     private int _selectedLauncherLocaleIndex;
     private int _selectedSystemActivityIndex;
-    private double _animationFpsLimit = 59;
     private double _maxRealTimeLogValue = 13;
     private bool _disableHardwareAcceleration;
     private bool _isLaunchBlockedByPrompt;

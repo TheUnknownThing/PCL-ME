@@ -51,9 +51,7 @@ internal static class MotionDurations
 
     public static int HintVisibleMaxCharacters => Source.HintVisibleMaxCharacters;
 
-    public static TimeSpan FrameInterval => Source.FrameInterval;
-
-    public static int AnimationFps => Source.AnimationFps;
+    public static TimeSpan FrameInterval { get; } = TimeSpan.FromMilliseconds(1000d / 60d);
 
     public static event PropertyChangedEventHandler? Changed
     {
@@ -61,19 +59,14 @@ internal static class MotionDurations
         remove => Source.PropertyChanged -= value;
     }
 
-    public static void ApplyRuntimePreferences(int animationFpsLimit, double debugAnimationSpeed)
+    public static void ApplyRuntimePreferences(double debugAnimationSpeed)
     {
-        Source.Apply(animationFpsLimit, debugAnimationSpeed);
+        Source.Apply(debugAnimationSpeed);
     }
 
     public static TimeSpan ScaleAnimationDuration(TimeSpan baseDuration)
     {
         return Source.ScaleAnimationDuration(baseDuration);
-    }
-
-    public static int NormalizeFpsSetting(int storedFpsLimit)
-    {
-        return Math.Max(1, storedFpsLimit + 1);
     }
 
     public static double NormalizeSpeedSetting(double storedSpeedSetting)
@@ -107,14 +100,9 @@ internal static class MotionDurations
             nameof(HintNudge)
         ];
 
-        private int _animationFpsLimit = 59;
         private double _debugAnimationSpeed = 9;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-
-        public int AnimationFpsLimit => _animationFpsLimit;
-
-        public int AnimationFps => NormalizeFpsSetting(_animationFpsLimit);
 
         public double DebugAnimationSpeed => _debugAnimationSpeed;
 
@@ -164,25 +152,18 @@ internal static class MotionDurations
 
         public int HintVisibleMaxCharacters => 23;
 
-        public TimeSpan FrameInterval => TimeSpan.FromMilliseconds(1000d / AnimationFps);
-
-        public void Apply(int animationFpsLimit, double debugAnimationSpeed)
+        public void Apply(double debugAnimationSpeed)
         {
-            var normalizedFpsLimit = Math.Clamp(animationFpsLimit, 0, 59);
             var normalizedDebugSpeed = Math.Clamp(debugAnimationSpeed, 0, 30);
-            if (_animationFpsLimit == normalizedFpsLimit && Math.Abs(_debugAnimationSpeed - normalizedDebugSpeed) < 0.0001d)
+            if (Math.Abs(_debugAnimationSpeed - normalizedDebugSpeed) < 0.0001d)
             {
                 return;
             }
 
-            _animationFpsLimit = normalizedFpsLimit;
             _debugAnimationSpeed = normalizedDebugSpeed;
 
-            OnPropertyChanged(nameof(AnimationFpsLimit));
-            OnPropertyChanged(nameof(AnimationFps));
             OnPropertyChanged(nameof(DebugAnimationSpeed));
             OnPropertyChanged(nameof(SpeedFactor));
-            OnPropertyChanged(nameof(FrameInterval));
             foreach (var propertyName in DurationPropertyNames)
             {
                 OnPropertyChanged(propertyName);

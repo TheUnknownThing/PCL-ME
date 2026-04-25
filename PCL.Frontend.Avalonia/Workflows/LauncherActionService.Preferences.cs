@@ -29,28 +29,22 @@ internal sealed partial class LauncherActionService
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
 
-        var animationFpsLimit = 59;
         var debugAnimationSpeed = 9d;
         if (File.Exists(runtimePaths.SharedConfigPath))
         {
             var provider = runtimePaths.OpenSharedConfigProvider();
-            if (provider.Exists("UiAniFPS"))
-            {
-                animationFpsLimit = provider.Get<int>("UiAniFPS");
-            }
-
             if (provider.Exists("SystemDebugAnim"))
             {
                 debugAnimationSpeed = provider.Get<int>("SystemDebugAnim");
             }
         }
 
-        ApplyAnimationPreferences(animationFpsLimit, debugAnimationSpeed);
+        ApplyAnimationPreferences(debugAnimationSpeed);
     }
 
-    public static void ApplyAnimationPreferences(int animationFpsLimit, double debugAnimationSpeed)
+    public static void ApplyAnimationPreferences(double debugAnimationSpeed)
     {
-        MotionDurations.ApplyRuntimePreferences(animationFpsLimit, debugAnimationSpeed);
+        MotionDurations.ApplyRuntimePreferences(debugAnimationSpeed);
     }
 
     public void ApplyAppearance(

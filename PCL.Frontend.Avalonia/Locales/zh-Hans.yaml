@@ -1897,7 +1897,6 @@ setup:
       announcements: 启动器公告
       debug_animation_speed: 动画速度
       http_proxy: HTTP 代理
-      max_animation_fps: 最高动画帧率
       realtime_log_lines: 实时日志行数
       secure_dns_mode: 安全 DNS 模式
       secure_dns_provider: 安全 DNS 提供商

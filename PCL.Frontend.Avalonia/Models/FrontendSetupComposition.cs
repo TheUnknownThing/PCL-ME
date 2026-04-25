@@ -66,7 +66,6 @@ internal sealed record FrontendSetupGameManageState(
 
 internal sealed record FrontendSetupLauncherMiscState(
     int SystemActivityIndex,
-    double AnimationFpsLimit,
     double MaxRealTimeLogValue,
     bool IsHardwareAccelerationToggleAvailable,
     bool DisableHardwareAcceleration,
