@@ -58,8 +58,6 @@ internal sealed partial class LauncherViewModel
 
     public ActionCommand RefreshTaskManagerCommand => _refreshTaskManagerCommand;
 
-    public ActionCommand ClearFinishedTasksCommand => _clearFinishedTasksCommand;
-
     public ActionCommand RefreshGameLogCommand => _refreshGameLogCommand;
 
     public ActionCommand ClearGameLogCommand => _clearGameLogCommand;

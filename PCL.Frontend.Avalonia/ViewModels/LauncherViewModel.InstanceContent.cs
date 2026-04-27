@@ -52,7 +52,6 @@ internal sealed partial class LauncherViewModel
     }
 
     private string _instanceWorldSearchQuery = string.Empty;
-    private string _instanceServerSearchQuery = string.Empty;
     private string _instanceResourceSearchQuery = string.Empty;
     private string _instanceResourceSurfaceTitle = "Mod";
     private InstanceResourceFilter _instanceResourceFilter = InstanceResourceFilter.All;
@@ -76,18 +75,6 @@ internal sealed partial class LauncherViewModel
             if (SetProperty(ref _instanceWorldSearchQuery, value))
             {
                 RefreshInstanceWorldEntries();
-            }
-        }
-    }
-
-    public string InstanceServerSearchQuery
-    {
-        get => _instanceServerSearchQuery;
-        set
-        {
-            if (SetProperty(ref _instanceServerSearchQuery, value))
-            {
-                RefreshInstanceServerEntries();
             }
         }
     }
@@ -361,7 +348,6 @@ internal sealed partial class LauncherViewModel
     private void InitializeInstanceContentSurfaces()
     {
         _instanceWorldSearchQuery = string.Empty;
-        _instanceServerSearchQuery = string.Empty;
         _instanceResourceSearchQuery = string.Empty;
         _instanceResourceSelectedPaths.Clear();
         _instanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
@@ -396,7 +382,6 @@ internal sealed partial class LauncherViewModel
 
         if (IsCurrentStandardRightPane(StandardRightPaneKind.InstanceServer))
         {
-            RaisePropertyChanged(nameof(InstanceServerSearchQuery));
             RaisePropertyChanged(nameof(HasInstanceServerEntries));
             RaisePropertyChanged(nameof(HasNoInstanceServerEntries));
             RaisePropertyChanged(nameof(ShowInstanceServerContent));

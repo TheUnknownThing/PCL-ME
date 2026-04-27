@@ -43,6 +43,8 @@ internal sealed class DownloadInstallMinecraftSectionViewModel(
     public double ChevronAngle => IsExpanded ? 180 : 0;
 
     public ActionCommand ToggleCommand { get; } = toggleCommand;
+
+    public ActionCommand? HeaderCommand => CanCollapse ? ToggleCommand : null;
 }
 
 internal sealed class DownloadInstallMinecraftChoiceViewModel(

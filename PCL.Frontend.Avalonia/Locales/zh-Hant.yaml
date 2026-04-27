@@ -647,8 +647,6 @@ shell:
     tasks:
       install_modpack: 整合包安裝：{name}
   task_manager:
-    actions:
-      clear_finished: 清除已完成任務
     activity:
       canceled: 已取消，持續 {duration}
       failed: 已失敗，持續 {duration}

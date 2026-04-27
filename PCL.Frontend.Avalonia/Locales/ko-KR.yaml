@@ -647,8 +647,6 @@ shell:
     tasks:
       install_modpack: "Modpack 설치: {name}"
   task_manager:
-    actions:
-      clear_finished: 완료된 작업 지우기
     activity:
       canceled: "{duration} 후에 취소됨"
       failed: "{duration} 후에 실패함"

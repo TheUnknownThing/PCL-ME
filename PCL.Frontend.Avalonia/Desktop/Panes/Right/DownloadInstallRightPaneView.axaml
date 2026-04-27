@@ -50,7 +50,7 @@
                   Header="{Binding Title}"
                   ShowChevron="{Binding CanCollapse}"
                   IsChevronExpanded="{Binding IsExpanded}"
-                  HeaderCommand="{Binding ToggleCommand}"
+                  HeaderCommand="{Binding HeaderCommand}"
                   ContentMargin="18,40,18,8">
                 <controls:PclCard.CardContent>
                     <ItemsControl ItemsSource="{Binding Choices}">

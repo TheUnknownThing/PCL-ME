@@ -647,8 +647,6 @@ shell:
     tasks:
       install_modpack: "Installation du modpack : {name}"
   task_manager:
-    actions:
-      clear_finished: Effacer les tâches terminées
     activity:
       canceled: Annulé après {duration}
       failed: Échec après {duration}

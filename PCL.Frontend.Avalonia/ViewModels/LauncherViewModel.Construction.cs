@@ -8,7 +8,6 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PCL.Core.App.I18n;
 using PCL.Core.App.Essentials;
-using PCL.Core.App.Tasks;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
@@ -105,7 +104,6 @@ internal sealed partial class LauncherViewModel
     private readonly ActionCommand _queryMinecraftServerCommand;
     private readonly ActionCommand _selectHeadSkinCommand;
     private readonly ActionCommand _saveHeadCommand;
-    private readonly ActionCommand _resetDownloadInstallSurfaceCommand;
     private readonly ActionCommand _manageDownloadFavoriteTargetCommand;
     private readonly ActionCommand _resetInstanceExportOptionsCommand;
     private readonly ActionCommand _importInstanceExportConfigCommand;
@@ -121,7 +119,6 @@ internal sealed partial class LauncherViewModel
     private readonly ActionCommand _importInstanceSelectionPackCommand;
     private readonly ActionCommand _openInstanceSelectionDownloadCommand;
     private readonly ActionCommand _refreshTaskManagerCommand;
-    private readonly ActionCommand _clearFinishedTasksCommand;
     private readonly ActionCommand _refreshGameLogCommand;
     private readonly ActionCommand _clearGameLogCommand;
     private LauncherFrontendRoute _currentRoute;
@@ -415,7 +412,6 @@ internal sealed partial class LauncherViewModel
         _queryMinecraftServerCommand = new ActionCommand(() => _ = QueryMinecraftServerAsync());
         _selectHeadSkinCommand = new ActionCommand(() => _ = SelectHeadSkinAsync());
         _saveHeadCommand = new ActionCommand(() => _ = SaveHeadAsync());
-        _resetDownloadInstallSurfaceCommand = new ActionCommand(ResetDownloadInstallSurface);
         _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
         _searchDownloadResourceCommand = new ActionCommand(SearchDownloadResource);
         _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
@@ -444,12 +440,6 @@ internal sealed partial class LauncherViewModel
             new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
             LT("shell.instance_select.empty.open_download_activity")));
         _refreshTaskManagerCommand = new ActionCommand(RefreshTaskManagerSurface);
-        _clearFinishedTasksCommand = new ActionCommand(() =>
-        {
-            TaskCenter.RemoveFinished();
-            RefreshTaskManagerSurface();
-            RefreshLauncherState(LT("shell.task_manager.actions.clear_finished"));
-        });
         _refreshGameLogCommand = new ActionCommand(RefreshGameLogSurface);
         _clearGameLogCommand = new ActionCommand(ClearGameLogSurface);
 

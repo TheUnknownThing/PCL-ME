@@ -738,8 +738,6 @@ shell:
       install_modpack:
         - name
   task_manager:
-    actions:
-      clear_finished: []
     activity:
       canceled:
         - duration

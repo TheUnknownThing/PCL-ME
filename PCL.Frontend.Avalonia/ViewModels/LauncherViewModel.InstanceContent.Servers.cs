@@ -20,7 +20,6 @@ internal sealed partial class LauncherViewModel
         ReplaceItems(
             InstanceServerEntries,
             _instanceComposition.Server.Entries
-                .Where(entry => MatchesSearch(entry.Title, entry.Address, entry.Status, InstanceServerSearchQuery))
                 .Select(CreateInstanceServerEntry));
     }
 
