@@ -188,6 +188,7 @@ package_linux() {
 
   prepare_directory "$package_dir"
   cp "$published_executable" "${package_dir}/${executable_name}"
+  cp "$icon_png" "${package_dir}/icon.png"
   chmod +x "${package_dir}/${executable_name}"
   tar -C "$rid_root" -czf "$archive_path" "$(basename "$package_dir")"
   echo "$archive_path"

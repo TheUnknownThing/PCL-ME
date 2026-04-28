@@ -112,7 +112,7 @@ internal static class FrontendLinuxDesktopEntryService
         builder.AppendLine("[Desktop Entry]");
         builder.AppendLine("Type=Application");
         builder.AppendLine($"Name={EscapeDesktopValue(displayName)}");
-        builder.AppendLine("Comment=PCL-ME frontend");
+        builder.AppendLine("Comment=PCL2 Multiplatform Edition");
         builder.AppendLine($"Exec={string.Join(" ", execArguments.Select(EscapeExecArgument))}");
 
         if (!string.IsNullOrWhiteSpace(workingDirectory))
@@ -156,8 +156,21 @@ internal static class FrontendLinuxDesktopEntryService
             return null;
         }
 
-        var iconPath = Path.Combine(executableDirectory, FrontendApplicationIdentity.LinuxIconRelativePath);
-        return File.Exists(iconPath) ? iconPath : null;
+        foreach (var iconPath in GetIconPathCandidates(executableDirectory))
+        {
+            if (File.Exists(iconPath))
+            {
+                return iconPath;
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<string> GetIconPathCandidates(string executableDirectory)
+    {
+        yield return Path.Combine(executableDirectory, FrontendApplicationIdentity.LinuxPackageIconFileName);
+        yield return Path.Combine(executableDirectory, FrontendApplicationIdentity.LinuxIconRelativePath);
     }
 
     private static string GetDesktopEntryPath(string applicationsDirectory)

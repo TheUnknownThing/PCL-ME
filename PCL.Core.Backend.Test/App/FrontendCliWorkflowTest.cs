@@ -91,6 +91,60 @@ public sealed class FrontendCliWorkflowTest
     }
 
     [TestMethod]
+    public void ResolveIconPath_PrefersLinuxPackageIconBesideExecutable()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), "pcl-me-icon-path-" + Guid.NewGuid().ToString("N"));
+        var executablePath = Path.Combine(tempRoot, "PCL.Frontend.Avalonia");
+        var packageIconPath = Path.Combine(tempRoot, "icon.png");
+        var bundledIconPath = Path.Combine(tempRoot, "LauncherAssets", "Images", "icon.png");
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(bundledIconPath)!);
+            File.WriteAllText(executablePath, string.Empty);
+            File.WriteAllText(packageIconPath, string.Empty);
+            File.WriteAllText(bundledIconPath, string.Empty);
+
+            var iconPath = FrontendLinuxDesktopEntryService.ResolveIconPath(executablePath);
+
+            Assert.AreEqual(packageIconPath, iconPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempRoot))
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void ResolveIconPath_UsesBundledLauncherAssetIconWhenPackageIconIsMissing()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), "pcl-me-icon-path-" + Guid.NewGuid().ToString("N"));
+        var executablePath = Path.Combine(tempRoot, "PCL.Frontend.Avalonia");
+        var bundledIconPath = Path.Combine(tempRoot, "LauncherAssets", "Images", "icon.png");
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(bundledIconPath)!);
+            File.WriteAllText(executablePath, string.Empty);
+            File.WriteAllText(bundledIconPath, string.Empty);
+
+            var iconPath = FrontendLinuxDesktopEntryService.ResolveIconPath(executablePath);
+
+            Assert.AreEqual(bundledIconPath, iconPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempRoot))
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void Register_WithMissingExecutable_Fails()
     {
         if (!OperatingSystem.IsLinux())
@@ -123,6 +177,7 @@ public sealed class FrontendCliWorkflowTest
         {
             Directory.CreateDirectory(tempRoot);
             File.WriteAllText(executablePath, string.Empty);
+            File.WriteAllText(Path.Combine(tempRoot, "icon.png"), string.Empty);
             Environment.SetEnvironmentVariable("XDG_DATA_HOME", tempRoot);
 
             var registerResult = FrontendLinuxDesktopEntryService.Register(executablePath);
@@ -137,6 +192,7 @@ public sealed class FrontendCliWorkflowTest
             var entry = File.ReadAllText(registerResult.DesktopEntryPath);
             StringAssert.Contains(entry, $"Exec={executablePath}");
             StringAssert.Contains(entry, $"Path={tempRoot}");
+            StringAssert.Contains(entry, $"Icon={Path.Combine(tempRoot, "icon.png")}");
 
             var unregisterResult = FrontendLinuxDesktopEntryService.Unregister();
 
