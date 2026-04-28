@@ -15,7 +15,7 @@ internal static class AvaloniaDesktopHost
     {
         var platformAdapter = new FrontendPlatformAdapter();
         var runtimePaths = FrontendRuntimePaths.Resolve(platformAdapter);
-        FrontendStartupScalingService.ApplyStoredScale(runtimePaths);
+        FrontendStartupScalingService.DisablePlatformScaling();
         var renderingConfiguration = FrontendStartupRenderingService.Resolve(
             runtimePaths,
             platformAdapter.GetDesktopPlatformKind());

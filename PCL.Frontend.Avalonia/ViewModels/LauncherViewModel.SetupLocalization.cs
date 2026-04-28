@@ -99,7 +99,6 @@ internal sealed partial class LauncherViewModel
                 LocaleLabel = _i18n.T("setup.ui.fields.locale"),
                 LauncherOpacityLabel = _i18n.T("setup.ui.fields.launcher_opacity"),
                 UiScaleLabel = _i18n.T("setup.ui.fields.ui_scale"),
-                UiScaleRestartHint = _i18n.T("setup.ui.hints.ui_scale_restart"),
                 ThemeLabel = _i18n.T("setup.ui.fields.theme"),
                 LightPaletteLabel = _i18n.T("setup.ui.fields.light_palette"),
                 DarkPaletteLabel = _i18n.T("setup.ui.fields.dark_palette"),
@@ -424,7 +423,6 @@ internal sealed class SetupUiLocalization
     public required string LocaleLabel { get; init; }
     public required string LauncherOpacityLabel { get; init; }
     public required string UiScaleLabel { get; init; }
-    public required string UiScaleRestartHint { get; init; }
     public required string ThemeLabel { get; init; }
     public required string LightPaletteLabel { get; init; }
     public required string DarkPaletteLabel { get; init; }

@@ -183,6 +183,27 @@ internal sealed partial class LauncherViewModel
 
     public string LauncherOpacityLabel => FrontendAppearanceService.FormatLauncherOpacityLabel(LauncherOpacity);
 
+    public IReadOnlyList<string> UiScaleOptions => FrontendStartupScalingService.CommonUiScaleFactors
+        .Select(FrontendStartupScalingService.FormatUiScaleFactorLabel)
+        .ToArray();
+
+    public int SelectedUiScaleFactorIndex
+    {
+        get => _selectedUiScaleFactorIndex;
+        set
+        {
+            if (!TryNormalizeSelectionIndex(value, UiScaleOptions.Count, out var normalizedValue))
+            {
+                return;
+            }
+
+            if (SetProperty(ref _selectedUiScaleFactorIndex, normalizedValue))
+            {
+                UiScaleFactor = FrontendStartupScalingService.CommonUiScaleFactors[normalizedValue];
+            }
+        }
+    }
+
     public double UiScaleFactor
     {
         get => _uiScaleFactor;

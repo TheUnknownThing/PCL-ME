@@ -15,6 +15,11 @@ internal static class FrontendStartupScalingService
     public const double MinimumUiScaleFactor = 0.5d;
     public const double MaximumUiScaleFactor = 3d;
 
+    public static readonly double[] CommonUiScaleFactors =
+    [
+        0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0
+    ];
+
     public static FrontendStartupScalingConfiguration Resolve(FrontendRuntimePaths runtimePaths)
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
@@ -35,17 +40,11 @@ internal static class FrontendStartupScalingService
             ReadStoredUiScaleFactor(localConfig));
     }
 
-    public static void ApplyStoredScale(FrontendRuntimePaths runtimePaths)
+    public static void DisablePlatformScaling()
     {
-        var configuration = Resolve(runtimePaths);
-        if (!configuration.HasStoredScaleFactor)
-        {
-            return;
-        }
-
         Environment.SetEnvironmentVariable(
             GlobalScaleFactorEnvironmentVariable,
-            FormatEnvironmentScaleFactor(configuration.ScaleFactor));
+            "1");
     }
 
     public static double NormalizeUiScaleFactor(double value)
@@ -64,6 +63,25 @@ internal static class FrontendStartupScalingService
     public static string FormatUiScaleFactorLabel(double value)
     {
         return $"{Math.Round(NormalizeUiScaleFactor(value) * 100d)}%";
+    }
+
+    public static int ResolveClosestScaleFactorIndex(double value)
+    {
+        var normalized = NormalizeUiScaleFactor(value);
+        var closestIndex = 0;
+        var closestDifference = double.MaxValue;
+
+        for (var i = 0; i < CommonUiScaleFactors.Length; i++)
+        {
+            var difference = Math.Abs(CommonUiScaleFactors[i] - normalized);
+            if (difference < closestDifference)
+            {
+                closestDifference = difference;
+                closestIndex = i;
+            }
+        }
+
+        return closestIndex;
     }
 
     public static double ReadStoredUiScaleFactor(IKeyValueFileProvider localConfig)

@@ -349,6 +349,8 @@ internal sealed partial class LauncherViewModel
                 RaisePropertyChanged(nameof(IsDarkCustomThemeColorInvalid));
                 RaisePropertyChanged(nameof(LauncherOpacity));
                 RaisePropertyChanged(nameof(LauncherOpacityLabel));
+                RaisePropertyChanged(nameof(UiScaleOptions));
+                RaisePropertyChanged(nameof(SelectedUiScaleFactorIndex));
                 RaisePropertyChanged(nameof(UiScaleFactor));
                 RaisePropertyChanged(nameof(UiScaleFactorLabel));
                 RaisePropertyChanged(nameof(ShowLauncherLogoSetting));

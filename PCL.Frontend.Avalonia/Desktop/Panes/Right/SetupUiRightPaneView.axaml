@@ -51,29 +51,11 @@
                   FontSize="13.5"
                   Margin="0,0,20,0"
                   Text="{Binding SetupText.Ui.UiScaleLabel}" />
-              <StackPanel Grid.Row="4" Grid.Column="1" Spacing="4">
-                <Grid ColumnDefinitions="*,60">
-                  <Slider
-                      VerticalAlignment="Center"
-                      Minimum="0.5"
-                      Maximum="3"
-                      TickFrequency="0.1"
-                      IsSnapToTickEnabled="True"
-                      Value="{Binding UiScaleFactor}" />
-                  <TextBlock
-                      Grid.Column="1"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Center"
-                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                      FontSize="12"
-                      Text="{Binding UiScaleFactorLabel}" />
-                </Grid>
-                <TextBlock
-                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                    FontSize="12"
-                    Text="{Binding SetupText.Ui.UiScaleRestartHint}"
-                    TextWrapping="Wrap" />
-              </StackPanel>
+              <ComboBox
+                  Grid.Row="4"
+                  Grid.Column="1"
+                  ItemsSource="{Binding UiScaleOptions}"
+                  SelectedIndex="{Binding SelectedUiScaleFactorIndex}" />
 
               <TextBlock
                   Grid.Row="6"

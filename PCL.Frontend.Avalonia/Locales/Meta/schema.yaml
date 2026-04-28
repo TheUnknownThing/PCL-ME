@@ -1883,8 +1883,6 @@ setup:
       lock_window_size: []
       show_launcher_logo: []
       show_launching_hint: []
-    hints:
-      ui_scale_restart: []
     hidden_features:
       header: []
       header_temporary: []

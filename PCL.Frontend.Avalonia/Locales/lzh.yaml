@@ -1675,8 +1675,6 @@ setup:
       lock_window_size: 鎖定啓動器大小
       show_launcher_logo: 啟啟動器時顯 PCL 圖標
       show_launching_hint: 啟遊戲時顯「汝知否」
-    hints:
-      ui_scale_restart: 變更於下次啟動啟動器時生效。
     hidden_features:
       header: 功能隱藏
       header_temporary: 功能隱藏（暫停用，按 F12 可復啓）

@@ -97,7 +97,11 @@ internal sealed partial class MainWindow : Window
         TextInput += OnWindowTextInput;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
-        SizeChanged += (_, _) => ApplyDynamicBackgroundState();
+        SizeChanged += (_, _) =>
+        {
+            ApplyDynamicBackgroundState();
+            ApplyUiScale();
+        };
         ApplyMainBackgroundBrush();
         ApplyTitleBarBackgroundBrush();
         ApplyWindowOpacity();
@@ -516,6 +520,7 @@ internal sealed partial class MainWindow : Window
         ApplyDynamicBackgroundState();
         UpdatePromptOverlayRowHeights();
         QueuePromptOverlaySync();
+        ApplyUiScale();
     }
 
     private void OnNavigationTransitionRequested(object? sender, NavigationTransitionEventArgs e)
@@ -543,6 +548,12 @@ internal sealed partial class MainWindow : Window
         if (e.PropertyName == nameof(LauncherViewModel.LauncherOpacity))
         {
             ApplyWindowOpacity();
+            return;
+        }
+
+        if (e.PropertyName == nameof(LauncherViewModel.UiScaleFactor))
+        {
+            ApplyUiScale();
             return;
         }
 
@@ -578,6 +589,22 @@ internal sealed partial class MainWindow : Window
     {
         var configuredOpacity = _launcherViewModel?.LauncherOpacity ?? 600d;
         Opacity = FrontendAppearanceService.MapLauncherOpacityToWindowOpacity(configuredOpacity);
+    }
+
+    private void ApplyUiScale()
+    {
+        var scale = _launcherViewModel?.UiScaleFactor ?? FrontendStartupScalingService.DefaultUiScaleFactor;
+        var width = Bounds.Width;
+        var height = Bounds.Height;
+
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        GridRoot.RenderTransform = new ScaleTransform(scale, scale);
+        GridRoot.Width = width / scale;
+        GridRoot.Height = height / scale;
     }
 
     private void QueuePromptOverlaySync()

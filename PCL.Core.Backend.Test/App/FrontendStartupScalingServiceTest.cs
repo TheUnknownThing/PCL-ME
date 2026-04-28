@@ -50,22 +50,16 @@ public sealed class FrontendStartupScalingServiceTest
     }
 
     [TestMethod]
-    public void ApplyStoredScale_SetsAvaloniaGlobalScaleFactor()
+    public void DisablePlatformScaling_SetsAvaloniaGlobalScaleFactorToOne()
     {
-        using var environment = new FrontendStartupScalingEnvironment();
         var previousValue = Environment.GetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable);
-        File.WriteAllText(
-            environment.LocalConfigPath,
-            """
-            UiScaleFactor: 1.8
-            """);
 
         try
         {
-            FrontendStartupScalingService.ApplyStoredScale(environment.CreateRuntimePaths());
+            FrontendStartupScalingService.DisablePlatformScaling();
 
             Assert.AreEqual(
-                "1.8",
+                "1",
                 Environment.GetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable));
         }
         finally

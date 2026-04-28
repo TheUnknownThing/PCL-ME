@@ -99,7 +99,7 @@
     </Style>
   </Window.Styles>
 
-  <Grid x:Name="GridRoot">
+  <Grid x:Name="GridRoot" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
     <Grid x:Name="GridResize" Margin="10" RowDefinitions="14,*,14" ColumnDefinitions="14,*,14">
       <Border x:Name="TopLeft" Grid.Row="0" Grid.Column="0">
         <Border.Background>
