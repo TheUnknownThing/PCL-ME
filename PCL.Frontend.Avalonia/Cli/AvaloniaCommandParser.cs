@@ -29,6 +29,16 @@ internal static class AvaloniaCommandParser
             return ParseLaunchInstanceCommand(args);
         }
 
+        if (string.Equals(args[0], "register", StringComparison.OrdinalIgnoreCase))
+        {
+            return ParseNoArgumentCommand(args, AvaloniaCommandKind.Register);
+        }
+
+        if (string.Equals(args[0], "unregister", StringComparison.OrdinalIgnoreCase))
+        {
+            return ParseNoArgumentCommand(args, AvaloniaCommandKind.Unregister);
+        }
+
         return Error($"Unknown command '{args[0]}'.");
     }
 
@@ -120,6 +130,20 @@ internal static class AvaloniaCommandParser
             InstanceNameOverride: instanceName));
     }
 
+    private static AvaloniaParseResult ParseNoArgumentCommand(string[] args, AvaloniaCommandKind command)
+    {
+        if (args.Length > 1)
+        {
+            return Error($"Unexpected argument '{args[1]}'.");
+        }
+
+        return Success(new AvaloniaCommandOptions(
+            command,
+            Scenario: "modern-fabric",
+            ForceCjkFontWarning: false,
+            InstanceNameOverride: null));
+    }
+
     public static string GetUsageText()
     {
         return """
@@ -128,6 +152,8 @@ PCL.Frontend.Avalonia
 Usage:
   app [--scenario modern-fabric|legacy-forge] [--force-cjk-font-warning true|false]
   launch-instance --instance <instance-name>
+  register
+  unregister
   help
 
 Defaults:

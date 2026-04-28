@@ -21,8 +21,52 @@ internal static class FrontendCliExecutionService
         return options.Command switch
         {
             AvaloniaCommandKind.LaunchInstance => RunLaunchInstance(options),
+            AvaloniaCommandKind.Register => RunDesktopEntryRegistration(),
+            AvaloniaCommandKind.Unregister => RunDesktopEntryUnregistration(),
             _ => 1
         };
+    }
+
+    private static int RunDesktopEntryRegistration()
+    {
+        try
+        {
+            var result = FrontendLinuxDesktopEntryService.RegisterCurrentProcess();
+            WriteDesktopEntryResult(result);
+            return result.IsSuccess ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 1;
+        }
+    }
+
+    private static int RunDesktopEntryUnregistration()
+    {
+        try
+        {
+            var result = FrontendLinuxDesktopEntryService.Unregister();
+            WriteDesktopEntryResult(result);
+            return result.IsSuccess ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 1;
+        }
+    }
+
+    private static void WriteDesktopEntryResult(FrontendDesktopEntryOperationResult result)
+    {
+        if (result.IsSuccess)
+        {
+            Console.WriteLine(result.Message);
+        }
+        else
+        {
+            Console.Error.WriteLine(result.Message);
+        }
     }
 
     private static int RunLaunchInstance(AvaloniaCommandOptions options)

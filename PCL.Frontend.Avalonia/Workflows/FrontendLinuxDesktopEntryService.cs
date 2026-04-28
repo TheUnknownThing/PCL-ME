@@ -4,37 +4,84 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendLinuxDesktopEntryService
 {
-    public static void EnsureRegistered()
+    public static FrontendDesktopEntryOperationResult RegisterCurrentProcess()
     {
         if (!OperatingSystem.IsLinux())
         {
-            return;
+            return FrontendDesktopEntryOperationResult.Fail("Desktop entry registration is only supported on Linux.");
         }
 
         var executablePath = Environment.ProcessPath;
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            return;
+            return FrontendDesktopEntryOperationResult.Fail("Could not determine the current executable path.");
+        }
+
+        return Register(executablePath);
+    }
+
+    public static FrontendDesktopEntryOperationResult Register(string executablePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
+
+        if (!OperatingSystem.IsLinux())
+        {
+            return FrontendDesktopEntryOperationResult.Fail("Desktop entry registration is only supported on Linux.");
+        }
+
+        if (!File.Exists(executablePath))
+        {
+            return FrontendDesktopEntryOperationResult.Fail($"Executable does not exist: {executablePath}");
         }
 
         var applicationsDirectory = ResolveApplicationsDirectory();
         if (string.IsNullOrWhiteSpace(applicationsDirectory))
         {
-            return;
+            return FrontendDesktopEntryOperationResult.Fail("Could not resolve the XDG applications directory.");
         }
 
         Directory.CreateDirectory(applicationsDirectory);
 
-        var desktopEntryPath = Path.Combine(
-            applicationsDirectory,
-            FrontendApplicationIdentity.LinuxDesktopFileId + ".desktop");
+        var desktopEntryPath = GetDesktopEntryPath(applicationsDirectory);
         var desktopEntryContent = BuildDesktopEntry(
             FrontendApplicationIdentity.DisplayName,
             [executablePath],
             ResolveIconPath(executablePath),
             Path.GetDirectoryName(executablePath));
 
-        WriteIfChanged(desktopEntryPath, desktopEntryContent);
+        var wasChanged = WriteIfChanged(desktopEntryPath, desktopEntryContent);
+        return FrontendDesktopEntryOperationResult.Success(
+            desktopEntryPath,
+            wasChanged
+                ? $"Registered desktop entry: {desktopEntryPath}"
+                : $"Desktop entry is already registered: {desktopEntryPath}");
+    }
+
+    public static FrontendDesktopEntryOperationResult Unregister()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return FrontendDesktopEntryOperationResult.Fail("Desktop entry registration is only supported on Linux.");
+        }
+
+        var applicationsDirectory = ResolveApplicationsDirectory();
+        if (string.IsNullOrWhiteSpace(applicationsDirectory))
+        {
+            return FrontendDesktopEntryOperationResult.Fail("Could not resolve the XDG applications directory.");
+        }
+
+        var desktopEntryPath = GetDesktopEntryPath(applicationsDirectory);
+        if (!File.Exists(desktopEntryPath))
+        {
+            return FrontendDesktopEntryOperationResult.Success(
+                desktopEntryPath,
+                $"Desktop entry was not registered: {desktopEntryPath}");
+        }
+
+        File.Delete(desktopEntryPath);
+        return FrontendDesktopEntryOperationResult.Success(
+            desktopEntryPath,
+            $"Unregistered desktop entry: {desktopEntryPath}");
     }
 
     public static string BuildDesktopEntry(string displayName, string executablePath, string? iconPath)
@@ -113,18 +160,26 @@ internal static class FrontendLinuxDesktopEntryService
         return File.Exists(iconPath) ? iconPath : null;
     }
 
-    private static void WriteIfChanged(string path, string content)
+    private static string GetDesktopEntryPath(string applicationsDirectory)
+    {
+        return Path.Combine(
+            applicationsDirectory,
+            FrontendApplicationIdentity.LinuxDesktopFileId + ".desktop");
+    }
+
+    private static bool WriteIfChanged(string path, string content)
     {
         if (File.Exists(path))
         {
             var existing = File.ReadAllText(path);
             if (string.Equals(existing, content, StringComparison.Ordinal))
             {
-                return;
+                return false;
             }
         }
 
         File.WriteAllText(path, content, new UTF8Encoding(false));
+        return true;
     }
 
     private static string EscapeDesktopValue(string value)
@@ -155,4 +210,16 @@ internal static class FrontendLinuxDesktopEntryService
             .Replace("`", "\\`", StringComparison.Ordinal)
             .Replace("\n", "\\n", StringComparison.Ordinal) + "\"";
     }
+}
+
+internal sealed record FrontendDesktopEntryOperationResult(
+    bool IsSuccess,
+    string? DesktopEntryPath,
+    string Message)
+{
+    public static FrontendDesktopEntryOperationResult Success(string desktopEntryPath, string message) =>
+        new(true, desktopEntryPath, message);
+
+    public static FrontendDesktopEntryOperationResult Fail(string message) =>
+        new(false, DesktopEntryPath: null, message);
 }

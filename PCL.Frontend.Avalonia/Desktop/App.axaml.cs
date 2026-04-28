@@ -64,7 +64,6 @@ internal sealed class App : Application
         try
         {
             FrontendAppearanceService.ReapplyCurrentAppearance(this);
-            FrontendLinuxDesktopEntryService.EnsureRegistered();
             var localeDirectory = Path.Combine(AppContext.BaseDirectory, "Locales");
             var availableLocales = Directory.EnumerateFiles(localeDirectory, "*.yaml", SearchOption.TopDirectoryOnly)
                 .Select(Path.GetFileNameWithoutExtension)

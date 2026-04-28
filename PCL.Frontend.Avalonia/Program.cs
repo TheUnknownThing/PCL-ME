@@ -29,7 +29,7 @@ public partial class Program
             return;
         }
 
-        if (parseResult.Options.Command == AvaloniaCommandKind.LaunchInstance)
+        if (parseResult.Options.Command != AvaloniaCommandKind.App)
         {
             Environment.ExitCode = FrontendCliExecutionService.Run(parseResult.Options);
             return;
