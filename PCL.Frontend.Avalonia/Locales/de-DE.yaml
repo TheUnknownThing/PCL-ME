@@ -1670,10 +1670,13 @@ setup:
       light_palette: Helle Palette
       motd_font: MOTD
       theme: Thema
+      ui_scale: UI-Größe
     flags:
       lock_window_size: Launcherfenstergröße sperren
       show_launcher_logo: PCL-Logo beim Öffnen des Launchers anzeigen
       show_launching_hint: '"Schon gewusst?" beim Starten des Spiels anzeigen'
+    hints:
+      ui_scale_restart: Änderungen werden beim nächsten Start des Launchers wirksam.
     hidden_features:
       header: Funktionen ausgeblendet
       header_temporary: Funktionen ausgeblendet (vorübergehend deaktiviert, zum erneuten Aktivieren F12 drücken)

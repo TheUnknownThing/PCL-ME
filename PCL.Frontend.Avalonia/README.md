@@ -43,11 +43,13 @@ APP_VERSION=2026.04.14 ./PCL.Frontend.Avalonia/scripts/package-frontend.sh osx-a
 
 在部分 Linux 环境里，Avalonia 可能会把缩放因子识别成 `1.0`，从而导致当前 UI 的固定字号显示过小。你可以先查看输出名称：
 
+通常可以先在启动器的「设置 - 个性化 - 基本 - 界面大小」里调整全局 UI 缩放；该设置会在下次启动时生效。
+
 ```bash
 niri msg outputs
 ```
 
-然后显式指定缩放启动应用：
+如果需要按显示器分别覆盖缩放，再显式指定缩放启动应用：
 
 ```bash
 AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5' dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app

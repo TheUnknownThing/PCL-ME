@@ -351,6 +351,7 @@ internal static class FrontendSetupCompositionService
             LightCustomColorHex: ReadValue(sharedConfig, "UiLightColorCustom", string.Empty),
             DarkCustomColorHex: ReadValue(sharedConfig, "UiDarkColorCustom", string.Empty),
             LauncherOpacity: ReadValue(localConfig, "UiLauncherTransparent", 600),
+            UiScaleFactor: FrontendStartupScalingService.ReadStoredUiScaleFactor(localConfig),
             ShowLauncherLogo: ReadValue(localConfig, "UiLauncherLogo", true),
             LockWindowSize: ReadValue(sharedConfig, "UiLockWindowSize", false),
             ShowLaunchingHint: ReadValue(localConfig, "UiShowLaunchingHint", true),

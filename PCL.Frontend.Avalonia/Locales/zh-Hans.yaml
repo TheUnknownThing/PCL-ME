@@ -1672,10 +1672,13 @@ setup:
       light_palette: 浅色配色
       motd_font: MOTD
       theme: 主题
+      ui_scale: 界面大小
     flags:
       lock_window_size: 锁定启动器大小
       show_launcher_logo: 打开启动器时显示 PCL 图标
       show_launching_hint: 在启动游戏时显示“你知道吗”
+    hints:
+      ui_scale_restart: 更改将在下次启动启动器时生效。
     hidden_features:
       header: 功能隐藏
       header_temporary: 功能隐藏（已临时禁用，按 F12 可重新启用）

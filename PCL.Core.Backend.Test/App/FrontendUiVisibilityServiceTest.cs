@@ -135,6 +135,7 @@ public sealed class FrontendUiVisibilityServiceTest
             string.Empty,
             string.Empty,
             0,
+            FrontendStartupScalingService.DefaultUiScaleFactor,
             true,
             false,
             true,

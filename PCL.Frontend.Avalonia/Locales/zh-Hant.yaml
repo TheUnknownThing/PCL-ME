@@ -1672,10 +1672,13 @@ setup:
       light_palette: 淺色配色
       motd_font: MOTD
       theme: 主題
+      ui_scale: 介面大小
     flags:
       lock_window_size: 鎖定啓動器大小
       show_launcher_logo: 打開啓動器時顯示 PCL 圖標
       show_launching_hint: 在啓動遊戲時顯示“你知道嗎”
+    hints:
+      ui_scale_restart: 變更會在下次啟動啟動器時生效。
     hidden_features:
       header: 功能隱藏
       header_temporary: 功能隱藏（已臨時停用，按 F12 可重新啓用）

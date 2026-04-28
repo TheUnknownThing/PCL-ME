@@ -273,6 +273,7 @@ internal sealed partial class LauncherViewModel
     private string _customLightThemeColorHex = string.Empty;
     private string _customDarkThemeColorHex = string.Empty;
     private double _launcherOpacity = 360;
+    private double _uiScaleFactor = FrontendStartupScalingService.DefaultUiScaleFactor;
     private bool _showLauncherLogo = true;
     private bool _lockWindowSize;
     private bool _showLaunchingHint = true;

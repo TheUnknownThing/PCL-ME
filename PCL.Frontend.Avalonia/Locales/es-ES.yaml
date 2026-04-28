@@ -1675,10 +1675,13 @@ setup:
       light_palette: Paleta de luz
       motd_font: MOTD
       theme: Tema
+      ui_scale: Tamaño de la interfaz
     flags:
       lock_window_size: Tamaño de la ventana del iniciador de bloqueo
       show_launcher_logo: Mostrar el logotipo de PCL al abrir el iniciador
       show_launching_hint: Mostrar "¿Sabías que?" al iniciar el juego
+    hints:
+      ui_scale_restart: Los cambios se aplicarán la próxima vez que se inicie el lanzador.
     hidden_features:
       header: Funciones ocultas
       header_temporary: Funciones ocultas (temporalmente desactivadas, presione F12 para volver a activarlas)

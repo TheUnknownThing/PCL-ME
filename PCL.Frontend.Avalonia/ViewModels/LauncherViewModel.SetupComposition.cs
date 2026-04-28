@@ -96,6 +96,7 @@ internal sealed partial class LauncherViewModel
         "UiFont",
         "UiMotdFont",
         "UiLauncherTransparent",
+        FrontendStartupScalingService.UiScaleFactorConfigKey,
         "UiBackgroundColorful",
         "UiBackgroundOpacity",
         "UiBackgroundBlur",
@@ -348,6 +349,8 @@ internal sealed partial class LauncherViewModel
                 RaisePropertyChanged(nameof(IsDarkCustomThemeColorInvalid));
                 RaisePropertyChanged(nameof(LauncherOpacity));
                 RaisePropertyChanged(nameof(LauncherOpacityLabel));
+                RaisePropertyChanged(nameof(UiScaleFactor));
+                RaisePropertyChanged(nameof(UiScaleFactorLabel));
                 RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
                 RaisePropertyChanged(nameof(LockWindowSizeSetting));
                 RaisePropertyChanged(nameof(ShowLaunchingHintSetting));
@@ -623,6 +626,11 @@ internal sealed partial class LauncherViewModel
             case nameof(LauncherOpacity):
                 _launcherActionService.PersistLocalValue("UiLauncherTransparent", (int)Math.Round(LauncherOpacity));
                 break;
+            case nameof(UiScaleFactor):
+                _launcherActionService.PersistLocalValue(
+                    FrontendStartupScalingService.UiScaleFactorConfigKey,
+                    UiScaleFactor);
+                break;
             case nameof(ShowLauncherLogoSetting):
                 _launcherActionService.PersistLocalValue("UiLauncherLogo", ShowLauncherLogoSetting);
                 break;
@@ -838,6 +846,8 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(IsDarkCustomThemeColorInvalid));
         RaisePropertyChanged(nameof(LauncherOpacity));
         RaisePropertyChanged(nameof(LauncherOpacityLabel));
+        RaisePropertyChanged(nameof(UiScaleFactor));
+        RaisePropertyChanged(nameof(UiScaleFactorLabel));
         RaisePropertyChanged(nameof(ShowLauncherLogoSetting));
         RaisePropertyChanged(nameof(LockWindowSizeSetting));
         RaisePropertyChanged(nameof(ShowLaunchingHintSetting));

@@ -527,6 +527,7 @@ internal sealed partial class LauncherViewModel
         SeedCustomThemeColorIfNeeded(isDarkPalette: false, _selectedLightColorIndex, 0);
         SeedCustomThemeColorIfNeeded(isDarkPalette: true, _selectedDarkColorIndex, 0);
         _launcherOpacity = _setupComposition.Ui.LauncherOpacity;
+        _uiScaleFactor = _setupComposition.Ui.UiScaleFactor;
         _showLauncherLogo = _setupComposition.Ui.ShowLauncherLogo;
         _lockWindowSize = _setupComposition.Ui.LockWindowSize;
         _showLaunchingHint = _setupComposition.Ui.ShowLaunchingHint;

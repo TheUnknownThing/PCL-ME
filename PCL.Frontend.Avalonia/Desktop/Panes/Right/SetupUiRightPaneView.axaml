@@ -9,7 +9,7 @@
       <controls:PclCard Header="{Binding SetupText.Ui.BasicCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto,10,Auto">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,10,Auto,10,Auto,10,Auto">
               <TextBlock
                   VerticalAlignment="Center"
                   Foreground="{DynamicResource ColorBrush1}"
@@ -50,8 +50,39 @@
                   Foreground="{DynamicResource ColorBrush1}"
                   FontSize="13.5"
                   Margin="0,0,20,0"
+                  Text="{Binding SetupText.Ui.UiScaleLabel}" />
+              <StackPanel Grid.Row="4" Grid.Column="1" Spacing="4">
+                <Grid ColumnDefinitions="*,60">
+                  <Slider
+                      VerticalAlignment="Center"
+                      Minimum="0.5"
+                      Maximum="3"
+                      TickFrequency="0.1"
+                      IsSnapToTickEnabled="True"
+                      Value="{Binding UiScaleFactor}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="12"
+                      Text="{Binding UiScaleFactorLabel}" />
+                </Grid>
+                <TextBlock
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    FontSize="12"
+                    Text="{Binding SetupText.Ui.UiScaleRestartHint}"
+                    TextWrapping="Wrap" />
+              </StackPanel>
+
+              <TextBlock
+                  Grid.Row="6"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrush1}"
+                  FontSize="13.5"
+                  Margin="0,0,20,0"
                   Text="{Binding SetupText.Ui.ThemeLabel}" />
-              <StackPanel Grid.Row="4" Grid.Column="1" Spacing="8">
+              <StackPanel Grid.Row="6" Grid.Column="1" Spacing="8">
                 <Grid ColumnDefinitions="Auto,*,92,Auto,92,Auto">
                   <ComboBox
                       x:Name="ThemeModeComboBox"
