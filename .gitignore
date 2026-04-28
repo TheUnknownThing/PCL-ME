@@ -357,4 +357,7 @@ mise.local.toml
 
 # IDE
 .vscode/
+
+# Agent tools
 .codex
+.opencode
