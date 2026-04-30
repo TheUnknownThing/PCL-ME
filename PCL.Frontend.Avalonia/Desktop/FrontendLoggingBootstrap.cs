@@ -77,6 +77,11 @@ internal static class FrontendLoggingBootstrap
             return;
         }
 
+        if (level.Header() < logger.Configuration.MinLogLevel.Header())
+        {
+            return;
+        }
+
         var threadName = Thread.CurrentThread.Name ?? $"#{Environment.CurrentManagedThreadId}";
         var modulePrefix = string.IsNullOrWhiteSpace(module) ? string.Empty : $"[{module}] ";
         var formatted = $"[{DateTime.Now:HH:mm:ss.fff}] [{level.PrintName()}] [{threadName}] {modulePrefix}{message}";

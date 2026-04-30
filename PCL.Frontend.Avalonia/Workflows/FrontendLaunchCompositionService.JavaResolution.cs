@@ -234,6 +234,11 @@ internal static partial class FrontendLaunchCompositionService
         string launcherFolder,
         FrontendDownloadProvider downloadProvider)
     {
+        if (selectedJavaRuntime is not null)
+        {
+            return null;
+        }
+
         if (string.IsNullOrWhiteSpace(javaWorkflow.MissingJavaPrompt.DownloadTarget))
         {
             return null;

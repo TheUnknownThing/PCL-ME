@@ -626,7 +626,7 @@ internal sealed partial class LauncherViewModel
     private void RefreshLaunchState()
     {
         ReloadSetupComposition();
-        ReloadInstanceComposition();
+        ReloadInstanceComposition(initializeAllSurfaces: false);
         ApplyLaunchComposition(
             FrontendLaunchCompositionService.Compose(_options, _launcherActionService.RuntimePaths, i18n: _i18n),
             normalizeLaunchProfileSurface: true);
@@ -680,7 +680,7 @@ internal sealed partial class LauncherViewModel
     {
         ApplySetupComposition(snapshot.SetupComposition);
         _instanceCompositionLoadMode = snapshot.InstanceLoadMode;
-        ApplyInstanceComposition(snapshot.InstanceComposition);
+        ApplyInstanceComposition(snapshot.InstanceComposition, initializeAllSurfaces: false);
         ApplyToolsComposition(snapshot.ToolsComposition);
 
         _versionSavesComposition = snapshot.VersionSavesComposition;

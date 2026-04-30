@@ -461,7 +461,7 @@ internal sealed partial class LauncherViewModel
         ApplyToolsComposition(_toolsComposition);
         InitializeDownloadInstallSurface();
         ApplySetupComposition(_setupComposition);
-        ApplyInstanceComposition(_instanceComposition);
+        ApplyInstanceComposition(_instanceComposition, initializeAllSurfaces: false);
         InitializeStepOneSurfaces();
         InitializePromptLanes();
         RefreshHelpTopics();
