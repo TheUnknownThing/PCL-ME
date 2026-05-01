@@ -103,6 +103,9 @@ jobs:
             artifact/**/PCL-ME-*.zip
             artifact/**/PCL-ME-*.tar.gz
             artifact/**/PCL-ME-*.exe
+            artifact/**/PCL-ME-*.zip.asc
+            artifact/**/PCL-ME-*.tar.gz.asc
+            artifact/**/PCL-ME-*.exe.asc
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -29,7 +29,7 @@ body = """
 ---
 
 [GPG 签名公钥](https://github.com/TheUnknownThing/PCL-ME/blob/main/GPG-PUBLIC-KEY.asc)
-公钥指纹 `81D9430A309B84272D518584EDF4453F0BBB862E`
+公钥指纹 `4201C9D251B88EB5D2DA9F73D9F460F471F3C6F3`
 
 """
 # Remove leading and trailing whitespaces from the changelog's body.

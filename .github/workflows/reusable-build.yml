@@ -21,6 +21,11 @@ on:
       artifact_name:
         required: true
         type: string
+    secrets:
+      RELEASE_GPG_PRIVATE_KEY:
+        required: true
+      RELEASE_GPG_PASSPHRASE:
+        required: false
 
 jobs:
   build:
@@ -28,6 +33,7 @@ jobs:
     runs-on: ${{ inputs.runner }}
     env:
       LANG: en_US.UTF-8
+      RELEASE_GPG_FINGERPRINT: 4201C9D251B88EB5D2DA9F73D9F460F471F3C6F3
 
     steps:
       - name: Checkout
@@ -82,6 +88,76 @@ jobs:
           chmod +x ./PCL.Frontend.Avalonia/scripts/package-frontend.sh
           ./PCL.Frontend.Avalonia/scripts/package-frontend.sh "${{ inputs.rid }}"
 
+      - name: Install GPG
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v gpg >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install gnupg
+          elif [[ "$RUNNER_OS" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y gnupg
+          else
+            echo "Unsupported runner OS for GPG signing: $RUNNER_OS" >&2
+            exit 1
+          fi
+
+      - name: Sign packaged artifacts
+        shell: bash
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$RELEASE_GPG_PRIVATE_KEY" ]]; then
+            echo "RELEASE_GPG_PRIVATE_KEY is required for release signing." >&2
+            exit 1
+          fi
+
+          export GNUPGHOME
+          GNUPGHOME="$(mktemp -d)"
+          chmod 700 "$GNUPGHOME"
+          trap 'rm -rf "$GNUPGHOME"' EXIT
+
+          printf '%s' "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
+
+          signing_key="$(gpg --batch --with-colons --list-secret-keys "$RELEASE_GPG_FINGERPRINT" | awk -F: '$1 == "fpr" { print $10; exit }')"
+          if [[ "$signing_key" != "$RELEASE_GPG_FINGERPRINT" ]]; then
+            echo "Imported release signing key does not match $RELEASE_GPG_FINGERPRINT." >&2
+            exit 1
+          fi
+
+          signed_count=0
+          while IFS= read -r -d '' artifact_file; do
+            sign_args=(
+              --batch
+              --yes
+              --pinentry-mode loopback
+              --local-user "$RELEASE_GPG_FINGERPRINT"
+              --detach-sign
+              --armor
+              --output "$artifact_file.asc"
+            )
+
+            if [[ -n "$RELEASE_GPG_PASSPHRASE" ]]; then
+              sign_args+=(--passphrase "$RELEASE_GPG_PASSPHRASE")
+            fi
+
+            gpg "${sign_args[@]}" "$artifact_file"
+            gpg --batch --verify "$artifact_file.asc" "$artifact_file"
+            signed_count=$((signed_count + 1))
+          done < <(find artifact -type f \( -name 'PCL-ME-*.zip' -o -name 'PCL-ME-*.tar.gz' -o -name 'PCL-ME-*.exe' \) -print0)
+
+          if [[ "$signed_count" -eq 0 ]]; then
+            echo "No packaged artifacts were found to sign." >&2
+            exit 1
+          fi
+
       - name: Upload the Build Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -91,3 +167,6 @@ jobs:
             artifact/*/PCL-ME-*.zip
             artifact/*/PCL-ME-*.tar.gz
             artifact/*/PCL-ME-*.exe
+            artifact/*/PCL-ME-*.zip.asc
+            artifact/*/PCL-ME-*.tar.gz.asc
+            artifact/*/PCL-ME-*.exe.asc
