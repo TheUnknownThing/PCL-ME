@@ -6,7 +6,57 @@
     x:DataType="vm:LauncherViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections">
-  <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding ShowInstanceResourceContent}">
+  <UserControl.Styles>
+    <Style Selector="ListBox.instance-resource-entry-list">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+
+    <Style Selector="ListBox.instance-resource-entry-list ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter
+              Content="{TemplateBinding Content}"
+              ContentTemplate="{TemplateBinding ContentTemplate}"
+              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+              Padding="{TemplateBinding Padding}"
+              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.instance-resource-entry-list ListBoxItem:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+    </Style>
+
+    <Style Selector="ListBox.instance-resource-entry-list ListBoxItem:selected">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+    </Style>
+
+    <Style Selector="ListBox.instance-resource-entry-list ListBoxItem:selected:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+    </Style>
+  </UserControl.Styles>
+
+  <controls:PclCard
+      Header=" "
+      MinHeight="55"
+      ContentMargin="20,48,18,22"
+      IsVisible="{Binding ShowInstanceResourceContent}">
     <controls:PclCard.HeaderOverlayContent>
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel
@@ -57,15 +107,23 @@
       </Grid>
     </controls:PclCard.HeaderOverlayContent>
     <controls:PclCard.CardContent>
-      <ItemsControl
+
+      <ListBox
+          x:Name="EntriesList"
+          Classes="instance-resource-entry-list"
           ItemsSource="{Binding InstanceResourceEntries}"
-          Padding="0">
-        <ItemsControl.ItemTemplate>
+          MinHeight="0">
+        <ListBox.ItemsPanel>
+          <ItemsPanelTemplate>
+            <VirtualizingStackPanel />
+          </ItemsPanelTemplate>
+        </ListBox.ItemsPanel>
+        <ListBox.ItemTemplate>
           <DataTemplate>
             <sections:ResourceEntryCardView />
           </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+        </ListBox.ItemTemplate>
+      </ListBox>
     </controls:PclCard.CardContent>
   </controls:PclCard>
 </UserControl>

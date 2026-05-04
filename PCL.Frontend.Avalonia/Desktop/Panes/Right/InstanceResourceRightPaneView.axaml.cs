@@ -9,6 +9,7 @@ namespace PCL.Frontend.Avalonia.Desktop.Panes.Right;
 
 internal sealed partial class InstanceResourceRightPaneView : UserControl
 {
+    private const double ContentSectionSpacing = 15;
     private const double SelectionActionSpacerMinimumHeight = 80;
     private const double SelectionActionSpacerPadding = 28;
     private const string HiddenSelectionActionTransform = "translate(0px,10px) scale(0.985)";
@@ -23,7 +24,9 @@ internal sealed partial class InstanceResourceRightPaneView : UserControl
         InitializeComponent();
 
         ConfigureSelectionActionButtons();
-        SelectionActionCard.SizeChanged += (_, _) => UpdateSelectionActionSpacerHeight();
+        ContentGrid.SizeChanged += (_, _) => UpdateEntryListAvailableHeight();
+        HeaderSection.SizeChanged += (_, _) => UpdateEntryListAvailableHeight();
+        SelectionActionCard.SizeChanged += (_, _) => UpdateEntryListBottomPadding();
         DataContextChanged += OnDataContextChanged;
         DetachedFromVisualTree += (_, _) => DetachLauncherViewModel();
     }
@@ -77,7 +80,13 @@ internal sealed partial class InstanceResourceRightPaneView : UserControl
         if (e.PropertyName is nameof(LauncherViewModel.ShowInstanceResourceBatchActions)
             or nameof(LauncherViewModel.ShowInstanceResourceContent))
         {
-            Dispatcher.UIThread.Post(() => _ = UpdateSelectionActionCardAsync(animated: true), DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    UpdateEntryListAvailableHeight();
+                    _ = UpdateSelectionActionCardAsync(animated: true);
+                },
+                DispatcherPriority.Background);
         }
     }
 
@@ -93,7 +102,7 @@ internal sealed partial class InstanceResourceRightPaneView : UserControl
         var wasShown = _selectionActionCardShown;
         var version = ++_selectionActionAnimationVersion;
 
-        UpdateSelectionActionSpacerHeight();
+        UpdateEntryListBottomPadding();
 
         if (!animated)
         {
@@ -166,18 +175,32 @@ internal sealed partial class InstanceResourceRightPaneView : UserControl
             shouldShow ? VisibleSelectionActionTransform : HiddenSelectionActionTransform);
     }
 
-    private void UpdateSelectionActionSpacerHeight()
+    private void UpdateEntryListBottomPadding()
     {
         if (!ShouldShowSelectionActionCard())
         {
-            SelectionActionSpacer.Height = 0d;
+            EntriesSection.SetListBottomPadding(0d);
             return;
         }
 
         var measuredHeight = SelectionActionCard.Bounds.Height > 0
             ? SelectionActionCard.Bounds.Height + SelectionActionSpacerPadding
             : 0d;
-        SelectionActionSpacer.Height = Math.Max(SelectionActionSpacerMinimumHeight, measuredHeight);
+        EntriesSection.SetListBottomPadding(Math.Max(SelectionActionSpacerMinimumHeight, measuredHeight));
+    }
+
+    private void UpdateEntryListAvailableHeight()
+    {
+        if (ContentGrid.Bounds.Height <= 0)
+        {
+            return;
+        }
+
+        var availableHeight = ContentGrid.Bounds.Height - HeaderSection.Bounds.Height - ContentSectionSpacing;
+        if (availableHeight > 0)
+        {
+            EntriesSection.SetListAvailableHeight(availableHeight);
+        }
     }
 
     private static global::Avalonia.Media.Transformation.TransformOperations ParseTransform(string value)

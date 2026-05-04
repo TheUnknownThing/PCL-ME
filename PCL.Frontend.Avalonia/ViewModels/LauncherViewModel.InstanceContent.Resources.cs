@@ -20,11 +20,6 @@ internal sealed partial class LauncherViewModel
         InstanceResourceSurfaceTitle = ResolveInstanceResourceSurfaceTitle();
         RaisePropertyChanged(nameof(InstanceResourceLoadingText));
         var sourceEntries = GetCurrentInstanceResourceSourceEntries();
-        if (!ShouldRefreshInstanceResourceEntries(sourceEntries))
-        {
-            return;
-        }
-
         var searchedEntries = sourceEntries
             .Where(entry => MatchesSearch(
                 entry.Title,
@@ -53,8 +48,11 @@ internal sealed partial class LauncherViewModel
             .ToArray();
         _instanceResourceSelectedPaths.IntersectWith(visibleEntries.Select(entry => entry.Path));
 
-        PopulateInstanceResourceEntries(visibleEntries);
-        CaptureInstanceResourceRefreshSnapshot(sourceEntries);
+        if (ShouldRefreshInstanceResourceEntries(sourceEntries))
+        {
+            PopulateInstanceResourceEntries(visibleEntries);
+            CaptureInstanceResourceRefreshSnapshot(sourceEntries);
+        }
 
         RaisePropertyChanged(nameof(HasInstanceResourceEntries));
         RaisePropertyChanged(nameof(HasNoInstanceResourceEntries));

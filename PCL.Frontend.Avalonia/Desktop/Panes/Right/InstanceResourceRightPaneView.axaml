@@ -9,26 +9,18 @@
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections"
     DataContext="{ReflectionBinding Launcher}">
   <Grid ClipToBounds="False">
-    <ScrollViewer
-        x:Name="ContentScrollViewer"
-        VerticalScrollBarVisibility="Auto"
-        IsVisible="{Binding ShowInstanceResourceContent}">
-      <StackPanel Margin="25,10,25,10" Spacing="15">
-        <sections:InstanceResourceHeaderSection />
-        <sections:InstanceResourceEntriesSection />
-        <Border
-            x:Name="SelectionActionSpacer"
-            Height="0"
-            Background="Transparent"
-            IsHitTestVisible="False">
-          <Border.Transitions>
-            <Transitions>
-              <DoubleTransition Property="Height" Duration="{Binding SurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
-            </Transitions>
-          </Border.Transitions>
-        </Border>
-      </StackPanel>
-    </ScrollViewer>
+    <Grid
+        x:Name="ContentGrid"
+        Margin="25,10,25,10"
+        ClipToBounds="False"
+        IsVisible="{Binding ShowInstanceResourceContent}"
+        RowDefinitions="Auto,15,*">
+      <sections:InstanceResourceHeaderSection x:Name="HeaderSection" Grid.Row="0" />
+      <sections:InstanceResourceEntriesSection
+          x:Name="EntriesSection"
+          Grid.Row="2"
+          VerticalAlignment="Top" />
+    </Grid>
 
     <sections:InstanceResourceEmptyStateSection
         HorizontalAlignment="Center"
