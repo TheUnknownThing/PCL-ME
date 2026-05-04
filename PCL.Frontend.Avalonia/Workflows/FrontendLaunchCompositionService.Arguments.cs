@@ -34,7 +34,8 @@ internal static partial class FrontendLaunchCompositionService
         JsonFileProvider sharedConfig,
         YamlFileProvider? instanceConfig,
         FrontendRetroWrapperOptions retroWrapperOptions,
-        MinecraftLaunchReplacementValuePlan replacementPlan)
+        MinecraftLaunchReplacementValuePlan replacementPlan,
+        bool allowBlockingPreparation)
     {
         var javaMajorVersion = selectedJavaRuntime?.MajorVersion
                                ?? manifestSummary.JsonRequiredMajorVersion
@@ -60,7 +61,8 @@ internal static partial class FrontendLaunchCompositionService
             effectiveJvmArguments,
             replacementPlan.Values,
             indieDirectory,
-            javaMajorVersion);
+            javaMajorVersion,
+            allowBlockingPreparation);
 
         var legacyMinecraftArguments = ReadManifestProperty(launcherFolder, selectedInstanceName, "minecraftArguments");
         if (!string.IsNullOrWhiteSpace(legacyMinecraftArguments))
@@ -327,7 +329,8 @@ internal static partial class FrontendLaunchCompositionService
         string effectiveJvmArguments,
         IReadOnlyDictionary<string, string> replacementValues,
         string indieDirectory,
-        int javaMajorVersion)
+        int javaMajorVersion,
+        bool allowBlockingPreparation)
     {
         var modernJvmSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "jvm");
         var mainClass = ReadManifestProperty(launcherFolder, selectedInstanceName, "mainClass")
@@ -337,7 +340,10 @@ internal static partial class FrontendLaunchCompositionService
         var javaWrapperOptions = ResolveJavaWrapperOptions(launcherFolder, localConfig, instanceConfig);
         var debugLog4jConfigurationPath = ResolveDebugLog4jConfigurationPath(launcherFolder, indieDirectory, instanceConfig);
         var rendererAgentArgument = ResolveRendererAgentArgument(launcherFolder, localConfig, instanceConfig);
-        var authlibInjectorArgument = ResolveAuthlibInjectorArgument(launcherFolder, selectedProfile);
+        var authlibInjectorArgument = ResolveAuthlibInjectorArgument(
+            launcherFolder,
+            selectedProfile,
+            allowBlockingPreparation);
         return modernJvmSections.Count > 0
             ? MinecraftLaunchJvmArgumentService.BuildModernArguments(
                 new MinecraftLaunchModernJvmArgumentRequest(

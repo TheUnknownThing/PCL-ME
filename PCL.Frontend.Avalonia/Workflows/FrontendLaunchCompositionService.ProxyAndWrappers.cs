@@ -375,7 +375,8 @@ internal static partial class FrontendLaunchCompositionService
 
     private static string? ResolveAuthlibInjectorArgument(
         string launcherFolder,
-        FrontendLaunchProfileSummary selectedProfile)
+        FrontendLaunchProfileSummary selectedProfile,
+        bool allowBlockingPreparation)
     {
         if (selectedProfile.Kind != MinecraftLaunchProfileKind.Auth ||
             string.IsNullOrWhiteSpace(selectedProfile.AuthServer))
@@ -390,7 +391,7 @@ internal static partial class FrontendLaunchCompositionService
         }
 
         var injectorPath = ResolveAuthlibInjectorPath(launcherFolder)
-                           ?? TryDownloadAuthlibInjector(launcherFolder);
+                           ?? (allowBlockingPreparation ? TryDownloadAuthlibInjector(launcherFolder) : null);
         if (string.IsNullOrWhiteSpace(injectorPath))
         {
             LogWrapper.Warn("Launch", "Authlib profile selected but authlib-injector jar is unavailable; multiplayer authentication may fail.");

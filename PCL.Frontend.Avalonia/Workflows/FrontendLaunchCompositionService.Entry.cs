@@ -30,7 +30,8 @@ internal static partial class FrontendLaunchCompositionService
         AvaloniaCommandOptions options,
         FrontendRuntimePaths runtimePaths,
         bool ignoreJavaCompatibilityWarningOnce = false,
-        II18nService? i18n = null)
+        II18nService? i18n = null,
+        bool allowBlockingPreparation = false)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var localConfig = runtimePaths.OpenLocalConfigProvider();
@@ -160,7 +161,8 @@ internal static partial class FrontendLaunchCompositionService
             sharedConfig,
             instanceConfig,
             retroWrapperOptions,
-            replacementPlan);
+            replacementPlan,
+            allowBlockingPreparation);
         var sessionStartPlan = BuildSessionStartPlan(
             launcherFolder,
             selectedInstanceName,
@@ -213,12 +215,14 @@ internal static partial class FrontendLaunchCompositionService
             IsRestrictedFeatureAllowed: true);
         var precheckResult = MinecraftLaunchPrecheckService.Evaluate(precheckRequest);
         var targetJavaRuntimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
-        var javaRuntimeInstallPlan = BuildJavaRuntimeInstallPlan(
-            javaWorkflow,
-            manifestSummary,
-            selectedJavaRuntime,
-            launcherFolder,
-            downloadProvider);
+        var javaRuntimeInstallPlan = allowBlockingPreparation
+            ? BuildJavaRuntimeInstallPlan(
+                javaWorkflow,
+                manifestSummary,
+                selectedJavaRuntime,
+                launcherFolder,
+                downloadProvider)
+            : null;
 
         return new FrontendLaunchComposition(
             options.Scenario,

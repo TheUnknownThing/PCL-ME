@@ -412,7 +412,8 @@ internal sealed partial class LauncherViewModel
                 _options,
                 _launcherActionService.RuntimePaths,
                 ignoreJavaCompatibilityWarningOnce,
-                _i18n);
+                _i18n,
+                allowBlockingPreparation: true);
         }, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();

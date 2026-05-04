@@ -150,7 +150,8 @@ internal static class FrontendCliExecutionService
                 options,
                 runtimePaths,
                 ignoreJavaCompatibilityWarningOnce,
-                i18n);
+                i18n,
+                allowBlockingPreparation: true);
             if (!launchComposition.PrecheckResult.IsSuccess)
             {
                 Console.Error.WriteLine(GetLaunchPrecheckFailureMessage(launchComposition, i18n));

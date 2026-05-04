@@ -143,7 +143,7 @@ internal sealed partial class LauncherViewModel
 
     private MinecraftLaunchJavaPrompt? GetPendingJavaPrompt()
     {
-        return _launchComposition.SelectedJavaRuntime is null
+        return _launchComposition.SelectedJavaRuntime is null && _launchComposition.JavaRuntimeInstallPlan is not null
             ? _launchComposition.JavaWorkflow.MissingJavaPrompt
             : null;
     }
