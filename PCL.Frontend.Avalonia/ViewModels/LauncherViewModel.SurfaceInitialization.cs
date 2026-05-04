@@ -18,6 +18,13 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class LauncherViewModel
 {
+    private enum BackgroundContentRefreshMode
+    {
+        None,
+        Immediate,
+        Deferred
+    }
+
     private void InitializeAboutEntries()
     {
         ReplaceItems(AboutProjectEntries,
@@ -479,6 +486,15 @@ internal sealed partial class LauncherViewModel
         _detectClipboardResourceLinks = _setupComposition.GameManage.DetectClipboardResourceLinks;
     }
 
+    private void InitializeGlobalSetupSettings()
+    {
+        _ignoreQuiltLoader = _setupComposition.GameManage.IgnoreQuiltLoader;
+        _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;
+        _debugModeEnabled = _setupComposition.LauncherMisc.DebugModeEnabled;
+        ApplyLaunchLogRetentionPreference();
+        RefreshDebugModeSurface();
+    }
+
     private void InitializeLauncherMiscSurface()
     {
         _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
@@ -517,8 +533,11 @@ internal sealed partial class LauncherViewModel
             $"InitializeJavaSurface: selected='{_selectedJavaRuntimeKey}', uiEntries={JavaRuntimeEntries.Count}.");
     }
 
-    private void InitializeUiSurface()
+    private void InitializeUiSurface(
+        bool refreshFeatureToggleGroups = true,
+        BackgroundContentRefreshMode backgroundContentRefreshMode = BackgroundContentRefreshMode.Immediate)
     {
+        _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
         _selectedDarkModeIndex = _setupComposition.Ui.DarkModeIndex;
         _selectedLightColorIndex = FrontendAppearanceService.NormalizeThemeColorIndex(_setupComposition.Ui.LightColorIndex, ThemeColorOptions.Count);
         _selectedDarkColorIndex = FrontendAppearanceService.NormalizeThemeColorIndex(_setupComposition.Ui.DarkColorIndex, ThemeColorOptions.Count);
@@ -546,8 +565,20 @@ internal sealed partial class LauncherViewModel
         _selectedHomepagePresetIndex = Math.Clamp(_setupComposition.Ui.HomepagePresetIndex, 0, HomepagePresetOptions.Count - 1);
         RefreshTitleBarLogoImage();
         RefreshLaunchHomepage(forceRefresh: false);
-        RefreshUiFeatureToggleGroups();
-        RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
+        if (refreshFeatureToggleGroups)
+        {
+            RefreshUiFeatureToggleGroups();
+        }
+
+        switch (backgroundContentRefreshMode)
+        {
+            case BackgroundContentRefreshMode.Immediate:
+                RefreshBackgroundContentState(selectNewAsset: _currentBackgroundAssetPath is null, addActivity: false);
+                break;
+            case BackgroundContentRefreshMode.Deferred:
+                QueueBackgroundContentRefresh(selectNewAsset: _currentBackgroundAssetPath is null);
+                break;
+        }
     }
 
     private void RefreshUiFeatureToggleGroups()

@@ -155,6 +155,11 @@ internal sealed partial class LauncherViewModel
         _suppressSetupPersistence = true;
         try
         {
+            if (!initializeAllSurfaces)
+            {
+                InitializeGlobalSetupSettings();
+            }
+
             if (initializeAllSurfaces)
             {
                 InitializeAboutEntries();
@@ -167,10 +172,16 @@ internal sealed partial class LauncherViewModel
                 InitializeUiSurface();
                 RaiseSetupSurfaceProperties();
             }
-            else
+            else if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
             {
                 InitializeActiveSetupSurface();
                 RaiseActiveSetupSurfaceProperties();
+            }
+            else
+            {
+                InitializeUiSurface(
+                    refreshFeatureToggleGroups: false,
+                    backgroundContentRefreshMode: BackgroundContentRefreshMode.Deferred);
             }
         }
         finally
@@ -184,12 +195,20 @@ internal sealed partial class LauncherViewModel
         }
     }
 
-    private void ReloadSetupComposition(bool initializeAllSurfaces = true, bool applyAppearance = true)
+    private void ReloadSetupComposition(bool initializeAllSurfaces = false, bool applyAppearance = true)
     {
         FrontendHttpProxyService.ApplyStoredProxySettings(_launcherActionService.RuntimePaths);
         FrontendHttpProxyService.ApplyStoredDnsSettings(_launcherActionService.RuntimePaths);
+        var composition = initializeAllSurfaces
+            ? FrontendSetupCompositionService.Compose(_launcherActionService.RuntimePaths, _i18n)
+            : FrontendSetupCompositionService.ComposeInitial(
+                _launcherActionService.RuntimePaths,
+                _i18n,
+                _currentRoute.Page == LauncherFrontendPageKey.Setup
+                    ? _currentRoute.Subpage
+                    : LauncherFrontendSubpageKey.Default);
         ApplySetupComposition(
-            FrontendSetupCompositionService.Compose(_launcherActionService.RuntimePaths, _i18n),
+            composition,
             initializeAllSurfaces,
             applyAppearance);
     }

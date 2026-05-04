@@ -331,8 +331,19 @@ internal sealed partial class LauncherViewModel
         _launcherActionService.TextInputPresenter = ShowInAppTextInputAsync;
         _launcherActionService.ChoicePresenter = ShowInAppChoiceAsync;
         _launcherComposition = LauncherCompositionService.Compose(options);
-        _setupComposition = FrontendSetupCompositionService.Compose(launcherActionService.RuntimePaths, i18nService);
+        _setupComposition = FrontendSetupCompositionService.ComposeInitial(
+            launcherActionService.RuntimePaths,
+            i18nService,
+            LauncherFrontendSubpageKey.Default);
         _currentRoute = NormalizeRoute(_launcherComposition.NavigationRequest.CurrentRoute);
+        if (_currentRoute.Page == LauncherFrontendPageKey.Setup)
+        {
+            _setupComposition = FrontendSetupCompositionService.ComposeActiveSurface(
+                launcherActionService.RuntimePaths,
+                i18nService,
+                _setupComposition,
+                _currentRoute.Subpage);
+        }
         var initialInstanceLoadMode = _currentRoute.Page == LauncherFrontendPageKey.InstanceSetup
             ? ShouldShowInstanceResourceLoadingForRoute(_currentRoute)
                 ? FrontendInstanceCompositionService.LoadMode.Lightweight
@@ -458,11 +469,9 @@ internal sealed partial class LauncherViewModel
         PropertyChanged += (_, args) => PersistInstanceSetting(args.PropertyName);
         PropertyChanged += (_, args) => PersistToolsSetting(args.PropertyName);
         PropertyChanged += (_, args) => HandleReactiveSettingChange(args.PropertyName);
-        InitializeAboutEntries();
-        InitializeFeedbackSections();
         ApplyToolsComposition(_toolsComposition);
         InitializeDownloadInstallSurface();
-        ApplySetupComposition(_setupComposition);
+        ApplySetupComposition(_setupComposition, initializeAllSurfaces: false);
         ApplyInstanceComposition(_instanceComposition, initializeAllSurfaces: false);
         InitializeStepOneSurfaces();
         InitializePromptLanes();

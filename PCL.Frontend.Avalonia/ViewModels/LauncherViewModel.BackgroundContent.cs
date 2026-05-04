@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
+using System.Threading;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
@@ -19,6 +21,7 @@ internal sealed partial class LauncherViewModel
     private Bitmap? _currentBackgroundBitmap;
     private PixelSize _currentBackgroundSourcePixelSize;
     private int _backgroundAssetCount;
+    private int _backgroundContentRefreshQueued;
 
     public IReadOnlyList<string> BackgroundSuitOptions => SetupText.Ui.BackgroundSuitOptions;
 
@@ -181,6 +184,22 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(ShowBackgroundAdvancedSettings));
         RaisePropertyChanged(nameof(BackgroundCardHeader));
         RaisePropertyChanged(nameof(ShowBackgroundClearAction));
+    }
+
+    private void QueueBackgroundContentRefresh(bool selectNewAsset)
+    {
+        if (Interlocked.Exchange(ref _backgroundContentRefreshQueued, 1) == 1)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                Interlocked.Exchange(ref _backgroundContentRefreshQueued, 0);
+                RefreshBackgroundContentState(selectNewAsset, addActivity: false);
+            },
+            DispatcherPriority.Background);
     }
 
     private static Bitmap LoadBackgroundBitmap(string path)

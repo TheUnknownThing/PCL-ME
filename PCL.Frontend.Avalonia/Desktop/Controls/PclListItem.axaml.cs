@@ -67,10 +67,20 @@ internal sealed partial class PclListItem : UserControl
     private bool _isAppearanceSubscribed;
     private DispatcherTimer? _accessorySpinTimer;
     private double _accessorySpinAngle;
+    private static readonly Dictionary<string, Geometry> GeometryCache = new(StringComparer.Ordinal);
+    private const int MaxCachedGeometryCount = 256;
+    private readonly RotateTransform _accessoryRotateTransform = new(0, 0, 0);
+    private readonly ScaleTransform _rootScaleTransform = new(1, 1);
+    private readonly ScaleTransform _logoPathScaleTransform = new(1, 1);
+    private readonly ScaleTransform _logoImageScaleTransform = new(1, 1);
 
     public PclListItem()
     {
         InitializeComponent();
+        RenderTransform = _rootScaleTransform;
+        AccessoryButton.RenderTransform = _accessoryRotateTransform;
+        LogoPath.RenderTransform = _logoPathScaleTransform;
+        LogoImage.RenderTransform = _logoImageScaleTransform;
         SelectionBarMotion.Initialize(SelectionBar);
 
         AttachedToVisualTree += (_, _) =>
@@ -317,7 +327,7 @@ internal sealed partial class PclListItem : UserControl
     {
         var hasIcon = !string.IsNullOrWhiteSpace(data);
         LogoPath.IsVisible = hasIcon && IconSource is null;
-        LogoPath.Data = hasIcon ? Geometry.Parse(data) : null;
+        LogoPath.Data = hasIcon ? GetCachedGeometry(data) : null;
         RefreshIconLayout();
     }
 
@@ -377,8 +387,8 @@ internal sealed partial class PclListItem : UserControl
         AccessoryHost.IsVisible = hasAnyAccessory;
         SecondaryAccessoryButton.IsVisible = hasSecondaryAccessory;
         AccessoryButton.IsVisible = hasAccessory;
-        SecondaryAccessoryPath.Data = hasSecondaryAccessory ? Geometry.Parse(SecondaryAccessoryIconData) : null;
-        AccessoryPath.Data = hasAccessory ? Geometry.Parse(AccessoryIconData) : null;
+        SecondaryAccessoryPath.Data = hasSecondaryAccessory ? GetCachedGeometry(SecondaryAccessoryIconData) : null;
+        AccessoryPath.Data = hasAccessory ? GetCachedGeometry(AccessoryIconData) : null;
     }
 
     private void UpdateAccessorySpinState()
@@ -388,6 +398,7 @@ internal sealed partial class PclListItem : UserControl
             _accessorySpinTimer?.Stop();
             _accessorySpinTimer = null;
             _accessorySpinAngle = 0;
+            _accessoryRotateTransform.Angle = 0;
             return;
         }
 
@@ -406,13 +417,15 @@ internal sealed partial class PclListItem : UserControl
     private void OnAccessorySpinTick(object? sender, EventArgs e)
     {
         _accessorySpinAngle = (_accessorySpinAngle + 18) % 360;
-        RefreshVisualState();
+        _accessoryRotateTransform.Angle = _accessorySpinAngle;
     }
 
     private void ApplyIconScale(double scale)
     {
-        LogoPath.RenderTransform = new ScaleTransform(scale, scale);
-        LogoImage.RenderTransform = new ScaleTransform(scale, scale);
+        _logoPathScaleTransform.ScaleX = scale;
+        _logoPathScaleTransform.ScaleY = scale;
+        _logoImageScaleTransform.ScaleX = scale;
+        _logoImageScaleTransform.ScaleY = scale;
     }
 
     private bool IsPointerOverAccessory(PointerEventArgs args)
@@ -537,7 +550,7 @@ internal sealed partial class PclListItem : UserControl
         LogoPath.Fill = IsSelected
             ? GetBrush("ColorBrush3")
             : GetBrush("ColorBrushGray2");
-        AccessoryButton.RenderTransform = new RotateTransform(_accessorySpinAngle, 0, 0);
+        _accessoryRotateTransform.Angle = _accessorySpinAngle;
         AccessoryPath.Fill = !AccessoryButton.IsEnabled
             ? GetBrush("ColorBrush5")
             : isHovered
@@ -551,6 +564,32 @@ internal sealed partial class PclListItem : UserControl
         AccessoryButton.Opacity = AccessoryButton.IsVisible && showAccessories ? 1.0 : 0.0;
         SecondaryAccessoryButton.IsHitTestVisible = SecondaryAccessoryButton.IsVisible && showAccessories;
         SecondaryAccessoryButton.Opacity = SecondaryAccessoryButton.IsVisible && showAccessories ? 1.0 : 0.0;
-        RenderTransform = _isPressed ? new ScaleTransform(0.985, 0.985) : new ScaleTransform(1, 1);
+        var scale = _isPressed ? 0.985 : 1d;
+        if (!ReferenceEquals(RenderTransform, _rootScaleTransform))
+        {
+            RenderTransform = _rootScaleTransform;
+        }
+
+        _rootScaleTransform.ScaleX = scale;
+        _rootScaleTransform.ScaleY = scale;
+    }
+
+    private static Geometry GetCachedGeometry(string data)
+    {
+        lock (GeometryCache)
+        {
+            if (GeometryCache.TryGetValue(data, out var cached))
+            {
+                return cached;
+            }
+
+            var geometry = Geometry.Parse(data);
+            if (GeometryCache.Count < MaxCachedGeometryCount)
+            {
+                GeometryCache[data] = geometry;
+            }
+
+            return geometry;
+        }
     }
 }

@@ -54,14 +54,22 @@ internal sealed partial class PclLoading : UserControl
     private const double HiddenSuccessScale = 0.72d;
     private const double VisibleSuccessScale = 1d;
 
-    private readonly DispatcherTimer _animationTimer = new() { Interval = AnimationTickInterval };
+    private static readonly DispatcherTimer SharedAnimationTimer = new() { Interval = AnimationTickInterval };
+    private static readonly HashSet<PclLoading> ActiveAnimations = [];
+
     private readonly Stopwatch _animationStopwatch = new();
     private bool _isMotionDurationSubscribed;
+    private bool _isAnimationLoopActive;
     private RotateTransform PickaxeRotateTransform => (RotateTransform)PickaxeHost.RenderTransform!;
     private TranslateTransform LeftDebrisTranslateTransform => (TranslateTransform)((TransformGroup)LeftDebris.RenderTransform!).Children[1]!;
     private TranslateTransform RightDebrisTranslateTransform => (TranslateTransform)((TransformGroup)RightDebris.RenderTransform!).Children[1]!;
     private ScaleTransform ErrorGlyphScaleTransform => (ScaleTransform)ErrorGlyph.RenderTransform!;
     private ScaleTransform SuccessGlyphScaleTransform => (ScaleTransform)SuccessGlyph.RenderTransform!;
+
+    static PclLoading()
+    {
+        SharedAnimationTimer.Tick += OnSharedAnimationTick;
+    }
 
     public PclLoading()
     {
@@ -69,7 +77,6 @@ internal sealed partial class PclLoading : UserControl
         ConfigureTransitions();
         RefreshText();
         RefreshVisualState();
-        _animationTimer.Tick += OnAnimationTick;
         AttachedToVisualTree += OnAttachedToVisualTree;
         DetachedFromVisualTree += OnDetachedFromVisualTree;
     }
@@ -143,7 +150,7 @@ internal sealed partial class PclLoading : UserControl
             _isMotionDurationSubscribed = true;
         }
 
-        _animationTimer.Interval = AnimationTickInterval;
+        SharedAnimationTimer.Interval = AnimationTickInterval;
         ConfigureTransitions();
         SyncAnimationState();
     }
@@ -161,7 +168,7 @@ internal sealed partial class PclLoading : UserControl
 
     private void OnMotionDurationsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        _animationTimer.Interval = AnimationTickInterval;
+        SharedAnimationTimer.Interval = AnimationTickInterval;
         ConfigureTransitions();
     }
 
@@ -220,7 +227,7 @@ internal sealed partial class PclLoading : UserControl
         SuccessGlyph.Opacity = isSuccess ? 1d : 0d;
         SuccessGlyphScaleTransform.ScaleX = isSuccess ? VisibleSuccessScale : HiddenSuccessScale;
         SuccessGlyphScaleTransform.ScaleY = isSuccess ? VisibleSuccessScale : HiddenSuccessScale;
-        if ((!IsError && !_animationTimer.IsEnabled) || isSuccess)
+        if ((!IsError && !_isAnimationLoopActive) || isSuccess)
         {
             ResetStrikeVisuals();
         }
@@ -251,30 +258,46 @@ internal sealed partial class PclLoading : UserControl
 
     private void StartAnimationLoop()
     {
-        if (_animationTimer.IsEnabled)
+        if (_isAnimationLoopActive)
         {
             return;
         }
 
+        _isAnimationLoopActive = true;
         _animationStopwatch.Restart();
-        _animationTimer.Start();
+        ActiveAnimations.Add(this);
+        SharedAnimationTimer.Interval = AnimationTickInterval;
+        if (!SharedAnimationTimer.IsEnabled)
+        {
+            SharedAnimationTimer.Start();
+        }
+
         UpdateAnimationFrame(TimeSpan.Zero);
     }
 
     private void StopAnimationLoop()
     {
-        if (!_animationTimer.IsEnabled)
+        if (!_isAnimationLoopActive)
         {
             return;
         }
 
-        _animationTimer.Stop();
+        _isAnimationLoopActive = false;
+        ActiveAnimations.Remove(this);
+        if (ActiveAnimations.Count == 0)
+        {
+            SharedAnimationTimer.Stop();
+        }
+
         _animationStopwatch.Reset();
     }
 
-    private void OnAnimationTick(object? sender, EventArgs e)
+    private static void OnSharedAnimationTick(object? sender, EventArgs e)
     {
-        UpdateAnimationFrame(_animationStopwatch.Elapsed);
+        foreach (var control in ActiveAnimations)
+        {
+            control.UpdateAnimationFrame(control._animationStopwatch.Elapsed);
+        }
     }
 
     private void UpdateAnimationFrame(TimeSpan elapsed)

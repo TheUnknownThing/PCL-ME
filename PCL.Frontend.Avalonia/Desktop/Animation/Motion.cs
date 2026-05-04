@@ -236,7 +236,20 @@ internal static class Motion
             return;
         }
 
-        Dispatcher.UIThread.Post(() => _ = RunAnimationAsync(control), DispatcherPriority.Loaded);
+        var state = States.GetOrCreateValue(control);
+        if (state.IsQueued)
+        {
+            return;
+        }
+
+        state.IsQueued = true;
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                state.IsQueued = false;
+                _ = RunAnimationAsync(control);
+            },
+            DispatcherPriority.Loaded);
     }
 
     private static async Task RunAnimationAsync(Control control)
@@ -309,14 +322,7 @@ internal static class Motion
 
     private static List<Control> CollectStaggerTargets(Control control)
     {
-        var descendantCards = control
-            .GetVisualDescendants()
-            .OfType<PclCard>()
-            .Where(card => card.IsVisible)
-            .OrderBy(card => GetRelativeCardOrigin(card, control).Y)
-            .ThenBy(card => GetRelativeCardOrigin(card, control).X)
-            .Cast<Control>()
-            .ToList();
+        var descendantCards = CollectVisibleDescendantCards(control, out var firstPanelChildren, out var firstMultiChildPanel);
         if (descendantCards.Count > 1)
         {
             return descendantCards;
@@ -342,26 +348,88 @@ internal static class Motion
                 return CollectStaggerTargets(child);
         }
 
-        var descendantPanels = control
-            .GetVisualDescendants()
-            .OfType<Panel>()
-            .Select(panel => panel.Children.OfType<Control>().Where(child => child.IsVisible).ToList())
-            .Where(children => children.Count > 0)
-            .ToList();
-
-        var multiChildPanel = descendantPanels.FirstOrDefault(children => children.Count > 1);
-        if (multiChildPanel is not null)
+        if (firstMultiChildPanel is not null)
         {
-            return multiChildPanel;
+            return firstMultiChildPanel;
         }
 
-        var singlePanel = descendantPanels.FirstOrDefault();
-        if (singlePanel is not null)
+        if (firstPanelChildren is not null)
         {
-            return singlePanel;
+            return firstPanelChildren;
         }
 
         return [];
+    }
+
+    private static List<Control> CollectVisibleDescendantCards(
+        Control control,
+        out List<Control>? firstPanelChildren,
+        out List<Control>? firstMultiChildPanel)
+    {
+        List<(PclCard Card, Point Origin)> cards = [];
+        firstPanelChildren = null;
+        firstMultiChildPanel = null;
+
+        foreach (var descendant in control.GetVisualDescendants())
+        {
+            if (descendant is PclCard { IsVisible: true } card)
+            {
+                cards.Add((card, GetRelativeCardOrigin(card, control)));
+            }
+
+            if (firstMultiChildPanel is not null || descendant is not Panel panel)
+            {
+                continue;
+            }
+
+            var visibleChildren = CollectVisiblePanelChildren(panel);
+            if (visibleChildren is null)
+            {
+                continue;
+            }
+
+            firstPanelChildren ??= visibleChildren;
+            if (visibleChildren.Count > 1)
+            {
+                firstMultiChildPanel = visibleChildren;
+            }
+        }
+
+        if (cards.Count <= 1)
+        {
+            return [];
+        }
+
+        cards.Sort(static (left, right) =>
+        {
+            var yComparison = left.Origin.Y.CompareTo(right.Origin.Y);
+            return yComparison != 0
+                ? yComparison
+                : left.Origin.X.CompareTo(right.Origin.X);
+        });
+
+        var targets = new List<Control>(cards.Count);
+        foreach (var item in cards)
+        {
+            targets.Add(item.Card);
+        }
+
+        return targets;
+    }
+
+    private static List<Control>? CollectVisiblePanelChildren(Panel panel)
+    {
+        List<Control>? children = null;
+        foreach (var child in panel.Children)
+        {
+            if (child is Control { IsVisible: true } control)
+            {
+                children ??= [];
+                children.Add(control);
+            }
+        }
+
+        return children;
     }
 
     private static Point GetRelativeCardOrigin(Control target, Visual ancestor)
@@ -575,6 +643,8 @@ internal static class Motion
         public TranslateTransform? MotionTransform { get; set; }
 
         public bool IsAttached { get; set; }
+
+        public bool IsQueued { get; set; }
 
         public int Version { get; set; }
     }

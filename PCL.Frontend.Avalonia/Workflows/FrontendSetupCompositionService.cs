@@ -11,6 +11,8 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendSetupCompositionService
 {
+    private const int MaxLogEntries = 8;
+
     public static FrontendSetupComposition Compose(FrontendRuntimePaths paths, II18nService i18n)
     {
         var sharedConfig = paths.OpenSharedConfigProvider();
@@ -25,6 +27,18 @@ internal static class FrontendSetupCompositionService
             BuildLauncherMiscState(paths, sharedConfig, localConfig),
             BuildJavaState(sharedConfig, localConfig, i18n),
             BuildUiState(sharedConfig, localConfig, i18n));
+    }
+
+    public static FrontendSetupComposition ComposeInitial(
+        FrontendRuntimePaths paths,
+        II18nService i18n,
+        LauncherFrontendSubpageKey activeSubpage)
+    {
+        var sharedConfig = paths.OpenSharedConfigProvider();
+        var localConfig = paths.OpenLocalConfigProvider();
+
+        var composition = CreateInactiveComposition(sharedConfig, localConfig, i18n);
+        return ComposeActiveSurface(paths, i18n, composition, activeSubpage);
     }
 
     public static FrontendSetupComposition ComposeActiveSurface(
@@ -74,6 +88,57 @@ internal static class FrontendSetupCompositionService
             },
             _ => current
         };
+    }
+
+    private static FrontendSetupComposition CreateInactiveComposition(
+        JsonFileProvider sharedConfig,
+        YamlFileProvider localConfig,
+        II18nService i18n)
+    {
+        return new FrontendSetupComposition(
+            new FrontendSetupAboutState(string.Empty),
+            new FrontendSetupLogState([]),
+            new FrontendSetupUpdateState(0, 1),
+            new FrontendSetupLaunchState(
+                IsolationIndex: 4,
+                WindowTitle: string.Empty,
+                CustomInfo: "PCLME",
+                VisibilityIndex: 4,
+                PriorityIndex: 1,
+                WindowTypeIndex: 1,
+                WindowWidth: "854",
+                WindowHeight: "480",
+                UseAutomaticRamAllocation: true,
+                CustomRamAllocationGb: MapStoredLaunchRamToGb(15),
+                RendererIndex: 0,
+                WrapperCommand: string.Empty,
+                JvmArguments: string.Empty,
+                GameArguments: string.Empty,
+                BeforeCommand: string.Empty,
+                EnvironmentVariables: string.Empty,
+                WaitForBeforeCommand: true,
+                ForceX11OnWayland: false,
+                DisableJavaLaunchWrapper: true,
+                DisableRetroWrapper: false,
+                RequireDedicatedGpu: true,
+                UseJavaExecutable: false,
+                PreferredIpStackIndex: 1),
+            BuildGameManageState(sharedConfig),
+            new FrontendSetupLauncherMiscState(
+                SystemActivityIndex: 0,
+                MaxRealTimeLogValue: ReadValue(sharedConfig, "SystemMaxLog", 13),
+                IsHardwareAccelerationToggleAvailable: false,
+                DisableHardwareAcceleration: false,
+                SecureDnsModeIndex: (int)FrontendSecureDnsMode.System,
+                SecureDnsProviderIndex: (int)FrontendSecureDnsProvider.Auto,
+                HttpProxyTypeIndex: 1,
+                HttpProxyAddress: string.Empty,
+                HttpProxyUsername: string.Empty,
+                HttpProxyPassword: string.Empty,
+                DebugAnimationSpeed: ReadValue(sharedConfig, "SystemDebugAnim", 9),
+                DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false)),
+            new FrontendSetupJavaState("auto", []),
+            BuildUiState(sharedConfig, localConfig, i18n));
     }
 
     public static int MapStoredLaunchVisibilityToDisplayIndex(int storedValue)
@@ -167,15 +232,7 @@ internal static class FrontendSetupCompositionService
             paths.FrontendArtifactDirectory
         };
 
-        var entries = logDirectories
-            .Where(Directory.Exists)
-            .SelectMany(directory => Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories))
-            .Where(path => path.EndsWith(".log", StringComparison.OrdinalIgnoreCase)
-                           || path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
-                           || path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-            .Select(path => new FileInfo(path))
-            .OrderByDescending(file => file.LastWriteTimeUtc)
-            .Take(8)
+        var entries = EnumerateRecentLogFiles(logDirectories)
             .Select(file => new FrontendSetupLogEntry(
                 file.Name,
                 $"{file.DirectoryName} • {file.LastWriteTime:yyyy-MM-dd HH:mm}",
@@ -194,6 +251,78 @@ internal static class FrontendSetupCompositionService
         }
 
         return new FrontendSetupLogState(entries);
+    }
+
+    private static IReadOnlyList<FileInfo> EnumerateRecentLogFiles(IEnumerable<string> logDirectories)
+    {
+        List<FileInfo> recentFiles = [];
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            AttributesToSkip = 0
+        };
+
+        foreach (var directory in logDirectories)
+        {
+            if (!Directory.Exists(directory))
+            {
+                continue;
+            }
+
+            try
+            {
+                foreach (var path in Directory.EnumerateFiles(directory, "*", options))
+                {
+                    if (!IsLogArtifact(path))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        AddRecentFile(recentFiles, new FileInfo(path));
+                    }
+                    catch
+                    {
+                        // Ignore files that disappear or become inaccessible during log discovery.
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore log roots that disappear or become inaccessible while enumerating.
+            }
+        }
+
+        return recentFiles;
+    }
+
+    private static bool IsLogArtifact(string path)
+    {
+        return path.EndsWith(".log", StringComparison.OrdinalIgnoreCase)
+               || path.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+               || path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void AddRecentFile(List<FileInfo> recentFiles, FileInfo file)
+    {
+        var insertIndex = recentFiles.FindIndex(existing => file.LastWriteTimeUtc > existing.LastWriteTimeUtc);
+        if (insertIndex < 0)
+        {
+            if (recentFiles.Count < MaxLogEntries)
+            {
+                recentFiles.Add(file);
+            }
+
+            return;
+        }
+
+        recentFiles.Insert(insertIndex, file);
+        if (recentFiles.Count > MaxLogEntries)
+        {
+            recentFiles.RemoveAt(recentFiles.Count - 1);
+        }
     }
 
     private static FrontendSetupUpdateState BuildUpdateState(

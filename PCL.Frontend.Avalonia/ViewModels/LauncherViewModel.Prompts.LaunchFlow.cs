@@ -641,13 +641,19 @@ internal sealed partial class LauncherViewModel
         var loadMode = ResolveInstanceCompositionLoadMode(_currentRoute);
         var selectedVersionSavePath = _selectedVersionSavePath;
         var includeDownloadRemoteState = _downloadCompositionHasRemoteState;
+        var currentRoute = _currentRoute;
 
         return Task.Run(() =>
         {
             FrontendHttpProxyService.ApplyStoredProxySettings(runtimePaths);
             FrontendHttpProxyService.ApplyStoredDnsSettings(runtimePaths);
 
-            var setupComposition = FrontendSetupCompositionService.Compose(runtimePaths, i18n);
+            var setupComposition = FrontendSetupCompositionService.ComposeInitial(
+                runtimePaths,
+                i18n,
+                currentRoute.Page == LauncherFrontendPageKey.Setup
+                    ? currentRoute.Subpage
+                    : LauncherFrontendSubpageKey.Default);
             var instanceComposition = FrontendInstanceCompositionService.Compose(runtimePaths, loadMode, i18n);
             var toolsComposition = FrontendToolsCompositionService.Compose(runtimePaths, i18n);
             var versionSavesComposition = FrontendVersionSavesCompositionService.Compose(
@@ -679,7 +685,7 @@ internal sealed partial class LauncherViewModel
 
     private void ApplyLaunchStateRefreshSnapshot(LaunchStateRefreshSnapshot snapshot)
     {
-        ApplySetupComposition(snapshot.SetupComposition);
+        ApplySetupComposition(snapshot.SetupComposition, initializeAllSurfaces: false);
         _instanceCompositionLoadMode = snapshot.InstanceLoadMode;
         ApplyInstanceComposition(snapshot.InstanceComposition, initializeAllSurfaces: false);
         ApplyToolsComposition(snapshot.ToolsComposition);
