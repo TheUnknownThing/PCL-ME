@@ -38,7 +38,7 @@ internal sealed partial class LauncherViewModel
             }
             else
             {
-                _activeCrashPlan = FrontendCrashCompositionService.Compose(_launcherActionService.RuntimePaths, _i18n);
+                _activeCrashPlan = FrontendCrashCompositionService.CreateDeferredPlan(_launcherActionService.RuntimePaths, _i18n);
                 _promptCatalog[AvaloniaPromptLaneKind.Crash] = [];
             }
             RebuildPromptLanes();

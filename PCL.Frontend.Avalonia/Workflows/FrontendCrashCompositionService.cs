@@ -8,6 +8,38 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendCrashCompositionService
 {
+    public static CrashAvaloniaPlan CreateDeferredPlan(FrontendRuntimePaths runtimePaths, II18nService i18n)
+    {
+        ArgumentNullException.ThrowIfNull(runtimePaths);
+        ArgumentNullException.ThrowIfNull(i18n);
+
+        var timestamp = DateTime.Now;
+        var exportRequest = new MinecraftCrashExportPlanRequest(
+            Timestamp: timestamp,
+            ReportDirectory: Path.Combine(
+                runtimePaths.FrontendTempDirectory,
+                "CrashReport",
+                timestamp.ToString("yyyy-MM-dd")),
+            LauncherVersionName: "frontend-avalonia",
+            UniqueAddress: runtimePaths.LauncherAppDataDirectory,
+            SourceFilePaths: [],
+            AdditionalSourceFilePaths: [],
+            CurrentLauncherLogFilePath: null,
+            Environment: GetHostEnvironmentSnapshot(),
+            CurrentAccessToken: null,
+            CurrentUserUuid: null,
+            UserProfilePath: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        var outputPrompt = MinecraftCrashWorkflowService.BuildOutputPrompt(new MinecraftCrashOutputPromptRequest(
+            i18n.T("crash.prompts.output.launch_failure.result_text"),
+            IsManualAnalysis: true,
+            HasDirectFile: false,
+            CanOpenModLoaderSettings: false));
+
+        return new CrashAvaloniaPlan(
+            outputPrompt,
+            MinecraftCrashExportWorkflowService.CreatePlan(exportRequest));
+    }
+
     public static CrashAvaloniaPlan Compose(FrontendRuntimePaths runtimePaths, II18nService i18n)
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);

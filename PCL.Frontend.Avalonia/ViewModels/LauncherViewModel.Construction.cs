@@ -348,7 +348,7 @@ internal sealed partial class LauncherViewModel
             _launcherComposition.StartupConsentResult);
         _launchComposition = FrontendLaunchCompositionService.Compose(options, launcherActionService.RuntimePaths, i18n: _i18n);
         _launchPromptContextKey = BuildLaunchPromptContextKey(_launchComposition, _instanceComposition.Selection.InstanceDirectory);
-        _activeCrashPlan = FrontendCrashCompositionService.Compose(launcherActionService.RuntimePaths, _i18n);
+        _activeCrashPlan = FrontendCrashCompositionService.CreateDeferredPlan(launcherActionService.RuntimePaths, _i18n);
         _selectedPromptLane = AvaloniaPromptLaneKind.Startup;
         _backCommand = new ActionCommand(NavigateBack, () => CanGoBack);
         _homeCommand = new ActionCommand(NavigateHome, () => CanGoHome);

@@ -158,7 +158,7 @@ internal sealed partial class LauncherViewModel
     {
         return actionKey switch
         {
-            "crash-test" => new ActionCommand(TriggerCrashPromptTest),
+            "crash-test" => new ActionCommand(() => _ = TriggerCrashPromptTestAsync()),
             "clear-rubbish" => new ActionCommand(ClearToolboxRubbish),
             "daily-luck" => new ActionCommand(ShowDailyLuck),
             "create-shortcut" => new ActionCommand(CreateLauncherShortcut),

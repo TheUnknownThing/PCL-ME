@@ -156,12 +156,25 @@ internal sealed partial class LauncherViewModel
                RuntimeInformation.ProcessArchitecture.ToString();
     }
 
-    private void TriggerCrashPromptTest()
+    private async Task TriggerCrashPromptTestAsync()
     {
-        EnsureCrashPromptLane();
-        RebuildPromptLanes();
-        SetPromptOverlayOpen(true);
-        SelectPromptLane(AvaloniaPromptLaneKind.Crash, updateActivity: false);
-        AddActivity(T("shell.prompts.activities.crash_test_triggered.title"), T("shell.prompts.activities.crash_test_triggered.body"));
+        try
+        {
+            var crashPlan = await Task.Run(() => FrontendCrashCompositionService.Compose(_launcherActionService.RuntimePaths, _i18n));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _activeCrashPlan = crashPlan;
+                EnsureCrashPromptLane();
+                RebuildPromptLanes();
+                SetPromptOverlayOpen(true);
+                SelectPromptLane(AvaloniaPromptLaneKind.Crash, updateActivity: false);
+                AddActivity(T("shell.prompts.activities.crash_test_triggered.title"), T("shell.prompts.activities.crash_test_triggered.body"));
+            });
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                AddFailureActivity(T("shell.prompts.activities.monitor_exception.title"), ex.Message));
+        }
     }
 }
