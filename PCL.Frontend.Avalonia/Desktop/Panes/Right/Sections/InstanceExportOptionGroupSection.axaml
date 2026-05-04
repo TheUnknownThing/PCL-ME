@@ -1,7 +1,9 @@
 <UserControl
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceExportOptionGroupSection"
     xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:ExportOptionGroupViewModel">
   <StackPanel Margin="0,0,0,2">
     <CheckBox
         MinHeight="26"
@@ -15,7 +17,7 @@
 
     <ItemsControl ItemsSource="{Binding Children}" IsVisible="{Binding Header.IsChecked, FallbackValue=False}">
       <ItemsControl.ItemTemplate>
-        <DataTemplate>
+        <DataTemplate x:DataType="vm:ExportOptionEntryViewModel">
           <CheckBox
               MinHeight="26"
               Margin="30,0,0,0"

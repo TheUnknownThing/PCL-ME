@@ -2,7 +2,9 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Left.TaskManagerLeftPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    DataContext="{Binding Launcher}">
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    DataContext="{ReflectionBinding Launcher}">
   <Border
       Padding="26,24"
       Background="{DynamicResource ColorBrush8}"

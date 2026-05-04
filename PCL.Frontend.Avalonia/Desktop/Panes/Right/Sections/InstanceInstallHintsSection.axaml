@@ -1,10 +1,12 @@
 <UserControl
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceInstallHintsSection"
     xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel">
   <ItemsControl ItemsSource="{Binding InstanceInstallHints}">
     <ItemsControl.ItemTemplate>
-      <DataTemplate>
+      <DataTemplate x:DataType="vm:SurfaceNoticeViewModel">
         <Border
             Margin="{Binding Margin}"
             Padding="12,10"

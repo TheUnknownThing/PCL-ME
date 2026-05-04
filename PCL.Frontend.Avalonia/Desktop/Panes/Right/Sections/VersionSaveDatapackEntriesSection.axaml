@@ -2,6 +2,8 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.VersionSaveDatapackEntriesSection"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
   <controls:PclCard Header=" " MinHeight="55" ContentMargin="20,48,18,22" IsVisible="{Binding ShowVersionSaveDatapackContent}">
     <controls:PclCard.HeaderOverlayContent>

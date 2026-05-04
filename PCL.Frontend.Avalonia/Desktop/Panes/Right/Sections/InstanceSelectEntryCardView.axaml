@@ -2,6 +2,8 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceSelectEntryCardView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:InstanceSelectEntryViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     ClipToBounds="False">

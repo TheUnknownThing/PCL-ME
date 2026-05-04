@@ -2,6 +2,8 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
     xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:motion="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"

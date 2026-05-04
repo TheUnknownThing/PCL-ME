@@ -2,8 +2,10 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.ToolsHelpRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
-    DataContext="{Binding Launcher}">
+    DataContext="{ReflectionBinding Launcher}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,25,25,10" Spacing="15">
       <controls:PclSearchBox

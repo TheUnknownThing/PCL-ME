@@ -2,9 +2,11 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.InstanceWorldRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     x:Name="Root"
-    DataContext="{Binding Launcher}">
+    DataContext="{ReflectionBinding Launcher}">
   <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowInstanceWorldContent}">
       <StackPanel Margin="25,10,25,10" Spacing="15">

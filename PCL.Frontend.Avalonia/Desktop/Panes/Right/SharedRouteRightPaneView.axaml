@@ -2,10 +2,12 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.SharedRouteRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
     xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections"
-    DataContext="{Binding Launcher}">
+    DataContext="{ReflectionBinding Launcher}">
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
@@ -18,7 +20,7 @@
           <SolidColorBrush x:Key="LiveLogConsoleForegroundBrush" Color="{DynamicResource BaseColor_Neutral570}" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
-      <DataTemplate x:Key="CommunityProjectInstallModeOptionTemplate">
+      <DataTemplate x:Key="CommunityProjectInstallModeOptionTemplate" x:DataType="vm:DownloadResourceFilterOptionViewModel">
         <TextBlock Text="{Binding Label}" />
       </DataTemplate>
     </ResourceDictionary>

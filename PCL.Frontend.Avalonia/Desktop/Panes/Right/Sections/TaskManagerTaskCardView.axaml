@@ -2,6 +2,8 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.TaskManagerTaskCardView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:TaskManagerEntryViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
   <controls:PclCard
       Margin="0,0,0,15"

@@ -2,6 +2,8 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceOverviewShortcutsSection"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
   <controls:PclCard Header="{Binding InstanceOverviewShortcutsHeaderText}" ContentMargin="20,40,20,18">
     <controls:PclCard.CardContent>
