@@ -44,61 +44,65 @@
                     Text="{Binding LauncherOpacityLabel}" />
               </Grid>
 
-              <TextBlock
+              <Grid
                   Grid.Row="4"
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,0,20,0"
-                  Text="{Binding SetupText.Ui.UiScaleLabel}" />
-              <ComboBox
-                  Grid.Row="4"
-                  Grid.Column="1"
-                  ItemsSource="{Binding UiScaleOptions}"
-                  SelectedIndex="{Binding SelectedUiScaleFactorIndex}" />
+                  Grid.ColumnSpan="2"
+                  ColumnDefinitions="Auto,*,Auto,*"
+                  ColumnSpacing="12">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Text="{Binding SetupText.Ui.UiScaleLabel}" />
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="150"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding UiScaleOptions}"
+                    SelectedIndex="{Binding SelectedUiScaleFactorIndex}" />
+                <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Text="{Binding SetupText.Ui.ThemeLabel}" />
+                <ComboBox
+                    x:Name="ThemeModeComboBox"
+                    Grid.Column="3"
+                    MinWidth="150"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding DarkModeOptions}"
+                    SelectedIndex="{Binding SelectedDarkModeIndex}" />
+              </Grid>
 
-              <TextBlock
-                  Grid.Row="6"
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,0,20,0"
-                  Text="{Binding SetupText.Ui.ThemeLabel}" />
-              <StackPanel Grid.Row="6" Grid.Column="1" Spacing="8">
-                <Grid ColumnDefinitions="Auto,*,92,Auto,92,Auto">
-                  <ComboBox
-                      x:Name="ThemeModeComboBox"
-                      Grid.Column="0"
-                      ItemsSource="{Binding DarkModeOptions}"
-                      SelectedIndex="{Binding SelectedDarkModeIndex}" />
+              <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Spacing="8">
+                <Grid
+                    IsVisible="{Binding IsThemeColorSwitchSupported}"
+                    ColumnDefinitions="Auto,*,Auto,*"
+                    ColumnSpacing="12">
                   <TextBlock
-                      Grid.Column="2"
-                      Margin="20,0,0,0"
-                      HorizontalAlignment="Center"
                       VerticalAlignment="Center"
-                      IsVisible="{Binding IsThemeColorSwitchSupported}"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="12.5"
                       Text="{Binding SetupText.Ui.LightPaletteLabel}" />
                   <ComboBox
                       x:Name="LightPaletteComboBox"
-                      Grid.Column="3"
-                      IsVisible="{Binding IsThemeColorSwitchSupported}"
+                      Grid.Column="1"
+                      MinWidth="180"
+                      HorizontalAlignment="Stretch"
                       ItemsSource="{Binding ThemeColorOptions}"
                       SelectedIndex="{Binding SelectedLightColorIndex}" />
                   <TextBlock
-                      Grid.Column="4"
-                      Margin="20,0,0,0"
-                      HorizontalAlignment="Center"
+                      Grid.Column="2"
                       VerticalAlignment="Center"
-                      IsVisible="{Binding IsThemeColorSwitchSupported}"
                       Foreground="{DynamicResource ColorBrush1}"
                       FontSize="12.5"
                       Text="{Binding SetupText.Ui.DarkPaletteLabel}" />
                   <ComboBox
                       x:Name="DarkPaletteComboBox"
-                      Grid.Column="5"
-                      IsVisible="{Binding IsThemeColorSwitchSupported}"
+                      Grid.Column="3"
+                      MinWidth="180"
+                      HorizontalAlignment="Stretch"
                       ItemsSource="{Binding ThemeColorOptions}"
                       SelectedIndex="{Binding SelectedDarkColorIndex}" />
                 </Grid>
