@@ -53,7 +53,8 @@ internal static partial class FrontendLaunchCompositionService
         var instanceConfig = hasSelectedInstance && Directory.Exists(instancePath)
             ? FrontendRuntimePaths.OpenInstanceConfigProvider(instancePath)
             : null;
-        var manifestSummary = ReadManifestSummary(launcherFolder, selectedInstanceName, instanceConfig);
+        using var manifestContext = FrontendLaunchManifestContext.Load(launcherFolder, selectedInstanceName);
+        var manifestSummary = ReadManifestSummary(launcherFolder, selectedInstanceName, instanceConfig, manifestContext);
         var indieDirectory = hasSelectedInstance && ResolveIsolationEnabled(localConfig, instanceConfig, manifestSummary)
             ? instancePath
             : launcherFolder;
@@ -77,7 +78,7 @@ internal static partial class FrontendLaunchCompositionService
             instanceConfig);
         var requiredArtifacts = BuildRequiredArtifacts(
             launcherFolder,
-            selectedInstanceName,
+            manifestContext,
             manifestSummary,
             selectedJavaRuntime);
         var resolvedInstanceName = ResolveSelectedInstanceName(selectedInstanceName, i18n);
@@ -90,6 +91,7 @@ internal static partial class FrontendLaunchCompositionService
         var classpathPlan = MinecraftLaunchClasspathService.BuildPlan(BuildClasspathRequest(
             launcherFolder,
             selectedInstanceName,
+            manifestContext,
             manifestSummary,
             selectedJavaRuntime,
             instanceConfig,
@@ -100,14 +102,13 @@ internal static partial class FrontendLaunchCompositionService
             AppDataNativesDirectory: Path.Combine(launcherFolder, "bin", "natives"),
             FinalFallbackDirectory: Path.Combine(runtimePaths.TempDirectory, "PCL", "natives")));
         var nativePathPlan = BuildNativePathPlan(
-            launcherFolder,
-            selectedInstanceName,
+            manifestContext,
             manifestSummary,
             selectedJavaRuntime,
             nativesDirectory);
         var nativeSyncRequest = BuildNativeSyncRequest(
             launcherFolder,
-            selectedInstanceName,
+            manifestContext,
             nativePathPlan.ExtractionDirectory,
             manifestSummary,
             selectedJavaRuntime);
@@ -154,6 +155,7 @@ internal static partial class FrontendLaunchCompositionService
             runtimePaths,
             launcherFolder,
             selectedInstanceName,
+            manifestContext,
             indieDirectory,
             manifestSummary,
             selectedProfile,
@@ -175,6 +177,7 @@ internal static partial class FrontendLaunchCompositionService
             nativePathPlan.ExtractionDirectory,
             nativePathPlan.AliasDirectory,
             nativeSyncRequest?.NativeArchives.Count ?? 0,
+            manifestContext,
             manifestSummary,
             selectedProfile,
             selectedJavaRuntime,

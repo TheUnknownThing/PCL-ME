@@ -145,6 +145,105 @@ public sealed class FrontendLaunchCompositionServiceTest
         Assert.AreEqual("CliInstance", result.PrecheckRequest.InstanceName);
     }
 
+    [TestMethod]
+    public void Compose_WithInheritedManifest_UsesParentAndChildManifestData()
+    {
+        using var environment = new LaunchCompositionTestEnvironment();
+        var launcherDirectory = Path.Combine(environment.RootDirectory, ".minecraft");
+        var parentName = "ParentInstance";
+        var childName = "ChildInstance";
+        var parentDirectory = Path.Combine(launcherDirectory, "versions", parentName);
+        var childDirectory = Path.Combine(launcherDirectory, "versions", childName);
+        Directory.CreateDirectory(parentDirectory);
+        Directory.CreateDirectory(childDirectory);
+
+        File.WriteAllText(
+            Path.Combine(parentDirectory, $"{parentName}.json"),
+            """
+            {
+              "id": "ParentInstance",
+              "mainClass": "parent.Main",
+              "arguments": {
+                "game": ["--parentArg"],
+                "jvm": ["-Dparent=true"]
+              },
+              "libraries": [
+                {
+                  "name": "com.example:parent:1.0",
+                  "downloads": {
+                    "artifact": {
+                      "path": "com/example/parent/1.0/parent-1.0.jar",
+                      "url": "https://example.invalid/parent.jar",
+                      "sha1": "parent-sha1"
+                    }
+                  }
+                }
+              ],
+              "downloads": {
+                "client": {
+                  "url": "https://example.invalid/parent-client.jar",
+                  "sha1": "parent-client-sha1"
+                }
+              }
+            }
+            """);
+        File.WriteAllText(
+            Path.Combine(childDirectory, $"{childName}.json"),
+            """
+            {
+              "id": "ChildInstance",
+              "inheritsFrom": "ParentInstance",
+              "mainClass": "child.Main",
+              "arguments": {
+                "game": ["--childArg"],
+                "jvm": ["-Dchild=true"]
+              },
+              "libraries": [
+                {
+                  "name": "com.example:child:1.0",
+                  "downloads": {
+                    "artifact": {
+                      "path": "com/example/child/1.0/child-1.0.jar",
+                      "url": "https://example.invalid/child.jar",
+                      "sha1": "child-sha1"
+                    }
+                  }
+                }
+              ],
+              "downloads": {
+                "client": {
+                  "url": "https://example.invalid/child-client.jar",
+                  "sha1": "child-client-sha1"
+                }
+              }
+            }
+            """);
+
+        var runtimePaths = environment.CreateRuntimePaths();
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
+        localConfig.Set("LaunchFolderSelect", launcherDirectory);
+        localConfig.Set("LaunchInstanceSelect", childName);
+        localConfig.Sync();
+
+        var result = FrontendLaunchCompositionService.Compose(
+            CreateOptions(),
+            runtimePaths);
+
+        CollectionAssert.Contains(
+            result.ClasspathPlan.Entries.ToList(),
+            Path.Combine(launcherDirectory, "libraries", "com", "example", "parent", "1.0", "parent-1.0.jar"));
+        CollectionAssert.Contains(
+            result.ClasspathPlan.Entries.ToList(),
+            Path.Combine(launcherDirectory, "libraries", "com", "example", "child", "1.0", "child-1.0.jar"));
+        Assert.IsTrue(result.RequiredArtifacts.Any(requirement => requirement.DownloadUrl == "https://example.invalid/parent-client.jar"));
+        Assert.IsTrue(result.RequiredArtifacts.Any(requirement => requirement.DownloadUrl == "https://example.invalid/child-client.jar"));
+        StringAssert.Contains(result.ArgumentPlan.FinalArguments, "-Dparent=true");
+        StringAssert.Contains(result.ArgumentPlan.FinalArguments, "-Dchild=true");
+        StringAssert.Contains(result.ArgumentPlan.FinalArguments, "--parentArg");
+        StringAssert.Contains(result.ArgumentPlan.FinalArguments, "--childArg");
+        StringAssert.Contains(result.ArgumentPlan.FinalArguments, "child.Main");
+    }
+
     private static AvaloniaCommandOptions CreateOptions(string scenario = "test", string? instanceNameOverride = null)
     {
         return new AvaloniaCommandOptions(

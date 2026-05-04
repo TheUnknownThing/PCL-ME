@@ -25,7 +25,8 @@ internal static partial class FrontendLaunchCompositionService
     private static FrontendVersionManifestSummary ReadManifestSummary(
         string launcherFolder,
         string selectedInstanceName,
-        YamlFileProvider? instanceConfig)
+        YamlFileProvider? instanceConfig,
+        FrontendLaunchManifestContext manifestContext)
     {
         if (string.IsNullOrWhiteSpace(selectedInstanceName))
         {
@@ -51,7 +52,7 @@ internal static partial class FrontendLaunchCompositionService
             VanillaVersion: effectiveVersion,
             VersionType: profile.VersionType,
             AssetsIndexName: profile.AssetsIndexName,
-            Libraries: ReadManifestLibraries(launcherFolder, selectedInstanceName),
+            Libraries: ReadManifestLibraries(launcherFolder, manifestContext),
             HasOptiFine: profile.HasOptiFine,
             HasForge: profile.HasForge,
             ForgeVersion: profile.ForgeVersion,
@@ -113,11 +114,11 @@ internal static partial class FrontendLaunchCompositionService
         }
     }
 
-    private static string? ReadManifestProperty(string launcherFolder, string selectedInstanceName, string propertyName)
+    private static string? ReadManifestProperty(FrontendLaunchManifestContext manifestContext, string propertyName)
     {
-        foreach (var document in EnumerateManifestDocuments(launcherFolder, selectedInstanceName))
+        foreach (var document in manifestContext.ChildFirstDocuments)
         {
-            var value = GetString(document.RootElement, propertyName);
+            var value = GetString(document.Root, propertyName);
             if (!string.IsNullOrWhiteSpace(value))
             {
                 return value;
@@ -127,22 +128,72 @@ internal static partial class FrontendLaunchCompositionService
         return null;
     }
 
-    private static IEnumerable<JsonDocument> EnumerateManifestDocuments(string launcherFolder, string selectedInstanceName)
+    private sealed class FrontendLaunchManifestContext : IDisposable
     {
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var currentVersion = selectedInstanceName;
-        while (!string.IsNullOrWhiteSpace(currentVersion) && visited.Add(currentVersion))
+        private readonly List<FrontendLaunchManifestDocument> _documents;
+
+        private FrontendLaunchManifestContext(List<FrontendLaunchManifestDocument> documents)
         {
-            var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, currentVersion);
-            if (string.IsNullOrWhiteSpace(manifestPath))
+            _documents = documents;
+        }
+
+        public IReadOnlyList<FrontendLaunchManifestDocument> ChildFirstDocuments => _documents;
+
+        public IEnumerable<FrontendLaunchManifestDocument> ParentFirstDocuments => _documents.AsEnumerable().Reverse();
+
+        public static FrontendLaunchManifestContext Load(string launcherFolder, string selectedInstanceName)
+        {
+            var documents = new List<FrontendLaunchManifestDocument>();
+            if (string.IsNullOrWhiteSpace(selectedInstanceName))
             {
-                yield break;
+                return new FrontendLaunchManifestContext(documents);
             }
 
-            var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-            yield return document;
-            currentVersion = GetString(document.RootElement, "inheritsFrom");
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var currentVersion = selectedInstanceName;
+            try
+            {
+                while (!string.IsNullOrWhiteSpace(currentVersion) && visited.Add(currentVersion))
+                {
+                    var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, currentVersion);
+                    if (string.IsNullOrWhiteSpace(manifestPath))
+                    {
+                        break;
+                    }
+
+                    var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
+                    documents.Add(new FrontendLaunchManifestDocument(currentVersion, manifestPath, document));
+                    currentVersion = GetString(document.RootElement, "inheritsFrom");
+                }
+            }
+            catch
+            {
+                foreach (var document in documents)
+                {
+                    document.Document.Dispose();
+                }
+
+                throw;
+            }
+
+            return new FrontendLaunchManifestContext(documents);
         }
+
+        public void Dispose()
+        {
+            foreach (var document in _documents)
+            {
+                document.Document.Dispose();
+            }
+        }
+    }
+
+    private sealed record FrontendLaunchManifestDocument(
+        string VersionName,
+        string ManifestPath,
+        JsonDocument Document)
+    {
+        public JsonElement Root => Document.RootElement;
     }
 
     private static string? GetString(JsonElement element, string propertyName)

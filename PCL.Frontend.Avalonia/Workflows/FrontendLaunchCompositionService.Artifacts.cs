@@ -24,84 +24,65 @@ internal static partial class FrontendLaunchCompositionService
 {
     private static IReadOnlyList<FrontendLaunchArtifactRequirement> BuildRequiredArtifacts(
         string launcherFolder,
-        string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendJavaRuntimeSummary? selectedJavaRuntime)
     {
-        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        if (manifestContext.ChildFirstDocuments.Count == 0)
         {
             return [];
         }
 
         var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var requirements = new Dictionary<string, FrontendLaunchArtifactRequirement>(StringComparer.OrdinalIgnoreCase);
-        CollectRequiredArtifactsRecursive(
-            launcherFolder,
-            selectedInstanceName,
-            runtimeArchitecture,
-            visited,
-            requirements);
+        foreach (var document in manifestContext.ParentFirstDocuments)
+        {
+            CollectRequiredArtifacts(
+                launcherFolder,
+                document.VersionName,
+                document.Root,
+                runtimeArchitecture,
+                requirements);
+        }
+
         return requirements.Values.ToArray();
     }
 
     private static MinecraftLaunchNativesSyncRequest? BuildNativeSyncRequest(
         string launcherFolder,
-        string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         string nativesDirectory,
         FrontendVersionManifestSummary manifestSummary,
         FrontendJavaRuntimeSummary? selectedJavaRuntime)
     {
-        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        if (manifestContext.ChildFirstDocuments.Count == 0)
         {
             return null;
         }
 
         var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var archives = new Dictionary<string, MinecraftLaunchNativeArchive>(StringComparer.OrdinalIgnoreCase);
-        CollectNativeArchivesRecursive(
-            launcherFolder,
-            selectedInstanceName,
-            runtimeArchitecture,
-            visited,
-            archives);
+        foreach (var document in manifestContext.ParentFirstDocuments)
+        {
+            CollectNativeArchives(
+                launcherFolder,
+                document.Root,
+                runtimeArchitecture,
+                archives);
+        }
+
         return archives.Count == 0
             ? null
             : new MinecraftLaunchNativesSyncRequest(nativesDirectory, archives.Values.ToArray(), LogSkippedFiles: false);
     }
 
-    private static void CollectRequiredArtifactsRecursive(
+    private static void CollectRequiredArtifacts(
         string launcherFolder,
         string versionName,
+        JsonElement root,
         MachineType runtimeArchitecture,
-        ISet<string> visited,
         IDictionary<string, FrontendLaunchArtifactRequirement> requirements)
     {
-        if (!visited.Add(versionName))
-        {
-            return;
-        }
-
-        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
-        if (string.IsNullOrWhiteSpace(manifestPath))
-        {
-            return;
-        }
-
-        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-        var root = document.RootElement;
-        var parentVersion = GetString(root, "inheritsFrom");
-        if (!string.IsNullOrWhiteSpace(parentVersion))
-        {
-            CollectRequiredArtifactsRecursive(
-                launcherFolder,
-                parentVersion,
-                runtimeArchitecture,
-                visited,
-                requirements);
-        }
-
         var clientDownloadUrl = GetNestedString(root, "downloads", "client", "url");
         if (!string.IsNullOrWhiteSpace(clientDownloadUrl))
         {
@@ -144,37 +125,12 @@ internal static partial class FrontendLaunchCompositionService
         }
     }
 
-    private static void CollectNativeArchivesRecursive(
+    private static void CollectNativeArchives(
         string launcherFolder,
-        string versionName,
+        JsonElement root,
         MachineType runtimeArchitecture,
-        ISet<string> visited,
         IDictionary<string, MinecraftLaunchNativeArchive> archives)
     {
-        if (!visited.Add(versionName))
-        {
-            return;
-        }
-
-        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
-        if (string.IsNullOrWhiteSpace(manifestPath))
-        {
-            return;
-        }
-
-        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-        var root = document.RootElement;
-        var parentVersion = GetString(root, "inheritsFrom");
-        if (!string.IsNullOrWhiteSpace(parentVersion))
-        {
-            CollectNativeArchivesRecursive(
-                launcherFolder,
-                parentVersion,
-                runtimeArchitecture,
-                visited,
-                archives);
-        }
-
         if (!root.TryGetProperty("libraries", out var libraries) || libraries.ValueKind != JsonValueKind.Array)
         {
             return;

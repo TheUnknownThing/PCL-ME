@@ -26,6 +26,7 @@ internal static partial class FrontendLaunchCompositionService
         FrontendRuntimePaths runtimePaths,
         string launcherFolder,
         string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         string indieDirectory,
         FrontendVersionManifestSummary manifestSummary,
         FrontendLaunchProfileSummary selectedProfile,
@@ -51,6 +52,7 @@ internal static partial class FrontendLaunchCompositionService
             runtimePaths,
             launcherFolder,
             selectedInstanceName,
+            manifestContext,
             manifestSummary,
             selectedProfile,
             selectedJavaRuntime,
@@ -64,7 +66,7 @@ internal static partial class FrontendLaunchCompositionService
             javaMajorVersion,
             allowBlockingPreparation);
 
-        var legacyMinecraftArguments = ReadManifestProperty(launcherFolder, selectedInstanceName, "minecraftArguments");
+        var legacyMinecraftArguments = ReadManifestProperty(manifestContext, "minecraftArguments");
         if (!string.IsNullOrWhiteSpace(legacyMinecraftArguments))
         {
             arguments += " " + MinecraftLaunchGameArgumentService.BuildLegacyPlan(
@@ -75,7 +77,7 @@ internal static partial class FrontendLaunchCompositionService
                     manifestSummary.HasOptiFine)).Arguments;
         }
 
-        var modernGameSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "game");
+        var modernGameSections = CollectArgumentSectionJsons(manifestContext, "game");
         if (modernGameSections.Count > 0)
         {
             var launchArgumentFeatures = BuildLaunchArgumentFeatures(localConfig);
@@ -125,6 +127,7 @@ internal static partial class FrontendLaunchCompositionService
         string nativeExtractionDirectory,
         string? nativePathAliasDirectory,
         int nativeArchiveCount,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendLaunchProfileSummary selectedProfile,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
@@ -146,6 +149,7 @@ internal static partial class FrontendLaunchCompositionService
                 nativeExtractionDirectory,
                 nativePathAliasDirectory,
                 nativeArchiveCount,
+                manifestContext,
                 manifestSummary,
                 selectedProfile,
                 selectedJavaRuntime,
@@ -168,6 +172,7 @@ internal static partial class FrontendLaunchCompositionService
             nativeExtractionDirectory,
             nativePathAliasDirectory,
             nativeArchiveCount,
+            manifestContext,
             manifestSummary,
             selectedProfile,
             selectedJavaRuntime,
@@ -247,6 +252,7 @@ internal static partial class FrontendLaunchCompositionService
         string nativeExtractionDirectory,
         string? nativePathAliasDirectory,
         int nativeArchiveCount,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendLaunchProfileSummary selectedProfile,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
@@ -263,6 +269,7 @@ internal static partial class FrontendLaunchCompositionService
             nativeExtractionDirectory,
             nativePathAliasDirectory,
             nativeArchiveCount,
+            manifestContext,
             manifestSummary,
             selectedProfile,
             selectedJavaRuntime,
@@ -319,6 +326,7 @@ internal static partial class FrontendLaunchCompositionService
         FrontendRuntimePaths runtimePaths,
         string launcherFolder,
         string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendLaunchProfileSummary selectedProfile,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
@@ -332,8 +340,8 @@ internal static partial class FrontendLaunchCompositionService
         int javaMajorVersion,
         bool allowBlockingPreparation)
     {
-        var modernJvmSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "jvm");
-        var mainClass = ReadManifestProperty(launcherFolder, selectedInstanceName, "mainClass")
+        var modernJvmSections = CollectArgumentSectionJsons(manifestContext, "jvm");
+        var mainClass = ReadManifestProperty(manifestContext, "mainClass")
                         ?? "net.minecraft.client.main.Main";
         var runtimeArchitecture = ResolveTargetJavaArchitecture(selectedJavaRuntime, manifestSummary);
         var proxyOptions = ResolveProxyOptions(runtimePaths, sharedConfig, instanceConfig);
@@ -401,6 +409,7 @@ internal static partial class FrontendLaunchCompositionService
         string nativeExtractionDirectory,
         string? nativePathAliasDirectory,
         int nativeArchiveCount,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendLaunchProfileSummary selectedProfile,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
@@ -417,7 +426,7 @@ internal static partial class FrontendLaunchCompositionService
                 GameVersionDrop: ResolveGameVersionDrop(manifestSummary.VanillaVersion),
                 IsGameVersionReliable: manifestSummary.IsVersionInfoValid,
                 AssetsIndexName: manifestSummary.AssetsIndexName ?? "legacy",
-                InheritedInstanceName: ReadManifestProperty(launcherFolder, selectedInstanceName, "inheritsFrom"),
+                InheritedInstanceName: ReadManifestProperty(manifestContext, "inheritsFrom"),
                 AllocatedMemoryInGigabytes: ResolveAllocatedMemoryGigabytes(indieDirectory, selectedJavaRuntime, localConfig, instanceConfig, manifestSummary),
                 MinecraftFolder: launcherFolder,
                 InstanceFolder: instanceDirectory,
@@ -444,19 +453,18 @@ internal static partial class FrontendLaunchCompositionService
     }
 
     private static IReadOnlyList<string> CollectArgumentSectionJsons(
-        string launcherFolder,
-        string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         string sectionName)
     {
-        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        if (manifestContext.ChildFirstDocuments.Count == 0)
         {
             return [];
         }
 
         var results = new List<string>();
-        foreach (var document in EnumerateManifestDocuments(launcherFolder, selectedInstanceName))
+        foreach (var document in manifestContext.ChildFirstDocuments)
         {
-            if (!document.RootElement.TryGetProperty("arguments", out var argumentsElement) ||
+            if (!document.Root.TryGetProperty("arguments", out var argumentsElement) ||
                 argumentsElement.ValueKind != JsonValueKind.Object ||
                 !argumentsElement.TryGetProperty(sectionName, out var sectionElement))
             {

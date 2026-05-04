@@ -25,6 +25,7 @@ internal static partial class FrontendLaunchCompositionService
     private static MinecraftLaunchClasspathRequest BuildClasspathRequest(
         string launcherFolder,
         string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
         YamlFileProvider? instanceConfig,
@@ -37,7 +38,7 @@ internal static partial class FrontendLaunchCompositionService
         var customHeadEntries = BuildClasspathHeadEntries(instanceConfig, instanceJarPath);
 
         return new MinecraftLaunchClasspathRequest(
-            Libraries: ReadClasspathLibraries(launcherFolder, selectedInstanceName, runtimeArchitecture),
+            Libraries: ReadClasspathLibraries(launcherFolder, manifestContext, runtimeArchitecture),
             CustomHeadEntries: customHeadEntries,
             RetroWrapperPath: retroWrapperOptions.RetroWrapperPath,
             ClasspathSeparator: GetClasspathSeparator());
@@ -45,22 +46,20 @@ internal static partial class FrontendLaunchCompositionService
 
     private static IReadOnlyList<MinecraftLaunchClasspathLibrary> ReadClasspathLibraries(
         string launcherFolder,
-        string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         MachineType runtimeArchitecture)
     {
-        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        if (manifestContext.ChildFirstDocuments.Count == 0)
         {
             return [];
         }
 
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var libraries = new List<MinecraftLaunchClasspathLibrary>();
-        CollectClasspathLibrariesRecursive(
-            launcherFolder,
-            selectedInstanceName,
-            runtimeArchitecture,
-            visited,
-            libraries);
+        foreach (var document in manifestContext.ParentFirstDocuments)
+        {
+            CollectClasspathLibraries(launcherFolder, document.Root, runtimeArchitecture, libraries);
+        }
+
         return DeduplicateClasspathLibraries(libraries);
     }
 
@@ -134,37 +133,12 @@ internal static partial class FrontendLaunchCompositionService
         return true;
     }
 
-    private static void CollectClasspathLibrariesRecursive(
+    private static void CollectClasspathLibraries(
         string launcherFolder,
-        string versionName,
+        JsonElement root,
         MachineType runtimeArchitecture,
-        ISet<string> visited,
         IList<MinecraftLaunchClasspathLibrary> libraries)
     {
-        if (!visited.Add(versionName))
-        {
-            return;
-        }
-
-        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
-        if (string.IsNullOrWhiteSpace(manifestPath))
-        {
-            return;
-        }
-
-        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-        var root = document.RootElement;
-        var parentVersion = GetString(root, "inheritsFrom");
-        if (!string.IsNullOrWhiteSpace(parentVersion))
-        {
-            CollectClasspathLibrariesRecursive(
-                launcherFolder,
-                parentVersion,
-                runtimeArchitecture,
-                visited,
-                libraries);
-        }
-
         if (!root.TryGetProperty("libraries", out var manifestLibraries) ||
             manifestLibraries.ValueKind != JsonValueKind.Array)
         {
@@ -192,43 +166,16 @@ internal static partial class FrontendLaunchCompositionService
 
     private static IReadOnlyList<MinecraftLaunchClasspathLibrary> ReadManifestLibraries(
         string launcherFolder,
-        string selectedInstanceName)
+        FrontendLaunchManifestContext manifestContext)
     {
-        if (string.IsNullOrWhiteSpace(selectedInstanceName))
+        if (manifestContext.ChildFirstDocuments.Count == 0)
         {
             return [];
         }
 
-        return ReadManifestLibrariesRecursive(
-            launcherFolder,
-            selectedInstanceName,
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-    }
-
-    private static IReadOnlyList<MinecraftLaunchClasspathLibrary> ReadManifestLibrariesRecursive(
-        string launcherFolder,
-        string versionName,
-        ISet<string> visited)
-    {
-        if (!visited.Add(versionName))
-        {
-            return [];
-        }
-
-        var manifestPath = FrontendVersionManifestPathResolver.ResolveManifestPath(launcherFolder, versionName);
-        if (string.IsNullOrWhiteSpace(manifestPath))
-        {
-            return [];
-        }
-
-        using var document = JsonDocument.Parse(File.ReadAllText(manifestPath));
-        var root = document.RootElement;
-        var parentVersion = GetString(root, "inheritsFrom");
-        var parentLibraries = string.IsNullOrWhiteSpace(parentVersion)
-            ? []
-            : ReadManifestLibrariesRecursive(launcherFolder, parentVersion, visited);
-        var currentLibraries = ParseLibraries(root, launcherFolder);
-        return parentLibraries.Concat(currentLibraries).ToArray();
+        return manifestContext.ParentFirstDocuments
+            .SelectMany(document => ParseLibraries(document.Root, launcherFolder))
+            .ToArray();
     }
 
     private static MinecraftLaunchClasspathLibrary[] ParseLibraries(JsonElement root, string launcherFolder)

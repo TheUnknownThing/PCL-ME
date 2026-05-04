@@ -23,15 +23,13 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static partial class FrontendLaunchCompositionService
 {
     private static FrontendNativePathPlan BuildNativePathPlan(
-        string launcherFolder,
-        string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
         string baseNativesDirectory)
     {
         var extractionDirectory = ResolveNativeExtractionDirectory(
-            launcherFolder,
-            selectedInstanceName,
+            manifestContext,
             manifestSummary,
             selectedJavaRuntime,
             baseNativesDirectory);
@@ -50,13 +48,12 @@ internal static partial class FrontendLaunchCompositionService
     }
 
     private static string ResolveNativeExtractionDirectory(
-        string launcherFolder,
-        string selectedInstanceName,
+        FrontendLaunchManifestContext manifestContext,
         FrontendVersionManifestSummary manifestSummary,
         FrontendJavaRuntimeSummary? selectedJavaRuntime,
         string baseNativesDirectory)
     {
-        var modernJvmSections = CollectArgumentSectionJsons(launcherFolder, selectedInstanceName, "jvm");
+        var modernJvmSections = CollectArgumentSectionJsons(manifestContext, "jvm");
         if (modernJvmSections.Count == 0)
         {
             return baseNativesDirectory;
