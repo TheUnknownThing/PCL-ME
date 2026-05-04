@@ -2709,7 +2709,7 @@ resource_detail:
     loader: 載入器
     version: 版本
   install_modes:
-    current_only: 惟今實例
+    current_only: 惟今模組
     single_resource: 單資源
     with_dependencies: 兼依賴
   install:

@@ -2709,7 +2709,7 @@ resource_detail:
     loader: 짐을 싣는 사람
     version: 버전
   install_modes:
-    current_only: 현재 인스턴스만
+    current_only: 현재 모드만
     single_resource: 단일 리소스
     with_dependencies: 종속성 포함
   install:

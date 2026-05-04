@@ -2719,7 +2719,7 @@ resource_detail:
     loader: 加载器
     version: 版本
   install_modes:
-    current_only: 仅当前实例
+    current_only: 仅当前模组
     single_resource: 单个资源
     with_dependencies: 包含依赖项
   install:

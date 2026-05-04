@@ -2709,7 +2709,7 @@ resource_detail:
     loader: Chargeur
     version: Version
   install_modes:
-    current_only: Instance actuelle seulement
+    current_only: Mod actuel uniquement
     single_resource: Ressource seule
     with_dependencies: Avec dépendances
   install:

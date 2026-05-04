@@ -2709,7 +2709,7 @@ resource_detail:
     loader: Loader
     version: Version
   install_modes:
-    current_only: Nur aktuelle Instanz
+    current_only: Nur aktuelle Mod
     single_resource: Nur diese Ressource
     with_dependencies: Mit Abhängigkeiten
   install:

@@ -2725,7 +2725,7 @@ resource_detail:
     loader: Cargador
     version: Versión
   install_modes:
-    current_only: Solo instancia actual
+    current_only: Solo el mod actual
     single_resource: Solo este recurso
     with_dependencies: Con dependencias
   install:

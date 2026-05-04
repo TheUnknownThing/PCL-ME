@@ -2719,7 +2719,7 @@ resource_detail:
     loader: Loader
     version: Version
   install_modes:
-    current_only: Current instance only
+    current_only: Current mod only
     single_resource: Single resource
     with_dependencies: With dependencies
   install:
