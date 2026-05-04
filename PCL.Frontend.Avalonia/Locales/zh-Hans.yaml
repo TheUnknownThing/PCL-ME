@@ -1673,6 +1673,9 @@ setup:
       motd_font: MOTD
       theme: 主题
       ui_scale: 界面大小
+    scale_confirmation:
+      title: 保留界面大小？
+      message: 界面大小已从 {old_scale} 更改为 {new_scale}。请在 {seconds} 秒内确认，否则将自动还原。
     flags:
       lock_window_size: 锁定启动器大小
       show_launcher_logo: 打开启动器时显示 PCL 图标

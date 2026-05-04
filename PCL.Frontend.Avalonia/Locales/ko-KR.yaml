@@ -1671,6 +1671,9 @@ setup:
       motd_font: MOTD
       theme: 테마
       ui_scale: UI 크기
+    scale_confirmation:
+      title: UI 크기를 유지할까요?
+      message: UI 크기가 {old_scale}에서 {new_scale}(으)로 변경되었습니다. {seconds}초 안에 확인하지 않으면 자동으로 되돌립니다.
     flags:
       lock_window_size: 잠금 실행기 창 크기
       show_launcher_logo: 런처를 열 때 PCL 로고 표시

@@ -1671,6 +1671,9 @@ setup:
       motd_font: MOTD
       theme: Thème
       ui_scale: Taille de l'interface
+    scale_confirmation:
+      title: Conserver la taille de l'interface ?
+      message: La taille de l'interface est passée de {old_scale} à {new_scale}. Confirmez dans les {seconds} seconde(s), sinon elle sera automatiquement rétablie.
     flags:
       lock_window_size: Verrouiller la taille de la fenêtre du lanceur
       show_launcher_logo: Afficher le logo PCL lors de l'ouverture du lanceur

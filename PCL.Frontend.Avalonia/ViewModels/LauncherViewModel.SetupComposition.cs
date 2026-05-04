@@ -629,6 +629,11 @@ internal sealed partial class LauncherViewModel
                 _launcherActionService.PersistLocalValue("UiLauncherTransparent", (int)Math.Round(LauncherOpacity));
                 break;
             case nameof(UiScaleFactor):
+                if (_suppressUiScalePersistence)
+                {
+                    break;
+                }
+
                 _launcherActionService.PersistLocalValue(
                     FrontendStartupScalingService.UiScaleFactorConfigKey,
                     UiScaleFactor);

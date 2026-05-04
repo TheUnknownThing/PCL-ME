@@ -1,3 +1,4 @@
+using System.Threading;
 using Avalonia.Media;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -197,9 +198,26 @@ internal sealed partial class LauncherViewModel
                 return;
             }
 
-            if (SetProperty(ref _selectedUiScaleFactorIndex, normalizedValue))
+            var previousScale = _uiScaleFactor;
+            var nextScale = FrontendStartupScalingService.CommonUiScaleFactors[normalizedValue];
+            if (AreEquivalentUiScaleFactors(previousScale, nextScale))
             {
-                UiScaleFactor = FrontendStartupScalingService.CommonUiScaleFactors[normalizedValue];
+                SetProperty(ref _selectedUiScaleFactorIndex, normalizedValue);
+                return;
+            }
+
+            var shouldConfirm = !_suppressSetupPersistence;
+            ApplyUiScaleFactorState(
+                normalizedValue,
+                nextScale,
+                suppressPersistence: shouldConfirm);
+
+            if (shouldConfirm)
+            {
+                _ = ConfirmUiScaleFactorChangeAsync(
+                    Interlocked.Increment(ref _uiScaleConfirmationVersion),
+                    previousScale,
+                    nextScale);
             }
         }
     }
@@ -210,14 +228,41 @@ internal sealed partial class LauncherViewModel
         set
         {
             var normalized = FrontendStartupScalingService.NormalizeUiScaleFactor(value);
-            if (SetProperty(ref _uiScaleFactor, normalized))
-            {
-                RaisePropertyChanged(nameof(UiScaleFactorLabel));
-            }
+            ApplyUiScaleFactorState(
+                FrontendStartupScalingService.ResolveClosestScaleFactorIndex(normalized),
+                normalized,
+                suppressPersistence: false);
         }
     }
 
     public string UiScaleFactorLabel => FrontendStartupScalingService.FormatUiScaleFactorLabel(UiScaleFactor);
+
+    private void ApplyUiScaleFactorState(int selectedIndex, double scaleFactor, bool suppressPersistence)
+    {
+        var previousSuppressUiScalePersistence = _suppressUiScalePersistence;
+        _suppressUiScalePersistence |= suppressPersistence;
+
+        try
+        {
+            SetProperty(ref _selectedUiScaleFactorIndex, selectedIndex, nameof(SelectedUiScaleFactorIndex));
+            var normalized = FrontendStartupScalingService.NormalizeUiScaleFactor(scaleFactor);
+            if (SetProperty(ref _uiScaleFactor, normalized, nameof(UiScaleFactor)))
+            {
+                RaisePropertyChanged(nameof(UiScaleFactorLabel));
+            }
+        }
+        finally
+        {
+            _suppressUiScalePersistence = previousSuppressUiScalePersistence;
+        }
+    }
+
+    private static bool AreEquivalentUiScaleFactors(double left, double right)
+    {
+        return Math.Abs(
+            FrontendStartupScalingService.NormalizeUiScaleFactor(left) -
+            FrontendStartupScalingService.NormalizeUiScaleFactor(right)) < 0.001d;
+    }
 
     public bool ShowLauncherLogoSetting
     {

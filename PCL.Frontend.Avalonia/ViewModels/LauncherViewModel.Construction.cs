@@ -275,6 +275,8 @@ internal sealed partial class LauncherViewModel
     private double _launcherOpacity = 360;
     private double _uiScaleFactor = FrontendStartupScalingService.DefaultUiScaleFactor;
     private int _selectedUiScaleFactorIndex = FrontendStartupScalingService.ResolveClosestScaleFactorIndex(FrontendStartupScalingService.DefaultUiScaleFactor);
+    private bool _suppressUiScalePersistence;
+    private int _uiScaleConfirmationVersion;
     private bool _showLauncherLogo = true;
     private bool _lockWindowSize;
     private bool _showLaunchingHint = true;

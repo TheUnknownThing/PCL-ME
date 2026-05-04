@@ -1676,6 +1676,9 @@ setup:
       motd_font: MOTD
       theme: Tema
       ui_scale: Tamaño de la interfaz
+    scale_confirmation:
+      title: ¿Mantener tamaño de la interfaz?
+      message: El tamaño de la interfaz cambió de {old_scale} a {new_scale}. Confirma en {seconds} segundo(s), o se revertirá automáticamente.
     flags:
       lock_window_size: Tamaño de la ventana del iniciador de bloqueo
       show_launcher_logo: Mostrar el logotipo de PCL al abrir el iniciador

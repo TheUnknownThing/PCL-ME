@@ -543,7 +543,8 @@
                 x:Name="PromptOverlayBackdrop"
                 IsVisible="False"
                 Classes="pcl-dialog-overlay"
-                Background="{DynamicResource ColorBrushPromptOverlayBackdrop}" />
+                Background="{DynamicResource ColorBrushPromptOverlayBackdrop}"
+                ZIndex="70" />
 
             <Border
                 x:Name="PromptOverlayHost"
@@ -557,7 +558,8 @@
                 Background="{DynamicResource ColorBrushTransparent}"
                 BorderBrush="{DynamicResource ColorBrushTransparent}"
                 BorderThickness="0"
-                CornerRadius="7">
+                CornerRadius="7"
+                ZIndex="71">
               <Border
                   x:Name="PromptOverlayPanel"
                   Classes="pcl-dialog-panel"

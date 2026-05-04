@@ -1879,6 +1879,12 @@ setup:
       motd_font: []
       theme: []
       ui_scale: []
+    scale_confirmation:
+      title: []
+      message:
+        - old_scale
+        - new_scale
+        - seconds
     flags:
       lock_window_size: []
       show_launcher_logo: []

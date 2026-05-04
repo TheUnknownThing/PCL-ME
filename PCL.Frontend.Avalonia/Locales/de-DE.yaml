@@ -1671,6 +1671,9 @@ setup:
       motd_font: MOTD
       theme: Thema
       ui_scale: UI-Größe
+    scale_confirmation:
+      title: UI-Größe beibehalten?
+      message: Die UI-Größe wurde von {old_scale} auf {new_scale} geändert. Bestätige innerhalb von {seconds} Sekunde(n), sonst wird sie automatisch zurückgesetzt.
     flags:
       lock_window_size: Launcherfenstergröße sperren
       show_launcher_logo: PCL-Logo beim Öffnen des Launchers anzeigen

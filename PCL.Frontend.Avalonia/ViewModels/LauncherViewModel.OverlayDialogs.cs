@@ -198,6 +198,87 @@ internal sealed partial class LauncherViewModel
         return await ShowPromptOverlayDialogAsync(dialog, resultSource).ConfigureAwait(false);
     }
 
+    private async Task<bool> ShowInAppTimedConfirmationAsync(
+        string title,
+        Func<int, string> messageFactory,
+        string confirmText,
+        bool isDanger,
+        int timeoutSeconds)
+    {
+        await _promptOverlayDialogSemaphore.WaitAsync().ConfigureAwait(false);
+
+        var safeTimeoutSeconds = Math.Max(1, timeoutSeconds);
+        using var countdownCancellationTokenSource = new CancellationTokenSource();
+        var resultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? T("common.actions.confirm") : confirmText;
+        var completionInvoked = 0;
+
+        void Complete(bool result)
+        {
+            if (Interlocked.Exchange(ref completionInvoked, 1) != 0)
+            {
+                return;
+            }
+
+            resultSource.TrySetResult(result);
+        }
+
+        var dialog = CreatePromptOverlayDialogState(
+            PromptOverlayDialogKind.Confirm,
+            title,
+            messageFactory(safeTimeoutSeconds),
+            isDanger,
+            options:
+            [
+                new PromptOptionViewModel(T("common.actions.cancel"), string.Empty, PclButtonColorState.Normal, new ActionCommand(() => Complete(false))),
+                new PromptOptionViewModel(
+                    resolvedConfirmText,
+                    string.Empty,
+                    isDanger ? PclButtonColorState.Red : PclButtonColorState.Highlight,
+                    new ActionCommand(() => Complete(true)))
+            ]);
+
+        var countdownTask = RunPromptOverlayCountdownAsync(
+            dialog,
+            messageFactory,
+            safeTimeoutSeconds,
+            Complete,
+            countdownCancellationTokenSource.Token);
+
+        try
+        {
+            return await ShowPromptOverlayDialogAsync(dialog, resultSource).ConfigureAwait(false);
+        }
+        finally
+        {
+            countdownCancellationTokenSource.Cancel();
+            try
+            {
+                await countdownTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (countdownCancellationTokenSource.IsCancellationRequested)
+            {
+            }
+        }
+    }
+
+    private async Task RunPromptOverlayCountdownAsync(
+        PromptOverlayDialogState dialog,
+        Func<int, string> messageFactory,
+        int timeoutSeconds,
+        Action<bool> complete,
+        CancellationToken cancellationToken)
+    {
+        for (var remainingSeconds = timeoutSeconds; remainingSeconds > 0; remainingSeconds--)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                UpdatePromptOverlayDialogMessage(dialog, messageFactory(remainingSeconds)));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+        }
+
+        complete(false);
+    }
+
     private async Task<string?> ShowInAppTextInputAsync(
         string title,
         string message,
@@ -413,6 +494,21 @@ internal sealed partial class LauncherViewModel
         RaisePromptOverlayPresentationProperties();
     }
 
+    private void UpdatePromptOverlayDialogMessage(PromptOverlayDialogState dialog, string message)
+    {
+        if (!dialog.SetMessage(message))
+        {
+            return;
+        }
+
+        if (ReferenceEquals(_activePromptOverlayDialog, dialog)
+            || ReferenceEquals(_closingPromptOverlayDialog, dialog))
+        {
+            RaisePropertyChanged(nameof(PromptOverlayMessage));
+            RaisePropertyChanged(nameof(ShowPromptOverlayMessage));
+        }
+    }
+
     private void RaisePromptOverlayPresentationProperties()
     {
         RaisePropertyChanged(nameof(PromptOverlayTitle));
@@ -452,11 +548,13 @@ internal sealed class PromptOverlayDialogState(
     IReadOnlyList<PromptOptionViewModel> options,
     IReadOnlyList<PclChoiceDialogOption> choiceOptions)
 {
+    private string _message = message;
+
     public PromptOverlayDialogKind Kind { get; } = kind;
 
     public string Title { get; } = title;
 
-    public string Message { get; } = message;
+    public string Message => _message;
 
     public bool IsDanger { get; } = isDanger;
 
@@ -471,4 +569,15 @@ internal sealed class PromptOverlayDialogState(
     public ActionCommand ConfirmCommand => Options.Count > 0 ? Options[^1].Command : new ActionCommand(static () => { });
 
     public ActionCommand CancelCommand => Options.Count > 1 ? Options[0].Command : ConfirmCommand;
+
+    public bool SetMessage(string message)
+    {
+        if (string.Equals(_message, message, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        _message = message;
+        return true;
+    }
 }
