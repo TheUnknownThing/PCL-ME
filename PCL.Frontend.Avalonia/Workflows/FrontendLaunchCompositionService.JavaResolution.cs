@@ -165,7 +165,8 @@ internal static partial class FrontendLaunchCompositionService
         string launcherFolder,
         FrontendVersionManifestSummary manifestSummary,
         MinecraftLaunchJavaWorkflowPlan javaWorkflow,
-        bool ignoreJavaCompatibilityWarningOnce)
+        bool ignoreJavaCompatibilityWarningOnce,
+        bool allowBlockingPreparation)
     {
         var selectedJavaPath = ResolveConfiguredJavaSelection(sharedConfig, instanceConfig, launcherFolder);
         var ignoreJavaCompatibilityWarning = ignoreJavaCompatibilityWarningOnce ||
@@ -212,7 +213,10 @@ internal static partial class FrontendLaunchCompositionService
             return new FrontendJavaSelectionResult(bundledRuntime, null, compatibilityPrompt);
         }
 
-        return new FrontendJavaSelectionResult(ProbeHostJavaRuntime(manifestSummary, javaWorkflow), null, compatibilityPrompt);
+        var hostRuntime = allowBlockingPreparation
+            ? ProbeHostJavaRuntime(manifestSummary, javaWorkflow)
+            : null;
+        return new FrontendJavaSelectionResult(hostRuntime, null, compatibilityPrompt);
     }
 
     private static int ResolveGameVersionDrop(Version? vanillaVersion)

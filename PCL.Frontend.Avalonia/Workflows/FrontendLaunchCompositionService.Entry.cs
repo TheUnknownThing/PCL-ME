@@ -67,7 +67,8 @@ internal static partial class FrontendLaunchCompositionService
             launcherFolder,
             manifestSummary,
             javaWorkflow,
-            ignoreJavaCompatibilityWarningOnce);
+            ignoreJavaCompatibilityWarningOnce,
+            allowBlockingPreparation);
         var selectedJavaRuntime = javaSelection.Runtime;
         var retroWrapperOptions = ResolveRetroWrapperOptions(
             launcherFolder,
