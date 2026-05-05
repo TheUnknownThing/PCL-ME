@@ -141,9 +141,10 @@ internal static partial class FrontendLaunchCompositionService
 
     private static FrontendLaunchProfileSummary BuildFallbackProfile(FrontendRuntimePaths runtimePaths)
     {
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var legacyName = LauncherFrontendRuntimeStateService.TryReadProtectedString(
             runtimePaths.SharedConfigDirectory,
-            runtimePaths.SharedConfigPath,
+            sharedConfig,
             "LoginLegacyName");
         return new FrontendLaunchProfileSummary(
             string.IsNullOrWhiteSpace(legacyName) ? MinecraftLaunchProfileKind.None : MinecraftLaunchProfileKind.Legacy,

@@ -6,6 +6,7 @@ namespace PCL.Core.App.Configuration.Storage;
 public abstract class CommonFileProvider(string path) : IKeyValueFileProvider
 {
     public string FilePath { get; set; } = path;
+    protected object SyncRoot { get; } = new();
 
     public abstract T Get<T>(string key);
     public abstract void Set<T>(string key, T value);
@@ -16,17 +17,20 @@ public abstract class CommonFileProvider(string path) : IKeyValueFileProvider
 
     public void Sync()
     {
-        var parentDirectory = Path.GetDirectoryName(FilePath);
-        if (!string.IsNullOrWhiteSpace(parentDirectory)) Directory.CreateDirectory(parentDirectory);
-        var tmpFile = $"{FilePath}.tmp{RandomUtils.NextInt(1, 99999):00000}";
-        var bakFile = $"{FilePath}.bak";
-        using (var stream = new FileStream(tmpFile, FileMode.Create, FileAccess.Write, FileShare.Read))
+        lock (SyncRoot)
         {
-            WriteToStream(stream);
-            stream.Flush(true);
-        }
+            var parentDirectory = Path.GetDirectoryName(FilePath);
+            if (!string.IsNullOrWhiteSpace(parentDirectory)) Directory.CreateDirectory(parentDirectory);
+            var tmpFile = $"{FilePath}.tmp{RandomUtils.NextInt(1, 99999):00000}";
+            var bakFile = $"{FilePath}.bak";
+            using (var stream = new FileStream(tmpFile, FileMode.Create, FileAccess.Write, FileShare.Read))
+            {
+                WriteToStream(stream);
+                stream.Flush(true);
+            }
 
-        if (File.Exists(FilePath)) File.Replace(tmpFile, FilePath, bakFile);
-        else File.Move(tmpFile, FilePath);
+            if (File.Exists(FilePath)) File.Replace(tmpFile, FilePath, bakFile);
+            else File.Move(tmpFile, FilePath);
+        }
     }
 }

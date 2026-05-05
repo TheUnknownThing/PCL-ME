@@ -372,9 +372,10 @@ internal sealed partial class LauncherActionService
 
     private void IncrementLaunchCounts(string? instanceDirectory, MinecraftGameShellPlan shellPlan)
     {
+        var sharedConfig = RuntimePaths.OpenSharedConfigProvider();
         var currentLaunchCount = LauncherFrontendRuntimeStateService.ReadProtectedInt(
             RuntimePaths.SharedConfigDirectory,
-            RuntimePaths.SharedConfigPath,
+            sharedConfig,
             "SystemLaunchCount");
         PersistProtectedSharedValue(
             "SystemLaunchCount",

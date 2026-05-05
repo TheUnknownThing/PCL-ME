@@ -62,7 +62,8 @@ internal static class FrontendHttpProxyService
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
 
-        return ReadProtectedValue(runtimePaths, ProxyAddressKey) ?? string.Empty;
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        return ReadProtectedValue(runtimePaths, sharedConfig, ProxyAddressKey) ?? string.Empty;
     }
 
     public static string ReadConfiguredProxyUsername(FrontendRuntimePaths runtimePaths)
@@ -149,7 +150,7 @@ internal static class FrontendHttpProxyService
         ArgumentNullException.ThrowIfNull(sharedConfig);
 
         var selectedMode = ReadProxyMode(sharedConfig);
-        var addressRaw = ReadProtectedValue(runtimePaths, ProxyAddressKey);
+        var addressRaw = ReadProtectedValue(runtimePaths, sharedConfig, ProxyAddressKey);
         var address = TryParseProxyUri(addressRaw);
         var username = ReadSecretValue(runtimePaths, sharedConfig, ProxyUsernameKey, allowPlainTextFallback: true);
         var password = ReadSecretValue(runtimePaths, sharedConfig, ProxyPasswordKey, allowPlainTextFallback: true);
@@ -484,11 +485,14 @@ internal static class FrontendHttpProxyService
         };
     }
 
-    private static string? ReadProtectedValue(FrontendRuntimePaths runtimePaths, string key)
+    private static string? ReadProtectedValue(
+        FrontendRuntimePaths runtimePaths,
+        JsonFileProvider sharedConfig,
+        string key)
     {
         return LauncherFrontendRuntimeStateService.TryReadProtectedString(
             runtimePaths.SharedConfigDirectory,
-            runtimePaths.SharedConfigPath,
+            sharedConfig,
             key);
     }
 

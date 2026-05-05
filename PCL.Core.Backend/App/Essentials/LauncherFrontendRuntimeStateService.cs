@@ -29,6 +29,21 @@ public static class LauncherFrontendRuntimeStateService
         }
     }
 
+    public static int ReadStartupCount(string sharedDataPath, JsonFileProvider sharedConfig, int fallback = 0)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sharedDataPath);
+        ArgumentNullException.ThrowIfNull(sharedConfig);
+
+        try
+        {
+            return ReadProtectedInt(sharedDataPath, sharedConfig, "SystemCount", fallback);
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+
     public static int ReadProtectedInt(
         string sharedDataPath,
         string sharedConfigPath,
@@ -36,6 +51,18 @@ public static class LauncherFrontendRuntimeStateService
         int fallback = 0)
     {
         var plainText = TryReadProtectedString(sharedDataPath, sharedConfigPath, key);
+        return int.TryParse(plainText, out var value)
+            ? value
+            : fallback;
+    }
+
+    public static int ReadProtectedInt(
+        string sharedDataPath,
+        JsonFileProvider sharedConfig,
+        string key,
+        int fallback = 0)
+    {
+        var plainText = TryReadProtectedString(sharedDataPath, sharedConfig, key);
         return int.TryParse(plainText, out var value)
             ? value
             : fallback;
@@ -59,6 +86,31 @@ public static class LauncherFrontendRuntimeStateService
             }
 
             var encryptedValue = provider.Get<string>(key);
+            return TryUnprotectString(sharedDataPath, encryptedValue);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static string? TryReadProtectedString(
+        string sharedDataPath,
+        JsonFileProvider sharedConfig,
+        string key)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sharedDataPath);
+        ArgumentNullException.ThrowIfNull(sharedConfig);
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
+        try
+        {
+            if (!sharedConfig.Exists(key))
+            {
+                return null;
+            }
+
+            var encryptedValue = sharedConfig.Get<string>(key);
             return TryUnprotectString(sharedDataPath, encryptedValue);
         }
         catch

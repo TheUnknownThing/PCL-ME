@@ -14,6 +14,10 @@ internal sealed record FrontendRuntimePaths(
     string LauncherAppDataDirectory,
     IReadOnlyList<string> MigrationWarnings)
 {
+    private readonly object _configProviderLock = new();
+    private JsonFileProvider? _sharedConfigProvider;
+    private YamlFileProvider? _localConfigProvider;
+
     public string FrontendArtifactDirectory => Path.Combine(DataDirectory, "frontend-artifacts");
 
     public string FrontendTempDirectory => Path.Combine(TempDirectory, "frontend-artifacts");
@@ -24,18 +28,33 @@ internal sealed record FrontendRuntimePaths(
 
     public JsonFileProvider OpenSharedConfigProvider()
     {
-        return OpenProvider(
-            SharedConfigPath,
-            "shared launcher config",
-            path => new JsonFileProvider(path));
+        lock (_configProviderLock)
+        {
+            return _sharedConfigProvider ??= OpenProvider(
+                SharedConfigPath,
+                "shared launcher config",
+                path => new JsonFileProvider(path));
+        }
     }
 
     public YamlFileProvider OpenLocalConfigProvider()
     {
-        return OpenProvider(
-            LocalConfigPath,
-            "local launcher config",
-            path => new YamlFileProvider(path));
+        lock (_configProviderLock)
+        {
+            return _localConfigProvider ??= OpenProvider(
+                LocalConfigPath,
+                "local launcher config",
+                path => new YamlFileProvider(path));
+        }
+    }
+
+    public void ClearConfigProviderCache()
+    {
+        lock (_configProviderLock)
+        {
+            _sharedConfigProvider = null;
+            _localConfigProvider = null;
+        }
     }
 
     public static YamlFileProvider OpenInstanceConfigProvider(string instanceDirectory)

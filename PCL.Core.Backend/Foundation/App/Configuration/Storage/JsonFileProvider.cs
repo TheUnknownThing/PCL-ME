@@ -62,51 +62,75 @@ public class JsonFileProvider : CommonFileProvider, IEnumerableKeyProvider
 
     public override T Get<T>(string key)
     {
-        var result = _rootElement[key];
-        if (result == null) throw new KeyNotFoundException($"Not found: '{key}'");
-        try
+        lock (SyncRoot)
         {
-            var r = result.Deserialize<T>();
-            return r ?? throw GetNullException();
-        }
-        catch (JsonException)
-        {
-            T fallback;
-            var type = typeof(T);
-            if (type == typeof(string)) fallback = (T)(object)result.ToString();
-            else
+            var result = _rootElement[key];
+            if (result == null) throw new KeyNotFoundException($"Not found: '{key}'");
+            try
             {
-                var jsonStr = result.Deserialize<string>()!;
-                if (type == typeof(bool)) fallback = (T)(object)(jsonStr.ToLowerInvariant() is "true" or "1");
-                else fallback = JsonSerializer.Deserialize<T>(jsonStr, _SerializerOptions) ?? throw GetNullException();
+                var r = result.Deserialize<T>();
+                return r ?? throw GetNullException();
             }
-            Set(key, fallback);
-            return fallback;
+            catch (JsonException)
+            {
+                T fallback;
+                var type = typeof(T);
+                if (type == typeof(string)) fallback = (T)(object)result.ToString();
+                else
+                {
+                    var jsonStr = result.Deserialize<string>()!;
+                    if (type == typeof(bool)) fallback = (T)(object)(jsonStr.ToLowerInvariant() is "true" or "1");
+                    else fallback = JsonSerializer.Deserialize<T>(jsonStr, _SerializerOptions) ?? throw GetNullException();
+                }
+                Set(key, fallback);
+                return fallback;
+            }
+            Exception GetNullException() => new NullReferenceException($"Deserialized value is null: '{key}'");
         }
-        Exception GetNullException() => new NullReferenceException($"Deserialized value is null: '{key}'");
     }
 
     public override void Set<T>(string key, T value)
     {
-        _rootElement[key] = JsonSerializer.SerializeToNode(value);
+        lock (SyncRoot)
+        {
+            _rootElement[key] = JsonSerializer.SerializeToNode(value);
+        }
     }
 
     public override bool Exists(string key)
     {
-        return _rootElement.ContainsKey(key);
+        lock (SyncRoot)
+        {
+            return _rootElement.ContainsKey(key);
+        }
     }
 
     public override void Remove(string key)
     {
-        _rootElement.Remove(key);
+        lock (SyncRoot)
+        {
+            _rootElement.Remove(key);
+        }
     }
 
     protected override void WriteToStream(Stream stream)
     {
-        var writer = new Utf8JsonWriter(stream, _WriterOptions);
-        _rootElement.WriteTo(writer, _SerializerOptions);
-        writer.Flush();
+        lock (SyncRoot)
+        {
+            var writer = new Utf8JsonWriter(stream, _WriterOptions);
+            _rootElement.WriteTo(writer, _SerializerOptions);
+            writer.Flush();
+        }
     }
 
-    public IEnumerable<string> Keys => _rootElement.Select(pair => pair.Key);
+    public IEnumerable<string> Keys
+    {
+        get
+        {
+            lock (SyncRoot)
+            {
+                return _rootElement.Select(pair => pair.Key).ToArray();
+            }
+        }
+    }
 }

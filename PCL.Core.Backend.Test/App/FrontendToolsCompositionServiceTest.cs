@@ -53,13 +53,9 @@ public sealed class FrontendToolsCompositionServiceTest
         var i18n = new DictionaryI18nService();
         var initial = FrontendToolsCompositionService.Compose(runtimePaths, i18n);
 
-        File.WriteAllText(
-            environment.SharedConfigPath,
-            """
-            {
-              "CacheDownloadFolder": "/tmp/downloads-two"
-            }
-            """);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        sharedConfig.Set("CacheDownloadFolder", "/tmp/downloads-two");
+        sharedConfig.Sync();
 
         var updated = FrontendToolsCompositionService.ComposeActiveSurface(
             runtimePaths,
@@ -109,13 +105,9 @@ public sealed class FrontendToolsCompositionServiceTest
               "Types": ["Guides"]
             }
             """);
-        File.WriteAllText(
-            environment.SharedConfigPath,
-            """
-            {
-              "CacheDownloadFolder": "/tmp/downloads-two"
-            }
-            """);
+        var sharedConfig = runtimePaths.OpenSharedConfigProvider();
+        sharedConfig.Set("CacheDownloadFolder", "/tmp/downloads-two");
+        sharedConfig.Sync();
 
         var updated = FrontendToolsCompositionService.ComposeActiveSurface(
             runtimePaths,

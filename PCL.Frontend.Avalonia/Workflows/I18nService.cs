@@ -33,6 +33,11 @@ internal interface II18nService
 internal sealed class I18nService : II18nService, IDisposable
 {
     private const string DefaultLocale = "en-US";
+#if DEBUG
+    private static bool EnableSchemaDiagnostics => true;
+#else
+    private static bool EnableSchemaDiagnostics => false;
+#endif
 
     private static readonly IReadOnlyDictionary<string, object?> EmptyArgs =
         new Dictionary<string, object?>(0, StringComparer.Ordinal);
@@ -67,7 +72,9 @@ internal sealed class I18nService : II18nService, IDisposable
         _fallbackLocale = NormalizeLocale(fallbackLocale)
                           ?? throw new ArgumentException("Fallback locale is invalid.", nameof(fallbackLocale));
         _availableLocales = DiscoverAvailableLocales(_localeDirectory, _fallbackLocale);
-        _schemaSnapshot = LoadSchemaSnapshot(_schemaPath);
+        _schemaSnapshot = EnableSchemaDiagnostics
+            ? LoadSchemaSnapshot(_schemaPath)
+            : I18nSchemaSnapshot.Empty();
         _currentSnapshot = LoadInitialSnapshot(settingsManager.Locale);
         _settingsManager.LocaleChanged += OnLocaleChanged;
     }
@@ -316,6 +323,12 @@ internal sealed class I18nService : II18nService, IDisposable
     {
         if (!_missingKeyWarnings.TryAdd(key, 0))
         {
+            return;
+        }
+
+        if (!EnableSchemaDiagnostics)
+        {
+            LogWrapper.Warn("I18n", $"Missing translation key '{key}' for locale '{locale}'.");
             return;
         }
 

@@ -100,18 +100,13 @@ internal sealed partial class LauncherViewModel
         _launchWindowHeight = _setupComposition.Launch.WindowHeight;
         _useAutomaticRamAllocation = _setupComposition.Launch.UseAutomaticRamAllocation;
         _customRamAllocation = _setupComposition.Launch.CustomRamAllocationGb;
-        var (totalMemoryGb, availableMemoryGb) = FrontendSystemMemoryService.GetPhysicalMemoryState();
-        _launchTotalRamGb = totalMemoryGb;
-        _launchUsedRamGb = Math.Max(totalMemoryGb - availableMemoryGb, 0);
-        _launchAutomaticAllocatedRamGb = FrontendSystemMemoryService.CalculateAllocatedMemoryGb(
-            0,
-            _customRamAllocation,
-            isModable: false,
-            hasOptiFine: false,
-            modCount: 0,
-            is64BitJava: null,
-            totalMemoryGb,
-            availableMemoryGb);
+        if (!FrontendSystemMemoryService.TryGetCachedPhysicalMemoryState(out var memoryState))
+        {
+            memoryState = FrontendSystemMemoryService.GetFallbackPhysicalMemoryState();
+            QueueLaunchMemoryStateRefresh();
+        }
+
+        ApplyLaunchMemoryState(memoryState);
         _isLaunchAdvancedOptionsExpanded = false;
         _selectedLaunchRendererIndex = _setupComposition.Launch.RendererIndex;
         _launchWrapperCommand = _setupComposition.Launch.WrapperCommand;
@@ -126,6 +121,68 @@ internal sealed partial class LauncherViewModel
         _requireDedicatedGpu = _setupComposition.Launch.RequireDedicatedGpu;
         _useJavaExecutable = _setupComposition.Launch.UseJavaExecutable;
         _selectedLaunchPreferredIpStackIndex = _setupComposition.Launch.PreferredIpStackIndex;
+    }
+
+    private void ApplyLaunchMemoryState((double TotalGb, double AvailableGb) memoryState)
+    {
+        _launchTotalRamGb = memoryState.TotalGb;
+        _launchUsedRamGb = Math.Max(memoryState.TotalGb - memoryState.AvailableGb, 0);
+        _launchAutomaticAllocatedRamGb = FrontendSystemMemoryService.CalculateAllocatedMemoryGb(
+            0,
+            _customRamAllocation,
+            isModable: false,
+            hasOptiFine: false,
+            modCount: 0,
+            is64BitJava: null,
+            memoryState.TotalGb,
+            memoryState.AvailableGb);
+    }
+
+    private void QueueLaunchMemoryStateRefresh()
+    {
+        var refreshVersion = Interlocked.Increment(ref _launchMemoryRefreshVersion);
+        _ = RefreshLaunchMemoryStateAsync(refreshVersion);
+    }
+
+    private async Task RefreshLaunchMemoryStateAsync(int refreshVersion)
+    {
+        try
+        {
+            var memoryState = await Task.Run(FrontendSystemMemoryService.GetPhysicalMemoryState);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (refreshVersion != _launchMemoryRefreshVersion || !IsLaunchSetupRoute(_currentRoute))
+                {
+                    return;
+                }
+
+                ApplyLaunchMemoryState(memoryState);
+                RaiseLaunchMemoryStateProperties();
+            });
+        }
+        catch
+        {
+            // Memory telemetry is informational; stale fallback values are acceptable.
+        }
+    }
+
+    private static bool IsLaunchSetupRoute(LauncherFrontendRoute route)
+    {
+        return route.Page == LauncherFrontendPageKey.Setup &&
+               route.Subpage is LauncherFrontendSubpageKey.Default
+                   or LauncherFrontendSubpageKey.SetupLaunch
+                   or LauncherFrontendSubpageKey.SetupLink;
+    }
+
+    private void RaiseLaunchMemoryStateProperties()
+    {
+        RaisePropertyChanged(nameof(UsedRamLabel));
+        RaisePropertyChanged(nameof(TotalRamLabel));
+        RaisePropertyChanged(nameof(AllocatedRamLabel));
+        RaisePropertyChanged(nameof(UsedRamBarWidth));
+        RaisePropertyChanged(nameof(AllocatedRamBarWidth));
+        RaisePropertyChanged(nameof(FreeRamBarWidth));
+        RaisePropertyChanged(nameof(ShowRamAllocationWarning));
     }
 
     private void InitializeToolsTestSurface()

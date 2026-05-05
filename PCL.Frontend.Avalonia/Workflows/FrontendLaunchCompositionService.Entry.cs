@@ -190,7 +190,7 @@ internal static partial class FrontendLaunchCompositionService
                 ReadValue(sharedConfig, "LaunchArgumentVisible", LauncherVisibility.DoNothing)));
         var launchCount = LauncherFrontendRuntimeStateService.ReadProtectedInt(
             runtimePaths.SharedConfigDirectory,
-            runtimePaths.SharedConfigPath,
+            sharedConfig,
             "SystemLaunchCount");
         var supportPrompt = MinecraftLaunchShellService.GetSupportPrompt(launchCount);
         var loginRequirement = ResolveLoginRequirement(instanceConfig);

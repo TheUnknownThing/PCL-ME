@@ -70,7 +70,7 @@ internal sealed class App : Application
                 .OfType<string>()
                 .ToArray();
             var settingsManager = new I18nSettingsManager(
-                new FrontendConfigProviderAdapter(runtimePaths.OpenSharedConfigProvider()),
+                new FrontendConfigProviderAdapter(runtimePaths),
                 initialLocaleProvider: () => CultureInfo.CurrentUICulture.Name,
                 availableLocales: availableLocales);
             _i18nService = new I18nService(settingsManager);

@@ -46,6 +46,7 @@ internal static class FrontendSettingsSnapshotWorkflowService
 
         CopyConfigFile(sharedSourcePath, runtimePaths.SharedConfigPath);
         CopyConfigFile(localSourcePath, runtimePaths.LocalConfigPath);
+        runtimePaths.ClearConfigProviderCache();
     }
 
     private static void EnsureConfigFilesExist(FrontendRuntimePaths runtimePaths)

@@ -60,6 +60,37 @@ public sealed class FrontendSettingsSnapshotWorkflowServiceTest
     }
 
     [TestMethod]
+    public void RestoreSnapshot_InvalidatesCachedConfigProviders()
+    {
+        using var workspace = new TempSettingsWorkspace();
+        File.WriteAllText(workspace.RuntimePaths.SharedConfigPath, "{\n  \"SystemLocale\": \"en-US\"\n}");
+        File.WriteAllText(workspace.RuntimePaths.LocalConfigPath, "UiBlur: true\n");
+
+        var sharedProvider = workspace.RuntimePaths.OpenSharedConfigProvider();
+        var localProvider = workspace.RuntimePaths.OpenLocalConfigProvider();
+        var sharedConfigAdapter = new FrontendConfigProviderAdapter(workspace.RuntimePaths);
+        var exportDirectory = FrontendSettingsSnapshotWorkflowService.CreateSnapshot(
+            workspace.RuntimePaths,
+            CreateLocalTimestamp(2026, 4, 17, 12, 37, 0));
+
+        sharedProvider.Set("SystemLocale", "zh-Hans");
+        sharedProvider.Sync();
+        localProvider.Set("UiBlur", false);
+        localProvider.Sync();
+
+        FrontendSettingsSnapshotWorkflowService.RestoreSnapshot(workspace.RuntimePaths, exportDirectory);
+
+        var restoredSharedProvider = workspace.RuntimePaths.OpenSharedConfigProvider();
+        var restoredLocalProvider = workspace.RuntimePaths.OpenLocalConfigProvider();
+        Assert.AreNotSame(sharedProvider, restoredSharedProvider);
+        Assert.AreNotSame(localProvider, restoredLocalProvider);
+        Assert.AreEqual("en-US", restoredSharedProvider.Get<string>("SystemLocale"));
+        Assert.IsTrue(restoredLocalProvider.Get<bool>("UiBlur"));
+        Assert.IsTrue(sharedConfigAdapter.GetValue<string>("SystemLocale", out var restoredLocale));
+        Assert.AreEqual("en-US", restoredLocale);
+    }
+
+    [TestMethod]
     public void RestoreSnapshot_RejectsIncompleteExportDirectory()
     {
         using var workspace = new TempSettingsWorkspace();

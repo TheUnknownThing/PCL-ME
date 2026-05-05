@@ -111,6 +111,31 @@ public sealed class FrontendRuntimePathsTest
     }
 
     [TestMethod]
+    public void OpenConfigProviders_ReturnCachedStartupProviders()
+    {
+        using var environment = new FrontendRuntimePathTestEnvironment();
+        var paths = FrontendRuntimePaths.Resolve(new FrontendPlatformAdapter());
+
+        var firstSharedProvider = paths.OpenSharedConfigProvider();
+        var secondSharedProvider = paths.OpenSharedConfigProvider();
+        var firstLocalProvider = paths.OpenLocalConfigProvider();
+        var secondLocalProvider = paths.OpenLocalConfigProvider();
+
+        Assert.AreSame(firstSharedProvider, secondSharedProvider);
+        Assert.AreSame(firstLocalProvider, secondLocalProvider);
+
+        firstSharedProvider.Set("SystemDebugMode", true);
+        firstSharedProvider.Sync();
+        firstLocalProvider.Set("UiLauncherTransparent", 456);
+        firstLocalProvider.Sync();
+
+        Assert.IsTrue(secondSharedProvider.Get<bool>("SystemDebugMode"));
+        Assert.AreEqual(456, secondLocalProvider.Get<int>("UiLauncherTransparent"));
+        StringAssert.Contains(File.ReadAllText(paths.SharedConfigPath), "SystemDebugMode");
+        StringAssert.Contains(File.ReadAllText(paths.LocalConfigPath), "UiLauncherTransparent");
+    }
+
+    [TestMethod]
     public void OpenSharedConfigProvider_RecreatesInvalidDirectoryTarget()
     {
         using var environment = new FrontendRuntimePathTestEnvironment();

@@ -79,7 +79,7 @@ internal static class LauncherCompositionService
             HasAcceptedEula: ReadValue(sharedConfig, "SystemEula", false),
             CurrentStartupCount: LauncherFrontendRuntimeStateService.ReadStartupCount(
                 paths.SharedConfigDirectory,
-                paths.SharedConfigPath));
+                sharedConfig));
     }
 
     private static LauncherFrontendNavigationViewRequest BuildNavigationRequest(

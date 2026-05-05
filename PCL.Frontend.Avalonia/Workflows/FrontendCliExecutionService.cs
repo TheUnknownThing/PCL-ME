@@ -344,7 +344,7 @@ internal static class FrontendCliExecutionService
             .OfType<string>()
             .ToArray();
         var settingsManager = new I18nSettingsManager(
-            new FrontendConfigProviderAdapter(runtimePaths.OpenSharedConfigProvider()),
+            new FrontendConfigProviderAdapter(runtimePaths),
             initialLocaleProvider: () => System.Globalization.CultureInfo.CurrentUICulture.Name,
             availableLocales: availableLocales);
         return new I18nService(settingsManager);

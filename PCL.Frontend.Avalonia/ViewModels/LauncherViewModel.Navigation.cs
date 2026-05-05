@@ -748,7 +748,7 @@ internal sealed partial class LauncherViewModel
 
         if (route.Page == LauncherFrontendPageKey.Setup)
         {
-            ReloadActiveSetupSurface();
+            ReloadActiveSetupSurface(applyAppearance: false);
         }
         else if (route.Page == LauncherFrontendPageKey.Tools)
         {

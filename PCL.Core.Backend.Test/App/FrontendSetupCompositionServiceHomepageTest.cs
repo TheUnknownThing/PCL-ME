@@ -92,12 +92,10 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
         var i18n = new DictionaryI18nService();
         var initial = FrontendSetupCompositionService.Compose(runtimePaths, i18n);
 
-        File.WriteAllText(
-            environment.LocalConfigPath,
-            $$"""
-            LaunchArgumentTitle: New Title
-            LaunchArgumentJavaUser: '[{"Path":"{{updatedJavaPath}}","IsEnable":true}]'
-            """);
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
+        localConfig.Set("LaunchArgumentTitle", "New Title");
+        localConfig.Set("LaunchArgumentJavaUser", $$"""[{"Path":"{{updatedJavaPath}}","IsEnable":true}]""");
+        localConfig.Sync();
 
         var updated = FrontendSetupCompositionService.ComposeActiveSurface(
             runtimePaths,
@@ -127,12 +125,10 @@ public sealed class FrontendSetupCompositionServiceHomepageTest
         var i18n = new DictionaryI18nService();
         var initial = FrontendSetupCompositionService.Compose(runtimePaths, i18n);
 
-        File.WriteAllText(
-            environment.LocalConfigPath,
-            $$"""
-            LaunchArgumentTitle: New Title
-            LaunchArgumentJavaUser: '[{"Path":"{{updatedJavaPath}}","IsEnable":true}]'
-            """);
+        var localConfig = runtimePaths.OpenLocalConfigProvider();
+        localConfig.Set("LaunchArgumentTitle", "New Title");
+        localConfig.Set("LaunchArgumentJavaUser", $$"""[{"Path":"{{updatedJavaPath}}","IsEnable":true}]""");
+        localConfig.Sync();
 
         var updated = FrontendSetupCompositionService.ComposeActiveSurface(
             runtimePaths,

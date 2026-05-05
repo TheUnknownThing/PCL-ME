@@ -1,21 +1,72 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+
 namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendSystemMemoryService
 {
     private const long FallbackTotalMemoryBytes = 8L * 1024L * 1024L * 1024L;
+    private static readonly TimeSpan MemoryStateCacheDuration = TimeSpan.FromSeconds(5);
+    private static readonly object MemoryStateCacheLock = new();
+    private static DateTimeOffset _cachedMemoryStateTime;
+    private static (double TotalGb, double AvailableGb) _cachedMemoryState;
+
+    public static bool TryGetCachedPhysicalMemoryState(out (double TotalGb, double AvailableGb) memoryState)
+    {
+        var now = DateTimeOffset.UtcNow;
+        lock (MemoryStateCacheLock)
+        {
+            if (now - _cachedMemoryStateTime <= MemoryStateCacheDuration &&
+                _cachedMemoryState.TotalGb > 0)
+            {
+                memoryState = _cachedMemoryState;
+                return true;
+            }
+        }
+
+        memoryState = default;
+        return false;
+    }
+
+    public static (double TotalGb, double AvailableGb) GetFallbackPhysicalMemoryState()
+    {
+        var gcInfo = GC.GetGCMemoryInfo();
+        var totalBytes = gcInfo.TotalAvailableMemoryBytes > 0
+            ? gcInfo.TotalAvailableMemoryBytes
+            : FallbackTotalMemoryBytes;
+        var availableBytes = Math.Max(totalBytes - GC.GetTotalMemory(forceFullCollection: false), 0L);
+        return ToGigabytes(totalBytes, availableBytes);
+    }
 
     public static (double TotalGb, double AvailableGb) GetPhysicalMemoryState()
+    {
+        var now = DateTimeOffset.UtcNow;
+        lock (MemoryStateCacheLock)
+        {
+            if (now - _cachedMemoryStateTime <= MemoryStateCacheDuration &&
+                _cachedMemoryState.TotalGb > 0)
+            {
+                return _cachedMemoryState;
+            }
+        }
+
+        var memoryState = ReadPhysicalMemoryState();
+        lock (MemoryStateCacheLock)
+        {
+            _cachedMemoryState = memoryState;
+            _cachedMemoryStateTime = now;
+        }
+
+        return memoryState;
+    }
+
+    private static (double TotalGb, double AvailableGb) ReadPhysicalMemoryState()
     {
         var (totalBytes, availableBytes) = TryReadPhysicalMemoryBytes();
         if (totalBytes <= 0)
         {
-            var gcInfo = GC.GetGCMemoryInfo();
-            totalBytes = gcInfo.TotalAvailableMemoryBytes > 0
-                ? gcInfo.TotalAvailableMemoryBytes
-                : FallbackTotalMemoryBytes;
+            return GetFallbackPhysicalMemoryState();
         }
 
         if (availableBytes <= 0)
@@ -23,6 +74,11 @@ internal static class FrontendSystemMemoryService
             availableBytes = Math.Max(totalBytes - GC.GetTotalMemory(forceFullCollection: false), 0L);
         }
 
+        return ToGigabytes(totalBytes, availableBytes);
+    }
+
+    private static (double TotalGb, double AvailableGb) ToGigabytes(long totalBytes, long availableBytes)
+    {
         return (
             totalBytes / 1024d / 1024d / 1024d,
             availableBytes / 1024d / 1024d / 1024d);

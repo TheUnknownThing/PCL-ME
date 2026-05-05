@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Styling;
-using PCL.Core.App.Configuration.Storage;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -242,7 +241,7 @@ internal static class FrontendAppearanceService
 
         if (File.Exists(runtimePaths.SharedConfigPath))
         {
-            var provider = new JsonFileProvider(runtimePaths.SharedConfigPath);
+            var provider = runtimePaths.OpenSharedConfigProvider();
             if (provider.Exists("UiDarkMode"))
             {
                 darkModeIndex = provider.Get<int>("UiDarkMode");

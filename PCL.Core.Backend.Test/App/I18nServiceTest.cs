@@ -122,10 +122,14 @@ public sealed class I18nServiceTest
 
         Assert.AreEqual(1, warnings.Count);
         StringAssert.Contains(warnings[0], "Missing translation key 'launch.profile.kinds.microsoft'");
+#if DEBUG
         StringAssert.Contains(warnings[0], "Expected schema near");
         StringAssert.Contains(warnings[0], "launch");
         StringAssert.Contains(warnings[0], "microsoft");
         StringAssert.Contains(warnings[0], "authlib []");
+#else
+        Assert.IsFalse(warnings[0].Contains("Expected schema near", StringComparison.Ordinal));
+#endif
     }
 
     private sealed class LocaleFixture : IDisposable

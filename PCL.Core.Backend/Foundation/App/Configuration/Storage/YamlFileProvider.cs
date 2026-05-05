@@ -73,47 +73,71 @@ public class YamlFileProvider : CommonFileProvider, IEnumerableKeyProvider
 
     public override T Get<T>(string key)
     {
-        var result = _rootNode.Children[key];
-        var parser = result.ConvertToEventStream().GetParser();
-        try
+        lock (SyncRoot)
         {
-            return _Deserializer.Deserialize<T>(parser);
-        }
-        catch (Exception)
-        {
-            var type = typeof(T);
-            var graphStr = result.ToString();
-            var fallback = (type == typeof(bool))
-                ? (T)(object)(graphStr.ToLowerInvariant() is "true" or "1")
-                : (T)(object)graphStr;
-            Set(key, fallback);
-            return fallback;
+            var result = _rootNode.Children[key];
+            var parser = result.ConvertToEventStream().GetParser();
+            try
+            {
+                return _Deserializer.Deserialize<T>(parser);
+            }
+            catch (Exception)
+            {
+                var type = typeof(T);
+                var graphStr = result.ToString();
+                var fallback = (type == typeof(bool))
+                    ? (T)(object)(graphStr.ToLowerInvariant() is "true" or "1")
+                    : (T)(object)graphStr;
+                Set(key, fallback);
+                return fallback;
+            }
         }
     }
 
     public override void Set<T>(string key, T value)
     {
-        var emitter = new YamlNodeEmitter();
-        _Serializer.Serialize(emitter, value);
-        _rootNode.Children[key] = emitter.SingleRootNode;
+        lock (SyncRoot)
+        {
+            var emitter = new YamlNodeEmitter();
+            _Serializer.Serialize(emitter, value);
+            _rootNode.Children[key] = emitter.SingleRootNode;
+        }
     }
 
     public override bool Exists(string key)
     {
-        return _rootNode.Children.ContainsKey(key);
+        lock (SyncRoot)
+        {
+            return _rootNode.Children.ContainsKey(key);
+        }
     }
 
     public override void Remove(string key)
     {
-        _rootNode.Children.Remove(key);
+        lock (SyncRoot)
+        {
+            _rootNode.Children.Remove(key);
+        }
     }
 
     protected override void WriteToStream(Stream stream)
     {
-        var writer = new StreamWriter(stream, Encoding.UTF8);
-        _Serializer.Serialize(writer, _rootNode);
-        writer.Flush();
+        lock (SyncRoot)
+        {
+            var writer = new StreamWriter(stream, Encoding.UTF8);
+            _Serializer.Serialize(writer, _rootNode);
+            writer.Flush();
+        }
     }
 
-    public IEnumerable<string> Keys => _rootNode.Select(pair => pair.Key.ToString());
+    public IEnumerable<string> Keys
+    {
+        get
+        {
+            lock (SyncRoot)
+            {
+                return _rootNode.Select(pair => pair.Key.ToString()).ToArray();
+            }
+        }
+    }
 }

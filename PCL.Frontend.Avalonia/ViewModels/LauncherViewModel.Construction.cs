@@ -227,6 +227,7 @@ internal sealed partial class LauncherViewModel
     private double _launchUsedRamGb;
     private double _launchTotalRamGb;
     private double _launchAutomaticAllocatedRamGb;
+    private int _launchMemoryRefreshVersion;
     private bool _isLaunchAdvancedOptionsExpanded;
     private int _selectedLaunchRendererIndex;
     private string _launchWrapperCommand = string.Empty;
