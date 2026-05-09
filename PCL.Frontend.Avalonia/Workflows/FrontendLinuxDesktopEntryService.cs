@@ -46,7 +46,7 @@ internal static class FrontendLinuxDesktopEntryService
         var desktopEntryContent = BuildDesktopEntry(
             FrontendApplicationIdentity.DisplayName,
             [executablePath],
-            ResolveIconPath(executablePath),
+            ResolveOrCreateIconPath(executablePath, applicationsDirectory),
             Path.GetDirectoryName(executablePath));
 
         var wasChanged = WriteIfChanged(desktopEntryPath, desktopEntryContent);
@@ -148,6 +148,24 @@ internal static class FrontendLinuxDesktopEntryService
 
     public static string? ResolveIconPath(string executablePath)
     {
+        return ResolveExistingIconPath(executablePath);
+    }
+
+    internal static string? ResolveOrCreateIconPath(string executablePath, string applicationsDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(applicationsDirectory);
+
+        var existingIconPath = ResolveExistingIconPath(executablePath);
+        if (!string.IsNullOrWhiteSpace(existingIconPath))
+        {
+            return existingIconPath;
+        }
+
+        return TryMaterializeEmbeddedIcon(applicationsDirectory);
+    }
+
+    private static string? ResolveExistingIconPath(string executablePath)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
 
         var executableDirectory = Path.GetDirectoryName(executablePath);
@@ -165,6 +183,33 @@ internal static class FrontendLinuxDesktopEntryService
         }
 
         return null;
+    }
+
+    private static string? TryMaterializeEmbeddedIcon(string applicationsDirectory)
+    {
+        var dataDirectory = Path.GetDirectoryName(applicationsDirectory);
+        if (string.IsNullOrWhiteSpace(dataDirectory))
+        {
+            return null;
+        }
+
+        var iconPath = Path.Combine(dataDirectory, FrontendApplicationIdentity.LinuxDesktopIconRelativePath);
+        if (File.Exists(iconPath))
+        {
+            return iconPath;
+        }
+
+        using var resourceStream = typeof(FrontendApplicationIdentity).Assembly
+            .GetManifestResourceStream(FrontendApplicationIdentity.EmbeddedIconResourceName);
+        if (resourceStream is null)
+        {
+            return null;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(iconPath)!);
+        using var fileStream = File.Create(iconPath);
+        resourceStream.CopyTo(fileStream);
+        return iconPath;
     }
 
     private static IEnumerable<string> GetIconPathCandidates(string executableDirectory)

@@ -59,6 +59,29 @@ public sealed class FrontendUpdateInstallWorkflowServiceTest
     }
 
     [TestMethod]
+    public void ResolveExtractedPackageRoot_UsesExtractionRootForSingleTopLevelFile()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), "pcl-update-test-" + Guid.NewGuid().ToString("N"));
+        var packagedExecutable = Path.Combine(tempRoot, "PCL-ME");
+        Directory.CreateDirectory(tempRoot);
+        File.WriteAllText(packagedExecutable, string.Empty);
+
+        try
+        {
+            var resolved = FrontendUpdateInstallWorkflowService.ResolveExtractedPackageRoot(
+                FrontendUpdateInstallPlatform.Linux,
+                tempRoot,
+                "PCL-ME");
+
+            Assert.AreEqual(tempRoot, resolved);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void ResolveExtractedPackageRoot_FindsNestedMacAppBundle()
     {
         var tempRoot = Path.Combine(Path.GetTempPath(), "pcl-update-test-" + Guid.NewGuid().ToString("N"));

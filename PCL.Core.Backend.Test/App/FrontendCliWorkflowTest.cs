@@ -145,6 +145,41 @@ public sealed class FrontendCliWorkflowTest
     }
 
     [TestMethod]
+    public void ResolveOrCreateIconPath_MaterializesEmbeddedIconWhenPackagedIconsAreMissing()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), "pcl-me-icon-path-" + Guid.NewGuid().ToString("N"));
+        var executablePath = Path.Combine(tempRoot, "PCL-ME-linux-x64");
+        var applicationsDirectory = Path.Combine(tempRoot, "applications");
+        var expectedIconPath = Path.Combine(
+            tempRoot,
+            "icons",
+            "hicolor",
+            "512x512",
+            "apps",
+            "org.pcl.me.frontend.png");
+
+        try
+        {
+            Directory.CreateDirectory(tempRoot);
+            Directory.CreateDirectory(applicationsDirectory);
+            File.WriteAllText(executablePath, string.Empty);
+
+            var iconPath = FrontendLinuxDesktopEntryService.ResolveOrCreateIconPath(executablePath, applicationsDirectory);
+
+            Assert.AreEqual(expectedIconPath, iconPath);
+            Assert.IsTrue(File.Exists(expectedIconPath));
+            Assert.IsTrue(new FileInfo(expectedIconPath).Length > 0);
+        }
+        finally
+        {
+            if (Directory.Exists(tempRoot))
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void Register_WithMissingExecutable_Fails()
     {
         if (!OperatingSystem.IsLinux())
@@ -172,12 +207,18 @@ public sealed class FrontendCliWorkflowTest
         var previousDataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
         var tempRoot = Path.Combine(Path.GetTempPath(), "pcl-me-desktop-entry-" + Guid.NewGuid().ToString("N"));
         var executablePath = Path.Combine(tempRoot, "pcl-me");
+        var expectedIconPath = Path.Combine(
+            tempRoot,
+            "icons",
+            "hicolor",
+            "512x512",
+            "apps",
+            "org.pcl.me.frontend.png");
 
         try
         {
             Directory.CreateDirectory(tempRoot);
             File.WriteAllText(executablePath, string.Empty);
-            File.WriteAllText(Path.Combine(tempRoot, "icon.png"), string.Empty);
             Environment.SetEnvironmentVariable("XDG_DATA_HOME", tempRoot);
 
             var registerResult = FrontendLinuxDesktopEntryService.Register(executablePath);
@@ -192,7 +233,8 @@ public sealed class FrontendCliWorkflowTest
             var entry = File.ReadAllText(registerResult.DesktopEntryPath);
             StringAssert.Contains(entry, $"Exec={executablePath}");
             StringAssert.Contains(entry, $"Path={tempRoot}");
-            StringAssert.Contains(entry, $"Icon={Path.Combine(tempRoot, "icon.png")}");
+            StringAssert.Contains(entry, $"Icon={expectedIconPath}");
+            Assert.IsTrue(File.Exists(expectedIconPath));
 
             var unregisterResult = FrontendLinuxDesktopEntryService.Unregister();
 

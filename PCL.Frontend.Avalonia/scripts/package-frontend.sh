@@ -17,6 +17,14 @@ linux_launcher_script="launch-pcl-me.sh"
 windows_launcher_script="Launch PCL-ME.vbs"
 icon_png="${repo_root}/PCL.Frontend.Avalonia/Assets/icon.png"
 
+sanitize_name() {
+  printf '%s' "$1" | tr ' ' '-'
+}
+
+get_linux_binary_name() {
+  printf '%s' "$(sanitize_name "${app_name}")"
+}
+
 get_default_rids() {
   case "$(uname -s)" in
     Darwin)
@@ -152,7 +160,7 @@ package_macos() {
   local plist_path="${app_dir}/Contents/Info.plist"
   local resources_dir="${app_dir}/Contents/Resources"
   local macos_dir="${app_dir}/Contents/MacOS"
-  local archive_path="${rid_root}/$(echo "${app_name}" | tr ' ' '-')-${rid}.zip"
+  local archive_path="${rid_root}/$(sanitize_name "${app_name}")-${rid}.zip"
 
   prepare_directory "$app_dir"
   mkdir -p "$resources_dir" "$macos_dir"
@@ -177,9 +185,12 @@ package_linux() {
   local rid="$1"
   local publish_dir="$2"
   local rid_root="$3"
-  local package_dir="${rid_root}/$(echo "${app_name}" | tr ' ' '-')-${rid}"
-  local archive_path="${rid_root}/$(basename "$package_dir").tar.gz"
+  local package_name
+  package_name="$(sanitize_name "${app_name}")-${rid}"
+  local archive_path="${rid_root}/${package_name}.tar.gz"
   local published_executable="${publish_dir}/${executable_name}"
+  local package_dir="${rid_root}/package"
+  local packaged_executable="${package_dir}/$(get_linux_binary_name)"
 
   if [[ ! -f "$published_executable" ]]; then
     echo "Published executable not found: $published_executable" >&2
@@ -187,10 +198,9 @@ package_linux() {
   fi
 
   prepare_directory "$package_dir"
-  cp "$published_executable" "${package_dir}/${executable_name}"
-  cp "$icon_png" "${package_dir}/icon.png"
-  chmod +x "${package_dir}/${executable_name}"
-  tar -C "$rid_root" -czf "$archive_path" "$(basename "$package_dir")"
+  cp "$published_executable" "$packaged_executable"
+  chmod +x "$packaged_executable"
+  tar -C "$package_dir" -czf "$archive_path" "$(basename "$packaged_executable")"
   echo "$archive_path"
 }
 
@@ -198,7 +208,7 @@ package_windows() {
   local rid="$1"
   local publish_dir="$2"
   local rid_root="$3"
-  local package_path="${rid_root}/$(echo "${app_name}" | tr ' ' '-')-${rid}.exe"
+  local package_path="${rid_root}/$(sanitize_name "${app_name}")-${rid}.exe"
   local published_executable="${publish_dir}/${executable_name}.exe"
 
   if [[ ! -f "$published_executable" ]]; then

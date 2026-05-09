@@ -77,6 +77,7 @@
     <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_*.ttf" />
     <AvaloniaResource Include="Assets/icon.ico" />
     <AvaloniaResource Include="Assets/icon.png" />
+    <EmbeddedResource Include="Assets/icon.png" LogicalName="PCL.Frontend.Avalonia.Assets.icon.png" />
     <Content Include="Assets/LauncherAssets/**" Link="LauncherAssets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Locales/**" Link="Locales/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
