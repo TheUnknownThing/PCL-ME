@@ -248,6 +248,19 @@ internal sealed partial class LauncherViewModel
 
             if (!_launchComposition.PrecheckResult.IsSuccess)
             {
+                var failure = _launchComposition.PrecheckResult.Failure;
+                if (failure?.Kind == MinecraftLaunchPrecheckFailureKind.NoProfileSelected)
+                {
+                    _isLaunchInProgress = false;
+                    RaiseLaunchSessionProperties();
+                    HideLaunchDialog();
+                    await ShowInAppAlertAsync(
+                        T("launch.precheck.no_profile_alert.title"),
+                        T("launch.precheck.no_profile_alert.message"),
+                        T("common.actions.confirm"));
+                    return;
+                }
+
                 var failureMessage = GetLaunchPrecheckFailureMessage();
                 AddFailureActivity(T("shell.prompts.activities.precheck_failed.title"), failureMessage);
                 SetLaunchDialogStoppedState(T("shell.prompts.activities.precheck_failed.title"), failureMessage, isError: true);

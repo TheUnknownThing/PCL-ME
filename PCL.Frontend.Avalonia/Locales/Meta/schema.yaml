@@ -1052,6 +1052,9 @@ launch:
       auth_server_mismatch: []
       microsoft_or_auth_profile_required: []
       unknown: []
+    no_profile_alert:
+      title: []
+      message: []
   prompts:
     non_ascii_path:
       title: []

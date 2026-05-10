@@ -915,6 +915,9 @@ launch:
       auth_server_mismatch: 今外置登入檔與實例所需之認證伺服器不協。
       microsoft_or_auth_profile_required: 今實例須以微軟檔，或以合其認證伺服器之外置登入檔啟之。
       unknown: 今實例之啟動條件猶未備。
+    no_profile_alert:
+      title: 須先登入
+      message: 欲啟遊戲，請先登入。汝可於屏幕左側之登入區，添選帳戶。
   prompts:
     non_ascii_path:
       title: 非 ASCII 路徑警告

@@ -915,6 +915,9 @@ launch:
       auth_server_mismatch: Das ausgewählte Authlib-Konto stimmt nicht mit dem erforderlichen Auth-Server überein.
       microsoft_or_auth_profile_required: Diese Instanz erfordert entweder ein Microsoft- oder ein passendes Authlib-Profil.
       unknown: Die aktuelle Instanz ist noch nicht startbereit.
+    no_profile_alert:
+      title: Anmeldung erforderlich
+      message: Bitte melden Sie sich an, bevor Sie das Spiel starten. Sie können im Anmeldebereich auf der linken Seite des Bildschirms ein Konto hinzufügen oder auswählen.
   prompts:
     non_ascii_path:
       title: Warnung vor Nicht-ASCII-Pfad

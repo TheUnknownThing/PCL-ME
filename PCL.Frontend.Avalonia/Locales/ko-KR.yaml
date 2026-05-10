@@ -915,6 +915,9 @@ launch:
       auth_server_mismatch: 선택한 Authlib 계정이 필수 인증 서버와 일치하지 않습니다.
       microsoft_or_auth_profile_required: 이 인스턴스에는 Microsoft 또는 일치하는 Authlib 프로필이 필요합니다.
       unknown: 현재 인스턴스는 아직 시작할 준비가 되지 않았습니다.
+    no_profile_alert:
+      title: 로그인 필요
+      message: 게임을 시작하기 전에 로그인하세요. 화면 왼쪽의 로그인 영역에서 계정을 추가하거나 선택할 수 있습니다.
   prompts:
     non_ascii_path:
       title: 비ASCII 경로 경고

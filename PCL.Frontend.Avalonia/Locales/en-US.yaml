@@ -917,6 +917,9 @@ launch:
       auth_server_mismatch: The selected Authlib account does not match the required auth server.
       microsoft_or_auth_profile_required: This instance requires either a Microsoft or matching Authlib profile.
       unknown: The current instance is not ready to launch yet.
+    no_profile_alert:
+      title: Login Required
+      message: Please log in before launching the game. You can add or select an account in the login area on the left side of the screen.
   prompts:
     non_ascii_path:
       title: Non-ASCII path warning

@@ -158,6 +158,44 @@ internal sealed partial class LauncherViewModel
         }
     }
 
+    private async Task ShowInAppAlertAsync(
+        string title,
+        string message,
+        string confirmText)
+    {
+        await _promptOverlayDialogSemaphore.WaitAsync().ConfigureAwait(false);
+
+        var resultSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resolvedConfirmText = string.IsNullOrWhiteSpace(confirmText) ? T("common.actions.confirm") : confirmText;
+        var completionInvoked = 0;
+
+        void Complete(bool result)
+        {
+            if (Interlocked.Exchange(ref completionInvoked, 1) != 0)
+            {
+                return;
+            }
+
+            resultSource.TrySetResult(result);
+        }
+
+        var dialog = CreatePromptOverlayDialogState(
+            PromptOverlayDialogKind.Confirm,
+            title,
+            message,
+            isDanger: false,
+            options:
+            [
+                new PromptOptionViewModel(
+                    resolvedConfirmText,
+                    string.Empty,
+                    PclButtonColorState.Highlight,
+                    new ActionCommand(() => Complete(true)))
+            ]);
+
+        await ShowPromptOverlayDialogAsync(dialog, resultSource).ConfigureAwait(false);
+    }
+
     private async Task<bool> ShowInAppConfirmationAsync(
         string title,
         string message,

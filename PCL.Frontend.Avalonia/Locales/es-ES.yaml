@@ -917,6 +917,9 @@ launch:
       auth_server_mismatch: La cuenta Authlib seleccionada no coincide con el servidor de autenticación requerido.
       microsoft_or_auth_profile_required: Esta instancia requiere un perfil de Microsoft o de Authlib correspondiente.
       unknown: La instancia actual aún no está lista para iniciarse.
+    no_profile_alert:
+      title: Inicio de sesión requerido
+      message: Inicie sesión antes de iniciar el juego. Puede agregar o seleccionar una cuenta en el área de inicio de sesión en el lado izquierdo de la pantalla.
   prompts:
     non_ascii_path:
       title: Advertencia de ruta no ASCII

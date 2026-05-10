@@ -917,6 +917,9 @@ launch:
       auth_server_mismatch: 当前外置登录档案与实例要求的认证服务器不一致。
       microsoft_or_auth_profile_required: 当前实例要求使用微软档案或匹配认证服务器的外置登录档案启动。
       unknown: 当前实例尚未满足启动条件。
+    no_profile_alert:
+      title: 需要登录
+      message: 请先登录后再启动游戏。您可以在屏幕左侧的登录区域添加或选择账户。
   prompts:
     non_ascii_path:
       title: 非 ASCII 路径警告
