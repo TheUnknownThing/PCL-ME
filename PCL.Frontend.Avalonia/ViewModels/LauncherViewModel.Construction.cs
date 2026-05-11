@@ -19,7 +19,7 @@ internal sealed partial class LauncherViewModel
     private static readonly string LauncherRootDirectory = FrontendLauncherAssetLocator.RootDirectory;
     private static readonly string LaunchAvatarImageFilePath = GetLauncherAssetPath("Images", "Heads", "PCL-Community.png");
     private static readonly string LaunchNewsImageFilePath = GetLauncherAssetPath("Images", "Backgrounds", "server_bg.png");
-    private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "Heads", "Logo-CE.png");
+    private static readonly string UpdateAvailableIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private static readonly string UpdateCurrentIconFilePath = GetLauncherAssetPath("Images", "icon.png");
     private readonly AvaloniaCommandOptions _options;
     private readonly II18nService _i18n;
