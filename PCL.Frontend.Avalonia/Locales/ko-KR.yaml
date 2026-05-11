@@ -1475,6 +1475,10 @@ setup:
         summary: PCL 관련 프로젝트를 위한 커뮤니티 중심 유지 관리 및 협업.
         action: 커뮤니티 페이지 열기
         command: 커뮤니티 저장소 열기
+      maintainer:
+        summary: PCL-ME 유지 관리자.
+        action: 프로필 열기
+        command: GitHub 프로필 열기
       repo:
         title: PCL-ME
         action: 저장소 열기

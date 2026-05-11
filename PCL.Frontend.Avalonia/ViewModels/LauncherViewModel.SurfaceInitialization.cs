@@ -36,15 +36,27 @@ internal sealed partial class LauncherViewModel
                 _i18n.T("setup.about.project.original_author.action"),
                 CreateLinkCommand(_i18n.T("setup.about.project.original_author.command"), "https://ifdian.net/a/LTCat")),
             new AboutEntryViewModel(
-                _i18n.T("setup.about.project.community.title"),
-                _i18n.T("setup.about.project.community.summary"),
-                LoadLauncherBitmap("Images", "Heads", "PCL-Community.png"),
-                _i18n.T("setup.about.project.community.action"),
-                CreateLinkCommand(_i18n.T("setup.about.project.community.command"), "https://github.com/PCL-Community")),
+                "TheUnknownThing",
+                _i18n.T("setup.about.project.maintainer.summary"),
+                LoadLauncherBitmap("Images", "Heads", "TheUnknownThing.jpg"),
+                _i18n.T("setup.about.project.maintainer.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.maintainer.command"), "https://github.com/TheUnknownThing")),
+            new AboutEntryViewModel(
+                "RayZh-hs",
+                _i18n.T("setup.about.project.maintainer.summary"),
+                LoadLauncherBitmap("Images", "Heads", "RayZh-hs.jpg"),
+                _i18n.T("setup.about.project.maintainer.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.maintainer.command"), "https://github.com/RayZh-hs")),
+            new AboutEntryViewModel(
+                "wanoful",
+                _i18n.T("setup.about.project.maintainer.summary"),
+                LoadLauncherBitmap("Images", "Heads", "wanoful.png"),
+                _i18n.T("setup.about.project.maintainer.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.maintainer.command"), "https://github.com/wanoful")),
             new AboutEntryViewModel(
                 _i18n.T("setup.about.project.repo.title"),
                 _setupComposition.About.LauncherVersionSummary,
-                LoadLauncherBitmap("Images", "Heads", "Logo-CE.png"),
+                LoadLauncherBitmap("Images", "icon.png"),
                 _i18n.T("setup.about.project.repo.action"),
                 CreateLinkCommand(_i18n.T("setup.about.project.repo.command"), "https://github.com/TheUnknownThing/PCL-ME"))
         ]);

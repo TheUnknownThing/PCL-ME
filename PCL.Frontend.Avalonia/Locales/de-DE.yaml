@@ -1475,6 +1475,10 @@ setup:
         summary: "Community-getriebene Pflege und Zusammenarbeit für PCL-bezogene Projekte."
         action: Community-Seite öffnen
         command: Community-Repository öffnen
+      maintainer:
+        summary: PCL-ME-Betreuer.
+        action: Profil öffnen
+        command: GitHub-Profil öffnen
       repo:
         title: "PCL-ME"
         action: Repository öffnen

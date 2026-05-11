@@ -1480,6 +1480,10 @@ setup:
         summary: Mantenimiento y colaboración impulsados por la comunidad para proyectos relacionados con PCL.
         action: Abrir página de la comunidad
         command: Repositorio comunitario abierto
+      maintainer:
+        summary: Mantenedor de PCL-ME.
+        action: Abrir perfil
+        command: Abrir perfil de GitHub
       repo:
         title: PCL-ME
         action: Repositorio abierto

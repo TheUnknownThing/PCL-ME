@@ -1475,6 +1475,10 @@ setup:
         summary: Maintenance et collaboration pilotées par la communauté pour les projets liés à PCL.
         action: Ouvrir la page de la communauté
         command: Dépôt communautaire ouvert
+      maintainer:
+        summary: Responsable de maintenance de PCL-ME.
+        action: Ouvrir le profil
+        command: Ouvrir le profil GitHub
       repo:
         title: PCL-ME
         action: Dépôt ouvert

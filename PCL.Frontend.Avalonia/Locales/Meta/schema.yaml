@@ -1665,6 +1665,10 @@ setup:
         summary: []
         action: []
         command: []
+      maintainer:
+        summary: []
+        action: []
+        command: []
       repo:
         title: []
         action: []

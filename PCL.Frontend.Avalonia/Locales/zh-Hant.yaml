@@ -1477,6 +1477,10 @@ setup:
         summary: 由社区协作维护的 PCL 相关项目团队。
         action: 打开社区页面
         command: 打开社区仓库
+      maintainer:
+        summary: PCL-ME 維護者。
+        action: 開啟主頁
+        command: 開啟 GitHub 個人主頁
       repo:
         title: PCL-ME
         action: 打开仓库

@@ -1475,6 +1475,10 @@ setup:
         summary: 維護 PCL 諸相關項目之社羣協作團。
         action: 啟社羣頁
         command: 啟社羣倉庫
+      maintainer:
+        summary: PCL-ME 維護者。
+        action: 開主頁
+        command: 開 GitHub 個人主頁
       repo:
         title: "PCL-ME"
         action: 啟倉庫

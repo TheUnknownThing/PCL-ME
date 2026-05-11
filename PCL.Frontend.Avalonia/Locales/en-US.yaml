@@ -1477,6 +1477,10 @@ setup:
         summary: Community-driven maintenance and collaboration for PCL-related projects.
         action: Open community page
         command: Open community repository
+      maintainer:
+        summary: PCL-ME maintainer.
+        action: Open profile
+        command: Open GitHub profile
       repo:
         title: PCL-ME
         action: Open repository
