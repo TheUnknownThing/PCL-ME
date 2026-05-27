@@ -33,13 +33,14 @@
         Margin="0,0,0,15"
         ContentMargin="14,12,14,11"
         HorizontalAlignment="Center"
-        VerticalAlignment="Bottom"
+        VerticalAlignment="Center"
         IsVisible="{Binding IsInstanceExportRunning}">
       <controls:PclCard.CardContent>
         <controls:PclLoading
             HorizontalAlignment="Center"
+            VerticalAlignment="Center"
             IsRunning="{Binding IsInstanceExportRunning}"
-            Text="{Binding InstanceExportStartText}" />
+            Text="{Binding InstanceExportLoadingText}" />
       </controls:PclCard.CardContent>
     </controls:PclCard>
   </Grid>

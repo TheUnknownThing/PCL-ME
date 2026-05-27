@@ -3387,6 +3387,8 @@ instance:
       import_config: 讀取設
       save_config: 儲存設
       guide: 指南
+    status:
+      exporting: 正匯出整合包
     name: 整合包名稱
     version: 整合包版本
     options:
@@ -3408,6 +3410,8 @@ instance:
       no_instance_selected: 今未擇實例。
       guide_shown: 已顯製作指南。
       archive_missing: 匯出壓縮檔不存在。
+    hints:
+      completed: "整合包已匯出：{archive_name}"
     guide:
       title: 整合包製作指南
       step_1: 1. 先於實例匯出頁核其名、版本號與所勾之項。

@@ -3387,6 +3387,8 @@ instance:
       import_config: 구성 가져오기
       save_config: 구성 저장
       guide: 가이드
+    status:
+      exporting: 모드팩 내보내는 중
     name: 팩 이름
     version: 팩 버전
     options:
@@ -3408,6 +3410,8 @@ instance:
       no_instance_selected: 현재 선택된 인스턴스가 없습니다.
       guide_shown: 가이드를 표시했습니다.
       archive_missing: 내보내기 아카이브가 존재하지 않습니다.
+    hints:
+      completed: "모드팩 내보내기 완료: {archive_name}"
     guide:
       title: 모드팩 패키징 가이드
       step_1: 1. 먼저 인스턴스 내보내기 페이지에서 팩명, 버전, 선택한 콘텐츠를 확인하세요.

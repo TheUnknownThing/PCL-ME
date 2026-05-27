@@ -3411,6 +3411,8 @@ instance:
       import_config: Importar configuración
       save_config: Guardar configuración
       guide: Guía
+    status:
+      exporting: Exportando mod pack
     name: Nombre del paquete
     version: Versión del paquete
     options:
@@ -3432,6 +3434,8 @@ instance:
       no_instance_selected: Actualmente no hay ninguna instancia seleccionada.
       guide_shown: Mostró la guía.
       archive_missing: El archivo de exportación no existe.
+    hints:
+      completed: "Mod pack exportado: {archive_name}"
     guide:
       title: Guía de empaquetado de Modpack
       step_1: 1. Primero confirme el nombre del paquete, la versión y el contenido seleccionado en la página de exportación de la instancia.

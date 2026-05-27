@@ -3918,6 +3918,8 @@ instance:
       import_config: []
       save_config: []
       guide: []
+    status:
+      exporting: []
     name: []
     version: []
     options:
@@ -3939,6 +3941,9 @@ instance:
       no_instance_selected: []
       guide_shown: []
       archive_missing: []
+    hints:
+      completed:
+        - archive_name
     guide:
       title: []
       step_1: []

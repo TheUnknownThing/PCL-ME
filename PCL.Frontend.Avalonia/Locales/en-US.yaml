@@ -3397,6 +3397,8 @@ instance:
       import_config: Import Config
       save_config: Save Config
       guide: Guide
+    status:
+      exporting: Exporting Mod Pack
     name: Pack Name
     version: Pack Version
     options:
@@ -3418,6 +3420,8 @@ instance:
       no_instance_selected: No instance is currently selected.
       guide_shown: Displayed the guide.
       archive_missing: Export archive does not exist.
+    hints:
+      completed: "Mod pack exported: {archive_name}"
     guide:
       title: Modpack Packaging Guide
       step_1: 1. Confirm the pack name, version, and selected content on the instance export page first.

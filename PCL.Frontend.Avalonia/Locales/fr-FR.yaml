@@ -3387,6 +3387,8 @@ instance:
       import_config: Importer la configuration
       save_config: Enregistrer la configuration
       guide: Guide
+    status:
+      exporting: Exportation du mod pack
     name: Nom du pack
     version: Version du pack
     options:
@@ -3408,6 +3410,8 @@ instance:
       no_instance_selected: Aucune instance n'est actuellement sélectionnée.
       guide_shown: Affichage du guide.
       archive_missing: L'archive d'exportation n'existe pas.
+    hints:
+      completed: "Mod pack exporté : {archive_name}"
     guide:
       title: Guide de création de modpack
       step_1: 1. Confirmez d'abord le nom du pack, la version et le contenu sélectionné sur la page d'exportation de l'instance.

@@ -286,6 +286,7 @@ internal sealed partial class LauncherViewModel
 
     private async Task StartInstanceExportAsync()
     {
+        var activityTitle = T("instance.export.activities.start");
         if (IsInstanceExportRunning)
         {
             return;
@@ -293,7 +294,7 @@ internal sealed partial class LauncherViewModel
 
         if (!_instanceComposition.Selection.HasSelection)
         {
-            AddActivity(T("instance.export.activities.start"), T("instance.export.messages.no_instance_selected"));
+            AddActivity(activityTitle, T("instance.export.messages.no_instance_selected"));
             return;
         }
 
@@ -338,7 +339,7 @@ internal sealed partial class LauncherViewModel
                 File.Delete(archivePath);
             }
 
-            AddFailureActivity("开始导出", ex.Message);
+            AddFailureActivity(activityTitle, ex.Message);
             return;
         }
         finally
@@ -346,7 +347,10 @@ internal sealed partial class LauncherViewModel
             IsInstanceExportRunning = false;
         }
 
-        OpenInstanceTarget(T("instance.export.activities.start"), archivePath, T("instance.export.messages.archive_missing"));
+        AvaloniaHintBus.Show(
+            T("instance.export.hints.completed", ("archive_name", Path.GetFileName(archivePath))),
+            AvaloniaHintTheme.Success);
+        OpenInstanceTarget(activityTitle, archivePath, T("instance.export.messages.archive_missing"));
     }
 
     private ExportOptionEntryViewModel CreateExportOption(string key, string title, string description, bool isChecked)

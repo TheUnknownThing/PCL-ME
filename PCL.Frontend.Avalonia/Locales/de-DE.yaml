@@ -3387,6 +3387,8 @@ instance:
       import_config: Konfiguration importieren
       save_config: Konfiguration speichern
       guide: Leitfaden
+    status:
+      exporting: Modpack wird exportiert
     name: Paketname
     version: Paketversion
     options:
@@ -3408,6 +3410,8 @@ instance:
       no_instance_selected: Es ist derzeit keine Instanz ausgewählt.
       guide_shown: Der Leitfaden wurde angezeigt.
       archive_missing: Das Exportarchiv existiert nicht.
+    hints:
+      completed: "Modpack exportiert: {archive_name}"
     guide:
       title: Modpack-Paketierungsleitfaden
       step_1: "1. Bestätige zuerst auf der Instanz-Exportseite Paketname, Version und ausgewählten Inhalt."

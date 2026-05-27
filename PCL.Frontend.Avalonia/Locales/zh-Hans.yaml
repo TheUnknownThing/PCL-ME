@@ -3397,6 +3397,8 @@ instance:
       import_config: 读取配置
       save_config: 保存配置
       guide: 指南
+    status:
+      exporting: 正在导出整合包
     name: 整合包名称
     version: 整合包版本
     options:
@@ -3418,6 +3420,8 @@ instance:
       no_instance_selected: 当前未选择实例。
       guide_shown: 已显示制作指南。
       archive_missing: 导出压缩包不存在。
+    hints:
+      completed: "整合包已导出：{archive_name}"
     guide:
       title: 整合包制作指南
       step_1: 1. 先在实例导出页确认名称、版本号和勾选内容。

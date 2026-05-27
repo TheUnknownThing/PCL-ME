@@ -87,6 +87,7 @@ internal sealed partial class LauncherViewModel
     public string InstanceInstallModifyText => SD("instance.install.actions.modify");
 
     public string InstanceExportStartText => SD("instance.export.actions.start");
+    public string InstanceExportLoadingText => SD("instance.export.status.exporting");
     public string InstanceExportModrinthWarningText => SD("instance.export.warnings.modrinth");
     public string InstanceExportNameLabelText => SD("instance.export.name");
     public string InstanceExportVersionLabelText => SD("instance.export.version");
