@@ -34,6 +34,7 @@ internal sealed partial class PclTabButton : UserControl
     public PclTabButton()
     {
         InitializeComponent();
+        new ButtonTextOverflowToolTipController(ButtonHost, LabText);
 
         DataContextChanged += (_, _) =>
         {

@@ -32,9 +32,9 @@
         VerticalAlignment="Stretch"
         VerticalContentAlignment="Stretch"
         Padding="0">
-      <StackPanel
+      <Grid
           x:Name="ContentHost"
-          Orientation="Horizontal">
+          ColumnDefinitions="Auto,*">
         <Path
             x:Name="ShapeIcon"
             Margin="12,0,0,0"
@@ -44,11 +44,13 @@
             Stretch="Uniform" />
         <TextBlock
             x:Name="LabText"
+            Grid.Column="1"
             Margin="7,0,12,1"
             VerticalAlignment="Center"
             FontSize="13"
+            TextTrimming="CharacterEllipsis"
             Text="{Binding Text, ElementName=Root}" />
-      </StackPanel>
+      </Grid>
     </Button>
   </Border>
 </UserControl>

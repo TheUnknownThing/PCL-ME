@@ -36,18 +36,21 @@
         <Grid Margin="0,4,0,4">
           <TextBlock
               x:Name="TitleBlock"
-              HorizontalAlignment="Center"
+              HorizontalAlignment="Stretch"
               VerticalAlignment="Center"
               Margin="0,-12,0,0"
               FontSize="14"
-              Foreground="{DynamicResource ColorBrush3}" />
+              Foreground="{DynamicResource ColorBrush3}"
+              TextAlignment="Center"
+              TextTrimming="CharacterEllipsis" />
           <TextBlock
               x:Name="SubtitleBlock"
               Margin="26,0,26,2"
-              HorizontalAlignment="Center"
+              HorizontalAlignment="Stretch"
               VerticalAlignment="Bottom"
               FontSize="10"
               Foreground="{DynamicResource ColorBrushGray3}"
+              TextAlignment="Center"
               TextTrimming="CharacterEllipsis" />
         </Grid>
       </Border>

@@ -39,11 +39,13 @@
         <Grid>
           <TextBlock
               x:Name="LabText"
-              HorizontalAlignment="Center"
+              HorizontalAlignment="Stretch"
               VerticalAlignment="Center"
               FontSize="13"
               Foreground="{DynamicResource ColorBrush1}"
-              Margin="{Binding TextMargin, ElementName=Root}" />
+              Margin="{Binding TextMargin, ElementName=Root}"
+              TextAlignment="Center"
+              TextTrimming="CharacterEllipsis" />
         </Grid>
       </Border>
     </Button>

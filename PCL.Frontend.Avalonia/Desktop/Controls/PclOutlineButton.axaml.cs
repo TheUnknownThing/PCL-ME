@@ -26,6 +26,7 @@ internal sealed partial class PclOutlineButton : UserControl
     public PclOutlineButton()
     {
         InitializeComponent();
+        new ButtonTextOverflowToolTipController(ButtonHost, LabText);
 
         AttachedToVisualTree += (_, _) =>
         {

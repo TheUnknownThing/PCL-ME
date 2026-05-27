@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 
@@ -39,6 +40,7 @@ internal sealed partial class PclIconTextButton : UserControl
     public PclIconTextButton()
     {
         InitializeComponent();
+        new ButtonTextOverflowToolTipController(ButtonHost, LabText);
 
         AttachedToVisualTree += (_, _) =>
         {
@@ -148,21 +150,29 @@ internal sealed partial class PclIconTextButton : UserControl
 
     private void UpdateIconPlacement()
     {
-        ContentHost.Children.Clear();
-
         if (IconPlacement == PclIconTextButtonIconPlacement.Right)
         {
+            ContentHost.ColumnDefinitions = new ColumnDefinitions
+            {
+                new ColumnDefinition(GridLength.Star),
+                new ColumnDefinition(GridLength.Auto)
+            };
             LabText.Margin = new Thickness(12, 0, 7, 1);
             ShapeIcon.Margin = new Thickness(0, 0, 12, 0);
-            ContentHost.Children.Add(LabText);
-            ContentHost.Children.Add(ShapeIcon);
+            Grid.SetColumn(LabText, 0);
+            Grid.SetColumn(ShapeIcon, 1);
             return;
         }
 
+        ContentHost.ColumnDefinitions = new ColumnDefinitions
+        {
+            new ColumnDefinition(GridLength.Auto),
+            new ColumnDefinition(GridLength.Star)
+        };
         ShapeIcon.Margin = new Thickness(12, 0, 0, 0);
         LabText.Margin = new Thickness(7, 0, 12, 1);
-        ContentHost.Children.Add(ShapeIcon);
-        ContentHost.Children.Add(LabText);
+        Grid.SetColumn(ShapeIcon, 0);
+        Grid.SetColumn(LabText, 1);
     }
 
     private void RefreshVisualState()

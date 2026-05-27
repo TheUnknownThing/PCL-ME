@@ -30,14 +30,17 @@
         Command="{Binding Command, ElementName=Root}"
         HorizontalAlignment="Stretch"
         HorizontalContentAlignment="Stretch"
-        Padding="0">
+        VerticalContentAlignment="Center"
+        Padding="13,0">
       <TextBlock
           x:Name="LabText"
-          HorizontalAlignment="Center"
+          HorizontalAlignment="Stretch"
           VerticalAlignment="Center"
           FontSize="13"
           Margin="{Binding TextMargin, ElementName=Root}"
-          Foreground="{DynamicResource ColorBrush1}" />
+          Foreground="{DynamicResource ColorBrush1}"
+          TextAlignment="Center"
+          TextTrimming="CharacterEllipsis" />
     </Button>
   </Border>
 </UserControl>

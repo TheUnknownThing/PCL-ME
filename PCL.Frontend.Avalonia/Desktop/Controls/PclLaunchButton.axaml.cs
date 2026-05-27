@@ -27,6 +27,7 @@ internal sealed partial class PclLaunchButton : UserControl
     public PclLaunchButton()
     {
         InitializeComponent();
+        new ButtonTextOverflowToolTipController(ButtonHost, TitleBlock, SubtitleBlock);
 
         AttachedToVisualTree += (_, _) =>
         {

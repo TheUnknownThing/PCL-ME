@@ -29,7 +29,7 @@
         BorderThickness="0"
         Command="{Binding Command, ElementName=Root}"
         Padding="0">
-      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+      <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
         <Path
             x:Name="ShapeLogo"
             Width="14"
@@ -40,11 +40,13 @@
             Stretch="Uniform" />
         <TextBlock
             x:Name="LabText"
+            Grid.Column="1"
             Margin="8,0,12,0"
             VerticalAlignment="Center"
             FontSize="14"
-            Foreground="{DynamicResource ColorBrushTitleBarForeground}" />
-      </StackPanel>
+            Foreground="{DynamicResource ColorBrushTitleBarForeground}"
+            TextTrimming="CharacterEllipsis" />
+      </Grid>
     </Button>
   </Border>
 </UserControl>

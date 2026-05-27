@@ -20,7 +20,7 @@ internal sealed partial class PclButton : UserControl
         AvaloniaProperty.Register<PclButton, PclButtonColorState>(nameof(ColorType), PclButtonColorState.Normal);
 
     public static readonly StyledProperty<Thickness> ContentPaddingProperty =
-        AvaloniaProperty.Register<PclButton, Thickness>(nameof(ContentPadding), default);
+        AvaloniaProperty.Register<PclButton, Thickness>(nameof(ContentPadding), new Thickness(13, 0));
 
     public static readonly StyledProperty<Thickness> TextMarginProperty =
         AvaloniaProperty.Register<PclButton, Thickness>(nameof(TextMargin), default);
@@ -34,6 +34,7 @@ internal sealed partial class PclButton : UserControl
     public PclButton()
     {
         InitializeComponent();
+        new ButtonTextOverflowToolTipController(ButtonHost, LabText);
 
         AttachedToVisualTree += (_, _) =>
         {
