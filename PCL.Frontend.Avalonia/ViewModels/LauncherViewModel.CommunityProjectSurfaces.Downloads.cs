@@ -566,6 +566,7 @@ internal sealed partial class LauncherViewModel
         ReloadDownloadComposition();
         AddActivity(T("resource_detail.modpack.activities.install_completed"), T("resource_detail.modpack.messages.install_completed", ("instance_name", result.InstanceName), ("target_directory", result.TargetDirectory)));
         AvaloniaHintBus.Show(T("resource_detail.modpack.hints.install_completed", ("instance_name", result.InstanceName)), AvaloniaHintTheme.Success);
+        ReturnToLaunchPageAfterSuccessfulDownloadInstall();
     }
 
     private string ResolveCommunityProjectReleaseExtension(FrontendCommunityProjectReleaseEntry entry)

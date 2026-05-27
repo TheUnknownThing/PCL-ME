@@ -453,6 +453,7 @@ internal sealed partial class LauncherViewModel
                         await Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             var shouldRefreshLaunchState = isExistingInstance || AutoSelectNewInstance;
+                            var didRefreshLaunchState = false;
                             if (isExistingInstance || AutoSelectNewInstance)
                             {
                                 _launcherActionService.PersistLocalValue("LaunchInstanceSelect", targetInstanceName);
@@ -461,6 +462,7 @@ internal sealed partial class LauncherViewModel
                             if (shouldRefreshLaunchState)
                             {
                                 RefreshLaunchState();
+                                didRefreshLaunchState = true;
                             }
                             else
                             {
@@ -494,6 +496,11 @@ internal sealed partial class LauncherViewModel
                                     ("manifest_path", result.ManifestPath),
                                     ("downloaded_count", result.DownloadedFiles.Count),
                                     ("reused_count", result.ReusedFiles.Count)));
+
+                            if (!isExistingInstance)
+                            {
+                                ReturnToLaunchPageAfterSuccessfulDownloadInstall(refreshLaunchState: !didRefreshLaunchState);
+                            }
                         });
 
                         installTask.CompleteSuccessfully(
@@ -643,6 +650,28 @@ internal sealed partial class LauncherViewModel
                || string.Equals(optionTitle, "Legacy Fabric API", StringComparison.Ordinal)
                || string.Equals(optionTitle, "QFAPI / QSL", StringComparison.Ordinal)
                || string.Equals(optionTitle, "OptiFabric", StringComparison.Ordinal);
+    }
+
+    private void ReturnToLaunchPageAfterSuccessfulDownloadInstall(bool refreshLaunchState = false)
+    {
+        if (_currentRoute.Page is not (
+                LauncherFrontendPageKey.Download
+                or LauncherFrontendPageKey.TaskManager
+                or LauncherFrontendPageKey.CompDetail
+                or LauncherFrontendPageKey.InstanceSelect))
+        {
+            return;
+        }
+
+        if (refreshLaunchState)
+        {
+            RefreshLaunchState();
+        }
+
+        NavigateTo(
+            new LauncherFrontendRoute(LauncherFrontendPageKey.Launch),
+            T("launch.status.messages.returned_to_launch_page"),
+            RouteNavigationBehavior.Reset);
     }
 
     private FrontendInstallSelectionState CreateNotInstalledSelectionState()
