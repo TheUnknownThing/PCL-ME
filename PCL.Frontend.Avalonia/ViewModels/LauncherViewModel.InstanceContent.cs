@@ -354,10 +354,30 @@ internal sealed partial class LauncherViewModel
         _instanceResourceFilter = InstanceResourceFilter.All;
         _instanceResourceSortMethod = InstanceResourceSortMethod.ResourceName;
 
-        RefreshInstanceWorldEntries();
-        RefreshInstanceScreenshotEntries();
-        RefreshInstanceServerEntries();
-        RefreshInstanceResourceEntries();
+        InitializeCurrentInstanceContentSurface();
+    }
+
+    private void InitializeCurrentInstanceContentSurface()
+    {
+        switch (_currentRoute.Subpage)
+        {
+            case LauncherFrontendSubpageKey.VersionWorld:
+                RefreshInstanceWorldEntries();
+                break;
+            case LauncherFrontendSubpageKey.VersionScreenshot:
+                RefreshInstanceScreenshotEntries();
+                break;
+            case LauncherFrontendSubpageKey.VersionServer:
+                RefreshInstanceServerEntries();
+                break;
+            case LauncherFrontendSubpageKey.VersionMod:
+            case LauncherFrontendSubpageKey.VersionModDisabled:
+            case LauncherFrontendSubpageKey.VersionResourcePack:
+            case LauncherFrontendSubpageKey.VersionShader:
+            case LauncherFrontendSubpageKey.VersionSchematic:
+                RefreshInstanceResourceEntries();
+                break;
+        }
     }
 
     private void RefreshInstanceContentSurfaces()

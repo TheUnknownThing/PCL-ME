@@ -17,6 +17,7 @@ internal sealed class InstanceScreenshotEntryViewModel(
     Bitmap? image,
     string title,
     string info,
+    string path,
     ActionCommand openCommand)
 {
     public Bitmap? Image { get; } = image;
@@ -24,6 +25,8 @@ internal sealed class InstanceScreenshotEntryViewModel(
     public string Title { get; } = title;
 
     public string Info { get; } = info;
+
+    public string Path { get; } = path;
 
     public ActionCommand OpenCommand { get; } = openCommand;
 }

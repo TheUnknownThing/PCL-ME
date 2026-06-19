@@ -772,6 +772,10 @@ internal sealed partial class LauncherViewModel
                         initializeAllSurfaces: false);
                 }
             }
+            else
+            {
+                InitializeActiveInstanceSurface();
+            }
         }
         else if (route.Page == LauncherFrontendPageKey.VersionSaves)
         {
