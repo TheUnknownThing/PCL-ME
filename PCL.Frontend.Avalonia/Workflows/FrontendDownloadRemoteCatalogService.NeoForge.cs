@@ -43,16 +43,9 @@ internal static partial class FrontendDownloadRemoteCatalogService
     {
         var latestPayload = FetchJsonObject(CreateNeoForgeLatestSources(versionSourceIndex), versionSourceIndex);
         var legacyPayload = FetchJsonObject(CreateNeoForgeLegacySources(versionSourceIndex), versionSourceIndex);
-        var versions = new List<string>();
-        if (latestPayload.Value["versions"] is JsonArray latestVersions)
-        {
-            versions.AddRange(latestVersions.Select(node => node?.GetValue<string>()).OfType<string>());
-        }
-
-        if (legacyPayload.Value["versions"] is JsonArray legacyVersions)
-        {
-            versions.AddRange(legacyVersions.Select(node => node?.GetValue<string>()).OfType<string>());
-        }
+        var versions = FrontendInstallWorkflowService.EnumerateNeoForgeApiNames(latestPayload.Value)
+            .Concat(FrontendInstallWorkflowService.EnumerateNeoForgeApiNames(legacyPayload.Value))
+            .ToList();
 
         var baseUrl = latestPayload.Source.IsOfficial
             ? "https://maven.neoforged.net/releases/net/neoforged"

@@ -251,6 +251,70 @@ public sealed class FrontendModpackExportWorkflowServiceTest
         Assert.AreEqual("0.15.11", profile.FabricVersion);
     }
 
+    [TestMethod]
+    public void InspectPackage_ReadsCurseForgeNeoForgeLoader()
+    {
+        using var workspace = new TempLauncherWorkspace();
+        var archivePath = Path.Combine(workspace.RootPath, "curse-neoforge-pack.zip");
+        using (var archive = ZipFile.Open(archivePath, ZipArchiveMode.Create))
+        {
+            WriteTextEntry(
+                archive,
+                "manifest.json",
+                """
+                {
+                  "manifestType": "minecraftModpack",
+                  "manifestVersion": 1,
+                  "name": "NeoForge Demo",
+                  "version": "0.0.8",
+                  "minecraft": {
+                    "version": "1.21.1",
+                    "modLoaders": [
+                      { "id": "neoforge-21.1.228", "primary": true }
+                    ]
+                  },
+                  "files": [],
+                  "overrides": "overrides"
+                }
+                """);
+        }
+
+        using var httpClient = new HttpClient();
+        var package = FrontendModpackInstallWorkflowService.InspectPackage(
+            archivePath,
+            0,
+            httpClient,
+            CancellationToken.None);
+
+        Assert.AreEqual(FrontendModpackPackageKind.CurseForge, package.Kind);
+        Assert.AreEqual("1.21.1", package.MinecraftVersion);
+        Assert.AreEqual("21.1.228", package.NeoForgeVersion);
+    }
+
+    [TestMethod]
+    public void NeoForgeChoices_ReadsBmclDirectoryListing()
+    {
+        var root = new JsonObject
+        {
+            ["name"] = "neoforge",
+            ["files"] = new JsonArray(
+                new JsonObject
+                {
+                    ["name"] = "21.1.228",
+                    ["type"] = "DIRECTORY"
+                },
+                new JsonObject
+                {
+                    ["name"] = "maven-metadata.xml",
+                    ["type"] = "FILE"
+                })
+        };
+
+        CollectionAssert.AreEqual(
+            new[] { "21.1.228" },
+            FrontendInstallWorkflowService.EnumerateNeoForgeApiNames(root).ToArray());
+    }
+
     private static JsonObject CreateLibrary(string name)
     {
         return new JsonObject

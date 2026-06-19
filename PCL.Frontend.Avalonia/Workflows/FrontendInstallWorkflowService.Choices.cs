@@ -90,14 +90,8 @@ internal static partial class FrontendInstallWorkflowService
         string minecraftVersion,
         II18nService? i18n = null)
     {
-        if (root["versions"] is not JsonArray files)
+        foreach (var apiName in EnumerateNeoForgeApiNames(root))
         {
-            return;
-        }
-
-        foreach (var file in files.Select(node => node as JsonValue))
-        {
-            var apiName = file?.GetValue<string>();
             if (string.IsNullOrWhiteSpace(apiName))
             {
                 continue;
@@ -124,6 +118,45 @@ internal static partial class FrontendInstallWorkflowService
                     ["apiName"] = apiName,
                     ["minecraftVersion"] = inherit
                 }));
+        }
+    }
+
+
+    internal static IEnumerable<string> EnumerateNeoForgeApiNames(JsonObject root)
+    {
+        if (root["versions"] is JsonArray versions)
+        {
+            foreach (var node in versions)
+            {
+                var version = node?.GetValue<string>();
+                if (!string.IsNullOrWhiteSpace(version))
+                {
+                    yield return version;
+                }
+            }
+
+            yield break;
+        }
+
+        if (root["files"] is not JsonArray files)
+        {
+            yield break;
+        }
+
+        foreach (var node in files.OfType<JsonObject>())
+        {
+            var type = node["type"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(type)
+                && !string.Equals(type, "DIRECTORY", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var name = node["name"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                yield return name;
+            }
         }
     }
 
