@@ -6,24 +6,55 @@
 
 # PCL Multiplatform Edition
 
-[下载发行版](https://github.com/TheUnknownThing/PCL-ME/releases/latest) |
-[提交问题](https://github.com/TheUnknownThing/PCL-ME/issues) |
-[贡献指南](CONTRIBUTING.md) |
-[Avalonia 前端文档](PCL.Frontend.Avalonia/README.md) |
-[后端文档](PCL.Core.Backend/README.md)
+一款跨平台的 Minecraft 启动器，支持 Windows、macOS 和 Linux。
+
+[⬇ 下载最新版本](https://github.com/TheUnknownThing/PCL-ME/releases/latest) ·
+[🐛 反馈问题](https://github.com/TheUnknownThing/PCL-ME/issues) ·
+[📖 贡献指南](CONTRIBUTING.md)
 
 </div>
 
-PCL-ME 是上游 PCL-CE 的硬分叉版本，当前目标是维护一套真正可持续的跨平台启动器。现行主线实现基于 C#、.NET 10 与 Avalonia，面向 Windows、macOS 和 Linux。
+## 关于 PCL-ME
 
-## 项目结构
+PCL-ME 致力于将 PCL 熟悉的使用体验完整带到 Windows、macOS 与 Linux 上，并长期维护下去。
 
-- `PCL.Frontend.Avalonia/`：当前维护中的桌面前端与 UI 资源
-- `PCL.Core.Backend/`：共享启动器逻辑、后端工作流与基础服务
-- `PCL.Core.Backend.Test/`：后端回归测试
-- `PCL.Core.Backend.Foundation.Test/`：可移植性与基础层测试
+## 界面预览
 
-## 快速开始
+<table>
+<tr>
+<td><img src="docs/screenshots/launch.png" alt="启动页"></td>
+<td><img src="docs/screenshots/download.png" alt="下载页"></td>
+<td><img src="docs/screenshots/settings.png" alt="设置页"></td>
+</tr>
+<tr>
+<td align="center">启动游戏</td>
+<td align="center">下载 Mod 与整合包</td>
+<td align="center">界面与主题设置</td>
+</tr>
+</table>
+
+## 平台支持
+
+| 平台 | 状态 |
+|---|---|
+| 🐧 Linux | 主力平台，持续开发与测试 |
+| 🍎 macOS | 主力平台，持续开发与测试 |
+| 🪟 Windows | 已支持，但测试覆盖略少于上述平台 |
+
+## 安装
+
+- **Windows / macOS**：前往 [Releases 页面](https://github.com/TheUnknownThing/PCL-ME/releases/latest) 下载对应平台的安装包。
+- **Linux**：除了 Releases 中的发行包，Arch Linux 用户也可以通过 AUR 安装：
+
+  ```bash
+  yay -S pcl-me-bin
+  ```
+
+---
+
+## 给开发者
+
+如果你希望从源码构建或参与开发：
 
 ```bash
 dotnet restore
@@ -31,24 +62,20 @@ dotnet build
 dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
-## 平台说明
+更多细节请参见 [Avalonia 前端文档](PCL.Frontend.Avalonia/README.md) 与 [后端文档](PCL.Core.Backend/README.md)，贡献流程请参见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-| 平台 | 状态 | 说明 |
-|---|---|---|
-| Windows | 持续完善中 | 已支持，但验证强度仍低于 macOS / Linux |
-| macOS | 主要目标平台 | 持续开发与测试 |
-| Linux | 主要目标平台 | 持续开发与测试 |
+> PCL-ME 由 [PCL-CE](https://github.com/PCL-Community/PCL-CE) 分叉而来，目前作为独立分支维护。技术栈：C# + .NET 10 + Avalonia。
 
 ## 许可证
 
-PCL-ME 使用分层授权模型：
+PCL-ME 的代码按目录分别授权：
 
-- `PCL.Frontend.Avalonia/` 下的 UI 内容遵循 [PCL.Frontend.Avalonia/LICENSE](PCL.Frontend.Avalonia/LICENSE) 自定义许可证。
-- 本仓库中其余启动器相关逻辑遵循 [Apache License 2.0](LICENSE)，除非某个文件或子目录另有说明。
+- `PCL.Frontend.Avalonia/` 下的界面相关内容遵循 [自定义许可证](PCL.Frontend.Avalonia/LICENSE)。
+- 仓库其余部分遵循 [Apache License 2.0](LICENSE)。
 
-资源致谢：
+若不确定某个文件适用哪套条款，请查阅其所在目录或上级目录中的许可证说明。
 
-- 当前应用 Logo 基于 [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo) 仓库中的素材；该源仓库使用 Apache License 2.0。
-- 为了保持多平台环境下的界面字体一致性，`PCL.Frontend.Avalonia/Assets/Fonts/` 中随附并使用了 [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/) 字体文件。HarmonyOS Sans 版权归 Huawei Device Co., Ltd. 所有，按 HarmonyOS Sans Fonts License Agreement 提供，特此致谢。
+#### 资源致谢
 
-如果你不确定某个文件适用哪套条款，请先看它所在目录，再检查该目录附近的许可证说明。
+- 应用图标取自 [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo)（Apache 2.0）。
+- 界面字体使用 [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/)，版权归 Huawei Device Co., Ltd. 所有，依据 HarmonyOS Sans Fonts License Agreement 授权使用，特此致谢。

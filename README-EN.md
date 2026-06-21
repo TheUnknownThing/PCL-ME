@@ -6,24 +6,55 @@
 
 # PCL Multiplatform Edition
 
-[Releases](https://github.com/TheUnknownThing/PCL-ME/releases/latest) |
-[Issues](https://github.com/TheUnknownThing/PCL-ME/issues) |
-[Contributing](CONTRIBUTING.md) |
-[Avalonia Frontend Docs](PCL.Frontend.Avalonia/README.md) |
-[Backend Docs](PCL.Core.Backend/README.md)
+A cross-platform Minecraft launcher for Windows, macOS, and Linux.
+
+[⬇ Download Latest](https://github.com/TheUnknownThing/PCL-ME/releases/latest) ·
+[🐛 Report an Issue](https://github.com/TheUnknownThing/PCL-ME/issues) ·
+[📖 Contributing Guide](CONTRIBUTING.md)
 
 </div>
 
-PCL-ME is a hard fork of the upstream PCL-CE edition, focused on a maintained cross-platform launcher stack. The active application is built with C#, .NET 10, and Avalonia for Windows, macOS, and Linux.
+## About PCL-ME
 
-## Project Layout
+PCL-ME aims to bring the familiar PCL experience to Windows, macOS, and Linux, with long-term maintenance in mind.
 
-- `PCL.Frontend.Avalonia/`: maintained desktop frontend and UI assets
-- `PCL.Core.Backend/`: shared launcher logic, backend workflows, and foundation services
-- `PCL.Core.Backend.Test/`: backend regression tests
-- `PCL.Core.Backend.Foundation.Test/`: portability and foundation tests
+## Screenshots
 
-## Quick Start
+<table>
+<tr>
+<td><img src="docs/screenshots/launch.png" alt="Launch page"></td>
+<td><img src="docs/screenshots/download.png" alt="Download page"></td>
+<td><img src="docs/screenshots/settings.png" alt="Settings page"></td>
+</tr>
+<tr>
+<td align="center">Launching the game</td>
+<td align="center">Browsing mods and modpacks</td>
+<td align="center">Interface and theme settings</td>
+</tr>
+</table>
+
+## Platform Support
+
+| Platform | Status |
+|---|---|
+| 🐧 Linux | Primary target, actively developed and tested |
+| 🍎 macOS | Primary target, actively developed and tested |
+| 🪟 Windows | Supported, but receives less testing than the above |
+
+## Installation
+
+- **Windows / macOS**: Grab the installer for your platform from the [Releases page](https://github.com/TheUnknownThing/PCL-ME/releases/latest).
+- **Linux**: In addition to the Releases artifacts, Arch Linux users can install from the AUR:
+
+  ```bash
+  yay -S pcl-me-bin
+  ```
+
+---
+
+## For Developers
+
+If you'd like to build from source or contribute:
 
 ```bash
 dotnet restore
@@ -31,24 +62,20 @@ dotnet build
 dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
-## Platform Notes
+See the [Avalonia frontend docs](PCL.Frontend.Avalonia/README.md) and [backend docs](PCL.Core.Backend/README.md) for more details, and refer to [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.
 
-| Platform | Status | Notes |
-|---|---|---|
-| Windows | In progress | Supported, but still receives less validation than macOS/Linux |
-| macOS | Primary target | Actively developed and tested |
-| Linux | Primary target | Actively developed and tested |
+> PCL-ME was forked from [PCL-CE](https://github.com/PCL-Community/PCL-CE) and is now maintained as an independent branch. Tech stack: C# + .NET 10 + Avalonia.
 
 ## License
 
-PCL-ME uses a split license model:
+PCL-ME is licensed per directory:
 
-- UI contents under `PCL.Frontend.Avalonia/` follow the custom license in [PCL.Frontend.Avalonia/LICENSE](PCL.Frontend.Avalonia/LICENSE).
-- All other launcher-related logic in this repository follows [Apache License 2.0](LICENSE), unless a file states otherwise.
+- UI-related content under `PCL.Frontend.Avalonia/` follows its [custom license](PCL.Frontend.Avalonia/LICENSE).
+- The rest of the repository follows the [Apache License 2.0](LICENSE).
 
-Asset credits:
+If you are unsure which terms apply to a particular file, refer to the license notice in its directory or parent directories.
 
-- The current application logo is based on assets from [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo); that source repository is licensed under Apache License 2.0.
-- To keep UI typography consistent across platforms, the project bundles and uses [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/) font files in `PCL.Frontend.Avalonia/Assets/Fonts/`. HarmonyOS Sans is copyrighted by Huawei Device Co., Ltd. and provided under the HarmonyOS Sans Fonts License Agreement.
+#### Asset Credits
 
-If you are unsure which terms apply to a file, start with the folder it lives in and then check the nearest license notice in that subtree.
+- The application icon is based on assets from [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo) (Apache 2.0).
+- The UI uses [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/), copyrighted by Huawei Device Co., Ltd. and licensed under the HarmonyOS Sans Fonts License Agreement. We gratefully acknowledge their work.
