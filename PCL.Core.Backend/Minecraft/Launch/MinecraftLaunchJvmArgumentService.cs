@@ -58,7 +58,7 @@ public static class MinecraftLaunchJvmArgumentService
         if (!string.IsNullOrWhiteSpace(request.AuthlibInjectorArgument))
         {
             data.Insert(0, request.AuthlibInjectorArgument);
-            if (request.JavaMajorVersion >= 6)
+            if (OperatingSystem.IsWindows() && request.JavaMajorVersion >= 6)
             {
                 data.Add("-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT");
             }

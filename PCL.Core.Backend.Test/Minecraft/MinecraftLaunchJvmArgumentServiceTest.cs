@@ -35,7 +35,10 @@ public sealed class MinecraftLaunchJvmArgumentServiceTest
         StringAssert.Contains(result, "-Dlog4j2.formatMsgNoLookups=true");
         StringAssert.Contains(result, "\"-Djava.library.path=C:\\Minecraft\\natives\"");
         StringAssert.Contains(result, "-cp ${classpath}");
-        StringAssert.Contains(result, "-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT");
+        var hasWindowsTrustStoreOverride = result.Contains(
+            "-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT",
+            System.StringComparison.Ordinal);
+        Assert.AreEqual(OperatingSystem.IsWindows(), hasWindowsTrustStoreOverride);
         StringAssert.Contains(result, "-Dhttp.proxyHost=proxy.example");
         StringAssert.Contains(result, "-Dhttp.proxyPort=8080");
         StringAssert.Contains(result, "-Dhttps.proxyHost=proxy.example");

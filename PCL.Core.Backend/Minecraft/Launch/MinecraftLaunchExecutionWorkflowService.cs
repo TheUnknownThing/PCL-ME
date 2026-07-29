@@ -41,15 +41,14 @@ public static class MinecraftLaunchExecutionWorkflowService
         ArgumentNullException.ThrowIfNull(request);
 
         var runtimePlan = MinecraftLaunchRuntimeService.BuildProcessPlan(request);
-        var shouldRedirectProcessOutput = OperatingSystem.IsWindows();
         return new MinecraftLaunchProcessShellPlan(
             runtimePlan.ExecutablePath,
             runtimePlan.LaunchArguments,
             runtimePlan.WorkingDirectory,
             runtimePlan.CreateNoWindow,
             UseShellExecute: false,
-            RedirectStandardOutput: shouldRedirectProcessOutput,
-            RedirectStandardError: shouldRedirectProcessOutput,
+            RedirectStandardOutput: true,
+            RedirectStandardError: true,
             runtimePlan.PathEnvironmentValue,
             runtimePlan.AppDataEnvironmentValue,
             runtimePlan.EnvironmentVariables,

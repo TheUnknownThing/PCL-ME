@@ -51,8 +51,8 @@ public sealed class MinecraftLaunchExecutionWorkflowServiceTest
         Assert.AreEqual("--demo", result.Arguments);
         Assert.AreEqual(@"D:\Instances\Fabric", result.WorkingDirectory);
         Assert.IsFalse(result.UseShellExecute);
-        Assert.AreEqual(OperatingSystem.IsWindows(), result.RedirectStandardOutput);
-        Assert.AreEqual(OperatingSystem.IsWindows(), result.RedirectStandardError);
+        Assert.IsTrue(result.RedirectStandardOutput);
+        Assert.IsTrue(result.RedirectStandardError);
         Assert.AreEqual(@"D:\.minecraft", result.AppDataEnvironmentValue);
         Assert.AreEqual(MinecraftLaunchProcessPriorityKind.AboveNormal, result.PriorityKind);
         Assert.AreEqual(@"Started game process: C:\Java\bin\javaw.exe", result.StartedLogMessage);
