@@ -893,6 +893,8 @@ startup:
 
         The hidden Hardcore Fan theme is not unlocked. The cross-platform edition does not include hidden themes!
 launch:
+  permissions:
+    microphone_usage_description: Minecraft mods need microphone access for in-game voice chat.
   announcements:
     community_edition_intro:
       title: Cross-Platform Edition Notice

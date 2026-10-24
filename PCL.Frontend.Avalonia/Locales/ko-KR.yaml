@@ -891,6 +891,8 @@ startup:
 
         숨겨진 Hardcore Fan 테마는 잠금 해제되지 않습니다. 크로스 플랫폼 에디션에는 숨겨진 테마가 포함되지 않습니다!
 launch:
+  permissions:
+    microphone_usage_description: Minecraft 모드는 게임 내 음성 채팅을 위해 마이크 접근 권한이 필요합니다.
   announcements:
     community_edition_intro:
       title: 크로스 플랫폼 버전 공지

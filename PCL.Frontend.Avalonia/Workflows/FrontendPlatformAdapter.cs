@@ -246,12 +246,14 @@ internal sealed class FrontendPlatformAdapter
         string targetDirectory,
         string executablePath,
         string instanceName,
-        string displayName)
+        string displayName,
+        string microphoneUsageDescription)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(targetDirectory);
         ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceName);
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(microphoneUsageDescription);
 
         Directory.CreateDirectory(targetDirectory);
 
@@ -276,7 +278,7 @@ internal sealed class FrontendPlatformAdapter
         if (OperatingSystem.IsMacOS())
         {
             var appBundlePath = Path.Combine(targetDirectory, $"{SanitizeFileName(displayName)}.app");
-            WriteMacApplicationBundle(appBundlePath, executablePath, arguments, displayName);
+            WriteMacApplicationBundle(appBundlePath, executablePath, arguments, displayName, microphoneUsageDescription);
             return new FrontendShortcutMaterializationResult(appBundlePath);
         }
 
@@ -460,7 +462,8 @@ internal sealed class FrontendPlatformAdapter
         string appBundlePath,
         string executablePath,
         IReadOnlyList<string> arguments,
-        string displayName)
+        string displayName,
+        string microphoneUsageDescription)
     {
         var contentsDirectory = Path.Combine(appBundlePath, "Contents");
         var macOsDirectory = Path.Combine(contentsDirectory, "MacOS");
@@ -494,6 +497,8 @@ internal sealed class FrontendPlatformAdapter
                 <string>public.app-category.games</string>
                 <key>LSUIElement</key>
                 <true/>
+                <key>NSMicrophoneUsageDescription</key>
+                <string>{{EscapeXmlValue(microphoneUsageDescription)}}</string>
             </dict>
             </plist>
             """;

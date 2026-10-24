@@ -893,6 +893,8 @@ startup:
 
         隐藏的 Hardcore Fan 主题尚未解锁。跨平台版不包含隐藏主题！
 launch:
+  permissions:
+    microphone_usage_description: Minecraft 模组需要访问麦克风以进行游戏内语音聊天。
   announcements:
     community_edition_intro:
       title: 跨平台版提示

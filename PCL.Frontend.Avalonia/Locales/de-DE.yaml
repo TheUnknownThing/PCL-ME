@@ -891,6 +891,8 @@ startup:
 
         Das versteckte Hardcore-Fan-Design ist nicht freigeschaltet. Die Cross-Platform-Edition enthält keine versteckten Designs!
 launch:
+  permissions:
+    microphone_usage_description: Minecraft-Mods benötigen Mikrofonzugriff für den Sprachchat im Spiel.
   announcements:
     community_edition_intro:
       title: Hinweis zur Cross-Platform Edition

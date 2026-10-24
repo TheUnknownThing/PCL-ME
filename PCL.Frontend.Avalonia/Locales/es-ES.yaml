@@ -893,6 +893,8 @@ startup:
 
         El tema oculto Hardcore Fan no está desbloqueado. La edición multiplataforma no incluye temas ocultos!
 launch:
+  permissions:
+    microphone_usage_description: Los mods de Minecraft necesitan acceso al micrófono para el chat de voz en el juego.
   announcements:
     community_edition_intro:
       title: Aviso de edición multiplataforma

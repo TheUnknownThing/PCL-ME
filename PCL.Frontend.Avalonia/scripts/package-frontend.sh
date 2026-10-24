@@ -12,7 +12,6 @@ bundle_identifier="${BUNDLE_IDENTIFIER:-org.pcl.me.frontend}"
 app_version="${APP_VERSION:-$(date +%Y.%m.%d)}"
 publish_mode="${PUBLISH_MODE:-self-contained}"
 executable_name="PCL.Frontend.Avalonia"
-mac_launcher_name="PCLLauncher"
 linux_launcher_script="launch-pcl-me.sh"
 windows_launcher_script="Launch PCL-ME.vbs"
 icon_png="${repo_root}/PCL.Frontend.Avalonia/Assets/icon.png"
@@ -157,6 +156,7 @@ package_macos() {
   local temp_dir="$4"
   local app_dir="${rid_root}/${app_name}.app"
   local plist_template="${repo_root}/PCL.Frontend.Avalonia/packaging/Info.plist.template"
+  local entitlements_path="${repo_root}/PCL.Frontend.Avalonia/packaging/macos.entitlements"
   local plist_path="${app_dir}/Contents/Info.plist"
   local resources_dir="${app_dir}/Contents/Resources"
   local macos_dir="${app_dir}/Contents/MacOS"
@@ -165,18 +165,18 @@ package_macos() {
   prepare_directory "$app_dir"
   mkdir -p "$resources_dir" "$macos_dir"
   copy_tree "$publish_dir" "$macos_dir"
-  write_text_file "${macos_dir}/${mac_launcher_name}" "#!/bin/sh
-script_dir=\"\$(cd \"\$(dirname \"\$0\")\" && pwd)\"
-exec \"\${script_dir}/${executable_name}\" app \"\$@\"
-"
   create_mac_icon "${resources_dir}/AppIcon.icns" "$temp_dir"
   sed \
     -e "s|__APP_NAME__|${app_name}|g" \
-    -e "s|__LAUNCHER_NAME__|${mac_launcher_name}|g" \
+    -e "s|__LAUNCHER_NAME__|${executable_name}|g" \
     -e "s|__BUNDLE_IDENTIFIER__|${bundle_identifier}|g" \
     -e "s|__APP_VERSION__|${app_version}|g" \
     "$plist_template" > "$plist_path"
-  chmod +x "${macos_dir}/${executable_name}" "${macos_dir}/${mac_launcher_name}"
+  chmod +x "${macos_dir}/${executable_name}"
+  # TCC needs a signed native bundle executable to identify microphone requests from Java.
+  require_tool codesign
+  codesign --force --deep --sign - --entitlements "$entitlements_path" "$app_dir" || return 1
+  codesign --verify --deep --strict "$app_dir" || return 1
   ditto -c -k --sequesterRsrc --keepParent "$app_dir" "$archive_path"
   echo "$archive_path"
 }

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -40,6 +41,41 @@ public sealed class FrontendPlatformAdapterTest
         };
 
         Assert.IsFalse(FrontendPlatformAdapter.IsSuccessfulStart(startInfo, null));
+    }
+
+    [TestMethod]
+    public void CreateDirectLaunchShortcut_DeclaresMicrophoneUsageInMacBundle()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+
+        var root = Path.Combine(Path.GetTempPath(), "pcl-mac-shortcut-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            const string microphoneUsageDescription = "Minecraft mods need microphone access for voice chat & communication.";
+            var adapter = new FrontendPlatformAdapter();
+            var shortcut = adapter.CreateDirectLaunchShortcut(
+                root,
+                "/Applications/PCL-ME.app/Contents/MacOS/PCL.Frontend.Avalonia",
+                "Backstabbed++",
+                "Backstabbed++",
+                microphoneUsageDescription);
+
+            var plist = XDocument.Load(Path.Combine(shortcut.ShortcutPath, "Contents", "Info.plist"));
+            var usageKey = plist.Root!.Element("dict")!.Elements("key")
+                .Single(key => key.Value == "NSMicrophoneUsageDescription");
+
+            Assert.AreEqual(microphoneUsageDescription, (usageKey.NextNode as XElement)?.Value);
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
     }
 
     [TestMethod]

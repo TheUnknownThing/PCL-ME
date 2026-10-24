@@ -1022,6 +1022,8 @@ startup:
       title: []
       message: []
 launch:
+  permissions:
+    microphone_usage_description: []
   announcements:
     community_edition_intro:
       title: []

@@ -893,6 +893,8 @@ startup:
 
         隱藏的 Hardcore Fan 主題尚未解鎖。跨平台版不包含隱藏主題！
 launch:
+  permissions:
+    microphone_usage_description: Minecraft 模組需要存取麥克風以進行遊戲內語音聊天。
   announcements:
     community_edition_intro:
       title: 跨平台版提示

@@ -891,6 +891,8 @@ startup:
 
         Le thème caché Hardcore Fan n'est pas débloqué. L'édition multiplateforme n'inclut pas de thèmes cachés !
 launch:
+  permissions:
+    microphone_usage_description: Les mods Minecraft ont besoin du microphone pour le chat vocal en jeu.
   announcements:
     community_edition_intro:
       title: Avis d'édition multiplateforme

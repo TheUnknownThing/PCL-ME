@@ -76,7 +76,12 @@ internal sealed partial class LauncherActionService
     public string CreateDirectLaunchShortcutAt(string targetDirectory, string instanceName, string displayName)
     {
         var executablePath = Environment.ProcessPath ?? Path.Combine(RuntimePaths.ExecutableDirectory, "PCL.Frontend.Avalonia");
-        return PlatformAdapter.CreateDirectLaunchShortcut(targetDirectory, executablePath, instanceName, displayName).ShortcutPath;
+        return PlatformAdapter.CreateDirectLaunchShortcut(
+            targetDirectory,
+            executablePath,
+            instanceName,
+            displayName,
+            I18n.T("launch.permissions.microphone_usage_description")).ShortcutPath;
     }
 
     private static void TryDeleteDirectory(string path)
