@@ -65,7 +65,7 @@ internal sealed partial class PclListItem : UserControl
     private bool _isPressed;
     private bool? _selectionBarSelectedState;
     private bool _isAppearanceSubscribed;
-    private DispatcherTimer? _accessorySpinTimer;
+    private readonly FrameAnimation _accessorySpinAnimation;
     private double _accessorySpinAngle;
     private static readonly Dictionary<string, Geometry> GeometryCache = new(StringComparer.Ordinal);
     private const int MaxCachedGeometryCount = 256;
@@ -77,6 +77,7 @@ internal sealed partial class PclListItem : UserControl
     public PclListItem()
     {
         InitializeComponent();
+        _accessorySpinAnimation = new FrameAnimation(this, UpdateAccessorySpinFrame);
         RenderTransform = _rootScaleTransform;
         AccessoryButton.RenderTransform = _accessoryRotateTransform;
         LogoPath.RenderTransform = _logoPathScaleTransform;
@@ -393,30 +394,22 @@ internal sealed partial class PclListItem : UserControl
 
     private void UpdateAccessorySpinState()
     {
-        if (!AccessoryIsSpinning)
+        if (_accessorySpinAnimation is null)
         {
-            _accessorySpinTimer?.Stop();
-            _accessorySpinTimer = null;
-            _accessorySpinAngle = 0;
-            _accessoryRotateTransform.Angle = 0;
             return;
         }
 
-        _accessorySpinTimer ??= new DispatcherTimer
+        _accessorySpinAnimation.IsEnabled = AccessoryIsSpinning;
+        if (!AccessoryIsSpinning)
         {
-            Interval = TimeSpan.FromMilliseconds(16)
-        };
-        _accessorySpinTimer.Tick -= OnAccessorySpinTick;
-        _accessorySpinTimer.Tick += OnAccessorySpinTick;
-        if (!_accessorySpinTimer.IsEnabled)
-        {
-            _accessorySpinTimer.Start();
+            _accessorySpinAngle = 0;
+            _accessoryRotateTransform.Angle = 0;
         }
     }
 
-    private void OnAccessorySpinTick(object? sender, EventArgs e)
+    private void UpdateAccessorySpinFrame(TimeSpan elapsed)
     {
-        _accessorySpinAngle = (_accessorySpinAngle + 18) % 360;
+        _accessorySpinAngle = elapsed.TotalMilliseconds * (18d / 16d) % 360d;
         _accessoryRotateTransform.Angle = _accessorySpinAngle;
     }
 
@@ -501,8 +494,6 @@ internal sealed partial class PclListItem : UserControl
 
         FrontendAppearanceService.AppearanceChanged -= OnAppearanceChanged;
         _isAppearanceSubscribed = false;
-        _accessorySpinTimer?.Stop();
-        _accessorySpinTimer = null;
     }
 
     private void OnAppearanceChanged()

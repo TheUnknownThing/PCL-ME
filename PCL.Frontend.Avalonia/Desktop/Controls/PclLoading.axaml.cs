@@ -1,11 +1,9 @@
-using System.Diagnostics;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
@@ -30,7 +28,6 @@ internal sealed partial class PclLoading : UserControl
     public static readonly StyledProperty<IBrush?> IndicatorBrushProperty =
         AvaloniaProperty.Register<PclLoading, IBrush?>(nameof(IndicatorBrush));
 
-    private static TimeSpan AnimationTickInterval => MotionDurations.FrameInterval;
     private static TimeSpan StrikeLeadIn => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(250));
     private static TimeSpan StrikeDownDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(500));
     private static TimeSpan StrikeRecoveryDuration => MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(900));
@@ -54,26 +51,18 @@ internal sealed partial class PclLoading : UserControl
     private const double HiddenSuccessScale = 0.72d;
     private const double VisibleSuccessScale = 1d;
 
-    private static readonly DispatcherTimer SharedAnimationTimer = new() { Interval = AnimationTickInterval };
-    private static readonly HashSet<PclLoading> ActiveAnimations = [];
-
-    private readonly Stopwatch _animationStopwatch = new();
+    private readonly FrameAnimation _animation;
     private bool _isMotionDurationSubscribed;
-    private bool _isAnimationLoopActive;
     private RotateTransform PickaxeRotateTransform => (RotateTransform)PickaxeHost.RenderTransform!;
     private TranslateTransform LeftDebrisTranslateTransform => (TranslateTransform)((TransformGroup)LeftDebris.RenderTransform!).Children[1]!;
     private TranslateTransform RightDebrisTranslateTransform => (TranslateTransform)((TransformGroup)RightDebris.RenderTransform!).Children[1]!;
     private ScaleTransform ErrorGlyphScaleTransform => (ScaleTransform)ErrorGlyph.RenderTransform!;
     private ScaleTransform SuccessGlyphScaleTransform => (ScaleTransform)SuccessGlyph.RenderTransform!;
 
-    static PclLoading()
-    {
-        SharedAnimationTimer.Tick += OnSharedAnimationTick;
-    }
-
     public PclLoading()
     {
         InitializeComponent();
+        _animation = new FrameAnimation(this, UpdateAnimationFrame);
         ConfigureTransitions();
         RefreshText();
         RefreshVisualState();
@@ -150,7 +139,6 @@ internal sealed partial class PclLoading : UserControl
             _isMotionDurationSubscribed = true;
         }
 
-        SharedAnimationTimer.Interval = AnimationTickInterval;
         ConfigureTransitions();
         SyncAnimationState();
     }
@@ -163,12 +151,11 @@ internal sealed partial class PclLoading : UserControl
             _isMotionDurationSubscribed = false;
         }
 
-        StopAnimationLoop();
+        _animation.IsEnabled = false;
     }
 
     private void OnMotionDurationsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        SharedAnimationTimer.Interval = AnimationTickInterval;
         ConfigureTransitions();
     }
 
@@ -227,7 +214,7 @@ internal sealed partial class PclLoading : UserControl
         SuccessGlyph.Opacity = isSuccess ? 1d : 0d;
         SuccessGlyphScaleTransform.ScaleX = isSuccess ? VisibleSuccessScale : HiddenSuccessScale;
         SuccessGlyphScaleTransform.ScaleY = isSuccess ? VisibleSuccessScale : HiddenSuccessScale;
-        if ((!IsError && !_isAnimationLoopActive) || isSuccess)
+        if ((!IsError && _animation?.IsRunning != true) || isSuccess)
         {
             ResetStrikeVisuals();
         }
@@ -246,57 +233,9 @@ internal sealed partial class PclLoading : UserControl
 
     private void SyncAnimationState()
     {
-        var shouldAnimate = VisualRoot is not null && IsRunning && !IsError && !IsSuccess;
-        if (shouldAnimate)
+        if (_animation is not null)
         {
-            StartAnimationLoop();
-            return;
-        }
-
-        StopAnimationLoop();
-    }
-
-    private void StartAnimationLoop()
-    {
-        if (_isAnimationLoopActive)
-        {
-            return;
-        }
-
-        _isAnimationLoopActive = true;
-        _animationStopwatch.Restart();
-        ActiveAnimations.Add(this);
-        SharedAnimationTimer.Interval = AnimationTickInterval;
-        if (!SharedAnimationTimer.IsEnabled)
-        {
-            SharedAnimationTimer.Start();
-        }
-
-        UpdateAnimationFrame(TimeSpan.Zero);
-    }
-
-    private void StopAnimationLoop()
-    {
-        if (!_isAnimationLoopActive)
-        {
-            return;
-        }
-
-        _isAnimationLoopActive = false;
-        ActiveAnimations.Remove(this);
-        if (ActiveAnimations.Count == 0)
-        {
-            SharedAnimationTimer.Stop();
-        }
-
-        _animationStopwatch.Reset();
-    }
-
-    private static void OnSharedAnimationTick(object? sender, EventArgs e)
-    {
-        foreach (var control in ActiveAnimations)
-        {
-            control.UpdateAnimationFrame(control._animationStopwatch.Elapsed);
+            _animation.IsEnabled = IsRunning && !IsError && !IsSuccess;
         }
     }
 
