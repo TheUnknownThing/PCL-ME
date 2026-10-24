@@ -14,7 +14,8 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class LauncherViewModel
 {
     private const string HomepageCacheUrlKey = "CacheSavedPageUrl";
-    private IReadOnlyList<HomepagePresetDefinition> HomepagePresetCatalog =>
+    private IReadOnlyList<HomepagePresetDefinition>? _homepagePresetCatalog;
+    private IReadOnlyList<HomepagePresetDefinition> HomepagePresetCatalog => _homepagePresetCatalog ??=
     [
         new(T("launch.homepage.presets.random_hint"), HomepagePresetKind.RandomHint, null),
         new(T("launch.homepage.presets.minecraft_news"), HomepagePresetKind.RemoteMarkup, "https://news.bugjump.net/News.xaml"),

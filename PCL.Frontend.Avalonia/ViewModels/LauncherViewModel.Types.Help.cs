@@ -109,11 +109,14 @@ internal sealed class UiFeatureToggleGroupViewModel(string title, IReadOnlyList<
 internal sealed class UiFeatureToggleItemViewModel(
     string title,
     bool isChecked,
-    Action<bool>? changed = null) : ViewModelBase
+    Action<bool>? changed = null,
+    string? configKey = null) : ViewModelBase
 {
     private bool _isChecked = isChecked;
 
     public string Title { get; } = title;
+
+    public string? ConfigKey { get; } = configKey;
 
     public bool IsChecked
     {

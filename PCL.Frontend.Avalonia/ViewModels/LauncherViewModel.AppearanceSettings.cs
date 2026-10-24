@@ -6,14 +6,18 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class LauncherViewModel
 {
+    private IReadOnlyList<string>? _displayFontOptions;
+    private IReadOnlyList<string>? _homepagePresetOptions;
+
     public IReadOnlyList<string> DarkModeOptions => SetupText.Ui.DarkModeOptions;
 
     public IReadOnlyList<string> ThemeColorOptions => SetupText.Ui.ThemeColorOptions;
 
-    public IReadOnlyList<string> FontOptions => FrontendAppearanceService.BuildDisplayFontOptions(
-        SetupText.Ui.FontOptions.FirstOrDefault());
+    public IReadOnlyList<string> FontOptions => _displayFontOptions ??=
+        FrontendAppearanceService.BuildDisplayFontOptions(SetupText.Ui.FontOptions.FirstOrDefault());
 
-    public IReadOnlyList<string> HomepagePresetOptions => HomepagePresetCatalog.Select(item => item.Title).ToArray();
+    public IReadOnlyList<string> HomepagePresetOptions => _homepagePresetOptions ??=
+        HomepagePresetCatalog.Select(item => item.Title).ToArray();
 
     public int SelectedDarkModeIndex
     {

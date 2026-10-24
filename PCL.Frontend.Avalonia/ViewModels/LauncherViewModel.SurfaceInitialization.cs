@@ -652,15 +652,42 @@ internal sealed partial class LauncherViewModel
 
     private void RefreshUiFeatureToggleGroups()
     {
+        var groups = _setupComposition.Ui.ToggleGroups;
+        // Reloading an unchanged composition should not reset checkbox bindings
+        // and rebuild their item containers on every visit to the page.
+        if (UiFeatureToggleGroups.Count == groups.Count)
+        {
+            var unchanged = true;
+            for (var groupIndex = 0; groupIndex < groups.Count && unchanged; groupIndex++)
+            {
+                var group = groups[groupIndex];
+                var current = UiFeatureToggleGroups[groupIndex];
+                unchanged = current.Title == group.Title && current.Items.Count == group.Items.Count;
+                for (var itemIndex = 0; itemIndex < group.Items.Count && unchanged; itemIndex++)
+                {
+                    var item = group.Items[itemIndex];
+                    var currentItem = current.Items[itemIndex];
+                    unchanged = currentItem.ConfigKey == item.ConfigKey
+                        && currentItem.Title == item.Title && currentItem.IsChecked == item.IsChecked;
+                }
+            }
+
+            if (unchanged)
+            {
+                return;
+            }
+        }
+
         ReplaceItems(UiFeatureToggleGroups,
-            _setupComposition.Ui.ToggleGroups.Select(group =>
+            groups.Select(group =>
                 new UiFeatureToggleGroupViewModel(
                     group.Title,
                     group.Items.Select(item =>
                         new UiFeatureToggleItemViewModel(
                             item.Title,
                             item.IsChecked,
-                            isChecked => PersistUiToggle(item.ConfigKey, item.Title, isChecked))).ToArray())));
+                            isChecked => PersistUiToggle(item.ConfigKey, item.Title, isChecked),
+                            item.ConfigKey)).ToArray())));
     }
 
     private void RefreshHelpTopics()

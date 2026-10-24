@@ -9,6 +9,9 @@ internal sealed partial class LauncherViewModel
     private void RefreshSetupLocalizationCatalog()
     {
         _setupText = CreateSetupLocalizationCatalog();
+        _displayFontOptions = null;
+        _homepagePresetOptions = null;
+        _homepagePresetCatalog = null;
     }
 
     private SetupLocalizationCatalog CreateSetupLocalizationCatalog()
