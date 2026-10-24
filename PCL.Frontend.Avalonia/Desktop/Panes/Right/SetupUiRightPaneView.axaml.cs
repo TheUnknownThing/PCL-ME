@@ -1,43 +1,64 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.ViewModels;
 
 namespace PCL.Frontend.Avalonia.Desktop.Panes.Right;
 
 internal sealed partial class SetupUiRightPaneView : UserControl
 {
-    private readonly ComboBox _launcherLocaleComboBox;
-    private readonly ComboBox _themeModeComboBox;
-    private readonly ComboBox _lightPaletteComboBox;
-    private readonly ComboBox _darkPaletteComboBox;
-    private readonly ComboBox _globalFontComboBox;
-    private readonly ComboBox _motdFontComboBox;
-    private readonly ComboBox _backgroundSuitComboBox;
-    private readonly ComboBox _homepagePresetComboBox;
+    private static readonly (string Name, Func<LauncherViewModel, int> Index)[] SelectionBindings =
+    [
+        ("LauncherLocaleComboBox", static launcher => launcher.SelectedLauncherLocaleIndex),
+        ("ThemeModeComboBox", static launcher => launcher.SelectedDarkModeIndex),
+        ("LightPaletteComboBox", static launcher => launcher.SelectedLightColorIndex),
+        ("DarkPaletteComboBox", static launcher => launcher.SelectedDarkColorIndex),
+        ("GlobalFontComboBox", static launcher => launcher.SelectedGlobalFontIndex),
+        ("MotdFontComboBox", static launcher => launcher.SelectedMotdFontIndex),
+        ("BackgroundSuitComboBox", static launcher => launcher.SelectedBackgroundSuitIndex),
+        ("HomepagePresetComboBox", static launcher => launcher.SelectedHomepagePresetIndex)
+    ];
+    private readonly Dictionary<PclDeferredContentControl, List<(ComboBox Combo, Func<LauncherViewModel, int> Index)>> _sectionSelections = [];
     private LauncherViewModel? _observedLauncher;
+    private bool _isSelectionRestoreQueued;
 
     public SetupUiRightPaneView()
     {
         InitializeComponent();
-        _launcherLocaleComboBox = this.FindControl<ComboBox>("LauncherLocaleComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the launcher locale combo box.");
-        _themeModeComboBox = this.FindControl<ComboBox>("ThemeModeComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the theme mode combo box.");
-        _lightPaletteComboBox = this.FindControl<ComboBox>("LightPaletteComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the light palette combo box.");
-        _darkPaletteComboBox = this.FindControl<ComboBox>("DarkPaletteComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the dark palette combo box.");
-        _globalFontComboBox = this.FindControl<ComboBox>("GlobalFontComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the global font combo box.");
-        _motdFontComboBox = this.FindControl<ComboBox>("MotdFontComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the MOTD font combo box.");
-        _backgroundSuitComboBox = this.FindControl<ComboBox>("BackgroundSuitComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the background suit combo box.");
-        _homepagePresetComboBox = this.FindControl<ComboBox>("HomepagePresetComboBox")
-            ?? throw new InvalidOperationException("The setup UI page did not contain the homepage preset combo box.");
         DataContextChanged += OnDataContextChanged;
+        AttachedToVisualTree += (_, _) =>
+        {
+            ObserveLauncher(DataContext as LauncherViewModel);
+            ScheduleSelectionRestore();
+        };
         DetachedFromVisualTree += (_, _) => ObserveLauncher(null);
+        ScheduleSelectionRestore();
+    }
+
+    private void OnSectionContentCreated(object? sender, EventArgs e)
+    {
+        if (sender is not PclDeferredContentControl { Content: Control content } section)
+        {
+            return;
+        }
+
+        // PclCard has its own namescope. Search the newly built card content,
+        // whose logical children exist before its presenters are attached.
+        var root = content is PclCard { CardContent: Control cardContent } ? cardContent : content;
+        var combos = root.GetLogicalDescendants().OfType<ComboBox>()
+            .Where(combo => combo.Name is not null).ToDictionary(combo => combo.Name!);
+        var selections = new List<(ComboBox, Func<LauncherViewModel, int>)>();
+        foreach (var binding in SelectionBindings)
+        {
+            if (combos.TryGetValue(binding.Name, out var combo))
+            {
+                selections.Add((combo, binding.Index));
+            }
+        }
+
+        _sectionSelections[section] = selections;
         ScheduleSelectionRestore();
     }
 
@@ -92,7 +113,17 @@ internal sealed partial class SetupUiRightPaneView : UserControl
 
     private void ScheduleSelectionRestore()
     {
-        Dispatcher.UIThread.Post(RestoreSelections, DispatcherPriority.Background);
+        if (_isSelectionRestoreQueued)
+        {
+            return;
+        }
+
+        _isSelectionRestoreQueued = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            _isSelectionRestoreQueued = false;
+            RestoreSelections();
+        }, DispatcherPriority.Background);
     }
 
     private void RestoreSelections()
@@ -102,14 +133,13 @@ internal sealed partial class SetupUiRightPaneView : UserControl
             return;
         }
 
-        ApplySelectedIndex(_launcherLocaleComboBox, _observedLauncher.SelectedLauncherLocaleIndex);
-        ApplySelectedIndex(_themeModeComboBox, _observedLauncher.SelectedDarkModeIndex);
-        ApplySelectedIndex(_lightPaletteComboBox, _observedLauncher.SelectedLightColorIndex);
-        ApplySelectedIndex(_darkPaletteComboBox, _observedLauncher.SelectedDarkColorIndex);
-        ApplySelectedIndex(_globalFontComboBox, _observedLauncher.SelectedGlobalFontIndex);
-        ApplySelectedIndex(_motdFontComboBox, _observedLauncher.SelectedMotdFontIndex);
-        ApplySelectedIndex(_backgroundSuitComboBox, _observedLauncher.SelectedBackgroundSuitIndex);
-        ApplySelectedIndex(_homepagePresetComboBox, _observedLauncher.SelectedHomepagePresetIndex);
+        foreach (var selections in _sectionSelections.Values)
+        {
+            foreach (var binding in selections)
+            {
+                ApplySelectedIndex(binding.Combo, binding.Index(_observedLauncher));
+            }
+        }
     }
 
     private static void ApplySelectedIndex(ComboBox comboBox, int selectedIndex)

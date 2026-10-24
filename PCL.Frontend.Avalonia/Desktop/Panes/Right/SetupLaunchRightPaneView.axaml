@@ -216,164 +216,167 @@
           ShowChevron="True"
           IsChevronExpanded="{Binding IsLaunchAdvancedOptionsExpanded}"
           HeaderCommand="{Binding ToggleLaunchAdvancedOptionsCommand}"
-          ContentMargin="20,12,20,15">
-        <controls:PclCard.CardContent>
-          <StackPanel Spacing="12">
-            <Grid ColumnDefinitions="Auto,*">
-              <TextBlock
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,0,25,0"
-                  Text="{Binding SetupText.Launch.RendererLabel}" />
-              <ComboBox
-                  Grid.Column="1"
-                  Height="28"
-                  ItemsSource="{Binding LaunchRendererOptions}"
-                  SelectedIndex="{Binding SelectedLaunchRendererIndex}" />
-            </Grid>
-
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto,9,Auto,9,Auto,9,Auto,9,Auto">
-              <TextBlock
-                  VerticalAlignment="Top"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,4,25,0"
-                  Text="{Binding SetupText.Launch.BeforeCommandLabel}" />
-              <StackPanel Grid.Column="1" Spacing="8">
-                <TextBox
-                    MinHeight="72"
-                    Padding="8,6"
-                    AcceptsReturn="True"
-                    Text="{Binding LaunchBeforeCommand}"
-                    TextWrapping="Wrap"
-                    VerticalContentAlignment="Top" />
-                <CheckBox
+          ContentMargin="20,12,20,15"
+          CardContent="{Binding}">
+        <controls:PclCard.CardContentTemplate>
+          <DataTemplate x:DataType="vm:LauncherViewModel">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock
+                    VerticalAlignment="Center"
                     Foreground="{DynamicResource ColorBrush1}"
-                    Content="{Binding SetupText.Launch.WaitForBeforeCommandLabel}"
-                    IsChecked="{Binding WaitForLaunchBeforeCommand}" />
-              </StackPanel>
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="{Binding SetupText.Launch.RendererLabel}" />
+                <ComboBox
+                    Grid.Column="1"
+                    Height="28"
+                    ItemsSource="{Binding LaunchRendererOptions}"
+                    SelectedIndex="{Binding SelectedLaunchRendererIndex}" />
+              </Grid>
 
-              <TextBlock
-                  Grid.Row="2"
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,0,25,0"
-                  Text="{Binding SetupText.Launch.WrapperCommandLabel}" />
-              <TextBox
-                  Grid.Row="2"
-                  Grid.Column="1"
-                  Height="28"
-                  Padding="8,4"
-                  Text="{Binding LaunchWrapperCommand}" />
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,9,Auto,9,Auto,9,Auto,9,Auto,9,Auto,9,Auto">
+                <TextBlock
+                    VerticalAlignment="Top"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Margin="0,4,25,0"
+                    Text="{Binding SetupText.Launch.BeforeCommandLabel}" />
+                <StackPanel Grid.Column="1" Spacing="8">
+                  <TextBox
+                      MinHeight="72"
+                      Padding="8,6"
+                      AcceptsReturn="True"
+                      Text="{Binding LaunchBeforeCommand}"
+                      TextWrapping="Wrap"
+                      VerticalContentAlignment="Top" />
+                  <CheckBox
+                      Foreground="{DynamicResource ColorBrush1}"
+                      Content="{Binding SetupText.Launch.WaitForBeforeCommandLabel}"
+                      IsChecked="{Binding WaitForLaunchBeforeCommand}" />
+                </StackPanel>
 
-              <TextBlock
-                  Grid.Row="4"
-                  VerticalAlignment="Top"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,4,25,0"
-                  Text="{Binding SetupText.Launch.JvmArgumentsLabel}" />
-              <TextBox
-                  Grid.Row="4"
-                  Grid.Column="1"
-                  MinHeight="92"
-                  Padding="8,6"
-                  AcceptsReturn="True"
-                  Text="{Binding LaunchJvmArguments}"
-                  TextWrapping="Wrap"
-                  VerticalContentAlignment="Top" />
-
-              <TextBlock
-                  Grid.Row="6"
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,0,25,0"
-                  Text="{Binding SetupText.Launch.GameArgumentsLabel}" />
-              <TextBox
-                  Grid.Row="6"
-                  Grid.Column="1"
-                  Height="28"
-                  Padding="8,4"
-                  Text="{Binding LaunchGameArguments}" />
-
-              <TextBlock
-                  Grid.Row="8"
-                  VerticalAlignment="Top"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,4,25,0"
-                  Text="{Binding SetupText.Launch.EnvironmentVariablesLabel}" />
-              <StackPanel Grid.Row="8" Grid.Column="1" Spacing="6">
+                <TextBlock
+                    Grid.Row="2"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="{Binding SetupText.Launch.WrapperCommandLabel}" />
                 <TextBox
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding LaunchWrapperCommand}" />
+
+                <TextBlock
+                    Grid.Row="4"
+                    VerticalAlignment="Top"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Margin="0,4,25,0"
+                    Text="{Binding SetupText.Launch.JvmArgumentsLabel}" />
+                <TextBox
+                    Grid.Row="4"
+                    Grid.Column="1"
                     MinHeight="92"
                     Padding="8,6"
                     AcceptsReturn="True"
-                    Text="{Binding LaunchEnvironmentVariables}"
+                    Text="{Binding LaunchJvmArguments}"
                     TextWrapping="Wrap"
                     VerticalContentAlignment="Top" />
-                <TextBlock
-                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                    FontSize="12"
-                    Text="{Binding SetupText.Launch.EnvironmentVariablesHint}"
-                    TextWrapping="Wrap" />
-              </StackPanel>
 
-              <TextBlock
-                  Grid.Row="10"
-                  VerticalAlignment="Top"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,4,25,0"
-                  Text="{Binding SetupText.Launch.LinuxDisplayBackendLabel}" />
-              <StackPanel Grid.Row="10" Grid.Column="1" Spacing="6">
+                <TextBlock
+                    Grid.Row="6"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="{Binding SetupText.Launch.GameArgumentsLabel}" />
+                <TextBox
+                    Grid.Row="6"
+                    Grid.Column="1"
+                    Height="28"
+                    Padding="8,4"
+                    Text="{Binding LaunchGameArguments}" />
+
+                <TextBlock
+                    Grid.Row="8"
+                    VerticalAlignment="Top"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Margin="0,4,25,0"
+                    Text="{Binding SetupText.Launch.EnvironmentVariablesLabel}" />
+                <StackPanel Grid.Row="8" Grid.Column="1" Spacing="6">
+                  <TextBox
+                      MinHeight="92"
+                      Padding="8,6"
+                      AcceptsReturn="True"
+                      Text="{Binding LaunchEnvironmentVariables}"
+                      TextWrapping="Wrap"
+                      VerticalContentAlignment="Top" />
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="12"
+                      Text="{Binding SetupText.Launch.EnvironmentVariablesHint}"
+                      TextWrapping="Wrap" />
+                </StackPanel>
+
+                <TextBlock
+                    Grid.Row="10"
+                    VerticalAlignment="Top"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Margin="0,4,25,0"
+                    Text="{Binding SetupText.Launch.LinuxDisplayBackendLabel}" />
+                <StackPanel Grid.Row="10" Grid.Column="1" Spacing="6">
+                  <CheckBox
+                      Foreground="{DynamicResource ColorBrush1}"
+                      Content="{Binding SetupText.Launch.ForceX11Label}"
+                      IsChecked="{Binding ForceX11OnWaylandForLaunch}" />
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="12"
+                      Text="{Binding SetupText.Launch.ForceX11Hint}"
+                      TextWrapping="Wrap" />
+                </StackPanel>
+              </Grid>
+
+              <StackPanel Spacing="8">
                 <CheckBox
                     Foreground="{DynamicResource ColorBrush1}"
-                    Content="{Binding SetupText.Launch.ForceX11Label}"
-                    IsChecked="{Binding ForceX11OnWaylandForLaunch}" />
-                <TextBlock
-                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                    FontSize="12"
-                    Text="{Binding SetupText.Launch.ForceX11Hint}"
-                    TextWrapping="Wrap" />
+                    Content="{Binding SetupText.Launch.DisableJavaLaunchWrapperLabel}"
+                    IsChecked="{Binding DisableJavaLaunchWrapper}" />
+                <CheckBox
+                    Foreground="{DynamicResource ColorBrush1}"
+                    Content="{Binding SetupText.Launch.DisableRetroWrapperLabel}"
+                    IsChecked="{Binding DisableRetroWrapper}" />
+                <CheckBox
+                    Foreground="{DynamicResource ColorBrush1}"
+                    Content="{Binding SetupText.Launch.RequireDedicatedGpuLabel}"
+                    IsChecked="{Binding RequireDedicatedGpu}" />
+                <CheckBox
+                    Foreground="{DynamicResource ColorBrush1}"
+                    Content="{Binding SetupText.Launch.UseJavaExecutableLabel}"
+                    IsChecked="{Binding UseJavaExecutable}" />
               </StackPanel>
-            </Grid>
 
-            <StackPanel Spacing="8">
-              <CheckBox
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.Launch.DisableJavaLaunchWrapperLabel}"
-                  IsChecked="{Binding DisableJavaLaunchWrapper}" />
-              <CheckBox
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.Launch.DisableRetroWrapperLabel}"
-                  IsChecked="{Binding DisableRetroWrapper}" />
-              <CheckBox
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.Launch.RequireDedicatedGpuLabel}"
-                  IsChecked="{Binding RequireDedicatedGpu}" />
-              <CheckBox
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.Launch.UseJavaExecutableLabel}"
-                  IsChecked="{Binding UseJavaExecutable}" />
+              <Border
+                  Padding="12,10"
+                  Background="{DynamicResource ColorBrush8}"
+                  BorderBrush="{DynamicResource ColorBrush6}"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="{DynamicResource ColorBrush2}"
+                    FontSize="12.5"
+                    Text="{Binding SetupText.Launch.InstanceSettingsHint}"
+                    TextWrapping="Wrap" />
+              </Border>
             </StackPanel>
-
-            <Border
-                Padding="12,10"
-                Background="{DynamicResource ColorBrush8}"
-                BorderBrush="{DynamicResource ColorBrush6}"
-                BorderThickness="1"
-                CornerRadius="4">
-              <TextBlock
-                  Foreground="{DynamicResource ColorBrush2}"
-                  FontSize="12.5"
-                  Text="{Binding SetupText.Launch.InstanceSettingsHint}"
-                  TextWrapping="Wrap" />
-            </Border>
-          </StackPanel>
-        </controls:PclCard.CardContent>
+          </DataTemplate>
+        </controls:PclCard.CardContentTemplate>
       </controls:PclCard>
 
       <controls:PclIconTextButton

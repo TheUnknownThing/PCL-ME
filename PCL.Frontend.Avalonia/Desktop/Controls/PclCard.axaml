@@ -96,7 +96,8 @@
           <ContentPresenter
               x:Name="CardContentPresenter"
               Margin="{Binding EffectiveContentMargin, ElementName=Root}"
-              Content="{Binding CardContent, ElementName=Root}" />
+              Content="{Binding CardContent, ElementName=Root}"
+              ContentTemplate="{Binding CardContentTemplate, ElementName=Root}" />
         </Grid>
       </Grid>
     </Border>

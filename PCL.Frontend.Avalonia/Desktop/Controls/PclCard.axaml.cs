@@ -2,13 +2,13 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows.Input;
 using PCL.Frontend.Avalonia.Icons;
 
@@ -45,6 +45,9 @@ internal sealed partial class PclCard : UserControl
 
     public static readonly StyledProperty<object?> CardContentProperty =
         AvaloniaProperty.Register<PclCard, object?>(nameof(CardContent));
+
+    public static readonly StyledProperty<IDataTemplate?> CardContentTemplateProperty =
+        AvaloniaProperty.Register<PclCard, IDataTemplate?>(nameof(CardContentTemplate));
 
     public static readonly StyledProperty<object?> HeaderOverlayContentProperty =
         AvaloniaProperty.Register<PclCard, object?>(nameof(HeaderOverlayContent));
@@ -107,10 +110,12 @@ internal sealed partial class PclCard : UserControl
         MotionDurations.Changed += OnMotionDurationsChanged;
         _isMotionDurationSubscribed = true;
         ConfigureChevronTransitions();
+        RefreshContentState(animate: false);
     }
 
     private void OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
+        StopContentAnimation();
         if (!_isMotionDurationSubscribed)
         {
             return;
@@ -166,6 +171,12 @@ internal sealed partial class PclCard : UserControl
     {
         get => GetValue(CardContentProperty);
         set => SetValue(CardContentProperty, value);
+    }
+
+    public IDataTemplate? CardContentTemplate
+    {
+        get => GetValue(CardContentTemplateProperty);
+        set => SetValue(CardContentTemplateProperty, value);
     }
 
     public object? HeaderOverlayContent
@@ -548,19 +559,24 @@ internal sealed partial class PclCard : UserControl
         }
 
         var plan = CreateHeightAnimationPlan(targetHeight - startHeight);
-        var stopwatch = Stopwatch.StartNew();
-        while (true)
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var animation = new FrameAnimation(this, elapsed =>
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var currentHeight = startHeight + GetAnimatedDelta(plan, stopwatch.Elapsed) * Math.Sign(targetHeight - startHeight);
-            await Dispatcher.UIThread.InvokeAsync(() => Height = currentHeight, DispatcherPriority.Render);
-            if (stopwatch.Elapsed >= plan.TotalDuration || !IsAnimationCurrent(version, cancellationToken))
+            if (!IsAnimationCurrent(version, cancellationToken))
             {
-                break;
+                completion.TrySetResult();
+                return;
             }
 
-            await Task.Delay(MotionDurations.FrameInterval, cancellationToken);
-        }
+            Height = startHeight + GetAnimatedDelta(plan, elapsed) * Math.Sign(targetHeight - startHeight);
+            if (elapsed >= plan.TotalDuration)
+            {
+                completion.TrySetResult();
+            }
+        });
+        using var registration = cancellationToken.Register(() => completion.TrySetResult());
+        animation.IsEnabled = true;
+        await completion.Task;
 
         if (!IsAnimationCurrent(version, cancellationToken))
         {

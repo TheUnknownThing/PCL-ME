@@ -254,41 +254,44 @@
           Header="{Binding SetupText.LauncherMisc.DebugCardHeader}"
           ShowChevron="True"
           IsChevronExpanded="False"
-          ContentMargin="20,12,20,15">
-        <controls:PclCard.CardContent>
-          <StackPanel Spacing="12">
-            <Grid ColumnDefinitions="Auto,*">
-              <TextBlock
-                  VerticalAlignment="Center"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  FontSize="13.5"
-                  Margin="0,0,25,0"
-                  Text="{Binding SetupText.LauncherMisc.DebugAnimationSpeedLabel}" />
-              <Grid Grid.Column="1" ColumnDefinitions="*,52">
-                <Slider
-                    VerticalAlignment="Center"
-                    Minimum="0"
-                    Maximum="30"
-                    Value="{Binding DebugAnimationSpeed}" />
+          ContentMargin="20,12,20,15"
+          CardContent="{Binding}">
+        <controls:PclCard.CardContentTemplate>
+          <DataTemplate x:DataType="vm:LauncherViewModel">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,*">
                 <TextBlock
-                    Grid.Column="1"
-                    HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                    FontSize="12"
-                    Text="{Binding DebugAnimationSpeedLabel}" />
+                    Foreground="{DynamicResource ColorBrush1}"
+                    FontSize="13.5"
+                    Margin="0,0,25,0"
+                    Text="{Binding SetupText.LauncherMisc.DebugAnimationSpeedLabel}" />
+                <Grid Grid.Column="1" ColumnDefinitions="*,52">
+                  <Slider
+                      VerticalAlignment="Center"
+                      Minimum="0"
+                      Maximum="30"
+                      Value="{Binding DebugAnimationSpeed}" />
+                  <TextBlock
+                      Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="12"
+                      Text="{Binding DebugAnimationSpeedLabel}" />
+                </Grid>
               </Grid>
-            </Grid>
 
-            <Grid ColumnDefinitions="*">
-              <CheckBox
-                  Grid.Column="0"
-                  Foreground="{DynamicResource ColorBrush1}"
-                  Content="{Binding SetupText.LauncherMisc.DebugModeLabel}"
-                  IsChecked="{Binding DebugModeEnabled}" />
-            </Grid>
-          </StackPanel>
-        </controls:PclCard.CardContent>
+              <Grid ColumnDefinitions="*">
+                <CheckBox
+                    Grid.Column="0"
+                    Foreground="{DynamicResource ColorBrush1}"
+                    Content="{Binding SetupText.LauncherMisc.DebugModeLabel}"
+                    IsChecked="{Binding DebugModeEnabled}" />
+              </Grid>
+            </StackPanel>
+          </DataTemplate>
+        </controls:PclCard.CardContentTemplate>
       </controls:PclCard>
     </StackPanel>
   </ScrollViewer>
