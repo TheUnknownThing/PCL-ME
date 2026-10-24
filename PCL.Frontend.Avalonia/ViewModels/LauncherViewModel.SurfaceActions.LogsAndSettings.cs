@@ -105,6 +105,7 @@ internal sealed partial class LauncherViewModel
     {
         try
         {
+            _launcherActionService.FlushPendingSettings();
             var exportDirectory = FrontendSettingsSnapshotWorkflowService.CreateSnapshot(_launcherActionService.RuntimePaths);
             AddActivity(LT("setup.launcher_misc.activities.export_settings"), exportDirectory);
             if (!_launcherActionService.TryOpenExternalTarget(exportDirectory, out var error))
@@ -145,6 +146,7 @@ internal sealed partial class LauncherViewModel
 
         try
         {
+            _launcherActionService.FlushPendingSettings();
             FrontendSettingsSnapshotWorkflowService.RestoreSnapshot(_launcherActionService.RuntimePaths, sourceDirectory);
         }
         catch (Exception ex)

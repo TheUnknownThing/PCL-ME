@@ -25,6 +25,35 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal sealed partial class LauncherActionService
 {
+    private FrontendDeferredSettingsWriter? _deferredSettingsWriter;
+
+    public void FlushPendingSettings() => _deferredSettingsWriter?.Flush();
+
+    public void PersistLocalValueDeferred<T>(string key, T value)
+    {
+        (_deferredSettingsWriter ??= new()).SetDeferred(RuntimePaths.OpenLocalConfigProvider(), key, value);
+    }
+
+    public void PersistSharedValueDeferred<T>(string key, T value)
+    {
+        (_deferredSettingsWriter ??= new()).SetDeferred(RuntimePaths.OpenSharedConfigProvider(), key, value);
+    }
+
+    public void PersistInstanceValueDeferred<T>(string instanceDirectory, string key, T value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceDirectory);
+        if (!FrontendRuntimePaths.IsRecognizedInstanceDirectory(instanceDirectory)) return;
+        var path = Path.Combine(instanceDirectory, "PCL", "config.v1.yml");
+        (_deferredSettingsWriter ??= new()).SetDeferred(path,
+            () => FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory), key, value);
+    }
+
+    private void SyncSettingsProvider(CommonFileProvider provider)
+    {
+        if (_deferredSettingsWriter is { } writer) writer.Sync(provider);
+        else provider.Sync();
+    }
+
     public static void ApplyStoredAnimationPreferences(FrontendRuntimePaths runtimePaths)
     {
         ArgumentNullException.ThrowIfNull(runtimePaths);
@@ -78,7 +107,7 @@ internal sealed partial class LauncherActionService
         Directory.CreateDirectory(Path.GetDirectoryName(RuntimePaths.LocalConfigPath)!);
         var provider = RuntimePaths.OpenLocalConfigProvider();
         provider.Set(key, value);
-        provider.Sync();
+        SyncSettingsProvider(provider);
     }
 
     public void PersistSharedValue<T>(string key, T value)
@@ -86,7 +115,7 @@ internal sealed partial class LauncherActionService
         Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
         var provider = RuntimePaths.OpenSharedConfigProvider();
         provider.Set(key, value);
-        provider.Sync();
+        SyncSettingsProvider(provider);
     }
 
     public void PersistProtectedSharedValue(string key, string value)
@@ -94,7 +123,7 @@ internal sealed partial class LauncherActionService
         Directory.CreateDirectory(RuntimePaths.SharedConfigDirectory);
         var provider = RuntimePaths.OpenSharedConfigProvider();
         provider.Set(key, ProtectSharedValue(value));
-        provider.Sync();
+        SyncSettingsProvider(provider);
     }
 
     public void RemoveLocalValues(IEnumerable<string> keys)
@@ -106,7 +135,7 @@ internal sealed partial class LauncherActionService
             provider.Remove(key);
         }
 
-        provider.Sync();
+        SyncSettingsProvider(provider);
     }
 
     public void RemoveSharedValues(IEnumerable<string> keys)
@@ -118,7 +147,7 @@ internal sealed partial class LauncherActionService
             provider.Remove(key);
         }
 
-        provider.Sync();
+        SyncSettingsProvider(provider);
     }
 
     public void PersistInstanceValue<T>(string instanceDirectory, string key, T value)
@@ -129,9 +158,17 @@ internal sealed partial class LauncherActionService
             return;
         }
 
-        var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
-        provider.Set(key, value);
-        provider.Sync();
+        if (_deferredSettingsWriter is { } writer)
+        {
+            writer.UpdateAndSync(Path.Combine(instanceDirectory, "PCL", "config.v1.yml"),
+                () => FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory), provider => provider.Set(key, value));
+        }
+        else
+        {
+            var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
+            provider.Set(key, value);
+            provider.Sync();
+        }
     }
 
     public void RemoveInstanceValues(string instanceDirectory, IEnumerable<string> keys)
@@ -142,13 +179,20 @@ internal sealed partial class LauncherActionService
             return;
         }
 
-        var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
-        foreach (var key in keys)
+        if (_deferredSettingsWriter is { } writer)
         {
-            provider.Remove(key);
+            writer.UpdateAndSync(Path.Combine(instanceDirectory, "PCL", "config.v1.yml"),
+                () => FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory), provider =>
+                {
+                    foreach (var key in keys) provider.Remove(key);
+                });
         }
-
-        provider.Sync();
+        else
+        {
+            var provider = FrontendRuntimePaths.OpenInstanceConfigProvider(instanceDirectory);
+            foreach (var key in keys) provider.Remove(key);
+            provider.Sync();
+        }
     }
 
     public void DisableNonAsciiGamePathWarning()

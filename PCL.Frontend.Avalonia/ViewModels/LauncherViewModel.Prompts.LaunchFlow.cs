@@ -29,6 +29,7 @@ internal sealed partial class LauncherViewModel
 
     private async Task HandleLaunchRequestedAsync()
     {
+        _launcherActionService.FlushPendingSettings();
         if (_isLaunchInProgress)
         {
             AddActivity(T("shell.prompts.activities.launch_in_progress.title"), T("shell.prompts.activities.launch_in_progress.body"));

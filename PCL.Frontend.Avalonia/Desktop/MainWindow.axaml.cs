@@ -7,6 +7,7 @@ using Avalonia.Animation;
 using Avalonia;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -93,7 +94,9 @@ internal sealed partial class MainWindow : Window
         Closed += OnWindowClosed;
         Deactivated += OnWindowDeactivated;
         AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Bubble, handledEventsToo: true);
-        KeyUp += OnWindowKeyUp;
+        AddHandler(KeyUpEvent, OnWindowKeyUp, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(PointerReleasedEvent, OnSettingsPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(Thumb.DragCompletedEvent, OnSettingsDragCompleted, RoutingStrategies.Bubble, handledEventsToo: true);
         TextInput += OnWindowTextInput;
         PropertyChanged += OnWindowPropertyChanged;
         DataContextChanged += OnDataContextChanged;
@@ -259,6 +262,7 @@ internal sealed partial class MainWindow : Window
 
     private void OnWindowClosed(object? sender, EventArgs e)
     {
+        _launcherViewModel?.FlushPendingSettings();
         AvaloniaHintBus.OnShow -= OnHintWrapperShow;
         MotionDurations.Changed -= OnMotionDurationsChanged;
         ActualThemeVariantChanged -= OnActualThemeVariantChanged;
@@ -266,7 +270,9 @@ internal sealed partial class MainWindow : Window
         Closed -= OnWindowClosed;
         Deactivated -= OnWindowDeactivated;
         RemoveHandler(KeyDownEvent, OnWindowKeyDown);
-        KeyUp -= OnWindowKeyUp;
+        RemoveHandler(KeyUpEvent, OnWindowKeyUp);
+        RemoveHandler(PointerReleasedEvent, OnSettingsPointerReleased);
+        RemoveHandler(Thumb.DragCompletedEvent, OnSettingsDragCompleted);
         TextInput -= OnWindowTextInput;
 
         foreach (var state in _activeHints.Values)
@@ -374,6 +380,25 @@ internal sealed partial class MainWindow : Window
     private void OnWindowKeyUp(object? sender, KeyEventArgs e)
     {
         _launcherViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+        if (e.Source is Visual source && (source is Slider || source.FindAncestorOfType<Slider>() is not null))
+        {
+            _launcherViewModel?.FlushPendingSettings();
+        }
+    }
+
+    private void OnSettingsPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        // Save before a button release can navigate or start a launch.
+        _launcherViewModel?.FlushPendingSettings();
+    }
+
+    private void OnSettingsDragCompleted(object? sender, VectorEventArgs e)
+    {
+        // Thumb completion also covers loss of pointer capture during a drag.
+        if (e.Source is Visual source && source.FindAncestorOfType<Slider>() is not null)
+        {
+            _launcherViewModel?.FlushPendingSettings();
+        }
     }
 
     private void OnWindowTextInput(object? sender, TextInputEventArgs e)
@@ -482,6 +507,7 @@ internal sealed partial class MainWindow : Window
 
     private void OnWindowDeactivated(object? sender, EventArgs e)
     {
+        _launcherViewModel?.FlushPendingSettings();
         _launcherViewModel?.UpdateKeyboardModifiers(KeyModifiers.None);
     }
 
@@ -503,6 +529,7 @@ internal sealed partial class MainWindow : Window
     {
         if (_launcherViewModel is not null)
         {
+            _launcherViewModel.FlushPendingSettings();
             _launcherViewModel.NavigationTransitionRequested -= OnNavigationTransitionRequested;
             _launcherViewModel.PropertyChanged -= OnLauncherViewModelPropertyChanged;
         }
@@ -1273,8 +1300,8 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
-        // Standard right panes animate through PclAnimatedRightPaneHost, which preserves the
-        // top-to-bottom card reveal. Only the launch pane needs a separate route animation here.
+        // Standard right panes animate their presenter through PclAnimatedRightPaneHost.
+        // Only the launch pane needs a separate route animation here.
         if (transition.IsLaunchRoute)
         {
             // The launch right pane is a text-heavy card. Animate the control itself to avoid

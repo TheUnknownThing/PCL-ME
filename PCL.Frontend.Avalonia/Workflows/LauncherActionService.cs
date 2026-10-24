@@ -45,6 +45,7 @@ internal sealed partial class LauncherActionService(
 
     public void ExitLauncher()
     {
+        FlushPendingSettings();
         exitLauncher();
     }
 
@@ -75,7 +76,7 @@ internal sealed partial class LauncherActionService(
         switch (action.Kind)
         {
             case MinecraftLaunchShellActionKind.ExitLauncher:
-                exitLauncher();
+                ExitLauncher();
                 break;
             case MinecraftLaunchShellActionKind.HideLauncher:
                 desktop.MainWindow.Hide();

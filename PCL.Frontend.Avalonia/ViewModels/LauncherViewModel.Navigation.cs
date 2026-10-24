@@ -711,6 +711,7 @@ internal sealed partial class LauncherViewModel
         string activityMessage,
         NavigationTransitionDirection direction)
     {
+        _launcherActionService.FlushPendingSettings();
         route = NormalizeRoute(route);
         var previousIsLaunchRoute = IsLaunchRoute;
         var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;

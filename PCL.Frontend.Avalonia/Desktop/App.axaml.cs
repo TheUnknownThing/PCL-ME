@@ -18,6 +18,7 @@ internal sealed class App : Application
     private readonly FrontendRuntimePaths _runtimePaths;
     private readonly FrontendPlatformAdapter _platformAdapter;
     private I18nService? _i18nService;
+    private LauncherActionService? _launcherActionService;
 
     public App(
         AvaloniaCommandOptions options,
@@ -79,6 +80,7 @@ internal sealed class App : Application
                 platformAdapter,
                 () => desktop.Shutdown(),
                 _i18nService);
+            _launcherActionService = launcherActionService;
             var launcherViewModel = LauncherViewModel.CreateBootstrap(_options, launcherActionService, _i18nService);
             var mainWindow = new MainWindow
             {
@@ -111,8 +113,15 @@ internal sealed class App : Application
 
     private void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
-        _i18nService?.Dispose();
-        FrontendLoggingBootstrap.Dispose();
+        try
+        {
+            _launcherActionService?.FlushPendingSettings();
+        }
+        finally
+        {
+            _i18nService?.Dispose();
+            FrontendLoggingBootstrap.Dispose();
+        }
     }
 
     private static async Task CloseSplashScreenAsync(FrontendStartupSplashSession? splashSession)

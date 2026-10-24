@@ -7,6 +7,8 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class LauncherViewModel
 {
+    public void FlushPendingSettings() => _launcherActionService.FlushPendingSettings();
+
     private static readonly string[] LaunchLocalResetKeys =
     [
         "LaunchArgumentTitle",
@@ -498,7 +500,7 @@ internal sealed partial class LauncherViewModel
                 _launcherActionService.PersistLocalValue("LaunchRamType", UseAutomaticRamAllocation ? 0 : 1);
                 break;
             case nameof(CustomRamAllocation):
-                _launcherActionService.PersistLocalValue("LaunchRamCustom", FrontendSetupCompositionService.MapLaunchRamGbToStoredValue(CustomRamAllocation));
+                _launcherActionService.PersistLocalValueDeferred("LaunchRamCustom", FrontendSetupCompositionService.MapLaunchRamGbToStoredValue(CustomRamAllocation));
                 break;
             case nameof(SelectedLaunchRendererIndex):
                 _launcherActionService.PersistLocalValue("LaunchAdvanceRenderer", SelectedLaunchRendererIndex);
@@ -546,13 +548,13 @@ internal sealed partial class LauncherViewModel
                 _launcherActionService.PersistSharedValue("ToolDownloadVersion", SelectedVersionSourceIndex);
                 break;
             case nameof(DownloadThreadLimit):
-                _launcherActionService.PersistSharedValue("ToolDownloadThread", (int)Math.Round(DownloadThreadLimit));
+                _launcherActionService.PersistSharedValueDeferred("ToolDownloadThread", (int)Math.Round(DownloadThreadLimit));
                 break;
             case nameof(DownloadSpeedLimit):
-                _launcherActionService.PersistSharedValue("ToolDownloadSpeed", (int)Math.Round(DownloadSpeedLimit));
+                _launcherActionService.PersistSharedValueDeferred("ToolDownloadSpeed", (int)Math.Round(DownloadSpeedLimit));
                 break;
             case nameof(DownloadTimeoutSeconds):
-                _launcherActionService.PersistSharedValue("ToolDownloadTimeout", (int)Math.Round(DownloadTimeoutSeconds));
+                _launcherActionService.PersistSharedValueDeferred("ToolDownloadTimeout", (int)Math.Round(DownloadTimeoutSeconds));
                 break;
             case nameof(AutoSelectNewInstance):
                 _launcherActionService.PersistSharedValue("ToolDownloadAutoSelectVersion", AutoSelectNewInstance);
@@ -580,7 +582,7 @@ internal sealed partial class LauncherViewModel
                 RefreshLaunchAnnouncements();
                 break;
             case nameof(MaxRealTimeLogValue):
-                _launcherActionService.PersistSharedValue("SystemMaxLog", (int)Math.Round(MaxRealTimeLogValue));
+                _launcherActionService.PersistSharedValueDeferred("SystemMaxLog", (int)Math.Round(MaxRealTimeLogValue));
                 break;
             case nameof(DisableHardwareAcceleration):
                 _launcherActionService.PersistSharedValue(
@@ -614,7 +616,7 @@ internal sealed partial class LauncherViewModel
                 FrontendHttpProxyService.ApplyStoredProxySettings(_launcherActionService.RuntimePaths);
                 break;
             case nameof(DebugAnimationSpeed):
-                _launcherActionService.PersistSharedValue("SystemDebugAnim", (int)Math.Round(DebugAnimationSpeed));
+                _launcherActionService.PersistSharedValueDeferred("SystemDebugAnim", (int)Math.Round(DebugAnimationSpeed));
                 LauncherActionService.ApplyAnimationPreferences(DebugAnimationSpeed);
                 break;
             case nameof(DebugModeEnabled):
@@ -645,7 +647,7 @@ internal sealed partial class LauncherViewModel
                 PersistCustomThemeColor("UiDarkColorCustom", CustomDarkThemeColorHex);
                 break;
             case nameof(LauncherOpacity):
-                _launcherActionService.PersistLocalValue("UiLauncherTransparent", (int)Math.Round(LauncherOpacity));
+                _launcherActionService.PersistLocalValueDeferred("UiLauncherTransparent", (int)Math.Round(LauncherOpacity));
                 break;
             case nameof(UiScaleFactor):
                 if (_suppressUiScalePersistence)
@@ -681,10 +683,10 @@ internal sealed partial class LauncherViewModel
                 _launcherActionService.PersistLocalValue("UiBackgroundSuit", SelectedBackgroundSuitIndex);
                 break;
             case nameof(BackgroundOpacity):
-                _launcherActionService.PersistLocalValue("UiBackgroundOpacity", (int)Math.Round(BackgroundOpacity));
+                _launcherActionService.PersistLocalValueDeferred("UiBackgroundOpacity", (int)Math.Round(BackgroundOpacity));
                 break;
             case nameof(BackgroundBlur):
-                _launcherActionService.PersistLocalValue("UiBackgroundBlur", (int)Math.Round(BackgroundBlur));
+                _launcherActionService.PersistLocalValueDeferred("UiBackgroundBlur", (int)Math.Round(BackgroundBlur));
                 break;
             case nameof(SelectedLogoTypeIndex):
                 _launcherActionService.PersistLocalValue("UiLogoType", SelectedLogoTypeIndex);

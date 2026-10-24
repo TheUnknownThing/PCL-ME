@@ -254,7 +254,7 @@ internal sealed partial class LauncherViewModel
                 _launcherActionService.PersistInstanceValue(instanceDirectory, "VersionRamType", _instanceMemoryModeIndex);
                 break;
             case nameof(InstanceCustomRamAllocation):
-                _launcherActionService.PersistInstanceValue(
+                _launcherActionService.PersistInstanceValueDeferred(
                     instanceDirectory,
                     "VersionRamCustom",
                     FrontendSetupCompositionService.MapLaunchRamGbToStoredValue(InstanceCustomRamAllocation));
