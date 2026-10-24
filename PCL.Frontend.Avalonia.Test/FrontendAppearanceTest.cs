@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Net;
+using System.Net.Http;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -12,10 +14,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.I18n;
 using PCL.Core.App.Configuration.Storage;
+using PCL.Core.IO.Net.Http.Proxying;
 using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Desktop;
 using PCL.Frontend.Avalonia.Desktop.Panes.Right;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels;
 using PCL.Frontend.Avalonia.Workflows;
 using static PCL.Frontend.Avalonia.Test.FrontendDeferredContentTest;
@@ -26,6 +30,77 @@ namespace PCL.Frontend.Avalonia.Test;
 [DoNotParallelize]
 public sealed class FrontendAppearanceTest
 {
+    [TestMethod]
+    public async Task SettingsNavigation_PreservesActiveNetworkConfiguration()
+    {
+        await RunOnUiThread(() =>
+        {
+            var originalDns = FrontendHttpProxyService.CurrentSecureDnsConfiguration;
+            var originalProxy = HttpClient.DefaultProxy;
+            try
+            {
+                using var fixture = new AppearanceFixture();
+                fixture.Actions.PersistLocalValue("SystemSystemUpdate", (int)LauncherUpdateMode.Disabled);
+                var activeProxy = new WebProxy();
+                var activeDns = new FrontendSecureDnsConfiguration(
+                    FrontendSecureDnsMode.DnsOverTls, FrontendSecureDnsProvider.Cloudflare);
+                HttpClient.DefaultProxy = activeProxy;
+                FrontendHttpProxyService.ApplySecureDnsConfiguration(activeDns);
+
+                // Exercise the same sidebar commands used by the UI, including repeat visits.
+                var entries = fixture.Launcher.SidebarSections.SelectMany(section => section.Items).ToArray();
+                foreach (var entry in entries.Concat(entries.Reverse()))
+                {
+                    entry.Command.Execute(null);
+                    Assert.AreSame(activeProxy, HttpClient.DefaultProxy, entry.Title);
+                    Assert.AreEqual(activeDns, FrontendHttpProxyService.CurrentSecureDnsConfiguration, entry.Title);
+                }
+            }
+            finally
+            {
+                HttpClient.DefaultProxy = originalProxy;
+                FrontendHttpProxyService.ApplySecureDnsConfiguration(originalDns);
+            }
+        });
+    }
+
+    [TestMethod]
+    public async Task SettingsNetworkChanges_ApplyImmediatelyAndSurviveNavigation()
+    {
+        await RunOnUiThread(() =>
+        {
+            var originalDns = FrontendHttpProxyService.CurrentSecureDnsConfiguration;
+            var originalProxy = HttpClient.DefaultProxy;
+            try
+            {
+                using var fixture = new AppearanceFixture();
+                fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+                fixture.Launcher.SelectedHttpProxyTypeIndex = 0;
+                fixture.Launcher.SelectedSecureDnsModeIndex = (int)FrontendSecureDnsMode.DnsOverTls;
+                fixture.Launcher.SelectedSecureDnsProviderIndex = (int)FrontendSecureDnsProvider.Cloudflare;
+
+                Assert.IsInstanceOfType<ProxyManager>(HttpClient.DefaultProxy);
+                Assert.AreEqual(ProxyMode.NoProxy, ((ProxyManager)HttpClient.DefaultProxy).Mode);
+                var expectedDns = new FrontendSecureDnsConfiguration(
+                    FrontendSecureDnsMode.DnsOverTls, FrontendSecureDnsProvider.Cloudflare);
+                Assert.AreEqual(expectedDns, FrontendHttpProxyService.CurrentSecureDnsConfiguration);
+
+                fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
+                fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+                Assert.AreEqual(0, fixture.Launcher.SelectedHttpProxyTypeIndex);
+                Assert.AreEqual((int)FrontendSecureDnsMode.DnsOverTls, fixture.Launcher.SelectedSecureDnsModeIndex);
+                Assert.AreEqual((int)FrontendSecureDnsProvider.Cloudflare, fixture.Launcher.SelectedSecureDnsProviderIndex);
+                Assert.AreEqual(ProxyMode.NoProxy, ((ProxyManager)HttpClient.DefaultProxy).Mode);
+                Assert.AreEqual(expectedDns, FrontendHttpProxyService.CurrentSecureDnsConfiguration);
+            }
+            finally
+            {
+                HttpClient.DefaultProxy = originalProxy;
+                FrontendHttpProxyService.ApplySecureDnsConfiguration(originalDns);
+            }
+        });
+    }
+
     [TestMethod]
     public async Task AppearanceChoices_ReuseListsAndRefreshTranslationsAfterLocaleChange()
     {

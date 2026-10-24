@@ -217,8 +217,8 @@ internal sealed partial class LauncherViewModel
 
     private void ReloadActiveSetupSurface(bool applyAppearance = true)
     {
-        FrontendHttpProxyService.ApplyStoredProxySettings(_launcherActionService.RuntimePaths);
-        FrontendHttpProxyService.ApplyStoredDnsSettings(_launcherActionService.RuntimePaths);
+        // Startup, settings edits and full reloads apply network configuration.
+        // Page navigation must not repeat synchronous OS secret-store reads.
         ApplySetupComposition(
             FrontendSetupCompositionService.ComposeActiveSurface(
                 _launcherActionService.RuntimePaths,
