@@ -131,7 +131,10 @@ internal sealed partial class LauncherViewModel
 
     private static bool ShouldCacheRightPane(StandardRightPaneDescriptor descriptor)
     {
-        return descriptor.Kind == StandardRightPaneKind.InstanceResource;
+        return descriptor.Kind is StandardRightPaneKind.InstanceResource
+            or StandardRightPaneKind.SetupLaunch or StandardRightPaneKind.SetupUi
+            or StandardRightPaneKind.SetupGameManage or StandardRightPaneKind.SetupLauncherMisc
+            or StandardRightPaneKind.SetupAbout;
     }
 
     private StandardRightPaneDescriptor ResolveStandardRightPaneDescriptor()

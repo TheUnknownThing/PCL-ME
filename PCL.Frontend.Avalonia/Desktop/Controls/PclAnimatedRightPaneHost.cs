@@ -1,16 +1,20 @@
 using Avalonia;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Layout;
+using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
+using System.Numerics;
 using PCL.Frontend.Avalonia.Desktop.Animation;
+using PCL.Frontend.Avalonia.ViewModels.Panes;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
 internal sealed class PclAnimatedRightPaneHost : Grid
 {
-    private const int StaggerStepMilliseconds = 42;
+    private const int MaxCachedPresenters = 4;
     private const double EnterOffsetY = -18d;
-    private const double ExitOffsetY = -12d;
 
     public static readonly StyledProperty<object?> PaneContentProperty =
         AvaloniaProperty.Register<PclAnimatedRightPaneHost, object?>(nameof(PaneContent));
@@ -18,6 +22,8 @@ internal sealed class PclAnimatedRightPaneHost : Grid
     private ContentControl? _currentPresenter;
     private object? _currentContent;
     private int _transitionVersion;
+    private readonly Dictionary<object, ContentControl> _cachedPresenters = new(ReferenceEqualityComparer.Instance);
+    private readonly LinkedList<object> _presenterUsage = [];
 
     static PclAnimatedRightPaneHost()
     {
@@ -33,6 +39,11 @@ internal sealed class PclAnimatedRightPaneHost : Grid
     public PclAnimatedRightPaneHost()
     {
         ClipToBounds = true;
+        DataContextChanged += (_, _) =>
+        {
+            _cachedPresenters.Clear();
+            _presenterUsage.Clear();
+        };
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -50,19 +61,19 @@ internal sealed class PclAnimatedRightPaneHost : Grid
     {
         var version = ++_transitionVersion;
         Dispatcher.UIThread.Post(
-            async () =>
+            () =>
             {
                 if (version != _transitionVersion || VisualRoot is null)
                 {
                     return;
                 }
 
-                await TransitionToAsync(newContent, version);
+                TransitionTo(newContent);
             },
             DispatcherPriority.Render);
     }
 
-    private async Task TransitionToAsync(object? newContent, int version)
+    private void TransitionTo(object? newContent)
     {
         if (ReferenceEquals(_currentContent, newContent) && _currentPresenter is not null)
         {
@@ -79,9 +90,8 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         _currentContent = newContent;
         if (newContent is not null)
         {
-            nextPresenter = CreatePresenter(newContent);
-            ConfigureMotion(nextPresenter, enterDelay: 0);
-            AttachPresenter(nextPresenter, zIndex: 1, opacity: 0);
+            nextPresenter = GetOrCreatePresenter(newContent);
+            AttachPresenter(nextPresenter);
             _currentPresenter = nextPresenter;
         }
         else
@@ -94,22 +104,44 @@ internal sealed class PclAnimatedRightPaneHost : Grid
             return;
         }
 
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (version != _transitionVersion || !ReferenceEquals(nextPresenter, _currentPresenter))
+        PlayEnterAnimation(nextPresenter);
+    }
+
+    private ContentControl GetOrCreatePresenter(object content)
+    {
+        if (_cachedPresenters.TryGetValue(content, out var presenter))
         {
-            DetachPresenter(nextPresenter);
-            return;
+            _presenterUsage.Remove(content);
+            _presenterUsage.AddFirst(content);
+            return presenter;
         }
 
-        Motion.PrimeEnter(nextPresenter);
-        nextPresenter.Opacity = 1;
-        if (!nextPresenter.IsVisible)
+        presenter = CreatePresenter(content);
+        if (content is RightPaneViewModel { Descriptor.Kind:
+                StandardRightPaneKind.SetupLaunch or StandardRightPaneKind.SetupUi
+                or StandardRightPaneKind.SetupGameManage or StandardRightPaneKind.SetupLauncherMisc
+                or StandardRightPaneKind.SetupAbout })
         {
-            Motion.SetAnimateOnVisible(nextPresenter, true);
-            return;
+            // Keep the view as control content: data templates may recreate their child
+            // when the presenter is reattached. Its data context still flows from the pane.
+            if (this.FindDataTemplate(content) is { } template)
+            {
+                presenter.DataContext = content;
+                presenter.Content = template.Build(content);
+            }
+
+            // Dynamic resource/instance pages are deliberately excluded from this cache.
+            _cachedPresenters.Add(content, presenter);
+            _presenterUsage.AddFirst(content);
+            if (_cachedPresenters.Count > MaxCachedPresenters)
+            {
+                var oldest = _presenterUsage.Last!;
+                _cachedPresenters.Remove(oldest.Value);
+                _presenterUsage.RemoveLast();
+            }
         }
 
-        await Motion.PlayEnterAsync(nextPresenter);
+        return presenter;
     }
 
     private static ContentControl CreatePresenter(object content)
@@ -122,25 +154,33 @@ internal sealed class PclAnimatedRightPaneHost : Grid
         };
     }
 
-    private static void ConfigureMotion(Control control, int enterDelay)
+    private static void PlayEnterAnimation(Control control)
     {
-        // Animate the whole pane as a single unit so non-card elements
-        // (for example warning/hint banners) participate in the same sequence.
-        Motion.SetStaggerChildren(control, false);
-        Motion.SetStaggerStep(control, StaggerStepMilliseconds);
-        Motion.SetDelay(control, enterDelay);
-        Motion.SetInitialOpacity(control, 0);
-        Motion.SetOffsetX(control, 0);
-        Motion.SetOffsetY(control, EnterOffsetY);
-        Motion.SetOvershootTranslation(control, true);
-        Motion.SetExitOffsetX(control, 0);
-        Motion.SetExitOffsetY(control, ExitOffsetY);
+        var visual = ElementComposition.GetElementVisual(control);
+        if (visual is null)
+        {
+            return;
+        }
+
+        var compositor = visual.Compositor;
+        var offset = compositor.CreateVector3KeyFrameAnimation();
+        offset.Duration = MotionDurations.EntranceTranslateOvershoot;
+        offset.InsertKeyFrame(0f, new Vector3(0f, (float)EnterOffsetY, 0f));
+        offset.InsertKeyFrame(1f, Vector3.Zero, new BackEaseOut());
+
+        var opacity = compositor.CreateScalarKeyFrameAnimation();
+        opacity.Duration = MotionDurations.EntranceFade;
+        opacity.InsertKeyFrame(0f, 0f);
+        opacity.InsertKeyFrame(1f, 1f, new CubicEaseOut());
+
+        // The presenter is a stable wrapper around the page, including its text.
+        // Animate that wrapper on the render thread without changing layout each frame.
+        visual.StartAnimation("Offset", offset);
+        visual.StartAnimation("Opacity", opacity);
     }
 
-    private void AttachPresenter(ContentControl presenter, int zIndex, double opacity)
+    private void AttachPresenter(ContentControl presenter)
     {
-        presenter.Opacity = opacity;
-        presenter.SetValue(ZIndexProperty, zIndex);
         Children.Add(presenter);
     }
 
@@ -151,6 +191,9 @@ internal sealed class PclAnimatedRightPaneHost : Grid
             return;
         }
 
+        var visual = ElementComposition.GetElementVisual(presenter);
+        visual?.StopAnimation("Offset");
+        visual?.StopAnimation("Opacity");
         Children.Remove(presenter);
     }
 }
