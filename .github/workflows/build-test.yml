@@ -47,3 +47,6 @@ jobs:
 
       - name: Test backend layer
         run: dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug
+
+      - name: Test Avalonia frontend
+        run: dotnet test PCL.Frontend.Avalonia.Test/PCL.Frontend.Avalonia.Test.csproj -c Debug

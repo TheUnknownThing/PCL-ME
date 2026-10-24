@@ -1,0 +1,260 @@
+using System.Reflection;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Data;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.Input.Raw;
+using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PCL.Core.App.Essentials;
+using PCL.Core.App.I18n;
+using PCL.Core.App.Configuration.Storage;
+using PCL.Frontend.Avalonia.Cli;
+using PCL.Frontend.Avalonia.Desktop.Controls;
+using PCL.Frontend.Avalonia.Desktop;
+using PCL.Frontend.Avalonia.Desktop.Panes.Right;
+using PCL.Frontend.Avalonia.ViewModels;
+using PCL.Frontend.Avalonia.Workflows;
+using static PCL.Frontend.Avalonia.Test.FrontendDeferredContentTest;
+
+namespace PCL.Frontend.Avalonia.Test;
+
+[TestClass]
+[DoNotParallelize]
+public sealed class FrontendAppearanceTest
+{
+    [TestMethod]
+    public async Task AppearanceChoices_ReuseListsAndRefreshTranslationsAfterLocaleChange()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            var launcher = fixture.Launcher;
+            var fonts = launcher.FontOptions;
+            var presets = launcher.HomepagePresetOptions;
+            var groups = launcher.UiFeatureToggleGroups.ToArray();
+            Assert.IsTrue(groups.Length > 0);
+            Assert.AreSame(fonts, launcher.FontOptions);
+            Assert.AreSame(presets, launcher.HomepagePresetOptions);
+
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupUI);
+            CollectionAssert.AreEqual(groups, launcher.UiFeatureToggleGroups.ToArray());
+
+            var toggle = groups.SelectMany(group => group.Items).First(item => item.ConfigKey == "UiHiddenPageDownload");
+            toggle.IsChecked = !toggle.IsChecked;
+            Assert.AreSame(toggle, launcher.UiFeatureToggleGroups.SelectMany(group => group.Items)
+                .First(item => item.ConfigKey == toggle.ConfigKey));
+            Assert.AreEqual(toggle.IsChecked, fixture.Paths.OpenLocalConfigProvider().Get<bool>(toggle.ConfigKey!));
+
+            fixture.Paths.OpenLocalConfigProvider().Set(toggle.ConfigKey!, !toggle.IsChecked);
+            fixture.Paths.OpenLocalConfigProvider().Sync();
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupUI);
+            Assert.AreEqual(!toggle.IsChecked, launcher.UiFeatureToggleGroups.SelectMany(group => group.Items)
+                .First(item => item.ConfigKey == toggle.ConfigKey).IsChecked);
+
+            Assert.IsTrue(fixture.I18n.SetLocale("zh-Hans"));
+            Tick();
+            Assert.AreNotSame(fonts, launcher.FontOptions);
+            Assert.AreNotSame(presets, launcher.HomepagePresetOptions);
+            Assert.AreNotEqual(fonts[0], launcher.FontOptions[0]);
+            Assert.AreNotEqual(presets[0], launcher.HomepagePresetOptions[0]);
+            Assert.AreNotEqual(groups[0].Title, launcher.UiFeatureToggleGroups[0].Title);
+            Assert.AreSame(launcher.FontOptions, launcher.FontOptions);
+            Assert.AreSame(launcher.HomepagePresetOptions, launcher.HomepagePresetOptions);
+        });
+    }
+
+    [TestMethod]
+    public async Task AppearanceSections_LoadCurrentSelectionsAndRetainScrollPositionOnReattach()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            var launcher = fixture.Launcher;
+            var view = new SetupUiRightPaneView { DataContext = launcher };
+            var window = new Window { Width = 900, Height = 300, Content = view };
+            window.Show();
+            Tick();
+            var items = view.FindControl<StackPanel>("AppearanceSections")!;
+            var sections = items.Children.Cast<PclDeferredContentControl>().ToArray();
+            Assert.IsNull(sections[4].Content, "Homepage content should start outside the viewport.");
+
+            launcher.SelectedHomepagePresetIndex = 2;
+            Assert.IsTrue(fixture.I18n.SetLocale("zh-Hans"));
+            Tick();
+            sections[4].BringIntoView();
+            Tick();
+            var homepage = (Control)sections[4].Content!;
+            var combo = ((Control)((PclCard)homepage).CardContent!).GetLogicalDescendants().OfType<ComboBox>()
+                .Single(control => control.Name == "HomepagePresetComboBox");
+            Assert.IsNotNull(combo, "Deferred templates must retain their named selection controls.");
+            Assert.AreEqual(launcher.SelectedHomepagePresetIndex, combo.SelectedIndex);
+            Assert.AreSame(launcher.HomepagePresetOptions, combo.ItemsSource);
+            Assert.IsTrue(fixture.I18n.SetLocale("en-US"));
+            Tick();
+            Assert.AreEqual(launcher.SelectedHomepagePresetIndex, combo.SelectedIndex);
+            Assert.AreSame(launcher.HomepagePresetOptions, combo.ItemsSource);
+            var scroll = view.GetVisualDescendants().OfType<ScrollViewer>().First();
+            var offset = scroll.Offset;
+            Assert.IsTrue(offset.Y > 0);
+
+            window.Content = null;
+            window.Content = view;
+            Tick();
+            Assert.AreSame(homepage, sections[4].Content);
+            Assert.AreEqual(offset, scroll.Offset);
+            Assert.AreEqual(launcher.SelectedHomepagePresetIndex, combo.SelectedIndex);
+
+            for (var repeat = 0; repeat < 2; repeat++)
+            {
+                foreach (var index in new[] { 1, 2, 3, 4, 5, 0 })
+                {
+                    sections[index].BringIntoView();
+                    Tick();
+                }
+            }
+            scroll.ScrollToHome();
+            Tick();
+            Assert.AreEqual(0d, sections[0].Bounds.Y, .01, "Returning home must preserve the start of the layout.");
+
+            launcher.UiFeatureToggleGroups.SelectMany(group => group.Items)
+                .Single(item => item.ConfigKey == "UiHiddenFunctionHidden").IsChecked = true;
+            Tick();
+            sections[5].BringIntoView();
+            Tick();
+            Assert.IsFalse(launcher.ShowUiFeatureHiddenCard);
+            Assert.AreEqual(0d, sections[5].DesiredSize.Height, .01, "A hidden final card must not leave a spacing gap.");
+            launcher.ToggleHiddenItemsOverride();
+            Tick();
+            sections[5].BringIntoView();
+            Tick();
+            Assert.IsTrue(((PclCard)sections[5].Content!).IsEffectivelyVisible);
+            window.Close();
+        });
+    }
+
+    private sealed class AppearanceFixture : IDisposable
+    {
+        private readonly string _root = Path.Combine(Path.GetTempPath(), "pcl-appearance-test", Guid.NewGuid().ToString("N"));
+
+        public FrontendRuntimePaths Paths { get; }
+        public I18nService I18n { get; }
+        public LauncherViewModel Launcher { get; }
+        public LauncherActionService Actions { get; }
+
+        public AppearanceFixture()
+        {
+            Paths = new FrontendRuntimePaths(_root, Path.Combine(_root, "temp"), Path.Combine(_root, "data"),
+                Path.Combine(_root, "shared"), Path.Combine(_root, "shared", "config.json"),
+                Path.Combine(_root, "data", "config.yml"), Path.Combine(_root, "appdata"), []);
+            I18n = new I18nService(new I18nSettingsManager(new FrontendConfigProviderAdapter(Paths)));
+            Actions = new LauncherActionService(Paths, new FrontendPlatformAdapter(), () => { }, I18n);
+            Launcher = LauncherViewModel.CreateBootstrap(AvaloniaCommandParser.CreateDefaultOptions(), Actions, I18n);
+            Navigate(LauncherFrontendSubpageKey.SetupUI);
+        }
+
+        public void Navigate(LauncherFrontendSubpageKey subpage)
+        {
+            var navigate = typeof(LauncherViewModel).GetMethod("NavigateTo", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            navigate.Invoke(Launcher, [new LauncherFrontendRoute(LauncherFrontendPageKey.Setup, subpage),
+                "Appearance test navigation", Activator.CreateInstance(navigate.GetParameters()[2].ParameterType)]);
+            Tick();
+        }
+
+        public void Dispose()
+        {
+            Actions.FlushPendingSettings();
+            I18n.Dispose();
+            Directory.Delete(_root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task AppearanceSlider_UpdatesImmediatelyAndSavesOnReleaseKeyboardCompletionAndClose()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            var window = new MainWindow { DataContext = fixture.Launcher };
+            var slider = new Slider { Minimum = 0, Maximum = 600 };
+            slider.Bind(RangeBase.ValueProperty, new Binding(nameof(LauncherViewModel.LauncherOpacity))
+            {
+                Source = fixture.Launcher,
+                Mode = BindingMode.TwoWay
+            });
+            window.Content = slider;
+            window.Show();
+            Tick();
+            fixture.Actions.FlushPendingSettings();
+            fixture.Actions.PersistLocalValue("UiLauncherTransparent", (int)Math.Round(fixture.Launcher.LauncherOpacity));
+            var before = File.ReadAllText(fixture.Paths.LocalConfigPath);
+
+            slider.Value = 400;
+            Assert.AreEqual(.8d, window.Opacity, .0001);
+            Assert.AreEqual(400d, fixture.Launcher.LauncherOpacity);
+            Assert.AreEqual(before, File.ReadAllText(fixture.Paths.LocalConfigPath));
+            window.MouseUp(new Point(20, 20), MouseButton.Left, RawInputModifiers.None);
+            Assert.AreEqual(400, new YamlFileProvider(fixture.Paths.LocalConfigPath).Get<int>("UiLauncherTransparent"));
+
+            Assert.IsTrue(slider.Focus());
+            window.KeyPressQwerty(PhysicalKey.ArrowRight, RawInputModifiers.None);
+            window.KeyReleaseQwerty(PhysicalKey.ArrowRight, RawInputModifiers.None);
+            Assert.AreEqual((int)Math.Round(slider.Value),
+                new YamlFileProvider(fixture.Paths.LocalConfigPath).Get<int>("UiLauncherTransparent"));
+
+            slider.Value = 420;
+            window.Close();
+            Assert.AreEqual(420, new YamlFileProvider(fixture.Paths.LocalConfigPath).Get<int>("UiLauncherTransparent"));
+        });
+    }
+
+    [TestMethod]
+    public async Task AppearanceSlider_UsesCurrentValuesForNavigationAndSettingsSnapshots()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            fixture.Launcher.LauncherOpacity = 410;
+            fixture.Actions.FlushPendingSettings();
+            var snapshot = FrontendSettingsSnapshotWorkflowService.CreateSnapshot(fixture.Paths);
+            Assert.AreEqual(410, new YamlFileProvider(Path.Combine(snapshot, Path.GetFileName(fixture.Paths.LocalConfigPath)))
+                .Get<int>("UiLauncherTransparent"));
+
+            fixture.Launcher.LauncherOpacity = 430;
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            Assert.AreEqual(430, new YamlFileProvider(fixture.Paths.LocalConfigPath).Get<int>("UiLauncherTransparent"));
+            fixture.Actions.FlushPendingSettings();
+            FrontendSettingsSnapshotWorkflowService.RestoreSnapshot(fixture.Paths, snapshot);
+            fixture.Actions.FlushPendingSettings();
+            Assert.AreEqual(410, fixture.Paths.OpenLocalConfigProvider().Get<int>("UiLauncherTransparent"));
+        });
+    }
+
+    [TestMethod]
+    public async Task InstanceSlider_PreservesOtherEditsAndExitSavesPendingGlobalValues()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            var instance = Path.Combine(fixture.Paths.DataDirectory, "TestInstance");
+            Directory.CreateDirectory(Path.Combine(instance, "mods"));
+            var config = Path.Combine(instance, "PCL", "config.v1.yml");
+            fixture.Actions.PersistInstanceValue(instance, "VersionRamCustom", 3d);
+            fixture.Actions.PersistInstanceValueDeferred(instance, "VersionRamCustom", 6d);
+            fixture.Actions.PersistInstanceValueDeferred(instance, "VersionRamCustom", 8d);
+            Assert.AreEqual(3d, new YamlFileProvider(config).Get<double>("VersionRamCustom"));
+            fixture.Actions.PersistInstanceValue(instance, "VersionArgumentTitle", "My Minecraft");
+            Assert.AreEqual(8d, new YamlFileProvider(config).Get<double>("VersionRamCustom"));
+            Assert.AreEqual("My Minecraft", new YamlFileProvider(config).Get<string>("VersionArgumentTitle"));
+
+            fixture.Actions.PersistLocalValueDeferred("UiLauncherTransparent", 470);
+            fixture.Actions.ExitLauncher();
+            Assert.AreEqual(470, new YamlFileProvider(fixture.Paths.LocalConfigPath).Get<int>("UiLauncherTransparent"));
+        });
+    }
+}
