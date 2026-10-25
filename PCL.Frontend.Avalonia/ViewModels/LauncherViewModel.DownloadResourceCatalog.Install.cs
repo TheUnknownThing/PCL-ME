@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
+using PCL.Core.Minecraft;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels.Panes;
@@ -113,8 +114,7 @@ internal sealed partial class LauncherViewModel
 
     private static string SanitizeInstallDirectoryName(string value)
     {
-        var invalidCharacters = Path.GetInvalidFileNameChars();
-        var cleaned = new string(value.Select(character => invalidCharacters.Contains(character) ? '-' : character).ToArray()).Trim();
+        var cleaned = MinecraftInstanceNameService.Sanitize(value).Trim();
         return string.IsNullOrWhiteSpace(cleaned) ? "ImportedModPack" : cleaned;
     }
 

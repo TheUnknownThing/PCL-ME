@@ -17,6 +17,7 @@ using Avalonia.Threading;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Core.App.Essentials;
 using PCL.Core.App.Tasks;
+using PCL.Core.Minecraft;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.Icons;
@@ -530,7 +531,7 @@ internal sealed partial class LauncherViewModel
             return T("resource_detail.modpack.validation.trailing_dot");
         }
 
-        if (value.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || value.Contains('!') || value.Contains(';'))
+        if (MinecraftInstanceNameService.ContainsInvalidCharacters(value) || value.Contains('!') || value.Contains(';'))
         {
             return T("resource_detail.modpack.validation.invalid_characters");
         }

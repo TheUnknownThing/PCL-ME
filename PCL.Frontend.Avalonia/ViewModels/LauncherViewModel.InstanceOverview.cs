@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia.Media.Imaging;
 using PCL.Core.App.Essentials;
+using PCL.Core.Minecraft;
 using PCL.Frontend.Avalonia.ViewModels.Panes;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -329,7 +330,7 @@ internal sealed partial class LauncherViewModel
             return;
         }
 
-        if (newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
+        if (MinecraftInstanceNameService.ContainsInvalidCharacters(newName)
             || newName.Contains(Path.DirectorySeparatorChar)
             || newName.Contains(Path.AltDirectorySeparatorChar))
         {

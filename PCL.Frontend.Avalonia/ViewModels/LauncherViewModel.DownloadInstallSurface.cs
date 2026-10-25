@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using PCL.Core.App.Essentials;
+using PCL.Core.Minecraft;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
@@ -926,7 +927,7 @@ internal sealed partial class LauncherViewModel
             return;
         }
 
-        if (trimmedName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        if (MinecraftInstanceNameService.ContainsInvalidCharacters(trimmedName))
         {
             DownloadInstallNameValidationMessage = T("download.install.validation.invalid_characters");
             return;

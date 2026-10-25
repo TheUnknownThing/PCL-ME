@@ -147,6 +147,7 @@
     <Compile Include="Minecraft/MinecraftCrashReportBuilder.cs" />
     <Compile Include="Minecraft/MinecraftCrashWorkflowService.cs" />
     <Compile Include="Minecraft/MinecraftLauncherProfilesFileService.cs" />
+    <Compile Include="Minecraft/MinecraftInstanceNameService.cs" />
     <Compile Include="Utils/OS/SystemEnvironmentSnapshot.cs" />
     <Compile Include="Utils/OS/SystemGpuInfo.cs" />
     <Compile Include="Utils/Secret/WindowsLegacyCpuIdProvider.cs" />
