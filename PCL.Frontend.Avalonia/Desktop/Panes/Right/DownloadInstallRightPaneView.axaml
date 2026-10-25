@@ -5,15 +5,29 @@
     xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
     x:DataType="vm:LauncherViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:views="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right"
     DataContext="{ReflectionBinding Launcher}">
   <ScrollViewer
       x:Name="InstallScrollViewer"
       VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="25,10,25,25" Spacing="12">
-      <StackPanel
+    <Grid
+        x:Name="InstallPageGrid"
+        Margin="25,10,25,25">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <Grid
+          Grid.Row="0"
           x:Name="MinecraftCatalogStage"
-          Spacing="12">
+          ColumnDefinitions="*">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <controls:PclCard
+            Grid.Row="0"
             x:Name="MinecraftCatalogLoadingCard"
             Margin="40,50"
             ContentMargin="20,20,20,17"
@@ -29,6 +43,7 @@
         </controls:PclCard>
 
         <controls:PclCard
+            Grid.Row="1"
             x:Name="MinecraftCatalogEmptyStateCard"
             IsVisible="False"
             ContentMargin="18,16,18,16">
@@ -42,9 +57,15 @@
         </controls:PclCard>
 
         <ItemsControl
+            Grid.Row="2"
             x:Name="MinecraftCatalogContentHost"
             IsVisible="False"
             ItemsSource="{Binding DownloadInstallMinecraftSections}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <views:CatalogSectionPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <controls:PclCard
@@ -53,9 +74,12 @@
                   ShowChevron="{Binding CanCollapse}"
                   IsChevronExpanded="{Binding IsExpanded}"
                   HeaderCommand="{Binding HeaderCommand}"
+                  ContentFill="{Binding CanCollapse}"
                   ContentMargin="18,40,18,8">
                 <controls:PclCard.CardContent>
-                    <ItemsControl ItemsSource="{Binding Choices}">
+                    <ItemsControl
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        ItemsSource="{Binding Choices}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
                           <controls:PclListItem
@@ -73,9 +97,10 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-      </StackPanel>
+      </Grid>
 
       <StackPanel
+          Grid.Row="1"
           x:Name="SelectionStage"
           IsVisible="False"
           Spacing="12">
@@ -274,6 +299,6 @@
               Text="{Binding DownloadInstallStartText}" />
         </Grid>
       </StackPanel>
-    </StackPanel>
+    </Grid>
   </ScrollViewer>
 </UserControl>

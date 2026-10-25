@@ -1,5 +1,9 @@
+using System;
+using System.Collections;
 using System.ComponentModel;
+using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 using PCL.Frontend.Avalonia.ViewModels;
@@ -9,7 +13,8 @@ namespace PCL.Frontend.Avalonia.Desktop.Panes.Right;
 internal sealed partial class DownloadInstallRightPaneView : UserControl
 {
     private readonly ScrollViewer _installScrollViewer;
-    private readonly StackPanel _minecraftCatalogStage;
+    private readonly Grid _installPageGrid;
+    private readonly Grid _minecraftCatalogStage;
     private readonly PCL.Frontend.Avalonia.Desktop.Controls.PclCard _minecraftCatalogLoadingCard;
     private readonly PCL.Frontend.Avalonia.Desktop.Controls.PclCard _minecraftCatalogEmptyStateCard;
     private readonly ItemsControl _minecraftCatalogContentHost;
@@ -19,13 +24,16 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
     private DownloadInstallStage _currentStage = DownloadInstallStage.Catalog;
     private int _stageAnimationVersion;
     private int _catalogVisualStateVersion;
+    private readonly HashSet<DownloadInstallMinecraftSectionViewModel> _observedCatalogSections = new();
 
     public DownloadInstallRightPaneView()
     {
         InitializeComponent();
         _installScrollViewer = this.FindControl<ScrollViewer>("InstallScrollViewer")
             ?? throw new InvalidOperationException("The install page did not contain the scroll viewer.");
-        _minecraftCatalogStage = this.FindControl<StackPanel>("MinecraftCatalogStage")
+        _installPageGrid = this.FindControl<Grid>("InstallPageGrid")
+            ?? throw new InvalidOperationException("The install page did not contain the page grid.");
+        _minecraftCatalogStage = this.FindControl<Grid>("MinecraftCatalogStage")
             ?? throw new InvalidOperationException("The install page did not contain the Minecraft version selection stage.");
         _minecraftCatalogLoadingCard = this.FindControl<PCL.Frontend.Avalonia.Desktop.Controls.PclCard>("MinecraftCatalogLoadingCard")
             ?? throw new InvalidOperationException("The install page did not contain the Minecraft version loading card.");
@@ -66,12 +74,136 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
         if (_observedLauncher is not null)
         {
             _observedLauncher.PropertyChanged -= OnLauncherPropertyChanged;
+            _observedLauncher.DownloadInstallMinecraftSections.CollectionChanged -= OnCatalogSectionsCollectionChanged;
         }
 
         _observedLauncher = shell;
         if (_observedLauncher is not null)
         {
             _observedLauncher.PropertyChanged += OnLauncherPropertyChanged;
+            _observedLauncher.DownloadInstallMinecraftSections.CollectionChanged += OnCatalogSectionsCollectionChanged;
+        }
+
+        UnobserveAllCatalogSections();
+        if (_observedLauncher is not null)
+        {
+            foreach (var section in _observedLauncher.DownloadInstallMinecraftSections)
+            {
+                ObserveCatalogSection(section);
+            }
+        }
+
+        ScheduleCatalogFillModeSync();
+    }
+
+    private void OnCatalogSectionsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (var item in e.OldItems)
+            {
+                if (item is DownloadInstallMinecraftSectionViewModel section)
+                {
+                    UnobserveCatalogSection(section);
+                }
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (var item in e.NewItems)
+            {
+                if (item is DownloadInstallMinecraftSectionViewModel section)
+                {
+                    ObserveCatalogSection(section);
+                }
+            }
+        }
+
+        ScheduleCatalogFillModeSync();
+    }
+
+    private void ObserveCatalogSection(DownloadInstallMinecraftSectionViewModel section)
+    {
+        if (!_observedCatalogSections.Add(section))
+        {
+            return;
+        }
+
+        section.PropertyChanged += OnCatalogSectionPropertyChanged;
+    }
+
+    private void UnobserveCatalogSection(DownloadInstallMinecraftSectionViewModel section)
+    {
+        if (!_observedCatalogSections.Remove(section))
+        {
+            return;
+        }
+
+        section.PropertyChanged -= OnCatalogSectionPropertyChanged;
+    }
+
+    private void UnobserveAllCatalogSections()
+    {
+        foreach (var section in _observedCatalogSections.ToArray())
+        {
+            UnobserveCatalogSection(section);
+        }
+    }
+
+    private void OnCatalogSectionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DownloadInstallMinecraftSectionViewModel.IsExpanded))
+        {
+            ScheduleCatalogFillModeSync();
+        }
+    }
+
+    private bool _catalogFillModeSyncScheduled;
+
+    private void ScheduleCatalogFillModeSync()
+    {
+        if (_catalogFillModeSyncScheduled)
+        {
+            return;
+        }
+
+        _catalogFillModeSyncScheduled = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            _catalogFillModeSyncScheduled = false;
+            SyncCatalogFillMode();
+        }, DispatcherPriority.Background);
+    }
+
+    private void SyncCatalogFillMode()
+    {
+        // The catalog only fills the window when a collapsible group is expanded. In
+        // that state the outer page scroll is disabled so the page (and therefore the
+        // catalog's star row) gets a bounded height, which the expanded card fills and
+        // whose inner list then scrolls. When nothing is expanded the page scrolls
+        // normally.
+        var sections = _observedLauncher?.DownloadInstallMinecraftSections;
+        var anyExpanded = sections is not null && sections.Any(section => section.CanCollapse && section.IsExpanded);
+        var isCatalogStage = _currentStage == DownloadInstallStage.Catalog
+            && (_observedLauncher?.ShowDownloadInstallMinecraftCatalog == true);
+        var fillMode = anyExpanded && isCatalogStage;
+        var desiredScroll = fillMode ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
+        var desiredStageRow = fillMode ? GridLength.Star : GridLength.Auto;
+
+        if (_installScrollViewer.VerticalScrollBarVisibility != desiredScroll)
+        {
+            _installScrollViewer.VerticalScrollBarVisibility = desiredScroll;
+        }
+
+        if (_installPageGrid.RowDefinitions[0].Height != desiredStageRow)
+        {
+            _installPageGrid.RowDefinitions[0].Height = desiredStageRow;
+        }
+
+        if (!fillMode)
+        {
+            _installScrollViewer.ScrollToHome();
         }
     }
 
@@ -114,6 +246,7 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
             ApplyStageVisibility(targetStage);
             _currentStage = targetStage;
             _hasAppliedInitialStageVisibility = true;
+            ScheduleCatalogFillModeSync();
             return;
         }
 
@@ -140,6 +273,7 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
         }
 
         ScheduleCatalogStateSync();
+        ScheduleCatalogFillModeSync();
     }
 
     private DownloadInstallStage ResolveTargetStage()

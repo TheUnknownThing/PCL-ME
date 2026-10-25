@@ -52,6 +52,9 @@ internal sealed partial class PclCard : UserControl
     public static readonly StyledProperty<object?> HeaderOverlayContentProperty =
         AvaloniaProperty.Register<PclCard, object?>(nameof(HeaderOverlayContent));
 
+    public static readonly StyledProperty<bool> ContentFillProperty =
+        AvaloniaProperty.Register<PclCard, bool>(nameof(ContentFill));
+
     public static readonly StyledProperty<ICommand?> HeaderCommandProperty =
         AvaloniaProperty.Register<PclCard, ICommand?>(nameof(HeaderCommand));
 
@@ -185,6 +188,12 @@ internal sealed partial class PclCard : UserControl
         set => SetValue(HeaderOverlayContentProperty, value);
     }
 
+    public bool ContentFill
+    {
+        get => GetValue(ContentFillProperty);
+        set => SetValue(ContentFillProperty, value);
+    }
+
     public ICommand? HeaderCommand
     {
         get => GetValue(HeaderCommandProperty);
@@ -271,6 +280,10 @@ internal sealed partial class PclCard : UserControl
             RaisePropertyChanged(ShowCloseButtonProperty, false, ShowCloseButton);
             RaisePropertyChanged(IsContentVisibleProperty, false, IsContentVisible);
             RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
+        }
+        else if (change.Property == ContentFillProperty)
+        {
+            RefreshContentState(animate: false);
         }
         else if (change.Property == ContentMarginProperty)
         {
@@ -441,11 +454,18 @@ internal sealed partial class PclCard : UserControl
 
     private void RefreshContentState(bool animate = true)
     {
-        if (!ShowChevron)
+        // Fill cards contain a long list that scrolls internally. When expanded
+        // they stretch to fill the host's available height (the catalog section's
+        // * row) so the card fills the displayed window; when collapsed they stay
+        // top-anchored at the header height. Non-fill cards are top-aligned and
+        // sized (or animated) to their content.
+        ApplyContentFillVerticalAlignment();
+
+        if (!ShowChevron || ContentFill)
         {
             StopContentAnimation();
             _contentAnimationVersion++;
-            SetContentRenderedVisible(true);
+            SetContentRenderedVisible(ShowChevron ? IsChevronExpanded : true);
             ContentHost.Height = double.NaN;
             Height = double.NaN;
             return;
@@ -462,6 +482,32 @@ internal sealed partial class PclCard : UserControl
         }
 
         AnimateContentState();
+    }
+
+    private void ApplyContentFillVerticalAlignment()
+    {
+        if (!ContentFill)
+        {
+            return;
+        }
+
+        var isFilled = IsChevronExpanded;
+        var alignment = isFilled
+            ? global::Avalonia.Layout.VerticalAlignment.Stretch
+            : global::Avalonia.Layout.VerticalAlignment.Top;
+        if (VerticalAlignment != alignment)
+        {
+            VerticalAlignment = alignment;
+        }
+
+        // When the card fills its host, the content row must also stretch so the inner
+        // list is bounded by the card's height and can scroll. Otherwise the content row
+        // sizes to its (unbounded) natural height and the list overflows the card.
+        var fillRow = isFilled ? GridLength.Star : GridLength.Auto;
+        if (LayoutRoot.RowDefinitions[1].Height != fillRow)
+        {
+            LayoutRoot.RowDefinitions[1].Height = fillRow;
+        }
     }
 
     private void AnimateContentState()
@@ -497,6 +543,12 @@ internal sealed partial class PclCard : UserControl
         _isContentRenderedVisible = isVisible;
         ContentHost.IsVisible = isVisible;
         ContentHost.IsHitTestVisible = isVisible;
+        // Fill cards reveal their (already-present) content with a fade instead of
+        // a height animation, since the card height is fixed and top-anchored.
+        if (ContentFill)
+        {
+            ContentHost.Opacity = isVisible ? 1 : 0;
+        }
         var newValue = IsContentVisible;
         if (oldValue != newValue)
         {
