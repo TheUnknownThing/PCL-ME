@@ -17,13 +17,16 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
     private readonly Grid _minecraftCatalogStage;
     private readonly PCL.Frontend.Avalonia.Desktop.Controls.PclCard _minecraftCatalogLoadingCard;
     private readonly PCL.Frontend.Avalonia.Desktop.Controls.PclCard _minecraftCatalogEmptyStateCard;
-    private readonly ItemsControl _minecraftCatalogContentHost;
+    private readonly ItemsControl _minecraftCatalogGroupListHost;
+    private readonly PCL.Frontend.Avalonia.Desktop.Controls.PclCard _minecraftCatalogExpandedHost;
+    private readonly ItemsControl _minecraftCatalogExpandedList;
     private readonly StackPanel _selectionStage;
     private LauncherViewModel? _observedLauncher;
     private bool _hasAppliedInitialStageVisibility;
     private DownloadInstallStage _currentStage = DownloadInstallStage.Catalog;
     private int _stageAnimationVersion;
     private int _catalogVisualStateVersion;
+    private DownloadInstallMinecraftSectionViewModel? _expandedCatalogSection;
     private readonly HashSet<DownloadInstallMinecraftSectionViewModel> _observedCatalogSections = new();
 
     public DownloadInstallRightPaneView()
@@ -39,8 +42,12 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
             ?? throw new InvalidOperationException("The install page did not contain the Minecraft version loading card.");
         _minecraftCatalogEmptyStateCard = this.FindControl<PCL.Frontend.Avalonia.Desktop.Controls.PclCard>("MinecraftCatalogEmptyStateCard")
             ?? throw new InvalidOperationException("The install page did not contain the Minecraft version empty state.");
-        _minecraftCatalogContentHost = this.FindControl<ItemsControl>("MinecraftCatalogContentHost")
-            ?? throw new InvalidOperationException("The install page did not contain the Minecraft version content host.");
+        _minecraftCatalogGroupListHost = this.FindControl<ItemsControl>("MinecraftCatalogGroupListHost")
+            ?? throw new InvalidOperationException("The install page did not contain the Minecraft version group list.");
+        _minecraftCatalogExpandedHost = this.FindControl<PCL.Frontend.Avalonia.Desktop.Controls.PclCard>("MinecraftCatalogExpandedHost")
+            ?? throw new InvalidOperationException("The install page did not contain the expanded Minecraft version host.");
+        _minecraftCatalogExpandedList = this.FindControl<ItemsControl>("MinecraftCatalogExpandedList")
+            ?? throw new InvalidOperationException("The install page did not contain the expanded Minecraft version list.");
         _selectionStage = this.FindControl<StackPanel>("SelectionStage")
             ?? throw new InvalidOperationException("The install page did not contain the loader selection stage.");
         DataContextChanged += OnDataContextChanged;
@@ -155,6 +162,9 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
     {
         if (e.PropertyName == nameof(DownloadInstallMinecraftSectionViewModel.IsExpanded))
         {
+            // Expanding/collapsing a group switches between the compact group list and
+            // the full-page expanded view, and also toggles the outer page scroll.
+            ScheduleCatalogStateSync();
             ScheduleCatalogFillModeSync();
         }
     }
@@ -337,15 +347,18 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
         var showContent = showCatalog && _observedLauncher?.ShowDownloadInstallMinecraftCatalogContent == true;
         var showEmptyState = showCatalog && _observedLauncher?.ShowDownloadInstallMinecraftCatalogEmptyState == true;
 
+        var expandedSection = ResolveExpandedCatalogSection();
+
         if (VisualRoot is null)
         {
-            ApplyCatalogVisibility(showLoading, showContent, showEmptyState);
+            ApplyCatalogVisibility(showLoading, showContent, showEmptyState, expandedSection);
             return;
         }
 
         if (showLoading)
         {
-            await HideAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
             await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
             await ShowAnimatedAsync(_minecraftCatalogLoadingCard, version, _catalogVisualStateVersion);
             return;
@@ -355,20 +368,58 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
 
         if (showEmptyState)
         {
-            await HideAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
             await ShowAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
             return;
         }
 
         await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
-        if (showContent)
+        if (!showContent)
         {
-            await ShowAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
+            return;
+        }
+
+        // When a group is expanded, the catalog shows a single full-page view of that
+        // group's versions (which scrolls internally). Otherwise it shows the compact
+        // list of group headers.
+        if (expandedSection is not null)
+        {
+            ApplyExpandedCatalogSection(expandedSection);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
+            await ShowAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
         }
         else
         {
-            await HideAnimatedAsync(_minecraftCatalogContentHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
+            await ShowAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
         }
+    }
+
+    private DownloadInstallMinecraftSectionViewModel? ResolveExpandedCatalogSection()
+    {
+        var sections = _observedLauncher?.DownloadInstallMinecraftSections;
+        if (sections is null)
+        {
+            return null;
+        }
+
+        return sections.FirstOrDefault(section => section.CanCollapse && section.IsExpanded);
+    }
+
+    private void ApplyExpandedCatalogSection(DownloadInstallMinecraftSectionViewModel section)
+    {
+        if (ReferenceEquals(_expandedCatalogSection, section))
+        {
+            return;
+        }
+
+        _expandedCatalogSection = section;
+        _minecraftCatalogExpandedHost.Header = section.Title;
+        _minecraftCatalogExpandedHost.HeaderCommand = section.HeaderCommand;
+        _minecraftCatalogExpandedList.ItemsSource = section.Choices;
     }
 
     private async Task ShowAnimatedAsync(Control control, int version)
@@ -427,19 +478,31 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
 
     private void ConfigureCatalogMotion()
     {
-        ConfigureStage(_minecraftCatalogContentHost, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: -8, exitOffsetY: -8, overshootTranslation: true);
+        ConfigureStage(_minecraftCatalogGroupListHost, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: -8, exitOffsetY: -8, overshootTranslation: true);
+        ConfigureStage(_minecraftCatalogExpandedHost, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: -10, exitOffsetY: -10, overshootTranslation: true);
         ConfigureStage(_minecraftCatalogEmptyStateCard, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: -6, exitOffsetY: -6, overshootTranslation: true);
         ConfigureStage(_minecraftCatalogLoadingCard, enterOffsetX: 0, exitOffsetX: 0, enterOffsetY: 10, exitOffsetY: 8, overshootTranslation: true);
-        Motion.SetStaggerChildren(_minecraftCatalogContentHost, true);
-        Motion.SetStaggerStep(_minecraftCatalogContentHost, 38);
-        Motion.SetDelay(_minecraftCatalogContentHost, 32);
+        Motion.SetStaggerChildren(_minecraftCatalogGroupListHost, true);
+        Motion.SetStaggerStep(_minecraftCatalogGroupListHost, 38);
+        Motion.SetDelay(_minecraftCatalogGroupListHost, 32);
+        Motion.SetStaggerChildren(_minecraftCatalogExpandedList, true);
+        Motion.SetStaggerStep(_minecraftCatalogExpandedList, 24);
     }
 
-    private void ApplyCatalogVisibility(bool showLoading, bool showContent, bool showEmptyState)
+    private void ApplyCatalogVisibility(
+        bool showLoading,
+        bool showContent,
+        bool showEmptyState,
+        DownloadInstallMinecraftSectionViewModel? expandedSection)
     {
         _minecraftCatalogLoadingCard.IsVisible = showLoading;
-        _minecraftCatalogContentHost.IsVisible = showContent;
         _minecraftCatalogEmptyStateCard.IsVisible = showEmptyState;
+        if (expandedSection is not null)
+        {
+            ApplyExpandedCatalogSection(expandedSection);
+        }
+        _minecraftCatalogGroupListHost.IsVisible = showContent && expandedSection is null;
+        _minecraftCatalogExpandedHost.IsVisible = showContent && expandedSection is not null;
     }
 
     private static void ConfigureStage(

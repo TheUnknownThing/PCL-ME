@@ -5,7 +5,6 @@
     xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
     x:DataType="vm:LauncherViewModel"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
-    xmlns:views="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right"
     DataContext="{ReflectionBinding Launcher}">
   <ScrollViewer
       x:Name="InstallScrollViewer"
@@ -56,47 +55,51 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <ItemsControl
-            Grid.Row="2"
-            x:Name="MinecraftCatalogContentHost"
-            IsVisible="False"
-            ItemsSource="{Binding DownloadInstallMinecraftSections}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <views:CatalogSectionPanel />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <controls:PclCard
-                  Margin="0,0,0,15"
-                  Header="{Binding Title}"
-                  ShowChevron="{Binding CanCollapse}"
-                  IsChevronExpanded="{Binding IsExpanded}"
-                  HeaderCommand="{Binding HeaderCommand}"
-                  ContentFill="{Binding CanCollapse}"
-                  ContentMargin="18,40,18,8">
-                <controls:PclCard.CardContent>
-                    <ItemsControl
-                        ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        ItemsSource="{Binding Choices}">
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                          <controls:PclListItem
-                              Margin="0,0,0,2"
-                              Command="{Binding SelectCommand}"
-                              IconSource="{Binding Icon}"
-                              IconScale="1"
-                              Info="{Binding Summary}"
-                              Title="{Binding Title}" />
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <Grid Grid.Row="2">
+          <ItemsControl
+              x:Name="MinecraftCatalogGroupListHost"
+              IsVisible="False"
+              ItemsSource="{Binding DownloadInstallMinecraftSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate
+                  x:DataType="vm:DownloadInstallMinecraftSectionViewModel">
+                <controls:PclCard
+                    Margin="0,0,0,15"
+                    Header="{Binding Title}"
+                    ShowChevron="{Binding CanCollapse}"
+                    IsChevronExpanded="False"
+                    HeaderCommand="{Binding HeaderCommand}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <controls:PclCard
+              x:Name="MinecraftCatalogExpandedHost"
+              IsVisible="False"
+              ShowChevron="True"
+              IsChevronExpanded="True"
+              ContentFill="True"
+              ContentMargin="18,40,18,12">
+            <controls:PclCard.CardContent>
+              <ItemsControl
+                  x:Name="MinecraftCatalogExpandedList"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate
+                      x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
+                    <controls:PclListItem
+                        Margin="0,0,0,2"
+                        Command="{Binding SelectCommand}"
+                        IconSource="{Binding Icon}"
+                        IconScale="1"
+                        Info="{Binding Summary}"
+                        Title="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+        </Grid>
       </Grid>
 
       <StackPanel
