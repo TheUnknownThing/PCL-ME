@@ -11,10 +11,15 @@ namespace PCL.Frontend.Avalonia.Workflows;
 /// </summary>
 internal sealed class FrontendDeferredSettingsWriter
 {
-    private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(250);
     private readonly object _sync = new();
     private readonly HashSet<CommonFileProvider> _pending = [];
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Background);
+
+    /// <summary>
+    /// Quiet period after the last deferred change before pending files are written.
+    /// Tests stretch this to keep their timing assumptions safe on loaded runners.
+    /// </summary>
+    internal TimeSpan SaveDelay { get; set; } = TimeSpan.FromMilliseconds(250);
 
     public FrontendDeferredSettingsWriter()
     {

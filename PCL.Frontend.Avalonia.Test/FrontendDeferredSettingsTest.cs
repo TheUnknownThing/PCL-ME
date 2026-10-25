@@ -46,13 +46,16 @@ public sealed class FrontendDeferredSettingsTest
         await RunOnUiThread(async () =>
         {
             using var fixture = new SettingsFixture();
-            var writer = new FrontendDeferredSettingsWriter();
+            // Stretch the quiet period so slow CI runners cannot deliver the second
+            // change after the first one legitimately flushed, and so the delayed
+            // write lands well past the waits below even under scheduling jitter.
+            var writer = new FrontendDeferredSettingsWriter { SaveDelay = TimeSpan.FromSeconds(1) };
             writer.SetDeferred(fixture.Local, "opacity", 1);
-            await Task.Delay(150);
+            await Task.Delay(400);
             writer.SetDeferred(fixture.Local, "opacity", 2);
-            await Task.Delay(150);
+            await Task.Delay(650);
             Assert.AreEqual(0, fixture.Local.WriteCount, "A later change must restart the quiet period.");
-            var deadline = DateTime.UtcNow.AddSeconds(2);
+            var deadline = DateTime.UtcNow.AddSeconds(3);
             while (fixture.Local.WriteCount == 0 && DateTime.UtcNow < deadline) await Task.Delay(25);
             Assert.AreEqual(1, fixture.Local.WriteCount);
 
