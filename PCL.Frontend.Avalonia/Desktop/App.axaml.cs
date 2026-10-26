@@ -28,6 +28,9 @@ internal sealed class App : Application
         _options = options;
         _runtimePaths = runtimePaths;
         _platformAdapter = platformAdapter;
+        // Avalonia's macOS backend exports this name as the process/menu-bar title
+        // before setup completes; the default would otherwise read "Avalonia Application".
+        Name = FrontendApplicationIdentity.DisplayName;
     }
 
     public override void Initialize()
