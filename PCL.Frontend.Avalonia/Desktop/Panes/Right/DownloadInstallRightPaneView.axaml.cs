@@ -26,6 +26,7 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
     private DownloadInstallStage _currentStage = DownloadInstallStage.Catalog;
     private int _stageAnimationVersion;
     private int _catalogVisualStateVersion;
+    private readonly HashSet<Control> _animatingControls = [];
     private DownloadInstallMinecraftSectionViewModel? _expandedCatalogSection;
     private readonly HashSet<DownloadInstallMinecraftSectionViewModel> _observedCatalogSections = new();
 
@@ -272,7 +273,9 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
 
         if (_currentStage == targetStage
             && _minecraftCatalogStage.IsVisible == (targetStage == DownloadInstallStage.Catalog)
-            && _selectionStage.IsVisible == (targetStage == DownloadInstallStage.Selection))
+            && _selectionStage.IsVisible == (targetStage == DownloadInstallStage.Selection)
+            && !_animatingControls.Contains(_minecraftCatalogStage)
+            && !_animatingControls.Contains(_selectionStage))
         {
             return;
         }
@@ -376,28 +379,28 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
 
         if (showLoading)
         {
-            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
-            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
-            await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
-            await ShowAnimatedAsync(_minecraftCatalogLoadingCard, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, isCatalogAnimation: true);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, isCatalogAnimation: true);
+            await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, isCatalogAnimation: true);
+            await ShowAnimatedAsync(_minecraftCatalogLoadingCard, version, isCatalogAnimation: true);
             return;
         }
 
-        await HideAnimatedAsync(_minecraftCatalogLoadingCard, version, _catalogVisualStateVersion);
+        await HideAnimatedAsync(_minecraftCatalogLoadingCard, version, isCatalogAnimation: true);
 
         if (showEmptyState)
         {
-            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
-            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
-            await ShowAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, isCatalogAnimation: true);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, isCatalogAnimation: true);
+            await ShowAnimatedAsync(_minecraftCatalogEmptyStateCard, version, isCatalogAnimation: true);
             return;
         }
 
-        await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, _catalogVisualStateVersion);
+        await HideAnimatedAsync(_minecraftCatalogEmptyStateCard, version, isCatalogAnimation: true);
         if (!showContent)
         {
-            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
-            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, isCatalogAnimation: true);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, isCatalogAnimation: true);
             return;
         }
 
@@ -407,13 +410,13 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
         if (expandedSection is not null)
         {
             ApplyExpandedCatalogSection(expandedSection);
-            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
-            await ShowAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogGroupListHost, version, isCatalogAnimation: true);
+            await ShowAnimatedAsync(_minecraftCatalogExpandedHost, version, isCatalogAnimation: true);
         }
         else
         {
-            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, _catalogVisualStateVersion);
-            await ShowAnimatedAsync(_minecraftCatalogGroupListHost, version, _catalogVisualStateVersion);
+            await HideAnimatedAsync(_minecraftCatalogExpandedHost, version, isCatalogAnimation: true);
+            await ShowAnimatedAsync(_minecraftCatalogGroupListHost, version, isCatalogAnimation: true);
         }
     }
 
@@ -441,52 +444,58 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
         _minecraftCatalogExpandedList.ItemsSource = section.Choices;
     }
 
-    private async Task ShowAnimatedAsync(Control control, int version)
+    private async Task ShowAnimatedAsync(Control control, int version, bool isCatalogAnimation = false)
     {
-        await ShowAnimatedAsync(control, version, _stageAnimationVersion);
-    }
-
-    private async Task ShowAnimatedAsync(Control control, int version, int expectedVersion)
-    {
-        if (version != expectedVersion)
+        if (!IsAnimationCurrent(version, isCatalogAnimation))
         {
             return;
         }
 
-        if (control.IsVisible)
+        // An interrupted exit leaves the control visible while fading it out.
+        // Replay its entrance so reversing the transition also restores opacity.
+        if (control.IsVisible && !_animatingControls.Contains(control))
         {
             return;
         }
 
+        _animatingControls.Add(control);
         control.IsVisible = true;
         await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (version != expectedVersion)
+        if (!IsAnimationCurrent(version, isCatalogAnimation))
         {
             return;
         }
 
         await Motion.PlayEnterAsync(control);
+        if (IsAnimationCurrent(version, isCatalogAnimation))
+        {
+            _animatingControls.Remove(control);
+        }
     }
 
-    private async Task HideAnimatedAsync(Control control, int version)
+    private async Task HideAnimatedAsync(Control control, int version, bool isCatalogAnimation = false)
     {
-        await HideAnimatedAsync(control, version, _stageAnimationVersion);
-    }
-
-    private async Task HideAnimatedAsync(Control control, int version, int expectedVersion)
-    {
-        if (version != expectedVersion || !control.IsVisible)
+        if (!IsAnimationCurrent(version, isCatalogAnimation) || !control.IsVisible)
         {
             return;
         }
 
+        _animatingControls.Add(control);
         await Motion.PlayExitAsync(control);
-        if (version != expectedVersion)
+        if (!IsAnimationCurrent(version, isCatalogAnimation))
         {
             return;
         }
 
         control.IsVisible = false;
+        _animatingControls.Remove(control);
+    }
+
+    private bool IsAnimationCurrent(int version, bool isCatalogAnimation)
+    {
+        // Read the live counter after every await; a captured counter cannot
+        // prevent an older transition from hiding a newer view.
+        return version == (isCatalogAnimation ? _catalogVisualStateVersion : _stageAnimationVersion);
     }
 
     private void ConfigureStageMotion()
