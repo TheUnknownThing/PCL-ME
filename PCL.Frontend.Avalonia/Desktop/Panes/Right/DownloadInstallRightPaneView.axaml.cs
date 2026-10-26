@@ -105,24 +105,34 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
 
     private void OnCatalogSectionsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        if (e.OldItems is not null)
+        // A Reset (ReplaceItems / Clear) reports OldItems == null, so we must drop the
+        // subscriptions we already hold before observing the replacement sections.
+        if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
         {
-            foreach (var item in e.OldItems)
+            UnobserveAllCatalogSections();
+            _expandedCatalogSection = null;
+        }
+        else
+        {
+            if (e.OldItems is not null)
             {
-                if (item is DownloadInstallMinecraftSectionViewModel section)
+                foreach (var item in e.OldItems)
                 {
-                    UnobserveCatalogSection(section);
+                    if (item is DownloadInstallMinecraftSectionViewModel section)
+                    {
+                        UnobserveCatalogSection(section);
+                    }
                 }
             }
-        }
 
-        if (e.NewItems is not null)
-        {
-            foreach (var item in e.NewItems)
+            if (e.NewItems is not null)
             {
-                if (item is DownloadInstallMinecraftSectionViewModel section)
+                foreach (var item in e.NewItems)
                 {
-                    ObserveCatalogSection(section);
+                    if (item is DownloadInstallMinecraftSectionViewModel section)
+                    {
+                        ObserveCatalogSection(section);
+                    }
                 }
             }
         }
@@ -308,6 +318,15 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
         if (version != _stageAnimationVersion)
         {
             return;
+        }
+
+        // Selecting a version leaves the catalog. Collapse the group that was
+        // expanded so returning with the Back button restores the group list
+        // instead of re-opening the expanded host.
+        var expandedSection = ResolveExpandedCatalogSection();
+        if (expandedSection is not null)
+        {
+            expandedSection.IsExpanded = false;
         }
 
         _installScrollViewer.ScrollToHome();
