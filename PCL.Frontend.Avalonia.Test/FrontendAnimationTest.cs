@@ -199,19 +199,28 @@ public sealed class FrontendAnimationTest
         });
     }
 
-    private static async Task RunOnUiThread(Action action)
+    [TestMethod]
+    public async Task HeadlessSession_ReusesWorkerAndIsolatesApplications()
     {
-        var session = HeadlessUnitTestSession.StartNew(typeof(AnimationTestApplication));
-        try
+        Application? firstApplication = null;
+        var firstThread = 0;
+        await RunOnUiThread(() =>
         {
-            await session.Dispatch(action, CancellationToken.None).ConfigureAwait(false);
-        }
-        finally
+            firstApplication = Application.Current;
+            firstThread = Environment.CurrentManagedThreadId;
+            Assert.IsNotNull(firstApplication);
+        });
+        await RunOnUiThread(() =>
         {
-            // Dispatch can complete inline on the UI thread; Dispose waits for that
-            // thread to exit, so it must run from a different thread.
-            await Task.Run(session.Dispose).ConfigureAwait(false);
-        }
+            Assert.IsNotNull(Application.Current);
+            Assert.AreNotSame(firstApplication, Application.Current);
+            Assert.AreEqual(firstThread, Environment.CurrentManagedThreadId);
+        });
+    }
+
+    private static Task RunOnUiThread(Action action)
+    {
+        return FrontendDeferredContentTest.RunOnUiThread(action);
     }
 
     private static StandardRightPaneDescriptor Descriptor(StandardRightPaneKind kind)

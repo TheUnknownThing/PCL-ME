@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Avalonia.Headless;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Configuration.Storage;
 using PCL.Frontend.Avalonia.Workflows;
@@ -114,17 +113,9 @@ public sealed class FrontendDeferredSettingsTest
         });
     }
 
-    private static async Task RunOnUiThread(Func<Task> action)
+    private static Task RunOnUiThread(Func<Task> action)
     {
-        var session = HeadlessUnitTestSession.StartNew(typeof(FrontendAnimationTest.AnimationTestApplication));
-        try
-        {
-            await session.Dispatch(async () => { await action(); return true; }, CancellationToken.None).ConfigureAwait(false);
-        }
-        finally
-        {
-            await Task.Run(session.Dispose).ConfigureAwait(false);
-        }
+        return FrontendMotionTest.RunAsync(action);
     }
 
     private sealed class SettingsFixture : IDisposable

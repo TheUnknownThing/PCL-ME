@@ -310,14 +310,7 @@ public sealed class FrontendDeferredContentTest
 
     internal static async Task RunOnUiThread(Action action)
     {
-        var session = HeadlessUnitTestSession.StartNew(typeof(FrontendAnimationTest.AnimationTestApplication));
-        try
-        {
-            await session.Dispatch(action, CancellationToken.None).ConfigureAwait(false);
-        }
-        finally
-        {
-            await Task.Run(session.Dispose).ConfigureAwait(false);
-        }
+        var session = HeadlessUnitTestSession.GetOrStartForAssembly(typeof(FrontendDeferredContentTest).Assembly);
+        await session.Dispatch(action, CancellationToken.None).ConfigureAwait(false);
     }
 }

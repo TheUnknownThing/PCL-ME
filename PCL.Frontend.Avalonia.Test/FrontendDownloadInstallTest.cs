@@ -1,7 +1,6 @@
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,53 +24,42 @@ public sealed class FrontendDownloadInstallTest
     [DataRow(false)]
     public async Task Catalog_RapidHeaderClicksKeepTheLatestViewVisible(bool finishExpanded)
     {
-        var session = HeadlessUnitTestSession.StartNew(typeof(FrontendAnimationTest.AnimationTestApplication));
-        try
+        await FrontendMotionTest.RunAsync(async () =>
         {
-            await session.Dispatch(async () =>
-            {
-                using var fixture = new CatalogFixture();
-                await Advance(400);
-                var groups = fixture.View.FindControl<ItemsControl>("MinecraftCatalogGroupListHost")!;
-                var expanded = fixture.View.FindControl<PclCard>("MinecraftCatalogExpandedHost")!;
-                var groupCard = groups.GetVisualDescendants().OfType<PclCard>()
-                    .Single(card => ReferenceEquals(card.DataContext, fixture.Section));
-                ClickHeader(groupCard);
-                await Advance(400);
-                Assert.IsTrue(expanded.IsVisible);
+            using var fixture = new CatalogFixture();
+            await Advance(400);
+            var groups = fixture.View.FindControl<ItemsControl>("MinecraftCatalogGroupListHost")!;
+            var expanded = fixture.View.FindControl<PclCard>("MinecraftCatalogExpandedHost")!;
+            var groupCard = groups.GetVisualDescendants().OfType<PclCard>()
+                .Single(card => ReferenceEquals(card.DataContext, fixture.Section));
+            ClickHeader(groupCard);
+            await Advance(400);
+            Assert.IsTrue(expanded.IsVisible);
 
-                // Reverse the collapse while its exit fade is still running.
-                ClickHeader(expanded);
+            // Reverse the collapse while its exit fade is still running.
+            ClickHeader(expanded);
+            await Advance(40);
+            ClickHeader(expanded);
+            if (!finishExpanded)
+            {
                 await Advance(40);
                 ClickHeader(expanded);
-                if (!finishExpanded)
-                {
-                    await Advance(40);
-                    ClickHeader(expanded);
-                }
+            }
 
-                await Advance(600);
-                Assert.AreEqual(finishExpanded, fixture.Section.IsExpanded);
-                Assert.AreEqual(finishExpanded, expanded.IsVisible);
-                Assert.AreEqual(!finishExpanded, groups.IsVisible);
-                if (finishExpanded)
-                {
-                    Assert.AreEqual(1d, expanded.Opacity, .01, "Reversing an exit must restore opacity as well as visibility.");
-                }
-                else
-                {
-                    Assert.IsTrue(groups.GetVisualDescendants().OfType<PclCard>()
-                        .All(card => Math.Abs(card.Opacity - 1) < .01));
-                }
-
-                await Task.Yield();
-                return true;
-            }, CancellationToken.None).ConfigureAwait(false);
-        }
-        finally
-        {
-            await Task.Run(session.Dispose).ConfigureAwait(false);
-        }
+            await Advance(600);
+            Assert.AreEqual(finishExpanded, fixture.Section.IsExpanded);
+            Assert.AreEqual(finishExpanded, expanded.IsVisible);
+            Assert.AreEqual(!finishExpanded, groups.IsVisible);
+            if (finishExpanded)
+            {
+                Assert.AreEqual(1d, expanded.Opacity, .01, "Reversing an exit must restore opacity as well as visibility.");
+            }
+            else
+            {
+                Assert.IsTrue(groups.GetVisualDescendants().OfType<PclCard>()
+                    .All(card => Math.Abs(card.Opacity - 1) < .01));
+            }
+        });
     }
 
     private static void ClickHeader(PclCard card)

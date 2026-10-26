@@ -290,22 +290,15 @@ public sealed class FrontendMotionTest
 
     internal static async Task RunAsync(Func<Task> action)
     {
-        var session = HeadlessUnitTestSession.StartNew(typeof(FrontendAnimationTest.AnimationTestApplication));
-        try
+        var session = HeadlessUnitTestSession.GetOrStartForAssembly(typeof(FrontendMotionTest).Assembly);
+        await session.Dispatch(async () =>
         {
-            await session.Dispatch(async () =>
-            {
-                await action();
-                // Let cancellation continuations drain before the session
-                // tears down its dispatcher and font manager.
-                await Task.Yield();
-                Tick();
-                return true;
-            }, CancellationToken.None).ConfigureAwait(false);
-        }
-        finally
-        {
-            await Task.Run(session.Dispose).ConfigureAwait(false);
-        }
+            await action();
+            // Let cancellation continuations drain before the isolated
+            // application tears down its dispatcher and font manager.
+            await Task.Yield();
+            Tick();
+            return true;
+        }, CancellationToken.None).ConfigureAwait(false);
     }
 }
