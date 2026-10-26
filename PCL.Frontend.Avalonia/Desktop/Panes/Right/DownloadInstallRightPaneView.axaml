@@ -9,11 +9,24 @@
   <ScrollViewer
       x:Name="InstallScrollViewer"
       VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="25,10,25,25" Spacing="12">
-      <StackPanel
+    <Grid
+        x:Name="InstallPageGrid"
+        Margin="25,10,25,25">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <Grid
+          Grid.Row="0"
           x:Name="MinecraftCatalogStage"
-          Spacing="12">
+          ColumnDefinitions="*">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <controls:PclCard
+            Grid.Row="0"
             x:Name="MinecraftCatalogLoadingCard"
             Margin="40,50"
             ContentMargin="20,20,20,17"
@@ -29,6 +42,7 @@
         </controls:PclCard>
 
         <controls:PclCard
+            Grid.Row="1"
             x:Name="MinecraftCatalogEmptyStateCard"
             IsVisible="False"
             ContentMargin="18,16,18,16">
@@ -41,23 +55,26 @@
           </controls:PclCard.CardContent>
         </controls:PclCard>
 
-        <ItemsControl
-            x:Name="MinecraftCatalogContentHost"
-            IsVisible="False"
-            ItemsSource="{Binding DownloadInstallMinecraftSections}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <controls:PclCard
-                  Margin="0,0,0,15"
-                  Header="{Binding Title}"
-                  ShowChevron="{Binding CanCollapse}"
-                  IsChevronExpanded="{Binding IsExpanded}"
-                  HeaderCommand="{Binding HeaderCommand}"
-                  ContentMargin="18,40,18,8">
-                <controls:PclCard.CardContent>
+        <Grid Grid.Row="2">
+          <ItemsControl
+              x:Name="MinecraftCatalogGroupListHost"
+              IsVisible="False"
+              ItemsSource="{Binding DownloadInstallMinecraftSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate
+                  x:DataType="vm:DownloadInstallMinecraftSectionViewModel">
+                <controls:PclCard
+                    Margin="0,0,0,15"
+                    Header="{Binding Title}"
+                    ShowChevron="{Binding CanCollapse}"
+                    IsChevronExpanded="False"
+                    HeaderCommand="{Binding HeaderCommand}"
+                    ContentMargin="18,40,18,12">
+                  <controls:PclCard.CardContent>
                     <ItemsControl ItemsSource="{Binding Choices}">
                       <ItemsControl.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate
+                            x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
                           <controls:PclListItem
                               Margin="0,0,0,2"
                               Command="{Binding SelectCommand}"
@@ -67,15 +84,53 @@
                               Title="{Binding Title}" />
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </controls:PclCard.CardContent>
-              </controls:PclCard>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </StackPanel>
+                    </ItemsControl>
+                  </controls:PclCard.CardContent>
+                </controls:PclCard>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <controls:PclCard
+              x:Name="MinecraftCatalogExpandedHost"
+              IsVisible="False"
+              ShowChevron="True"
+              IsChevronExpanded="True"
+              ContentFill="True"
+              ContentMargin="18,40,18,12">
+            <controls:PclCard.CardContent>
+              <ScrollViewer
+                  x:Name="MinecraftCatalogExpandedScroll"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  IsScrollChainingEnabled="False"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+                <ItemsControl
+                    x:Name="MinecraftCatalogExpandedList"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
+                      <controls:PclListItem
+                          Margin="0,0,0,2"
+                          Command="{Binding SelectCommand}"
+                          IconSource="{Binding Icon}"
+                          IconScale="1"
+                          Info="{Binding Summary}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </controls:PclCard.CardContent>
+          </controls:PclCard>
+        </Grid>
+      </Grid>
 
       <StackPanel
+          Grid.Row="1"
           x:Name="SelectionStage"
           IsVisible="False"
           Spacing="12">
@@ -274,6 +329,6 @@
               Text="{Binding DownloadInstallStartText}" />
         </Grid>
       </StackPanel>
-    </StackPanel>
+    </Grid>
   </ScrollViewer>
 </UserControl>
