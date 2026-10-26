@@ -72,6 +72,11 @@
                     ContentMargin="18,40,18,12">
                   <controls:PclCard.CardContent>
                     <ItemsControl ItemsSource="{Binding Choices}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <VirtualizingStackPanel CacheLength="0.5" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate
                             x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
@@ -110,6 +115,11 @@
                     x:Name="MinecraftCatalogExpandedList"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <VirtualizingStackPanel CacheLength="0.5" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate
                         x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
@@ -298,6 +308,11 @@
                         TextWrapping="Wrap" />
 
                     <ItemsControl ItemsSource="{Binding VisibleChoices}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <VirtualizingStackPanel CacheLength="0.5" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
                           <controls:PclListItem

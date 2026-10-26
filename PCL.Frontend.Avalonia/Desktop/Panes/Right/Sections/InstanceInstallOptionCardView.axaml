@@ -84,6 +84,11 @@
             TextWrapping="Wrap" />
 
         <ItemsControl ItemsSource="{Binding VisibleChoices}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <VirtualizingStackPanel CacheLength="0.5" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <controls:PclListItem

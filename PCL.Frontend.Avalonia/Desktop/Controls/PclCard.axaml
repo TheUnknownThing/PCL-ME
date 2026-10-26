@@ -5,7 +5,7 @@
     xmlns:animation="clr-namespace:PCL.Frontend.Avalonia.Desktop.Animation"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     x:Name="Root">
-  <Grid ClipToBounds="False">
+  <Grid x:Name="CardLayoutRoot" ClipToBounds="False">
     <Border
         x:Name="CardBorder"
         Background="{DynamicResource ColorBrushMyCard}"
@@ -106,13 +106,12 @@
         x:Name="HoverOutlineBorder"
         Background="Transparent"
         BorderBrush="{DynamicResource ColorBrushTransparent}"
-        BorderThickness="1"
+        BorderThickness="1.4"
         CornerRadius="6"
         IsHitTestVisible="False">
       <Border.Transitions>
         <Transitions>
           <BrushTransition Property="BorderBrush" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
-          <ThicknessTransition Property="BorderThickness" Duration="{Binding EmphasizedSurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
         </Transitions>
       </Border.Transitions>
     </Border>

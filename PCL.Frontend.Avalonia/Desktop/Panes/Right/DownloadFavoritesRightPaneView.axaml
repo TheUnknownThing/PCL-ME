@@ -66,6 +66,11 @@
               <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="20,18,18,18">
                 <controls:PclCard.CardContent>
                   <ItemsControl ItemsSource="{Binding Items}" Padding="0">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <VirtualizingStackPanel CacheLength="0.5" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <sections:ResourceEntryCardView />

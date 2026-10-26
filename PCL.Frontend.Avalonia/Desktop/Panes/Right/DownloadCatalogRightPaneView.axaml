@@ -63,6 +63,11 @@
                         Text="{Binding LoadingText}" />
 
                     <ItemsControl ItemsSource="{Binding Items}" IsVisible="{Binding HasItems}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <VirtualizingStackPanel CacheLength="0.5" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>
                           <controls:PclListItem

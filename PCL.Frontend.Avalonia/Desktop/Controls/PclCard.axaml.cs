@@ -6,6 +6,10 @@ using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Layout;
+using Avalonia.Rendering.Composition;
+using Avalonia.VisualTree;
+using System.Diagnostics;
 using Avalonia.Threading;
 using PCL.Frontend.Avalonia.Desktop.Animation;
 using System.ComponentModel;
@@ -16,8 +20,6 @@ namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
 internal sealed partial class PclCard : UserControl
 {
-    private static readonly Thickness IdleBorderThickness = new(1);
-    private static readonly Thickness HoverBorderThickness = new(1.4);
     private static readonly Thickness StandardHeaderTextMargin = new(15, 12, 0, 0);
     private static readonly Thickness CollapsibleHeaderTextMargin = new(15, 0, 40, 0);
     private static readonly Thickness StandardChevronMargin = new(0, 17, 16, 0);
@@ -70,6 +72,11 @@ internal sealed partial class PclCard : UserControl
     private int _contentAnimationVersion;
     private bool _isMotionDurationSubscribed;
     private CancellationTokenSource? _contentAnimationCts;
+    private readonly Dictionary<Control, int> _animatedSiblings = [];
+    private HeightAnimationPlan? _activeHeightPlan;
+    private double _animationStartHeight;
+    private double _animationTargetHeight;
+    private long _animationStartedAt;
 
     private readonly record struct HeightAnimationPlan(
         double TotalDistance,
@@ -301,7 +308,8 @@ internal sealed partial class PclCard : UserControl
         {
             RaisePropertyChanged(HasHeaderOverlayContentProperty, false, HasHeaderOverlayContent);
         }
-        else if (change.Property == IsVisibleProperty && change.GetNewValue<bool>() && !_isCloseAnimationPending)
+        else if (change.Property == IsVisibleProperty && change.GetNewValue<bool>()
+                 && !_isCloseAnimationPending && !Motion.IsAnimating(this))
         {
             ResetCloseVisualState();
         }
@@ -347,9 +355,6 @@ internal sealed partial class PclCard : UserControl
         HoverOutlineBorder.BorderBrush = _isHovered
             ? hoverBorderBrush
             : idleBorderBrush;
-        HoverOutlineBorder.BorderThickness = _isHovered
-            ? HoverBorderThickness
-            : IdleBorderThickness;
         CardBorder.Background = _isHovered
             ? hoverSurfaceBrush
             : idleSurfaceBrush;
@@ -512,29 +517,52 @@ internal sealed partial class PclCard : UserControl
 
     private void AnimateContentState()
     {
-        StopContentAnimation();
+        var startHeight = GetCurrentAnimationHeight();
+        StopContentAnimation(resetVisuals: false);
         var cts = new CancellationTokenSource();
         _contentAnimationCts = cts;
         var version = ++_contentAnimationVersion;
-        if (IsChevronExpanded)
-        {
-            _ = ExpandContentAsync(version, cts.Token);
-            return;
-        }
-
-        _ = CollapseContentAsync(version, cts.Token);
+        _ = AnimateContentStateAsync(startHeight, version, cts.Token);
     }
 
-    private void StopContentAnimation()
+    private void StopContentAnimation(bool resetVisuals = true)
     {
-        if (_contentAnimationCts is null)
+        _contentAnimationCts?.Cancel();
+        _contentAnimationCts?.Dispose();
+        _contentAnimationCts = null;
+        if (!resetVisuals)
         {
             return;
         }
 
-        _contentAnimationCts.Cancel();
-        _contentAnimationCts.Dispose();
-        _contentAnimationCts = null;
+        _activeHeightPlan = null;
+        CardLayoutRoot.Height = double.NaN;
+        CardLayoutRoot.VerticalAlignment = VerticalAlignment.Stretch;
+        CardLayoutRoot.ClipToBounds = false;
+        if (ElementComposition.GetElementVisual(CardLayoutRoot) is { } visual)
+        {
+            visual.ClipToBounds = false;
+            // Avalonia 11.3 does not expose Size through StopAnimation. A direct
+            // value update removes its animation on the next compositor commit.
+            visual.Size = default;
+            visual.Size = new Vector(CardLayoutRoot.Bounds.Width, CardLayoutRoot.Bounds.Height);
+        }
+
+        foreach (var (sibling, version) in _animatedSiblings)
+        {
+            CompositionOffsetAnimation.Stop(sibling, version);
+        }
+        _animatedSiblings.Clear();
+    }
+
+    private double GetCurrentAnimationHeight()
+    {
+        if (_activeHeightPlan is not { } plan)
+        {
+            return Math.Max(GetCollapsedHeight(), Bounds.Height);
+        }
+        var elapsed = Stopwatch.GetElapsedTime(_animationStartedAt);
+        return _animationStartHeight + GetAnimatedDelta(plan, elapsed) * Math.Sign(_animationTargetHeight - _animationStartHeight);
     }
 
     private void SetContentRenderedVisible(bool isVisible)
@@ -556,86 +584,158 @@ internal sealed partial class PclCard : UserControl
         }
     }
 
-    private async Task ExpandContentAsync(int version, CancellationToken cancellationToken)
+    private async Task AnimateContentStateAsync(double startHeight, int version, CancellationToken cancellationToken)
     {
         SetContentRenderedVisible(true);
+        ContentHost.IsHitTestVisible = false;
         ContentHost.Height = double.NaN;
+        var expandedHeight = Math.Max(GetCollapsedHeight(), MeasureExpandedHeight());
+        var targetHeight = IsChevronExpanded ? expandedHeight : GetCollapsedHeight();
+        var followingSiblings = CollectFollowingSiblings();
+        var previousSiblings = _animatedSiblings.Keys.ToHashSet();
+        var oldPositions = followingSiblings.Concat(previousSiblings).Distinct()
+            .ToDictionary(control => control, control => new Vector3D(control.Bounds.X, control.Bounds.Y, 0));
 
-        var startHeight = Math.Max(GetCollapsedHeight(), Bounds.Height);
-        var targetHeight = Math.Max(startHeight, MeasureExpandedHeight());
-        if (targetHeight <= 0)
+        // Keep the content at its expanded size throughout the animation. Expand
+        // the scroll extent up front, but defer collapsing it until the visual
+        // transition finishes so scrolling near the bottom does not jump early.
+        CardLayoutRoot.Height = expandedHeight;
+        CardLayoutRoot.VerticalAlignment = VerticalAlignment.Top;
+        Height = expandedHeight;
+        UpdateLayout();
+        // A newly shown virtualizing panel refines its estimated extent after
+        // receiving its viewport. Use that settled extent for the animation.
+        var measuredHeight = Math.Max(GetCollapsedHeight(), MeasureExpandedHeight());
+        if (Math.Abs(measuredHeight - expandedHeight) > .5)
         {
-            ContentHost.Height = double.NaN;
-            Height = double.NaN;
-            return;
+            expandedHeight = measuredHeight;
+            targetHeight = IsChevronExpanded ? expandedHeight : GetCollapsedHeight();
+            CardLayoutRoot.Height = expandedHeight;
+            Height = expandedHeight;
+            UpdateLayout();
         }
-
-        await AnimateCardHeightAsync(startHeight, targetHeight, version, cancellationToken);
-        if (!IsAnimationCurrent(version, cancellationToken) || !IsChevronExpanded)
-        {
-            return;
-        }
-
-        Height = double.NaN;
-    }
-
-    private async Task CollapseContentAsync(int version, CancellationToken cancellationToken)
-    {
-        SetContentRenderedVisible(true);
-        ContentHost.Height = double.NaN;
-
-        var startHeight = Math.Max(GetCollapsedHeight(), Bounds.Height);
-        if (startHeight <= 0)
-        {
-            Height = GetCollapsedHeight();
-            SetContentRenderedVisible(false);
-            return;
-        }
-
-        await AnimateCardHeightAsync(startHeight, GetCollapsedHeight(), version, cancellationToken);
-        if (!IsAnimationCurrent(version, cancellationToken) || IsChevronExpanded)
-        {
-            return;
-        }
-
-        SetContentRenderedVisible(false);
-    }
-
-    private async Task AnimateCardHeightAsync(double startHeight, double targetHeight, int version, CancellationToken cancellationToken)
-    {
-        await Dispatcher.UIThread.InvokeAsync(() => Height = startHeight, DispatcherPriority.Render);
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
         if (!IsAnimationCurrent(version, cancellationToken))
         {
             return;
         }
 
         var plan = CreateHeightAnimationPlan(targetHeight - startHeight);
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var animation = new FrameAnimation(this, elapsed =>
+        if (plan.TotalDistance > .5 && plan.TotalDuration > TimeSpan.Zero
+            && ElementComposition.GetElementVisual(CardLayoutRoot) is { } visual)
         {
-            if (!IsAnimationCurrent(version, cancellationToken))
+            _activeHeightPlan = plan;
+            _animationStartHeight = startHeight;
+            _animationTargetHeight = targetHeight;
+            _animationStartedAt = Stopwatch.GetTimestamp();
+            var easing = new HeightAnimationEasing(plan);
+            var size = visual.Compositor.CreateVectorKeyFrameAnimation();
+            size.Duration = plan.TotalDuration;
+            size.InsertKeyFrame(0f, new Vector(CardLayoutRoot.Bounds.Width, startHeight));
+            size.InsertKeyFrame(1f, new Vector(CardLayoutRoot.Bounds.Width, targetHeight), easing);
+            visual.ClipToBounds = true;
+            CardLayoutRoot.ClipToBounds = true;
+            var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            visual.Compositor.RequestCompositionUpdate(() =>
             {
-                completion.TrySetResult();
-                return;
+                if (IsAnimationCurrent(version, cancellationToken))
+                {
+                    _animationStartedAt = Stopwatch.GetTimestamp();
+                    visual.StartAnimation("Size", size);
+                }
+                started.TrySetResult();
+            });
+
+            foreach (var (sibling, oldPosition) in oldPositions)
+            {
+                if (ElementComposition.GetElementVisual(sibling) is not { } siblingVisual)
+                {
+                    continue;
+                }
+                var destination = new Vector3D(sibling.Bounds.X, sibling.Bounds.Y, 0);
+                if (!IsChevronExpanded && followingSiblings.Contains(sibling))
+                {
+                    destination += new Vector3D(0, targetHeight - expandedHeight, 0);
+                }
+
+                var offset = siblingVisual.Compositor.CreateVector3DKeyFrameAnimation();
+                offset.Duration = plan.TotalDuration;
+                if (previousSiblings.Contains(sibling) || CompositionOffsetAnimation.IsRunning(sibling))
+                {
+                    offset.InsertExpressionKeyFrame(0f, "this.StartingValue");
+                }
+                else
+                {
+                    offset.InsertKeyFrame(0f, oldPosition);
+                }
+                offset.InsertKeyFrame(1f, destination, easing);
+                _animatedSiblings[sibling] = CompositionOffsetAnimation.Start(sibling, offset);
             }
 
-            Height = startHeight + GetAnimatedDelta(plan, elapsed) * Math.Sign(targetHeight - startHeight);
-            if (elapsed >= plan.TotalDuration)
+            try
             {
-                completion.TrySetResult();
+                await started.Task.WaitAsync(cancellationToken);
+                await Task.Delay(plan.TotalDuration, cancellationToken);
             }
-        });
-        using var registration = cancellationToken.Register(() => completion.TrySetResult());
-        animation.IsEnabled = true;
-        await completion.Task;
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+        }
 
         if (!IsAnimationCurrent(version, cancellationToken))
         {
             return;
         }
+        SetContentRenderedVisible(IsChevronExpanded);
+        CardLayoutRoot.Height = double.NaN;
+        Height = IsChevronExpanded ? double.NaN : GetCollapsedHeight();
+        UpdateLayout();
+        StopContentAnimation();
+    }
 
-        await Dispatcher.UIThread.InvokeAsync(() => Height = targetHeight, DispatcherPriority.Render);
+    private HashSet<Control> CollectFollowingSiblings()
+    {
+        HashSet<Control> siblings = [];
+        for (Visual current = this; current.GetVisualParent() is { } parent; current = parent)
+        {
+            if (parent is ScrollViewer)
+            {
+                break;
+            }
+
+            if (parent is not StackPanel { Orientation: Orientation.Vertical } panel || current is not Control child)
+            {
+                continue;
+            }
+
+            var index = panel.Children.IndexOf(child);
+            if (index < 0)
+            {
+                continue;
+            }
+            for (var next = index + 1; next < panel.Children.Count; next++)
+            {
+                if (panel.Children[next].IsVisible)
+                {
+                    siblings.Add(panel.Children[next]);
+                }
+            }
+        }
+        return siblings;
+    }
+
+    private sealed class HeightAnimationEasing(HeightAnimationPlan plan) : Easing
+    {
+        public override double Ease(double progress)
+        {
+            if (plan.TotalDistance <= 0)
+            {
+                return 1;
+            }
+
+            var elapsed = TimeSpan.FromTicks((long)(Math.Clamp(progress, 0, 1) * plan.TotalDuration.Ticks));
+            return GetAnimatedDelta(plan, elapsed) / plan.TotalDistance;
+        }
     }
 
     private static HeightAnimationPlan CreateHeightAnimationPlan(double delta)

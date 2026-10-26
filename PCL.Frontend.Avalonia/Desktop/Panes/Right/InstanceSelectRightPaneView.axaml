@@ -40,7 +40,7 @@
                   <ItemsControl ItemsSource="{Binding Entries}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
-                        <StackPanel Spacing="0" />
+                        <VirtualizingStackPanel CacheLength="0.5" />
                       </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>

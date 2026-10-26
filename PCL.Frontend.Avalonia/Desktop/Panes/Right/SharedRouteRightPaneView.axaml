@@ -652,6 +652,11 @@
                   <controls:PclCard Margin="0,0,0,15" Header="{Binding Title}" ShowChevron="True" IsChevronExpanded="{Binding IsExpanded}" ContentMargin="18,38,18,12">
                     <controls:PclCard.CardContent>
                       <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <VirtualizingStackPanel CacheLength="0.5" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                           <DataTemplate>
                             <controls:PclListItem

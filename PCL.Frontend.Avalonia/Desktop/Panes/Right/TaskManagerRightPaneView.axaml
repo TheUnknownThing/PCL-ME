@@ -10,6 +10,11 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,25,25,10" Spacing="15">
       <ItemsControl ItemsSource="{Binding TaskManagerEntries}" IsVisible="{Binding HasTaskManagerEntries}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <VirtualizingStackPanel CacheLength="0.5" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <sections:TaskManagerTaskCardView />

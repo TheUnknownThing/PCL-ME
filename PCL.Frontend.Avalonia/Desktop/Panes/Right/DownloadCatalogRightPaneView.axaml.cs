@@ -116,42 +116,14 @@ internal sealed partial class DownloadCatalogRightPaneView : UserControl
         }
     }
 
-    private async Task ShowAnimatedAsync(Control control, int version)
+    private Task ShowAnimatedAsync(Control control, int version)
     {
-        if (version != _visualStateVersion)
-        {
-            return;
-        }
-
-        if (control.IsVisible)
-        {
-            return;
-        }
-
-        control.IsVisible = true;
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (version != _visualStateVersion)
-        {
-            return;
-        }
-
-        await Motion.PlayEnterAsync(control);
+        return Motion.ShowAsync(control, () => version == _visualStateVersion);
     }
 
-    private async Task HideAnimatedAsync(Control control, int version)
+    private Task HideAnimatedAsync(Control control, int version)
     {
-        if (version != _visualStateVersion || !control.IsVisible)
-        {
-            return;
-        }
-
-        await Motion.PlayExitAsync(control);
-        if (version != _visualStateVersion)
-        {
-            return;
-        }
-
-        control.IsVisible = false;
+        return Motion.HideAsync(control, () => version == _visualStateVersion);
     }
 
     private static void ConfigureAnimatedSurface(

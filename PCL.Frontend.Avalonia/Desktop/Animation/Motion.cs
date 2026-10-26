@@ -1,9 +1,10 @@
 using System.Runtime.CompilerServices;
+using System.Numerics;
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
-using Avalonia.Media;
+using Avalonia.Rendering.Composition;
+using Avalonia.Rendering.Composition.Animations;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using PCL.Frontend.Avalonia.Desktop.Controls;
@@ -192,19 +193,36 @@ internal static class Motion
 
         state.AttachedHandler = (_, _) =>
         {
-            PrimeEnterState(control);
-            QueueAnimation(control);
-        };
-        state.PropertyChangedHandler = (_, args) =>
-        {
-            if (args.Property == Visual.IsVisibleProperty && args.GetNewValue<bool>())
+            if (GetAnimateOnVisible(control))
             {
                 PrimeEnterState(control);
                 QueueAnimation(control);
             }
         };
+        state.DetachedHandler = (_, _) => CancelAnimation(control);
+        state.PropertyChangedHandler = (_, args) =>
+        {
+            if (args.Property != Visual.IsVisibleProperty)
+            {
+                return;
+            }
+
+            if (args.GetNewValue<bool>())
+            {
+                if (GetAnimateOnVisible(control))
+                {
+                    PrimeEnterState(control);
+                    QueueAnimation(control);
+                }
+            }
+            else
+            {
+                CancelAnimation(control);
+            }
+        };
 
         control.AttachedToVisualTree += state.AttachedHandler;
+        control.DetachedFromVisualTree += state.DetachedHandler;
         control.PropertyChanged += state.PropertyChangedHandler;
         state.IsAttached = true;
     }
@@ -221,11 +239,17 @@ internal static class Motion
             control.AttachedToVisualTree -= state.AttachedHandler;
         }
 
+        if (state.DetachedHandler is not null)
+        {
+            control.DetachedFromVisualTree -= state.DetachedHandler;
+        }
+
         if (state.PropertyChangedHandler is not null)
         {
             control.PropertyChanged -= state.PropertyChangedHandler;
         }
 
+        CancelAnimation(control);
         state.IsAttached = false;
     }
 
@@ -237,6 +261,7 @@ internal static class Motion
         }
 
         var state = States.GetOrCreateValue(control);
+        state.QueuedVersion = state.Version;
         if (state.IsQueued)
         {
             return;
@@ -247,62 +272,69 @@ internal static class Motion
             () =>
             {
                 state.IsQueued = false;
-                _ = RunAnimationAsync(control);
+                if (state.QueuedVersion == state.Version && GetAnimateOnVisible(control))
+                {
+                    _ = RunAnimationAsync(control);
+                }
             },
             DispatcherPriority.Loaded);
     }
 
-    private static async Task RunAnimationAsync(Control control)
+    private static async Task RunAnimationAsync(Control control, Func<bool>? isCurrent = null)
     {
-        if (!control.IsVisible)
+        if (!control.IsVisible || control.GetVisualRoot() is null)
         {
             return;
         }
 
+        Attach(control);
         var state = States.GetOrCreateValue(control);
+        if (state.PrimedTargets.Count == 0)
+        {
+            PrimeEnterState(control);
+        }
         var version = ++state.Version;
+
+        // Keep the host hidden while newly visible item templates realize their
+        // cards. Collecting before layout can animate an empty host instead.
+        await Dispatcher.UIThread.InvokeAsync(control.UpdateLayout, DispatcherPriority.Render);
+        if (state.Version != version || !control.IsVisible || control.GetVisualRoot() is null
+            || isCurrent?.Invoke() == false)
+        {
+            return;
+        }
+
         var targets = CollectTargets(control);
-        if (targets.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var target in targets)
-        {
-            PrepareInitialState(target, control);
-        }
-
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-        if (state.Version != version)
-        {
-            return;
-        }
-
-        var delay = Math.Max(0, GetDelay(control));
-        if (delay > 0)
-        {
-            await Task.Delay(delay);
-        }
-
-        if (state.Version != version || !control.IsVisible)
-        {
-            return;
-        }
-
-        var staggerStep = Math.Max(0, GetStaggerStep(control));
+        var cts = state.Cancellation = new CancellationTokenSource();
+        var delay = TimeSpan.FromMilliseconds(Math.Max(0, GetDelay(control)));
+        var stagger = Math.Max(0, GetStaggerStep(control));
         for (var index = 0; index < targets.Count; index++)
         {
-            if (staggerStep > 0 && index > 0)
-            {
-                await Task.Delay(staggerStep);
-            }
+            var target = targets[index];
+            SetOpacity(target, 1);
+            StartAnimation(target, control, entering: true, delay + TimeSpan.FromMilliseconds(index * stagger), state);
+        }
 
-            if (state.Version != version)
+        // The child animations and the host's restored opacity are committed
+        // together, so no fully visible frame precedes the entrance.
+        foreach (var primed in state.PrimedTargets)
+        {
+            SetOpacity(primed, 1);
+        }
+        state.PrimedTargets.Clear();
+        var lastDelay = delay + TimeSpan.FromMilliseconds(Math.Max(0, targets.Count - 1) * stagger);
+        _ = CompleteAnimationAsync(control, state, version, lastDelay + EnterTranslationDuration(control), entering: true, cts.Token);
+        // Callers historically wait until the last staggered item starts, rather
+        // than waiting for all entrance animations to finish.
+        try
+        {
+            if (lastDelay > TimeSpan.Zero)
             {
-                return;
+                await Task.Delay(lastDelay, cts.Token);
             }
-
-            PlayFinalState(targets[index]);
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
         }
     }
 
@@ -323,7 +355,7 @@ internal static class Motion
     private static List<Control> CollectStaggerTargets(Control control)
     {
         var descendantCards = CollectVisibleDescendantCards(control, out var firstPanelChildren, out var firstMultiChildPanel);
-        if (descendantCards.Count > 1)
+        if (descendantCards.Count > 0)
         {
             return descendantCards;
         }
@@ -370,7 +402,7 @@ internal static class Motion
         firstPanelChildren = null;
         firstMultiChildPanel = null;
 
-        foreach (var descendant in control.GetVisualDescendants())
+        foreach (var descendant in EnumerateAnimationDescendants(control))
         {
             if (descendant is PclCard { IsVisible: true } card)
             {
@@ -395,7 +427,7 @@ internal static class Motion
             }
         }
 
-        if (cards.Count <= 1)
+        if (cards.Count == 0)
         {
             return [];
         }
@@ -415,6 +447,30 @@ internal static class Motion
         }
 
         return targets;
+    }
+
+    private static IEnumerable<Visual> EnumerateAnimationDescendants(Visual parent)
+    {
+        foreach (var child in parent.GetVisualChildren())
+        {
+            if (child is Control { IsVisible: false })
+            {
+                continue;
+            }
+
+            yield return child;
+            // A card is one animation target. Animating its nested cards too
+            // applies the same translation twice to their contents.
+            if (child is PclCard)
+            {
+                continue;
+            }
+
+            foreach (var descendant in EnumerateAnimationDescendants(child))
+            {
+                yield return descendant;
+            }
+        }
     }
 
     private static List<Control>? CollectVisiblePanelChildren(Panel panel)
@@ -447,173 +503,224 @@ internal static class Motion
     public static void PrimeEnter(Control control)
     {
         ArgumentNullException.ThrowIfNull(control);
+        Attach(control);
         PrimeEnterState(control);
+    }
+
+    public static bool IsAnimating(Control control)
+    {
+        return States.TryGetValue(control, out var state)
+               && (state.PrimedTargets.Count > 0 || state.Cancellation is not null || state.IsExiting);
+    }
+
+    public static Task ShowAsync(Control control, Func<bool> isCurrent, bool replayWhenVisible = false)
+    {
+        if (!isCurrent())
+        {
+            return Task.CompletedTask;
+        }
+
+        var state = States.GetOrCreateValue(control);
+        if (control.IsVisible && !state.IsExiting && state.PrimedTargets.Count == 0 && !replayWhenVisible)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (state.PrimedTargets.Count == 0 || state.IsExiting || replayWhenVisible)
+        {
+            PrimeEnter(control);
+        }
+        control.IsVisible = true;
+        return RunAnimationAsync(control, isCurrent);
+    }
+
+    public static async Task HideAsync(Control control, Func<bool> isCurrent)
+    {
+        if (!isCurrent() || !control.IsVisible)
+        {
+            return;
+        }
+
+        await PlayExitAsync(control);
+        if (isCurrent())
+        {
+            control.IsVisible = false;
+        }
     }
 
     public static async Task PlayExitAsync(Control control)
     {
         ArgumentNullException.ThrowIfNull(control);
-
-        if (!control.IsVisible)
+        if (!control.IsVisible || control.GetVisualRoot() is null)
         {
             return;
         }
 
+        Attach(control);
+        CancelAnimation(control);
         var state = States.GetOrCreateValue(control);
-        var version = ++state.Version;
+        state.IsExiting = true;
+        var version = state.Version;
+        var cts = state.Cancellation = new CancellationTokenSource();
         var targets = CollectTargets(control);
-        if (targets.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var target in targets)
-        {
-            PrepareExitState(target);
-        }
-
-        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
-
-        var staggerStep = Math.Max(0, GetStaggerStep(control));
-        List<Task> exitTasks = [];
+        var stagger = Math.Max(0, GetStaggerStep(control));
         for (var index = 0; index < targets.Count; index++)
         {
-            if (staggerStep > 0 && index > 0)
-            {
-                await Task.Delay(staggerStep);
-            }
-
-            if (state.Version != version)
-            {
-                return;
-            }
-
-            exitTasks.Add(PlayExitTargetAsync(targets[index], control));
+            StartAnimation(targets[index], control, entering: false, TimeSpan.FromMilliseconds(index * stagger), state);
         }
 
-        await Task.WhenAll(exitTasks);
+        var duration = TimeSpan.FromMilliseconds(Math.Max(0, targets.Count - 1) * stagger) + MotionDurations.EntranceFade;
+        await CompleteAnimationAsync(control, state, version, duration, entering: false, cts.Token);
     }
 
     private static void PrimeEnterState(Control control)
     {
-        if (!GetAnimateOnVisible(control))
+        CancelAnimation(control);
+        var state = States.GetOrCreateValue(control);
+        SetOpacity(control, GetInitialOpacity(control));
+        state.PrimedTargets.Add(control);
+    }
+
+    private static void StartAnimation(Control target, Control source, bool entering, TimeSpan delay, MotionState owner)
+    {
+        var visual = ElementComposition.GetElementVisual(target);
+        if (visual is null)
+        {
+            SetOpacity(target, entering ? 1 : 0);
+            return;
+        }
+
+        var targetState = States.GetOrCreateValue(target);
+        var visualVersion = ++targetState.VisualVersion;
+        var offset = visual.Compositor.CreateVector3KeyFrameAnimation();
+        offset.Duration = entering ? EnterTranslationDuration(source) : MotionDurations.EntranceFade;
+        offset.DelayTime = delay;
+        offset.DelayBehavior = AnimationDelayBehavior.SetInitialValueBeforeDelay;
+        offset.SetVector3Parameter("shift", new Vector3(
+            (float)(entering ? GetOffsetX(source) : ResolveExitOffsetX(source)),
+            (float)(entering ? GetOffsetY(source) : ResolveExitOffsetY(source)), 0));
+        // Capture the settled layout offset before committing. Explicit
+        // animations do not receive this.FinalValue from the layout setter.
+        // The control's hover/press RenderTransform remains independent.
+        offset.InsertExpressionKeyFrame(0f, entering ? "rest + shift" : "rest");
+        offset.InsertExpressionKeyFrame(1f, entering ? "rest" : "rest + shift",
+            entering && GetOvershootTranslation(source) ? new BackEaseOut() : new CubicEaseOut());
+
+        var opacity = visual.Compositor.CreateScalarKeyFrameAnimation();
+        opacity.Duration = entering ? MotionDurations.EntranceFade : MotionDurations.ExitFade;
+        opacity.DelayTime = delay;
+        opacity.DelayBehavior = AnimationDelayBehavior.SetInitialValueBeforeDelay;
+        opacity.InsertKeyFrame(0f, entering ? (float)GetInitialOpacity(source) : 1f);
+        opacity.InsertKeyFrame(1f, entering ? 1f : 0f, new CubicEaseOut());
+        var offsetVersion = CompositionOffsetAnimation.Start(target, offset, () =>
+            offset.SetVector3Parameter("rest", new Vector3((float)target.Bounds.X, (float)target.Bounds.Y, 0)));
+        visual.Compositor.RequestCompositionUpdate(() =>
+        {
+            if (targetState.VisualVersion == visualVersion && target.GetVisualRoot() is not null)
+            {
+                visual.StartAnimation("Opacity", opacity);
+            }
+        });
+        owner.AnimatedTargets.Add(new TargetAnimation(target, visualVersion, offsetVersion));
+    }
+
+    private static TimeSpan EnterTranslationDuration(Control source) => GetOvershootTranslation(source)
+        ? MotionDurations.EntranceTranslateOvershoot
+        : MotionDurations.EntranceTranslate;
+
+    private static async Task CompleteAnimationAsync(Control control, MotionState state, int version,
+        TimeSpan duration, bool entering, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (ElementComposition.GetElementVisual(control) is { } visual)
+            {
+                var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                visual.Compositor.RequestCompositionUpdate(() => started.TrySetResult());
+                await started.Task.WaitAsync(cancellationToken);
+            }
+            await Task.Delay(duration, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        foreach (var target in CollectTargets(control))
+        if (state.Version != version)
         {
-            PrepareInitialState(target, control);
+            return;
         }
+        foreach (var target in state.AnimatedTargets)
+        {
+            if (States.GetOrCreateValue(target.Control).VisualVersion != target.Version)
+            {
+                continue;
+            }
+            SetOpacity(target.Control, entering ? 1 : 0);
+            ResetVisual(target);
+        }
+        state.AnimatedTargets.Clear();
+        state.Cancellation?.Dispose();
+        state.Cancellation = null;
     }
 
-    private static void PrepareInitialState(Control target, Control motionSource)
-    {
-        var state = States.GetOrCreateValue(target);
-        state.MotionTransitions ??= BuildTransitions(target.Transitions, entering: true);
-        state.MotionTransform ??= new TranslateTransform();
-
-        target.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
-        target.Transitions = null;
-        state.MotionTransform.Transitions = null;
-        target.Opacity = GetInitialOpacity(motionSource);
-        state.MotionTransform.X = GetOffsetX(motionSource);
-        state.MotionTransform.Y = GetOffsetY(motionSource);
-        target.RenderTransform = state.MotionTransform;
-        target.Transitions = state.MotionTransitions;
-        state.MotionTransform.Transitions = BuildTransformTransitions(GetOvershootTranslation(motionSource), entering: true);
-    }
-
-    private static void PlayFinalState(Control control)
-    {
-        control.Opacity = 1;
-        if (control.RenderTransform is TranslateTransform transform)
-        {
-            transform.X = 0;
-            transform.Y = 0;
-        }
-        else
-        {
-            control.RenderTransform = new TranslateTransform(0, 0);
-        }
-    }
-
-    private static void PrepareExitState(Control control)
+    private static void CancelAnimation(Control control)
     {
         var state = States.GetOrCreateValue(control);
-        state.MotionTransform ??= new TranslateTransform();
+        state.Version++;
+        state.Cancellation?.Cancel();
+        state.Cancellation?.Dispose();
+        state.Cancellation = null;
+        state.IsExiting = false;
+        foreach (var target in state.PrimedTargets)
+        {
+            SetOpacity(target, 1);
+            ResetOpacity(target);
+        }
+        state.PrimedTargets.Clear();
+        foreach (var target in state.AnimatedTargets)
+        {
+            if (States.GetOrCreateValue(target.Control).VisualVersion != target.Version)
+            {
+                continue;
+            }
+            States.GetOrCreateValue(target.Control).VisualVersion++;
+            SetOpacity(target.Control, 1);
+            ResetVisual(target);
+        }
+        state.AnimatedTargets.Clear();
+    }
 
-        var existingTransitions = control.Transitions;
-        control.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+    private static void ResetVisual(TargetAnimation target)
+    {
+        var control = target.Control;
+        CompositionOffsetAnimation.Stop(control, target.OffsetVersion);
+        ResetOpacity(control);
+    }
+
+    private static void ResetOpacity(Control control)
+    {
+        if (ElementComposition.GetElementVisual(control) is not { } visual)
+        {
+            return;
+        }
+        visual.StopAnimation("Opacity");
+        visual.Opacity = control.Opacity == 0 ? 1f : 0f;
+        visual.Opacity = (float)control.Opacity;
+    }
+
+    private static void SetOpacity(Control control, double opacity)
+    {
+        if (control.Opacity == opacity)
+        {
+            return;
+        }
+        // Preserve the caller's transitions, but do not start a UI-thread opacity
+        // transition while preparing or settling a render-thread animation.
+        var transitions = control.Transitions;
         control.Transitions = null;
-        control.Transitions = BuildTransitions(existingTransitions, entering: false);
-        state.MotionTransform.Transitions = BuildTransformTransitions(overshoot: false, entering: false);
-        control.RenderTransform = state.MotionTransform;
-    }
-
-    private static async Task PlayExitTargetAsync(Control control, Control motionSource)
-    {
-        control.Opacity = 0;
-        if (control.RenderTransform is TranslateTransform transform)
-        {
-            transform.X = ResolveExitOffsetX(motionSource);
-            transform.Y = ResolveExitOffsetY(motionSource);
-        }
-        else
-        {
-            control.RenderTransform = new TranslateTransform(ResolveExitOffsetX(motionSource), ResolveExitOffsetY(motionSource));
-        }
-
-        await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(MotionDurations.ExitFade.TotalMilliseconds, MotionDurations.EntranceFade.TotalMilliseconds)));
-    }
-
-    private static Transitions BuildTransitions(Transitions? original, bool entering)
-    {
-        var transitions = new Transitions();
-        if (original is not null)
-        {
-            foreach (var transition in original)
-            {
-                transitions.Add(transition);
-            }
-        }
-
-        transitions.Add(new DoubleTransition
-        {
-            Property = Visual.OpacityProperty,
-            Duration = entering ? MotionDurations.EntranceFade : MotionDurations.ExitFade,
-            Easing = new CubicEaseOut()
-        });
-
-        return transitions;
-    }
-
-    private static Transitions BuildTransformTransitions(bool overshoot, bool entering)
-    {
-        var duration = entering
-            ? overshoot
-                ? MotionDurations.EntranceTranslateOvershoot
-                : MotionDurations.EntranceTranslate
-            : MotionDurations.EntranceFade;
-        Easing easing = entering && overshoot
-            ? new BackEaseOut()
-            : new CubicEaseOut();
-
-        return
-        [
-            new DoubleTransition
-            {
-                Property = TranslateTransform.XProperty,
-                Duration = duration,
-                Easing = easing
-            },
-            new DoubleTransition
-            {
-                Property = TranslateTransform.YProperty,
-                Duration = duration,
-                Easing = easing
-            }
-        ];
+        control.SetCurrentValue(Visual.OpacityProperty, opacity);
+        control.Transitions = transitions;
     }
 
     private static double ResolveExitOffsetX(Control control)
@@ -632,20 +739,32 @@ internal static class Motion
             : configured;
     }
 
+    private readonly record struct TargetAnimation(Control Control, int Version, int OffsetVersion);
+
     private sealed class MotionState
     {
         public EventHandler<VisualTreeAttachmentEventArgs>? AttachedHandler { get; set; }
 
+        public EventHandler<VisualTreeAttachmentEventArgs>? DetachedHandler { get; set; }
+
         public EventHandler<AvaloniaPropertyChangedEventArgs>? PropertyChangedHandler { get; set; }
 
-        public Transitions? MotionTransitions { get; set; }
+        public CancellationTokenSource? Cancellation { get; set; }
 
-        public TranslateTransform? MotionTransform { get; set; }
+        public List<Control> PrimedTargets { get; } = [];
+
+        public List<TargetAnimation> AnimatedTargets { get; } = [];
 
         public bool IsAttached { get; set; }
 
         public bool IsQueued { get; set; }
 
+        public int QueuedVersion { get; set; }
+
+        public bool IsExiting { get; set; }
+
         public int Version { get; set; }
+
+        public int VisualVersion { get; set; }
     }
 }
