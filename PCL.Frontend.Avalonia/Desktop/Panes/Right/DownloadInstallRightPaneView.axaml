@@ -68,7 +68,25 @@
                     Header="{Binding Title}"
                     ShowChevron="{Binding CanCollapse}"
                     IsChevronExpanded="False"
-                    HeaderCommand="{Binding HeaderCommand}" />
+                    HeaderCommand="{Binding HeaderCommand}"
+                    ContentMargin="18,40,18,12">
+                  <controls:PclCard.CardContent>
+                    <ItemsControl ItemsSource="{Binding Choices}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate
+                            x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
+                          <controls:PclListItem
+                              Margin="0,0,0,2"
+                              Command="{Binding SelectCommand}"
+                              IconSource="{Binding Icon}"
+                              IconScale="1"
+                              Info="{Binding Summary}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </controls:PclCard.CardContent>
+                </controls:PclCard>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
@@ -81,22 +99,31 @@
               ContentFill="True"
               ContentMargin="18,40,18,12">
             <controls:PclCard.CardContent>
-              <ItemsControl
-                  x:Name="MinecraftCatalogExpandedList"
-                  ScrollViewer.VerticalScrollBarVisibility="Auto">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate
-                      x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
-                    <controls:PclListItem
-                        Margin="0,0,0,2"
-                        Command="{Binding SelectCommand}"
-                        IconSource="{Binding Icon}"
-                        IconScale="1"
-                        Info="{Binding Summary}"
-                        Title="{Binding Title}" />
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+              <ScrollViewer
+                  x:Name="MinecraftCatalogExpandedScroll"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  IsScrollChainingEnabled="False"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+                <ItemsControl
+                    x:Name="MinecraftCatalogExpandedList"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
+                      <controls:PclListItem
+                          Margin="0,0,0,2"
+                          Command="{Binding SelectCommand}"
+                          IconSource="{Binding Icon}"
+                          IconScale="1"
+                          Info="{Binding Summary}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
             </controls:PclCard.CardContent>
           </controls:PclCard>
         </Grid>
