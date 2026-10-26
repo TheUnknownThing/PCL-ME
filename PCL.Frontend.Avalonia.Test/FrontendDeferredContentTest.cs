@@ -213,6 +213,8 @@ public sealed class FrontendDeferredContentTest
         await RunOnUiThread(() =>
         {
             var builds = 0;
+            var animationFrame = 0;
+            var buildFrames = new List<int>();
             var sections = Enumerable.Range(0, 3).Select(_ => new PclDeferredContentControl
             {
                 EstimatedHeight = 60,
@@ -220,22 +222,32 @@ public sealed class FrontendDeferredContentTest
                 DeferredTemplate = new FuncDataTemplate<object>((_, _) =>
                 {
                     builds++;
+                    buildFrames.Add(animationFrame);
                     return new TextBox { Height = 60 };
                 })
             }).ToArray();
             var panel = new StackPanel();
             foreach (var section in sections) panel.Children.Add(section);
             var window = new Window { Height = 500, Width = 300, Content = new ScrollViewer { Content = panel } };
+            var observeFrames = true;
+            void ObserveFrame(TimeSpan _)
+            {
+                animationFrame++;
+                if (observeFrames) window.RequestAnimationFrame(ObserveFrame);
+            }
+            // Register before the content queue so each build records its actual
+            // animation frame. RunJobs can also process overdue automatic ticks.
+            window.RequestAnimationFrame(ObserveFrame);
             window.Show();
             window.UpdateLayout();
             for (var frame = 0; frame < 8 && builds < 3; frame++)
             {
-                var before = builds;
                 AvaloniaHeadlessPlatform.ForceRenderTimerTick();
                 Dispatcher.UIThread.RunJobs();
-                Assert.IsTrue(builds - before <= 1, "Visible groups must not all build in one frame.");
             }
+            observeFrames = false;
             Assert.AreEqual(3, builds);
+            Assert.AreEqual(3, buildFrames.Distinct().Count(), "Each visible group must build in a separate animation frame.");
 
             var cancelledBuilds = 0;
             var cancelled = new PclDeferredContentControl
