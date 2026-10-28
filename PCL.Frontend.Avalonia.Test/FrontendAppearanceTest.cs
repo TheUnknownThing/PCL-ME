@@ -145,6 +145,88 @@ public sealed class FrontendAppearanceTest
     }
 
     [TestMethod]
+    [DataRow(LauncherFrontendSubpageKey.SetupLaunch, false)]
+    [DataRow(LauncherFrontendSubpageKey.SetupLaunch, true)]
+    [DataRow(LauncherFrontendSubpageKey.SetupGameManage, false)]
+    [DataRow(LauncherFrontendSubpageKey.SetupGameManage, true)]
+    [DataRow(LauncherFrontendSubpageKey.SetupLauncherMisc, false)]
+    [DataRow(LauncherFrontendSubpageKey.SetupLauncherMisc, true)]
+    [DataRow(LauncherFrontendSubpageKey.SetupUpdate, false)]
+    [DataRow(LauncherFrontendSubpageKey.SetupUpdate, true)]
+    public async Task SettingsChoices_PreserveSelectionsAfterLocaleChange(
+        LauncherFrontendSubpageKey subpage, bool detachDuringLocaleChange)
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            fixture.Actions.PersistLocalValue("SystemSystemUpdate", (int)LauncherUpdateMode.Disabled);
+            fixture.Navigate(subpage);
+            UserControl view = subpage switch
+            {
+                LauncherFrontendSubpageKey.SetupLaunch => new SetupLaunchRightPaneView(),
+                LauncherFrontendSubpageKey.SetupGameManage => new SetupGameManageRightPaneView(),
+                LauncherFrontendSubpageKey.SetupLauncherMisc => new SetupLauncherMiscRightPaneView(),
+                LauncherFrontendSubpageKey.SetupUpdate => new SetupUpdateRightPaneView(),
+                _ => throw new ArgumentOutOfRangeException(nameof(subpage))
+            };
+            view.DataContext = fixture.Launcher;
+            var window = new Window { Width = 1000, Height = 900, Content = view };
+            window.Show();
+            Tick();
+            foreach (var card in view.GetVisualDescendants().OfType<PclCard>().ToArray())
+            {
+                card.IsChevronExpanded = true;
+            }
+            Tick();
+            var combos = view.GetVisualDescendants().OfType<ComboBox>().ToArray();
+            Assert.IsTrue(combos.Length > 0);
+            if (subpage is LauncherFrontendSubpageKey.SetupLaunch or LauncherFrontendSubpageKey.SetupGameManage)
+            {
+                foreach (var combo in combos) combo.SelectedIndex = 1;
+            }
+            var selections = combos.Select(combo => combo.SelectedIndex).ToArray();
+            Assert.IsTrue(selections.All(index => index >= 0), "Settings must initially have selections.");
+            var properties = typeof(LauncherViewModel).GetProperties()
+                .Where(property => property.PropertyType == typeof(int) &&
+                    property.Name.StartsWith("Selected", StringComparison.Ordinal) &&
+                    property.Name.EndsWith("Index", StringComparison.Ordinal)).ToArray();
+            var modelSelections = properties.Select(property => property.GetValue(fixture.Launcher)).ToArray();
+
+            foreach (var locale in new[] { "zh-Hans", "zh-Hant", "en-US" })
+            {
+                if (detachDuringLocaleChange)
+                {
+                    window.Content = null;
+                    fixture.Navigate(LauncherFrontendSubpageKey.SetupUI);
+                }
+                Assert.IsTrue(fixture.I18n.SetLocale(locale));
+                Tick();
+                if (detachDuringLocaleChange)
+                {
+                    fixture.Navigate(subpage);
+                    window.Content = view;
+                    Tick();
+                }
+                // Card templates can recreate their controls when the pane is reattached.
+                combos = view.GetVisualDescendants().OfType<ComboBox>().ToArray();
+                Assert.AreEqual(selections.Length, combos.Length);
+                for (var index = 0; index < combos.Length; index++)
+                {
+                    Assert.AreEqual(selections[index], combos[index].SelectedIndex, $"{subpage}, {locale}, option {index}");
+                    Assert.AreEqual(combos[index].Items[selections[index]], combos[index].SelectedItem);
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(combos[index].SelectedItem?.ToString()));
+                }
+                foreach (var (property, index) in properties.Select((property, index) => (property, index)))
+                {
+                    if (property.Name == nameof(LauncherViewModel.SelectedLauncherLocaleIndex)) continue;
+                    Assert.AreEqual(modelSelections[index], property.GetValue(fixture.Launcher), property.Name);
+                }
+            }
+            window.Close();
+        });
+    }
+
+    [TestMethod]
     public async Task AppearanceSections_LoadCurrentSelectionsAndRetainScrollPositionOnReattach()
     {
         await RunOnUiThread(() =>

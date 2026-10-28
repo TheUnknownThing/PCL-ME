@@ -24,7 +24,7 @@
                 Grid.ColumnSpan="3"
                 Height="28"
                 ItemsSource="{Binding UpdateChannelOptions}"
-                SelectedIndex="{Binding SelectedUpdateChannelIndex}" />
+                controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedUpdateChannelIndex}" />
 
             <TextBlock
                 Grid.Row="2"
@@ -39,7 +39,7 @@
                 Grid.ColumnSpan="3"
                 Height="28"
                 ItemsSource="{Binding UpdateModeOptions}"
-                SelectedIndex="{Binding SelectedUpdateModeIndex}" />
+                controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedUpdateModeIndex}" />
 
           </Grid>
         </controls:PclCard.CardContent>

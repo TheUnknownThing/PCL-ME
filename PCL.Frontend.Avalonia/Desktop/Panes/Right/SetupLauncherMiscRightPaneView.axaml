@@ -21,7 +21,7 @@
                 Grid.Column="1"
                 Height="28"
                 ItemsSource="{Binding SystemActivityOptions}"
-                SelectedIndex="{Binding SelectedSystemActivityIndex}" />
+                controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedSystemActivityIndex}" />
 
             <TextBlock
                 Grid.Row="2"
@@ -99,7 +99,7 @@
             <ComboBox
                 Grid.Column="1"
                 ItemsSource="{Binding SecureDnsModeOptions}"
-                SelectedIndex="{Binding SelectedSecureDnsModeIndex}" />
+                controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedSecureDnsModeIndex}" />
 
             <TextBlock
                 Grid.Row="2"
@@ -113,7 +113,7 @@
                 Grid.Column="1"
                 IsEnabled="{Binding IsSecureDnsProviderSelectionEnabled}"
                 ItemsSource="{Binding SecureDnsProviderOptions}"
-                SelectedIndex="{Binding SelectedSecureDnsProviderIndex}" />
+                controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedSecureDnsProviderIndex}" />
 
             <TextBlock
                 Grid.Row="4"

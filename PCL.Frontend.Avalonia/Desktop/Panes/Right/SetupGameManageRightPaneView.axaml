@@ -21,7 +21,7 @@
                 Grid.Column="1"
                 Height="28"
                 ItemsSource="{Binding DownloadSourceOptions}"
-                SelectedIndex="{Binding SelectedDownloadSourceIndex}" />
+                controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedDownloadSourceIndex}" />
 
             <TextBlock
                 Grid.Row="2"
@@ -35,7 +35,7 @@
                 Grid.Column="1"
                 Height="28"
                 ItemsSource="{Binding DownloadSourceOptions}"
-                SelectedIndex="{Binding SelectedVersionSourceIndex}" />
+                controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedVersionSourceIndex}" />
 
             <TextBlock
                 Grid.Row="4"
@@ -134,7 +134,7 @@
                   Grid.Column="1"
                   Height="28"
                   ItemsSource="{Binding DownloadSourceOptions}"
-                  SelectedIndex="{Binding SelectedCommunityDownloadSourceIndex}" />
+                  controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedCommunityDownloadSourceIndex}" />
 
               <TextBlock
                   Grid.Row="2"
@@ -148,7 +148,7 @@
                   Grid.Column="1"
                   Height="28"
                   ItemsSource="{Binding FileNameFormatOptions}"
-                  SelectedIndex="{Binding SelectedFileNameFormatIndex}" />
+                  controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedFileNameFormatIndex}" />
 
               <TextBlock
                   Grid.Row="4"
@@ -162,7 +162,7 @@
                   Grid.Column="1"
                   Height="28"
                   ItemsSource="{Binding ModLocalNameStyleOptions}"
-                  SelectedIndex="{Binding SelectedModLocalNameStyleIndex}" />
+                  controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedModLocalNameStyleIndex}" />
             </Grid>
 
             <CheckBox
