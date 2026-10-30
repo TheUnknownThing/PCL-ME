@@ -31,11 +31,6 @@ internal sealed class DesktopShellController : IDisposable
     private readonly MenuItem _petQuitItem;
     private readonly NativeMenu _trayMenu;
     private readonly ContextMenu _petMenu;
-    private readonly Func<FrontendDesktopSettings, WindowIcon> _petIconFactory;
-    private WindowIcon? _petTrayIcon;
-    private string? _trayIconPreset;
-    private string? _trayIconImagePath;
-    private object? _trayIconImageSource;
     private FrontendDesktopSettings _settings = new();
     private WindowState _restoreState = WindowState.Normal;
     private TrayIcon? _trayIcon;
@@ -52,8 +47,7 @@ internal sealed class DesktopShellController : IDisposable
         ICommand launchCommand,
         Action exitLauncher,
         Action flushSettings,
-        PixelPoint? savedPetPosition = null,
-        Func<FrontendDesktopSettings, WindowIcon>? petIconFactory = null)
+        PixelPoint? savedPetPosition = null)
     {
         _mainWindow = mainWindow;
         _i18n = i18n;
@@ -61,7 +55,6 @@ internal sealed class DesktopShellController : IDisposable
         _exitLauncher = exitLauncher;
         _flushSettings = flushSettings;
         _savedPetPosition = savedPetPosition;
-        _petIconFactory = petIconFactory ?? DesktopPetTrayIconFactory.Create;
         _hasShownMainWindow = mainWindow.IsVisible;
         _showCommand = new ActionCommand(ShowLauncher);
         _desktopLaunchCommand = new ActionCommand(LaunchSelectedInstance, () => !_disposed && _launchCommand.CanExecute(null));
@@ -159,32 +152,8 @@ internal sealed class DesktopShellController : IDisposable
     private void UpdateTrayIconAppearance()
     {
         if (_trayIcon is null) return;
-        if (!_settings.PetEnabled)
-        {
-            _trayIcon.Icon = _mainWindow.Icon;
-            return;
-        }
-
-        var source = _pet?.Sprite.CustomImage;
-        var presetId = _settings.PetUseCustom ? string.Empty : _settings.PetPresetId;
-        if (_petTrayIcon is null || _trayIconPreset != presetId
-            || _trayIconImagePath != _settings.PetImagePath || !ReferenceEquals(_trayIconImageSource, source))
-        {
-            try
-            {
-                _petTrayIcon = _petIconFactory(_settings);
-                _trayIconPreset = presetId;
-                _trayIconImagePath = _settings.PetImagePath;
-                _trayIconImageSource = source;
-            }
-            catch (Exception ex)
-            {
-                LogWrapper.Warn(ex, "Desktop", "Could not render the pet tray icon.");
-                _trayIcon.Icon = _mainWindow.Icon;
-                return;
-            }
-        }
-        _trayIcon.Icon = _petTrayIcon;
+        // The tray icon identifies the launcher, not the currently selected pet.
+        _trayIcon.Icon = _mainWindow.Icon;
     }
 
     public void UpdateSavedPetPosition(PixelPoint? position)
@@ -404,7 +373,5 @@ internal sealed class DesktopShellController : IDisposable
         }
         _pet?.Close();
         _pet = null;
-        _petTrayIcon = null;
-        _trayIconImageSource = null;
     }
 }
