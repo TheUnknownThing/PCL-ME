@@ -151,21 +151,24 @@ public sealed class FrontendMotionTest
             var layouts = 0;
             window.LayoutUpdated += (_, _) => layouts++;
             card.IsChevronExpanded = true;
-            await Advance(350);
+            // Loaded CI runners can stretch the compositor handshake and the
+            // real-time animation waits well past their nominal durations, so
+            // the settle budgets stay several times larger than the animations.
+            await Advance(600);
             Assert.IsTrue(double.IsNaN(card.Height));
             Assert.IsTrue(following.Bounds.Y > collapsedY + 200);
             Assert.IsTrue(layouts < 8, $"Expansion performed {layouts} layout passes.");
 
             layouts = 0;
             card.IsChevronExpanded = false;
-            await Advance(300);
+            await Advance(600);
             Assert.AreEqual(40d, card.Height);
             Assert.IsFalse(card.IsContentVisible);
             Assert.AreEqual(collapsedY, following.Bounds.Y, .01);
             Assert.AreEqual(following.Bounds.Y, ElementComposition.GetElementVisual(following)!.Offset.Y, .01);
             Assert.IsTrue(layouts < 8, $"Collapse performed {layouts} layout passes.");
             card.IsChevronExpanded = true;
-            await Advance(350);
+            await Advance(600);
             Assert.AreEqual("Unsaved edit", editor.Text);
             Assert.IsFalse(card.FindControl<Grid>("CardLayoutRoot")!.ClipToBounds);
             window.Close();
