@@ -31,6 +31,40 @@ namespace PCL.Frontend.Avalonia.Test;
 public sealed class FrontendAppearanceTest
 {
     [TestMethod]
+    public async Task DesktopPreferences_PersistAcrossNavigationLocaleChangesAndReset()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            var launcher = fixture.Launcher;
+            Assert.IsFalse(launcher.KeepRunningInTray);
+            Assert.IsFalse(launcher.DesktopPetEnabled);
+            launcher.KeepRunningInTray = true;
+            launcher.DesktopPetEnabled = true;
+            launcher.DesktopPetTopmost = false;
+            launcher.DesktopPetScale = 1.5;
+            fixture.Actions.FlushPendingSettings();
+            var expected = new FrontendDesktopSettings(true, true, false, 1.5);
+            Assert.AreEqual(expected, FrontendDesktopSettingsService.Read(new YamlFileProvider(fixture.Paths.LocalConfigPath)));
+
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            Assert.AreEqual(expected, launcher.DesktopSettings);
+            fixture.I18n.SetLocale("zh-Hans");
+            Tick();
+            Assert.AreEqual(expected, launcher.DesktopSettings);
+
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetXKey, -1800);
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetYKey, 200);
+            launcher.ResetLauncherMiscSettingsCommand.Execute(null);
+            Tick();
+            Assert.AreEqual(new FrontendDesktopSettings(), launcher.DesktopSettings);
+            Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(fixture.Paths.OpenLocalConfigProvider()));
+        });
+    }
+
+    [TestMethod]
     public async Task SettingsNavigation_PreservesActiveNetworkConfiguration()
     {
         await RunOnUiThread(() =>

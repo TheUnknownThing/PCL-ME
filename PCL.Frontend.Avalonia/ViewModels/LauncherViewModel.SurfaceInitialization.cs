@@ -557,6 +557,7 @@ internal sealed partial class LauncherViewModel
 
     private void InitializeGlobalSetupSettings()
     {
+        InitializeDesktopSettings();
         _ignoreQuiltLoader = _setupComposition.GameManage.IgnoreQuiltLoader;
         _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;
         _debugModeEnabled = _setupComposition.LauncherMisc.DebugModeEnabled;
@@ -566,6 +567,7 @@ internal sealed partial class LauncherViewModel
 
     private void InitializeLauncherMiscSurface()
     {
+        InitializeDesktopSettings();
         _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
         _selectedSystemActivityIndex = _setupComposition.LauncherMisc.SystemActivityIndex;
         _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;

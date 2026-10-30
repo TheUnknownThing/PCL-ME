@@ -3564,3 +3564,20 @@ welcome:
     tutorial: 開教學
     feedback: 提交反饋
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "顯啟動器"
+    launch_selected: "啟所選實例"
+    show_pet: "顯桌寵"
+    hide_pet: "隱桌寵"
+    quit: "退出"
+  pet:
+    title: "PCL-ME 桌寵"
+    hint: "拖之可移，單擊以戲，雙擊以顯啟動器，右擊以啟選單。"
+  settings:
+    header: "托盤與桌寵"
+    keep_running: "閉窗或最小化時留於托盤"
+    enable_pet: "啟用桌寵"
+    topmost: "桌寵居頂"
+    scale: "桌寵大小"
+    hint: "欲退，請於托盤或桌寵選單擇「退出」。無托盤則留啟動器以便取用。由選單啟遊戲，則顯啟動器以處理所需之提示。"

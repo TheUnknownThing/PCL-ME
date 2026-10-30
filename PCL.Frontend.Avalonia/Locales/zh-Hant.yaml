@@ -3574,3 +3574,20 @@ welcome:
     tutorial: 打開教學
     feedback: 提交回饋
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "顯示啟動器"
+    launch_selected: "啟動選取的實例"
+    show_pet: "顯示桌寵"
+    hide_pet: "隱藏桌寵"
+    quit: "結束"
+  pet:
+    title: "PCL-ME 桌寵"
+    hint: "拖曳可移動，按一下可互動，按兩下可顯示啟動器，按右鍵可開啟選單。"
+  settings:
+    header: "系統匣與桌寵"
+    keep_running: "關閉或最小化視窗時常駐系統匣"
+    enable_pet: "啟用桌寵"
+    topmost: "桌寵保持在最上層"
+    scale: "桌寵大小"
+    hint: "透過系統匣或桌寵選單中的「結束」關閉啟動器。系統匣無法使用時，啟動器會保持可存取。透過選單啟動遊戲時，會顯示啟動器以處理必要的提示。"

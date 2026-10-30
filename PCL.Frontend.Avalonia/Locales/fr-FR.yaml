@@ -3564,3 +3564,20 @@ welcome:
     tutorial: Ouvrir le tutoriel
     feedback: Envoyer des commentaires
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "Afficher le lanceur"
+    launch_selected: "Lancer l’instance sélectionnée"
+    show_pet: "Afficher le compagnon"
+    hide_pet: "Masquer le compagnon"
+    quit: "Quitter"
+  pet:
+    title: "Compagnon PCL-ME"
+    hint: "Faites glisser pour déplacer. Cliquez pour interagir. Double-cliquez pour afficher le lanceur. Faites un clic droit pour les autres actions."
+  settings:
+    header: "Zone de notification et compagnon"
+    keep_running: "Rester dans la zone de notification à la fermeture ou à la réduction"
+    enable_pet: "Activer le compagnon"
+    topmost: "Garder le compagnon au premier plan"
+    scale: "Taille du compagnon"
+    hint: "Utilisez Quitter dans le menu de notification ou du compagnon pour fermer le lanceur. Sans zone de notification, le lanceur reste accessible. Le lancement depuis ces menus affiche le lanceur pour les confirmations nécessaires."

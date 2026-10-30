@@ -3588,3 +3588,20 @@ welcome:
     tutorial: Abrir tutorial
     feedback: Enviar comentarios
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "Mostrar el lanzador"
+    launch_selected: "Iniciar la instancia seleccionada"
+    show_pet: "Mostrar la mascota"
+    hide_pet: "Ocultar la mascota"
+    quit: "Salir"
+  pet:
+    title: "Mascota de PCL-ME"
+    hint: "Arrastra para mover. Haz clic para interactuar. Haz doble clic para mostrar el lanzador. Haz clic derecho para ver más acciones."
+  settings:
+    header: "Bandeja del sistema y mascota"
+    keep_running: "Seguir en la bandeja al cerrar o minimizar"
+    enable_pet: "Activar la mascota de escritorio"
+    topmost: "Mantener la mascota en primer plano"
+    scale: "Tamaño de la mascota"
+    hint: "Usa Salir en el menú de la bandeja o de la mascota para cerrar el lanzador. Si no hay bandeja, el lanzador seguirá accesible. Al iniciar desde estos menús se muestra el lanzador para las confirmaciones necesarias."

@@ -8,6 +8,46 @@
     DataContext="{ReflectionBinding Launcher}">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="25,10,25,10" Spacing="15">
+      <controls:PclCard Header="{Binding SetupText.LauncherMisc.DesktopCardHeader}" ContentMargin="20,12,20,15">
+        <controls:PclCard.CardContent>
+          <StackPanel Spacing="10">
+            <CheckBox
+                Content="{Binding SetupText.LauncherMisc.KeepRunningInTrayLabel}"
+                IsChecked="{Binding KeepRunningInTray}" />
+            <CheckBox
+                Content="{Binding SetupText.LauncherMisc.DesktopPetEnabledLabel}"
+                IsChecked="{Binding DesktopPetEnabled}" />
+            <StackPanel IsEnabled="{Binding DesktopPetEnabled}" Spacing="10" Margin="20,0,0,0">
+              <CheckBox
+                  Content="{Binding SetupText.LauncherMisc.DesktopPetTopmostLabel}"
+                  IsChecked="{Binding DesktopPetTopmost}" />
+              <Grid ColumnDefinitions="Auto,*,60">
+                <TextBlock
+                    Margin="0,0,20,0"
+                    VerticalAlignment="Center"
+                    Text="{Binding SetupText.LauncherMisc.DesktopPetScaleLabel}" />
+                <Slider
+                    Grid.Column="1"
+                    Minimum="0.5"
+                    Maximum="2"
+                    TickFrequency="0.25"
+                    IsSnapToTickEnabled="True"
+                    Value="{Binding DesktopPetScale}" />
+                <TextBlock
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Text="{Binding DesktopPetScaleText}" />
+              </Grid>
+            </StackPanel>
+            <TextBlock
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                FontSize="12"
+                TextWrapping="Wrap"
+                Text="{Binding SetupText.LauncherMisc.DesktopHint}" />
+          </StackPanel>
+        </controls:PclCard.CardContent>
+      </controls:PclCard>
       <controls:PclCard Header="{Binding SetupText.LauncherMisc.SystemCardHeader}" ContentMargin="20,12,20,15">
         <controls:PclCard.CardContent>
           <Grid ColumnDefinitions="Auto,*" RowDefinitions="28,9,Auto,5,20,8,35">

@@ -59,7 +59,13 @@ internal sealed partial class LauncherViewModel
 
     private static readonly string[] LauncherMiscLocalResetKeys =
     [
-        "SystemSystemActivity"
+        "SystemSystemActivity",
+        FrontendDesktopSettingsService.KeepRunningInTrayKey,
+        FrontendDesktopSettingsService.PetEnabledKey,
+        FrontendDesktopSettingsService.PetTopmostKey,
+        FrontendDesktopSettingsService.PetScaleKey,
+        FrontendDesktopSettingsService.PetXKey,
+        FrontendDesktopSettingsService.PetYKey
     ];
 
     private static readonly string[] LauncherMiscSharedResetKeys =
@@ -459,6 +465,18 @@ internal sealed partial class LauncherViewModel
 
         switch (propertyName)
         {
+            case nameof(KeepRunningInTray):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.KeepRunningInTrayKey, KeepRunningInTray);
+                break;
+            case nameof(DesktopPetEnabled):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetEnabledKey, DesktopPetEnabled);
+                break;
+            case nameof(DesktopPetTopmost):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetTopmostKey, DesktopPetTopmost);
+                break;
+            case nameof(DesktopPetScale):
+                _launcherActionService.PersistLocalValueDeferred(FrontendDesktopSettingsService.PetScaleKey, DesktopPetScale);
+                break;
             case nameof(SelectedUpdateChannelIndex):
                 _launcherActionService.PersistLocalValue("SystemUpdateChannel", SelectedUpdateChannelIndex);
                 break;

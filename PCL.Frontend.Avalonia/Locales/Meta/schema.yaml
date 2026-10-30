@@ -4099,3 +4099,20 @@ welcome:
     tutorial: []
     feedback: []
     github: []
+desktop:
+  actions:
+    show_launcher: []
+    launch_selected: []
+    show_pet: []
+    hide_pet: []
+    quit: []
+  pet:
+    title: []
+    hint: []
+  settings:
+    header: []
+    keep_running: []
+    enable_pet: []
+    topmost: []
+    scale: []
+    hint: []

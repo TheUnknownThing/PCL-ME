@@ -3574,3 +3574,20 @@ welcome:
     tutorial: Open Tutorial
     feedback: Submit Feedback
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "Show launcher"
+    launch_selected: "Launch selected instance"
+    show_pet: "Show desktop pet"
+    hide_pet: "Hide desktop pet"
+    quit: "Quit"
+  pet:
+    title: "PCL-ME desktop pet"
+    hint: "Drag to move. Click to interact. Double-click to show the launcher. Right-click for more actions."
+  settings:
+    header: "Tray and desktop pet"
+    keep_running: "Keep running in the tray when closing or minimizing"
+    enable_pet: "Enable desktop pet"
+    topmost: "Keep pet on top"
+    scale: "Pet size"
+    hint: "Quit from the tray or pet menu to exit. If no tray is available, the launcher stays accessible. Launching from either menu shows the launcher for any required prompts."

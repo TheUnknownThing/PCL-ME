@@ -278,6 +278,12 @@ internal sealed partial class LauncherViewModel
             },
             LauncherMisc = new SetupLauncherMiscLocalization
             {
+                DesktopCardHeader = _i18n.T("desktop.settings.header"),
+                KeepRunningInTrayLabel = _i18n.T("desktop.settings.keep_running"),
+                DesktopPetEnabledLabel = _i18n.T("desktop.settings.enable_pet"),
+                DesktopPetTopmostLabel = _i18n.T("desktop.settings.topmost"),
+                DesktopPetScaleLabel = _i18n.T("desktop.settings.scale"),
+                DesktopHint = _i18n.T("desktop.settings.hint"),
                 SystemCardHeader = _i18n.T("setup.launcher_misc.cards.system.header"),
                 LauncherAnnouncementsLabel = _i18n.T("setup.launcher_misc.fields.announcements"),
                 RealTimeLogLinesLabel = _i18n.T("setup.launcher_misc.fields.realtime_log_lines"),
@@ -553,6 +559,12 @@ internal sealed class SetupJavaLocalization
 
 internal sealed class SetupLauncherMiscLocalization
 {
+    public required string DesktopCardHeader { get; init; }
+    public required string KeepRunningInTrayLabel { get; init; }
+    public required string DesktopPetEnabledLabel { get; init; }
+    public required string DesktopPetTopmostLabel { get; init; }
+    public required string DesktopPetScaleLabel { get; init; }
+    public required string DesktopHint { get; init; }
     public required string SystemCardHeader { get; init; }
     public required string LauncherAnnouncementsLabel { get; init; }
     public required string RealTimeLogLinesLabel { get; init; }

@@ -3574,3 +3574,20 @@ welcome:
     tutorial: 打开教程
     feedback: 提交反馈
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "显示启动器"
+    launch_selected: "启动选中的实例"
+    show_pet: "显示桌宠"
+    hide_pet: "隐藏桌宠"
+    quit: "退出"
+  pet:
+    title: "PCL-ME 桌宠"
+    hint: "拖动可移动，单击可互动，双击可显示启动器，右键可打开菜单。"
+  settings:
+    header: "托盘与桌宠"
+    keep_running: "关闭或最小化窗口时驻留托盘"
+    enable_pet: "启用桌宠"
+    topmost: "桌宠置顶"
+    scale: "桌宠大小"
+    hint: "通过托盘或桌宠菜单中的“退出”关闭启动器。托盘不可用时，启动器会保持可访问。通过菜单启动游戏时，会显示启动器以处理必要的提示。"
