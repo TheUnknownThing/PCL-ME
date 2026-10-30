@@ -64,6 +64,8 @@ internal sealed partial class LauncherViewModel
         FrontendDesktopSettingsService.PetEnabledKey,
         FrontendDesktopSettingsService.PetTopmostKey,
         FrontendDesktopSettingsService.PetScaleKey,
+        FrontendDesktopSettingsService.PetImagePathKey,
+        FrontendDesktopSettingsService.PetAppearanceKey,
         FrontendDesktopSettingsService.PetXKey,
         FrontendDesktopSettingsService.PetYKey
     ];
@@ -476,6 +478,13 @@ internal sealed partial class LauncherViewModel
                 break;
             case nameof(DesktopPetScale):
                 _launcherActionService.PersistLocalValueDeferred(FrontendDesktopSettingsService.PetScaleKey, DesktopPetScale);
+                break;
+            case nameof(DesktopPetImagePath):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetImagePathKey, DesktopPetImagePath);
+                break;
+            case nameof(SelectedDesktopPetAppearanceIndex):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetAppearanceKey,
+                    FrontendDesktopSettingsService.BuiltinAppearances[_selectedDesktopPetAppearanceIndex]);
                 break;
             case nameof(SelectedUpdateChannelIndex):
                 _launcherActionService.PersistLocalValue("SystemUpdateChannel", SelectedUpdateChannelIndex);

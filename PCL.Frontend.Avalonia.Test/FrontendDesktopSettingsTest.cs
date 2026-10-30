@@ -24,11 +24,13 @@ public sealed class FrontendDesktopSettingsTest
             provider.Set(FrontendDesktopSettingsService.PetEnabledKey, true);
             provider.Set(FrontendDesktopSettingsService.PetTopmostKey, false);
             provider.Set(FrontendDesktopSettingsService.PetScaleKey, 1.5);
+            provider.Set(FrontendDesktopSettingsService.PetImagePathKey, Path.Combine(root, "custom.png"));
+            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
             provider.Set(FrontendDesktopSettingsService.PetXKey, -1800);
             provider.Set(FrontendDesktopSettingsService.PetYKey, 140);
             provider.Sync();
             var reopened = new YamlFileProvider(path);
-            Assert.AreEqual(new FrontendDesktopSettings(true, true, false, 1.5), FrontendDesktopSettingsService.Read(reopened));
+            Assert.AreEqual(new FrontendDesktopSettings(true, true, false, 1.5, Path.Combine(root, "custom.png"), "slime"), FrontendDesktopSettingsService.Read(reopened));
             Assert.AreEqual(new PixelPoint(-1800, 140), FrontendDesktopSettingsService.ReadPosition(reopened));
         }
         finally
@@ -60,5 +62,6 @@ public sealed class FrontendDesktopSettingsTest
         Assert.AreEqual(1, FrontendDesktopSettingsService.NormalizeScale(double.PositiveInfinity));
         Assert.AreEqual(0.5, FrontendDesktopSettingsService.NormalizeScale(-100));
         Assert.AreEqual(2, FrontendDesktopSettingsService.NormalizeScale(100));
+        Assert.AreEqual("creeper", FrontendDesktopSettingsService.NormalizeAppearance("unknown"));
     }
 }

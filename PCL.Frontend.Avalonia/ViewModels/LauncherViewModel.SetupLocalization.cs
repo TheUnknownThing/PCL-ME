@@ -283,6 +283,19 @@ internal sealed partial class LauncherViewModel
                 DesktopPetEnabledLabel = _i18n.T("desktop.settings.enable_pet"),
                 DesktopPetTopmostLabel = _i18n.T("desktop.settings.topmost"),
                 DesktopPetScaleLabel = _i18n.T("desktop.settings.scale"),
+                DesktopPetChooseImageLabel = _i18n.T("desktop.settings.choose_image"),
+                DesktopPetResetImageLabel = _i18n.T("desktop.settings.reset_image"),
+                DesktopPetImageHint = _i18n.T("desktop.settings.image_hint"),
+                DesktopPetAppearanceLabel = _i18n.T("desktop.settings.appearance"),
+                DesktopPetCustomImageLabel = _i18n.T("desktop.settings.custom_image"),
+                DesktopPetAppearanceOptions =
+                [
+                    _i18n.T("desktop.appearances.creeper"),
+                    _i18n.T("desktop.appearances.slime"),
+                    _i18n.T("desktop.appearances.grass_block"),
+                    _i18n.T("desktop.appearances.enderman"),
+                    _i18n.T("desktop.settings.custom_image")
+                ],
                 DesktopHint = _i18n.T("desktop.settings.hint"),
                 SystemCardHeader = _i18n.T("setup.launcher_misc.cards.system.header"),
                 LauncherAnnouncementsLabel = _i18n.T("setup.launcher_misc.fields.announcements"),
@@ -335,6 +348,7 @@ internal sealed partial class LauncherViewModel
     private void RaiseSectionBLocalizedProperties()
     {
         RaisePropertyChanged(nameof(SetupText));
+        RaisePropertyChanged(nameof(DesktopPetAppearanceOptions));
         RaisePropertyChanged(nameof(UiFeatureHiddenCardHeader));
         RaisePropertyChanged(nameof(LaunchIsolationOptions));
         RaisePropertyChanged(nameof(LaunchVisibilityOptions));
@@ -564,6 +578,12 @@ internal sealed class SetupLauncherMiscLocalization
     public required string DesktopPetEnabledLabel { get; init; }
     public required string DesktopPetTopmostLabel { get; init; }
     public required string DesktopPetScaleLabel { get; init; }
+    public required string DesktopPetChooseImageLabel { get; init; }
+    public required string DesktopPetResetImageLabel { get; init; }
+    public required string DesktopPetImageHint { get; init; }
+    public required string DesktopPetAppearanceLabel { get; init; }
+    public required string DesktopPetCustomImageLabel { get; init; }
+    public required IReadOnlyList<string> DesktopPetAppearanceOptions { get; init; }
     public required string DesktopHint { get; init; }
     public required string SystemCardHeader { get; init; }
     public required string LauncherAnnouncementsLabel { get; init; }

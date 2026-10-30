@@ -98,7 +98,12 @@ internal sealed class DesktopShellController : IDisposable
     {
         if (_disposed) return;
         var normalized = settings with { PetScale = FrontendDesktopSettingsService.NormalizeScale(settings.PetScale) };
-        if (_hasAppliedSettings && normalized == _settings) return;
+        if (_hasAppliedSettings && normalized == _settings)
+        {
+            // Reimporting a previously missing asset may restore the same managed path.
+            if (_settings.PetEnabled) _pet?.ApplySettings(normalized);
+            return;
+        }
         _hasAppliedSettings = true;
         _settings = normalized;
         UpdateTrayIcon();

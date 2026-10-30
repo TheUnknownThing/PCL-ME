@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
+using Avalonia.Platform;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.I18n;
 using PCL.Core.Minecraft.Launch;
@@ -237,6 +238,66 @@ public sealed class FrontendDesktopShellTest
 
     private static DesktopShellController CreateShell(Window window) => new(
         window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { });
+
+    [TestMethod]
+    public async Task PetSingleClick_ShowsLauncherAndReactsForEveryBundledAppearance()
+    {
+        await Run(() =>
+        {
+            var window = new Window();
+            using var shell = CreateShell(window);
+            shell.SetTrayHostAvailable(false);
+            window.Show();
+            foreach (var appearance in FrontendDesktopSettingsService.BuiltinAppearances)
+            {
+                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetAppearance: appearance));
+                window.Close();
+                Assert.IsFalse(window.IsVisible);
+                var pet = shell.Pet!;
+                Assert.AreEqual(appearance, pet.Sprite.Appearance);
+                pet.MouseDown(new Point(40, 40), MouseButton.Left, RawInputModifiers.None);
+                pet.MouseUp(new Point(40, 40), MouseButton.Left, RawInputModifiers.None);
+                Assert.IsTrue(window.IsVisible, "A single click must perform the action described in the hint.");
+                Assert.IsTrue(pet.Sprite.IsReacting);
+            }
+            shell.Quit();
+        });
+    }
+
+    [TestMethod]
+    public async Task CustomPetImage_IsCachedAcrossSettingsChangesAndFallsBackWhenMissing()
+    {
+        await Run(() =>
+        {
+            var root = Path.Combine(Path.GetTempPath(), "pcl-pet-image-test-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            try
+            {
+                var path = Path.Combine(root, "custom.png");
+                using (var source = AssetLoader.Open(new Uri("avares://PCL.Frontend.Avalonia/Assets/icon.png")))
+                using (var output = File.Create(path)) source.CopyTo(output);
+                var window = new Window();
+                using var shell = CreateShell(window);
+                shell.ApplySettings(new(PetEnabled: true, PetImagePath: path));
+                var pet = shell.Pet!;
+                var image = pet.Sprite.CustomImage;
+                Assert.IsNotNull(image);
+                File.Delete(path);
+                shell.ApplySettings(new(PetEnabled: true, PetScale: 1.5, PetImagePath: path));
+                Assert.AreSame(image, pet.Sprite.CustomImage, "Changing size must reuse the decoded image.");
+                shell.ApplySettings(new(PetEnabled: true, PetImagePath: Path.Combine(root, "missing.png")));
+                Assert.IsNull(pet.Sprite.CustomImage);
+                Assert.IsTrue(pet.IsVisible);
+                shell.ApplySettings(new(PetEnabled: true));
+                Assert.IsNull(pet.Sprite.CustomImage);
+                shell.Quit();
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        });
+    }
 
     private static Task Run(Action action) => FrontendMotionTest.RunAsync(() =>
     {

@@ -43,6 +43,8 @@ internal sealed partial class App
         if (e.PropertyName is nameof(LauncherViewModel.KeepRunningInTray)
             or nameof(LauncherViewModel.DesktopPetEnabled)
             or nameof(LauncherViewModel.DesktopPetTopmost)
+            or nameof(LauncherViewModel.DesktopPetImagePath)
+            or nameof(LauncherViewModel.SelectedDesktopPetAppearanceIndex)
             or nameof(LauncherViewModel.DesktopPetScale))
         {
             ApplyDesktopSettings();

@@ -3583,7 +3583,7 @@ desktop:
     quit: "結束"
   pet:
     title: "PCL-ME 桌寵"
-    hint: "拖曳可移動，按一下可互動，按兩下可顯示啟動器，按右鍵可開啟選單。"
+    hint: "按一下顯示啟動器，拖曳可移動，按右鍵開啟選單以啟動遊戲或使用其他操作。"
   settings:
     header: "系統匣與桌寵"
     keep_running: "關閉或最小化視窗時常駐系統匣"
@@ -3591,3 +3591,16 @@ desktop:
     topmost: "桌寵保持在最上層"
     scale: "桌寵大小"
     hint: "透過系統匣或桌寵選單中的「結束」關閉啟動器。系統匣無法使用時，啟動器會保持可存取。透過選單啟動遊戲時，會顯示啟動器以處理必要的提示。"
+    choose_image: "選擇圖片"
+    reset_image: "使用預設桌寵"
+    image_filter: "桌寵圖片"
+    image_hint: "支援 PNG、JPEG、WebP 或 BMP，建議使用透明背景的 PNG 圖片。"
+    image_error_title: "無法使用桌寵圖片"
+    image_error_message: "請選擇有效圖片，尺寸不超過 4096 × 4096 像素，檔案大小不超過 10 MB。"
+    appearance: "外觀"
+    custom_image: "自訂圖片"
+  appearances:
+    creeper: "苦力怕"
+    slime: "史萊姆"
+    grass_block: "草地方塊"
+    enderman: "終界使者"

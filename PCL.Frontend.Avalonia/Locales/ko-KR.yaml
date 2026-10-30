@@ -3573,7 +3573,7 @@ desktop:
     quit: "종료"
   pet:
     title: "PCL-ME 데스크톱 펫"
-    hint: "드래그하여 이동하고, 클릭하여 상호작용합니다. 두 번 클릭하면 런처가 표시됩니다. 다른 작업은 마우스 오른쪽 버튼으로 확인하세요."
+    hint: "클릭하면 런처가 표시됩니다. 드래그하여 이동하세요. 게임 실행 및 다른 작업은 마우스 오른쪽 버튼 메뉴에서 선택하세요."
   settings:
     header: "트레이 및 데스크톱 펫"
     keep_running: "창을 닫거나 최소화할 때 트레이에서 계속 실행"
@@ -3581,3 +3581,16 @@ desktop:
     topmost: "펫을 항상 위에 표시"
     scale: "펫 크기"
     hint: "런처를 종료하려면 트레이 또는 펫 메뉴에서 종료를 선택하세요. 트레이를 사용할 수 없으면 런처에 계속 접근할 수 있습니다. 메뉴에서 게임을 실행하면 필요한 확인을 위해 런처가 표시됩니다."
+    choose_image: "이미지 선택"
+    reset_image: "기본 펫 사용"
+    image_filter: "펫 이미지"
+    image_hint: "PNG, JPEG, WebP 또는 BMP를 지원합니다. 배경이 투명한 PNG를 권장합니다."
+    image_error_title: "펫 이미지를 사용할 수 없음"
+    image_error_message: "4096 × 4096픽셀 및 10MB 이하의 유효한 이미지를 선택하세요."
+    appearance: "외형"
+    custom_image: "사용자 지정 이미지"
+  appearances:
+    creeper: "크리퍼"
+    slime: "슬라임"
+    grass_block: "잔디 블록"
+    enderman: "엔더맨"

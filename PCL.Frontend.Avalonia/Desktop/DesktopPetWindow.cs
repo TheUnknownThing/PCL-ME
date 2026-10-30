@@ -16,7 +16,6 @@ internal sealed class DesktopPetWindow : Window
     private PixelPoint _windowStart;
     private IPointer? _pointer;
     private bool _dragged;
-    private int _clickCount;
 
     public DesktopPetWindow()
     {
@@ -49,6 +48,8 @@ internal sealed class DesktopPetWindow : Window
         Topmost = settings.PetTopmost;
         Width = 80 * settings.PetScale;
         Height = 104 * settings.PetScale;
+        _sprite.SetImagePath(settings.PetImagePath);
+        _sprite.SetAppearance(settings.PetAppearance);
         if (IsVisible) RestorePosition(Position);
     }
 
@@ -74,7 +75,6 @@ internal sealed class DesktopPetWindow : Window
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
         _pointerStart = this.PointToScreen(e.GetPosition(this));
         _windowStart = Position;
-        _clickCount = e.ClickCount;
         _dragged = false;
         _pointer = e.Pointer;
         e.Pointer.Capture(this);
@@ -103,13 +103,10 @@ internal sealed class DesktopPetWindow : Window
             RestorePosition(Position);
             PositionSaved?.Invoke(Position);
         }
-        else if (_clickCount >= 2)
-        {
-            RestoreRequested?.Invoke();
-        }
         else
         {
             _sprite.Interact();
+            RestoreRequested?.Invoke();
         }
         e.Handled = true;
     }

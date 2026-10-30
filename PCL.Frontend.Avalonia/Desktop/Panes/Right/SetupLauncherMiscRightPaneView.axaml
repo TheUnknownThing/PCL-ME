@@ -18,6 +18,38 @@
                 Content="{Binding SetupText.LauncherMisc.DesktopPetEnabledLabel}"
                 IsChecked="{Binding DesktopPetEnabled}" />
             <StackPanel IsEnabled="{Binding DesktopPetEnabled}" Spacing="10" Margin="20,0,0,0">
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock
+                    Margin="0,0,20,0"
+                    VerticalAlignment="Center"
+                    Text="{Binding SetupText.LauncherMisc.DesktopPetAppearanceLabel}" />
+                <ComboBox
+                    Grid.Column="1"
+                    ItemsSource="{Binding DesktopPetAppearanceOptions}"
+                    PlaceholderText="{Binding SetupText.LauncherMisc.DesktopPetCustomImageLabel}"
+                    controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedDesktopPetAppearanceIndex}" />
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <Image
+                    Width="48"
+                    Height="48"
+                    Stretch="Uniform"
+                    IsVisible="{Binding HasDesktopPetImage}"
+                    Source="{Binding DesktopPetImagePreview}" />
+                <controls:PclButton
+                    VerticalAlignment="Center"
+                    Command="{Binding ChooseDesktopPetImageCommand}"
+                    Text="{Binding SetupText.LauncherMisc.DesktopPetChooseImageLabel}" />
+                <controls:PclButton
+                    VerticalAlignment="Center"
+                    Command="{Binding ResetDesktopPetImageCommand}"
+                    Text="{Binding SetupText.LauncherMisc.DesktopPetResetImageLabel}" />
+              </StackPanel>
+              <TextBlock
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                  FontSize="12"
+                  TextWrapping="Wrap"
+                  Text="{Binding SetupText.LauncherMisc.DesktopPetImageHint}" />
               <CheckBox
                   Content="{Binding SetupText.LauncherMisc.DesktopPetTopmostLabel}"
                   IsChecked="{Binding DesktopPetTopmost}" />

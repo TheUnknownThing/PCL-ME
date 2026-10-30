@@ -3583,7 +3583,7 @@ desktop:
     quit: "Quit"
   pet:
     title: "PCL-ME desktop pet"
-    hint: "Drag to move. Click to interact. Double-click to show the launcher. Right-click for more actions."
+    hint: "Click to show the launcher. Drag to move. Right-click for game launch and other actions."
   settings:
     header: "Tray and desktop pet"
     keep_running: "Keep running in the tray when closing or minimizing"
@@ -3591,3 +3591,16 @@ desktop:
     topmost: "Keep pet on top"
     scale: "Pet size"
     hint: "Quit from the tray or pet menu to exit. If no tray is available, the launcher stays accessible. Launching from either menu shows the launcher for any required prompts."
+    choose_image: "Choose image"
+    reset_image: "Use bundled pet"
+    image_filter: "Pet images"
+    image_hint: "PNG, JPEG, WebP, or BMP. A transparent PNG works best."
+    image_error_title: "Could not use pet image"
+    image_error_message: "Choose a valid image up to 4096 × 4096 pixels and 10 MB."
+    appearance: "Appearance"
+    custom_image: "Custom image"
+  appearances:
+    creeper: "Creeper"
+    slime: "Slime"
+    grass_block: "Grass block"
+    enderman: "Enderman"

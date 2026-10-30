@@ -10,6 +10,9 @@ internal static class FrontendDesktopSettingsService
     internal const string PetEnabledKey = "UiDesktopPetEnabled";
     internal const string PetTopmostKey = "UiDesktopPetTopmost";
     internal const string PetScaleKey = "UiDesktopPetScale";
+    internal const string PetImagePathKey = "UiDesktopPetImage";
+    internal const string PetAppearanceKey = "UiDesktopPetAppearance";
+    internal static readonly string[] BuiltinAppearances = ["creeper", "slime", "grass_block", "enderman"];
     internal const string PetXKey = "UiDesktopPetX";
     internal const string PetYKey = "UiDesktopPetY";
 
@@ -17,7 +20,13 @@ internal static class FrontendDesktopSettingsService
         ReadValue(config, KeepRunningInTrayKey, false),
         ReadValue(config, PetEnabledKey, false),
         ReadValue(config, PetTopmostKey, true),
-        NormalizeScale(ReadValue(config, PetScaleKey, 1d)));
+        NormalizeScale(ReadValue(config, PetScaleKey, 1d)),
+        ReadValue(config, PetImagePathKey, string.Empty),
+        NormalizeAppearance(ReadValue(config, PetAppearanceKey, "creeper")));
+
+    public static string NormalizeAppearance(string value) => BuiltinAppearances.Contains(value, StringComparer.Ordinal)
+        ? value
+        : "creeper";
 
     public static PixelPoint? ReadPosition(YamlFileProvider config) =>
         config.Exists(PetXKey) && config.Exists(PetYKey)

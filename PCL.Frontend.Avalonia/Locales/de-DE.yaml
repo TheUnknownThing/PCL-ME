@@ -3573,7 +3573,7 @@ desktop:
     quit: "Beenden"
   pet:
     title: "PCL-ME Desktop-Begleiter"
-    hint: "Zum Verschieben ziehen. Zum Interagieren klicken. Doppelklicken, um den Launcher anzuzeigen. Rechtsklicken für weitere Aktionen."
+    hint: "Klicken, um den Launcher anzuzeigen. Zum Verschieben ziehen. Rechtsklicken zum Spielstart und für weitere Aktionen."
   settings:
     header: "Infobereich und Desktop-Begleiter"
     keep_running: "Beim Schließen oder Minimieren im Infobereich weiterlaufen"
@@ -3581,3 +3581,16 @@ desktop:
     topmost: "Begleiter im Vordergrund halten"
     scale: "Größe des Begleiters"
     hint: "Zum Beenden den Menüpunkt Beenden im Infobereich oder beim Begleiter verwenden. Ohne Infobereich bleibt der Launcher erreichbar. Beim Start über diese Menüs wird der Launcher für erforderliche Rückfragen angezeigt."
+    choose_image: "Bild auswählen"
+    reset_image: "Integrierten Begleiter verwenden"
+    image_filter: "Begleiterbilder"
+    image_hint: "PNG, JPEG, WebP oder BMP. Ein transparentes PNG eignet sich am besten."
+    image_error_title: "Bild konnte nicht verwendet werden"
+    image_error_message: "Wähle ein gültiges Bild mit höchstens 4096 × 4096 Pixeln und 10 MB."
+    appearance: "Aussehen"
+    custom_image: "Eigenes Bild"
+  appearances:
+    creeper: "Creeper"
+    slime: "Schleim"
+    grass_block: "Grasblock"
+    enderman: "Enderman"

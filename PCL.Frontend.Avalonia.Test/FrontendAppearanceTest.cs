@@ -44,8 +44,9 @@ public sealed class FrontendAppearanceTest
             launcher.DesktopPetEnabled = true;
             launcher.DesktopPetTopmost = false;
             launcher.DesktopPetScale = 1.5;
+            launcher.SelectedDesktopPetAppearanceIndex = 1;
             fixture.Actions.FlushPendingSettings();
-            var expected = new FrontendDesktopSettings(true, true, false, 1.5);
+            var expected = new FrontendDesktopSettings(true, true, false, 1.5, PetAppearance: "slime");
             Assert.AreEqual(expected, FrontendDesktopSettingsService.Read(new YamlFileProvider(fixture.Paths.LocalConfigPath)));
 
             fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
@@ -54,6 +55,25 @@ public sealed class FrontendAppearanceTest
             fixture.I18n.SetLocale("zh-Hans");
             Tick();
             Assert.AreEqual(expected, launcher.DesktopSettings);
+
+            var customImage = Path.Combine(fixture.Paths.DataDirectory, "custom.png");
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetImagePathKey, customImage);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            Assert.AreEqual(customImage, launcher.DesktopPetImagePath);
+            Assert.AreEqual(4, launcher.SelectedDesktopPetAppearanceIndex);
+            Assert.IsTrue(launcher.ResetDesktopPetImageCommand.CanExecute(null));
+            launcher.ResetDesktopPetImageCommand.Execute(null);
+            Assert.IsFalse(launcher.HasDesktopPetImage);
+            Assert.AreEqual(string.Empty, fixture.Paths.OpenLocalConfigProvider().Get<string>(FrontendDesktopSettingsService.PetImagePathKey));
+            Assert.AreEqual(1, launcher.SelectedDesktopPetAppearanceIndex);
+
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetImagePathKey, customImage);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            launcher.SelectedDesktopPetAppearanceIndex = 2;
+            Assert.IsFalse(launcher.HasDesktopPetImage, "Selecting a bundled appearance must replace the custom image.");
+            Assert.AreEqual("grass_block", launcher.DesktopSettings.PetAppearance);
 
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetXKey, -1800);
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetYKey, 200);
