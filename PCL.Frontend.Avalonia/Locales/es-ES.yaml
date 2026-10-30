@@ -1486,6 +1486,10 @@ setup:
         summary: Mantenedor de PCL-ME.
         action: Abrir perfil
         command: Abrir perfil de GitHub
+      contributor:
+        summary: Colaborador de PCL-ME.
+        action: Abrir perfil
+        command: Abrir perfil de GitHub
       repo:
         title: PCL-ME
         action: Repositorio abierto
@@ -3622,9 +3626,7 @@ desktop:
     action_none: "No hacer nada"
     action_play_animation: "Reproducir animación de interacción"
   appearances:
-    creeper: "Creeper"
     slime: "Slime"
-    grass_block: "Bloque de césped"
     enderman: "Enderman"
   presets:
     creeper_gif: "Creeper"

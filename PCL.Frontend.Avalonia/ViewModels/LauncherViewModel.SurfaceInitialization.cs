@@ -54,6 +54,12 @@ internal sealed partial class LauncherViewModel
                 _i18n.T("setup.about.project.maintainer.action"),
                 CreateLinkCommand(_i18n.T("setup.about.project.maintainer.command"), "https://github.com/wanoful")),
             new AboutEntryViewModel(
+                "sclass53",
+                _i18n.T("setup.about.project.contributor.summary"),
+                LoadLauncherBitmap("Images", "Heads", "sclass53.png"),
+                _i18n.T("setup.about.project.contributor.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.contributor.command"), "https://github.com/sclass53")),
+            new AboutEntryViewModel(
                 _i18n.T("setup.about.project.repo.title"),
                 _setupComposition.About.LauncherVersionSummary,
                 LoadLauncherBitmap("Images", "icon.png"),

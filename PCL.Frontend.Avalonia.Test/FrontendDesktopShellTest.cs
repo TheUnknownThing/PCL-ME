@@ -316,18 +316,18 @@ public sealed class FrontendDesktopShellTest
     {
         await Run(() =>
         {
-            foreach (var appearance in FrontendDesktopSettingsService.BuiltinAppearances)
+            foreach (var preset in PetPresetCatalog.All.Where(preset => preset.Kind == PetPresetKind.VectorMascot))
             {
                 var window = new Window();
                 using var shell = CreateShell(window);
                 shell.SetTrayHostAvailable(false);
                 window.Show();
-                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetPresetId: appearance,
+                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetPresetId: preset.Id,
                     PetClickAction: PetAction.ShowLauncher));
                 window.Close();
                 Assert.IsFalse(window.IsVisible);
                 var pet = shell.Pet!;
-                Assert.AreEqual(appearance, pet.Sprite.Appearance);
+                Assert.AreSame(preset, pet.Sprite.Preset);
                 var click = new Point(40, 40);
                 pet.MouseDown(click, MouseButton.Left, RawInputModifiers.None);
                 pet.MouseUp(click, MouseButton.Left, RawInputModifiers.None);
@@ -342,13 +342,13 @@ public sealed class FrontendDesktopShellTest
     {
         await Run(() =>
         {
-            foreach (var appearance in FrontendDesktopSettingsService.BuiltinAppearances)
+            foreach (var preset in PetPresetCatalog.All.Where(preset => preset.Kind == PetPresetKind.VectorMascot))
             {
                 var window = new Window();
                 using var shell = CreateShell(window);
                 shell.SetTrayHostAvailable(false);
                 window.Show();
-                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetPresetId: appearance,
+                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetPresetId: preset.Id,
                     PetClickAction: PetAction.PlayAnimation));
                 var pet = shell.Pet!;
                 var click = new Point(40, 40);
@@ -382,10 +382,15 @@ public sealed class FrontendDesktopShellTest
                 shell.ApplySettings(new(PetEnabled: true, PetUseCustom: true, PetScale: 1.5, PetImagePath: path));
                 Assert.AreSame(image, pet.Sprite.CustomImage, "Changing size must reuse the decoded image.");
                 shell.ApplySettings(new(PetEnabled: true, PetUseCustom: true, PetImagePath: Path.Combine(root, "missing.png")));
-                Assert.IsNull(pet.Sprite.CustomImage);
+                Assert.AreEqual("creeper_gif", pet.Sprite.Preset?.Id);
+                Assert.IsNotNull(pet.Sprite.CurrentImage);
                 Assert.IsTrue(pet.IsVisible);
                 shell.ApplySettings(new(PetEnabled: true));
                 Assert.IsNotNull(pet.Sprite.Preset, "Switching back to a preset must load it again.");
+                shell.ApplySettings(new(PetEnabled: true, PetPresetId: "campfire_gif"));
+                shell.ApplySettings(new(PetEnabled: true, PetUseCustom: true));
+                Assert.AreEqual("creeper_gif", pet.Sprite.Preset?.Id,
+                    "An empty custom image must use the default preset too.");
                 shell.Quit();
             }
             finally

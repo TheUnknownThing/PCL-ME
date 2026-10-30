@@ -1483,6 +1483,10 @@ setup:
         summary: PCL-ME 维护者。
         action: 打开主页
         command: 打开 GitHub 个人主页
+      contributor:
+        summary: PCL-ME 贡献者。
+        action: 打开主页
+        command: 打开 GitHub 个人主页
       repo:
         title: PCL-ME
         action: 打开仓库
@@ -3608,9 +3612,7 @@ desktop:
     action_none: "无操作"
     action_play_animation: "播放交互动画"
   appearances:
-    creeper: "苦力怕"
     slime: "史莱姆"
-    grass_block: "草方块"
     enderman: "末影人"
   presets:
     creeper_gif: "苦力怕"

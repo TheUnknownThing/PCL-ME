@@ -244,7 +244,7 @@ public sealed class FrontendDesktopPetImageTest
             Assert.IsNotNull(fire);
             Assert.AreEqual(40, fire!.Frames.Count);
 
-            Assert.AreEqual("creeper", PetPresetCatalog.Find("missing").Id);
+            Assert.AreEqual("creeper_gif", PetPresetCatalog.Find("missing").Id);
             return Task.CompletedTask;
         });
     }

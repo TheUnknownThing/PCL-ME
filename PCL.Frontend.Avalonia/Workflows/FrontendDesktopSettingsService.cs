@@ -17,21 +17,14 @@ internal static class FrontendDesktopSettingsService
     internal const string PetDoubleClickActionKey = "UiDesktopPetDoubleClickAction";
     internal const string WindowCloseActionKey = "UiWindowCloseAction";
 
-    // Legacy keys, read once for migration.
-    internal const string PetAppearanceKey = "UiDesktopPetAppearance";
-
     internal const string PetXKey = "UiDesktopPetX";
     internal const string PetYKey = "UiDesktopPetY";
-
-    internal static readonly string[] BuiltinAppearances = ["creeper", "slime", "grass_block", "enderman"];
 
     public static FrontendDesktopSettings Read(YamlFileProvider config)
     {
         var imagePath = ReadValue(config, PetImagePathKey, string.Empty);
         var keepRunningInTray = ReadValue(config, KeepRunningInTrayKey, false);
-        var presetId = NormalizePreset(ReadValue(config, PetPresetKey, string.Empty),
-            ReadValue(config, PetAppearanceKey, string.Empty));
-        MigrateLegacyAppearance(config, presetId);
+        var presetId = NormalizePreset(ReadValue(config, PetPresetKey, string.Empty));
         return new FrontendDesktopSettings(
             keepRunningInTray,
             ReadValue(config, PetEnabledKey, true),
@@ -45,36 +38,11 @@ internal static class FrontendDesktopSettingsService
             ReadCloseAction(config));
     }
 
-    /// <summary>
-    /// Writes the resolved preset back and drops the legacy appearance key so the
-    /// migration only happens once instead of acting as a permanent fallback.
-    /// </summary>
-    private static void MigrateLegacyAppearance(YamlFileProvider config, string presetId)
-    {
-        if (!config.Exists(PetAppearanceKey)) return;
-        try
-        {
-            if (!config.Exists(PetPresetKey)) config.Set(PetPresetKey, presetId);
-            config.Remove(PetAppearanceKey);
-            config.Sync();
-        }
-        catch
-        {
-            // A read-only or otherwise locked configuration keeps the legacy key;
-            // the launcher-misc reset list still removes it explicitly.
-        }
-    }
-
-    public static string NormalizePreset(string? value, string? legacyAppearance = null)
+    public static string NormalizePreset(string? value)
     {
         if (PetPresetCatalog.IsKnown(value)) return value!;
-        if (PetPresetCatalog.IsKnown(legacyAppearance)) return legacyAppearance!;
         return PetPresetCatalog.DefaultId;
     }
-
-    public static string NormalizeAppearance(string value) => BuiltinAppearances.Contains(value, StringComparer.Ordinal)
-        ? value
-        : "creeper";
 
     public static WindowCloseAction NormalizeCloseAction(string? value, WindowCloseAction fallback) =>
         Enum.TryParse<WindowCloseAction>(value, true, out var action) ? action : fallback;

@@ -18,8 +18,6 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     private static readonly IBrush Dark = new SolidColorBrush(Color.Parse("#4C943D"));
     private static readonly IBrush Face = new SolidColorBrush(Color.Parse("#203728"));
     private static readonly IBrush Shadow = new SolidColorBrush(Color.FromArgb(40, 0, 0, 0));
-    private static readonly IBrush Dirt = new SolidColorBrush(Color.Parse("#8B5B36"));
-    private static readonly IBrush DirtLight = new SolidColorBrush(Color.Parse("#B08050"));
     private static readonly IBrush Ender = new SolidColorBrush(Color.Parse("#26232E"));
     private static readonly IBrush Purple = new SolidColorBrush(Color.Parse("#DC8AFF"));
     private static readonly IBrush Heart = new SolidColorBrush(Color.Parse("#FF7195"));
@@ -40,7 +38,6 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     private int Bob => _interactionFrames > 0 ? (_interactionFrames % 4 is 0 or 1 ? -2 : 0) : _frame % 8 is 3 or 4 ? -1 : 0;
     private bool _disposed;
     private string _imagePath = string.Empty;
-    private string _appearance = "creeper";
     private PetPreset? _preset;
 
     public DesktopPetSprite(bool animateCustomImage = true)
@@ -54,22 +51,13 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     internal bool IsAnimationRunning => _timer.IsEnabled;
     internal Bitmap? CustomImage => _idleAnimation?.FirstFrame ?? _customImage;
     internal Bitmap? CurrentImage => _currentImage;
-    internal string Appearance => _appearance;
     internal bool IsReacting => _interactionFrames > 0 || _showingClick;
     internal PetPreset? Preset => _preset;
-
-    public void SetAppearance(string appearance)
-    {
-        var normalized = FrontendDesktopSettingsService.NormalizeAppearance(appearance);
-        if (_appearance == normalized) return;
-        _appearance = normalized;
-        InvalidateVisual();
-    }
 
     /// <summary>Shows a user-provided static image instead of a preset.</summary>
     public void SetImagePath(string path)
     {
-        if (_disposed || string.Equals(path, _imagePath, StringComparison.Ordinal)
+        if (_disposed || _preset is null && string.Equals(path, _imagePath, StringComparison.Ordinal)
             && (_customImage is not null || string.IsNullOrWhiteSpace(path))) return;
         var nextImage = FrontendDesktopPetImageService.TryLoad(path);
         DisposeAnimations();
@@ -91,7 +79,6 @@ internal sealed class DesktopPetSprite : Control, IDisposable
         _imagePath = string.Empty;
         if (preset.Kind == PetPresetKind.VectorMascot)
         {
-            _appearance = FrontendDesktopSettingsService.NormalizeAppearance(preset.Id);
             _currentImage = null;
             ResetAnimationState();
             InvalidateVisual();
@@ -111,8 +98,7 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     public void SyncAnimation()
     {
         var needsAnimation = _idleAnimation is not null
-                              || _preset?.Kind == PetPresetKind.VectorMascot
-                              || (_preset is null && _customImage is null);
+                              || _preset?.Kind == PetPresetKind.VectorMascot;
         if (!_disposed && _animate && needsAnimation && IsEffectivelyVisible
             && TopLevel.GetTopLevel(this) is Window { IsVisible: true, WindowState: not WindowState.Minimized })
         {
@@ -134,7 +120,7 @@ internal sealed class DesktopPetSprite : Control, IDisposable
         if (_disposed) return;
         if (_idleAnimation is null)
         {
-            if (_preset is null || _preset.Kind == PetPresetKind.VectorMascot)
+            if (_preset?.Kind == PetPresetKind.VectorMascot)
             {
                 _interactionFrames = 8;
                 if (!_timer.IsEnabled && _animate) SyncAnimation();
@@ -161,9 +147,6 @@ internal sealed class DesktopPetSprite : Control, IDisposable
                 return;
         }
     }
-
-    /// <summary>Alias kept for the existing vector reaction behaviour.</summary>
-    public void Interact() => PlayClickAnimation();
 
     /// <summary>Restarts the idle animation from its first frame.</summary>
     public void RestartAnimation()
@@ -194,6 +177,7 @@ internal sealed class DesktopPetSprite : Control, IDisposable
             return;
         }
 
+        if (_preset?.Kind != PetPresetKind.VectorMascot) return;
         using var scale = context.PushTransform(Matrix.CreateScale(Bounds.Width / 20, Bounds.Height / 26));
         context.DrawEllipse(Shadow, null, new Point(10, 24), 7, 1);
         if (_interactionFrames > 0)
@@ -202,34 +186,11 @@ internal sealed class DesktopPetSprite : Control, IDisposable
             DrawHeart(context, 15, 1);
         }
         using var translate = context.PushTransform(Matrix.CreateTranslation(0, Bob));
-        switch (_appearance)
+        switch (_preset.Id)
         {
             case "slime": DrawSlime(context); return;
-            case "grass_block": DrawGrassBlock(context); return;
             case "enderman": DrawEnderman(context); return;
         }
-        DrawCreeper(context);
-    }
-
-    private static void DrawCreeper(DrawingContext context)
-    {
-        context.DrawRectangle(Outline, null, new Rect(4, 2, 12, 12));
-        context.DrawRectangle(Green, null, new Rect(5, 3, 10, 10));
-        context.DrawRectangle(Light, null, new Rect(5, 3, 10, 2));
-        context.DrawRectangle(Dark, null, new Rect(12, 5, 3, 8));
-        context.DrawRectangle(Light, null, new Rect(6, 6, 2, 1));
-        context.DrawRectangle(Face, null, new Rect(6, 7, 3, 2));
-        context.DrawRectangle(Face, null, new Rect(11, 7, 3, 2));
-        context.DrawRectangle(Face, null, new Rect(9, 9, 2, 3));
-        context.DrawRectangle(Face, null, new Rect(8, 10, 1, 3));
-        context.DrawRectangle(Face, null, new Rect(11, 10, 1, 3));
-        context.DrawRectangle(Outline, null, new Rect(6, 14, 8, 7));
-        context.DrawRectangle(Green, null, new Rect(7, 14, 6, 6));
-        context.DrawRectangle(Dark, null, new Rect(11, 14, 2, 6));
-        context.DrawRectangle(Outline, null, new Rect(3, 20, 6, 4));
-        context.DrawRectangle(Outline, null, new Rect(11, 20, 6, 4));
-        context.DrawRectangle(Green, null, new Rect(4, 20, 4, 2));
-        context.DrawRectangle(Dark, null, new Rect(12, 20, 4, 2));
     }
 
     private static void DrawSlime(DrawingContext context)
@@ -241,21 +202,6 @@ internal sealed class DesktopPetSprite : Control, IDisposable
         context.DrawRectangle(Light, null, new Rect(4, 13, 2, 6));
         context.DrawRectangle(Face, null, new Rect(6, 15, 3, 3));
         context.DrawRectangle(Face, null, new Rect(12, 15, 3, 3));
-        context.DrawRectangle(Face, null, new Rect(9, 20, 3, 1));
-    }
-
-    private static void DrawGrassBlock(DrawingContext context)
-    {
-        context.DrawRectangle(Outline, null, new Rect(2, 7, 16, 17));
-        context.DrawRectangle(Dirt, null, new Rect(3, 8, 14, 15));
-        context.DrawRectangle(Light, null, new Rect(3, 8, 14, 3));
-        context.DrawRectangle(Green, null, new Rect(3, 11, 14, 3));
-        context.DrawRectangle(Green, null, new Rect(5, 14, 3, 2));
-        context.DrawRectangle(Green, null, new Rect(13, 14, 2, 3));
-        context.DrawRectangle(DirtLight, null, new Rect(4, 18, 2, 2));
-        context.DrawRectangle(DirtLight, null, new Rect(14, 21, 2, 1));
-        context.DrawRectangle(Face, null, new Rect(6, 16, 2, 2));
-        context.DrawRectangle(Face, null, new Rect(12, 16, 2, 2));
         context.DrawRectangle(Face, null, new Rect(9, 20, 3, 1));
     }
 

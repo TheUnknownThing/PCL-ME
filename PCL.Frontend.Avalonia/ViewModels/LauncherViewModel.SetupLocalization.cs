@@ -299,11 +299,9 @@ internal sealed partial class LauncherViewModel
                 DesktopPetDoubleClickActionLabel = _i18n.T("desktop.settings.double_click_action"),
                 DesktopPetPresetOptions =
                 [
-                    _i18n.T("desktop.appearances.creeper") + " (SVG)",
-                    _i18n.T("desktop.appearances.slime") + " (SVG)",
-                    _i18n.T("desktop.appearances.grass_block") + " (SVG)",
-                    _i18n.T("desktop.appearances.enderman") + " (SVG)",
                     _i18n.T("desktop.presets.creeper_gif") + " (GIF)",
+                    _i18n.T("desktop.appearances.slime") + " (SVG)",
+                    _i18n.T("desktop.appearances.enderman") + " (SVG)",
                     _i18n.T("desktop.presets.campfire_gif") + " (GIF)"
                 ],
                 DesktopPetClickActionOptions =

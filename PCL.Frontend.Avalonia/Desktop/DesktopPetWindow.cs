@@ -81,6 +81,8 @@ internal sealed class DesktopPetWindow : Window
             if (settings.PetUseCustom)
             {
                 _sprite.SetImagePath(settings.PetImagePath);
+                if (_sprite.CustomImage is null)
+                    _sprite.SetPreset(PetPresetCatalog.Find(PetPresetCatalog.DefaultId), decodeSide);
             }
             else
             {

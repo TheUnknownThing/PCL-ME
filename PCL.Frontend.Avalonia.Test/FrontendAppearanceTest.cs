@@ -40,6 +40,10 @@ public sealed class FrontendAppearanceTest
             var launcher = fixture.Launcher;
             Assert.IsFalse(launcher.KeepRunningInTray);
             Assert.IsTrue(launcher.DesktopPetEnabled);
+            Assert.AreEqual("creeper_gif", launcher.DesktopSettings.PetPresetId);
+            Assert.AreEqual(fixture.I18n.T("desktop.presets.creeper_gif") + " (GIF)",
+                launcher.DesktopPetPresetOptions[launcher.SelectedDesktopPetPresetIndex]);
+            Assert.AreEqual(4, launcher.DesktopPetPresetOptions.Count);
             launcher.KeepRunningInTray = true;
             launcher.DesktopPetEnabled = true;
             launcher.DesktopPetTopmost = false;
@@ -74,21 +78,17 @@ public sealed class FrontendAppearanceTest
 
             launcher.SelectedDesktopPetPresetIndex = 2;
             Assert.IsFalse(launcher.DesktopPetUseCustom);
-            Assert.AreEqual("grass_block", launcher.DesktopSettings.PetPresetId);
+            Assert.AreEqual("enderman", launcher.DesktopSettings.PetPresetId);
             Assert.AreEqual(customImage, launcher.DesktopPetImagePath,
                 "Switching to a preset keeps the custom image for later reuse.");
 
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetXKey, -1800);
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetYKey, 200);
-            // Simulate a profile upgraded from the pre-preset build, where only the legacy key exists.
-            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
             launcher.ResetLauncherMiscSettingsCommand.Execute(null);
             Tick();
             Assert.AreEqual(new FrontendDesktopSettings(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray),
                 launcher.DesktopSettings);
             Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(fixture.Paths.OpenLocalConfigProvider()));
-            Assert.IsFalse(fixture.Paths.OpenLocalConfigProvider().Exists(FrontendDesktopSettingsService.PetAppearanceKey),
-                "Resetting must drop the migrated legacy appearance key.");
         });
     }
 

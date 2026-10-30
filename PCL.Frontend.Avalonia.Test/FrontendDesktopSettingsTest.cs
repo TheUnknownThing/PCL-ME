@@ -20,6 +20,7 @@ public sealed class FrontendDesktopSettingsTest
             var provider = new YamlFileProvider(path);
             Assert.AreEqual(new FrontendDesktopSettings(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray),
                 FrontendDesktopSettingsService.Read(provider));
+            Assert.AreEqual("creeper_gif", FrontendDesktopSettingsService.Read(provider).PetPresetId);
             Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(provider));
             provider.Set(FrontendDesktopSettingsService.KeepRunningInTrayKey, true);
             provider.Set(FrontendDesktopSettingsService.PetEnabledKey, true);
@@ -48,45 +49,24 @@ public sealed class FrontendDesktopSettingsTest
     }
 
     [TestMethod]
-    public void LegacyAppearance_IsMigratedToThePresetKeyAndRemoved()
+    [DataRow("creeper")]
+    [DataRow("grass_block")]
+    [DataRow("unknown")]
+    public void UnavailablePreset_UsesTheDefaultGif(string presetId)
     {
-        var root = Path.Combine(Path.GetTempPath(), "pcl-desktop-migrate-" + Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(Path.GetTempPath(), "pcl-desktop-test-" + Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(root);
             var path = Path.Combine(root, "settings.yaml");
             var provider = new YamlFileProvider(path);
-            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
+            provider.Set(FrontendDesktopSettingsService.PetPresetKey, presetId);
             provider.Sync();
 
-            var settings = FrontendDesktopSettingsService.Read(provider);
-            Assert.AreEqual("slime", settings.PetPresetId);
-
-            var reopened = new YamlFileProvider(path);
-            Assert.AreEqual("slime", reopened.Get<string>(FrontendDesktopSettingsService.PetPresetKey));
-            Assert.IsFalse(reopened.Exists(FrontendDesktopSettingsService.PetAppearanceKey));
-        }
-        finally
-        {
-            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
-        }
-    }
-
-    [TestMethod]
-    public void ExplicitPreset_WinsOverLegacyAppearanceAndLegacyKeyIsRemoved()
-    {
-        var root = Path.Combine(Path.GetTempPath(), "pcl-desktop-migrate-" + Guid.NewGuid().ToString("N"));
-        try
-        {
-            Directory.CreateDirectory(root);
-            var path = Path.Combine(root, "settings.yaml");
-            var provider = new YamlFileProvider(path);
-            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
-            provider.Set(FrontendDesktopSettingsService.PetPresetKey, "campfire_gif");
-            provider.Sync();
-
-            Assert.AreEqual("campfire_gif", FrontendDesktopSettingsService.Read(provider).PetPresetId);
-            Assert.IsFalse(new YamlFileProvider(path).Exists(FrontendDesktopSettingsService.PetAppearanceKey));
+            Assert.AreEqual("creeper_gif",
+                FrontendDesktopSettingsService.Read(new YamlFileProvider(path)).PetPresetId);
+            Assert.AreEqual("creeper_gif", PetPresetCatalog.Find(presetId).Id);
+            Assert.IsFalse(PetPresetCatalog.IsKnown(presetId));
         }
         finally
         {
@@ -117,9 +97,9 @@ public sealed class FrontendDesktopSettingsTest
         Assert.AreEqual(1, FrontendDesktopSettingsService.NormalizeScale(double.PositiveInfinity));
         Assert.AreEqual(0.5, FrontendDesktopSettingsService.NormalizeScale(-100));
         Assert.AreEqual(2, FrontendDesktopSettingsService.NormalizeScale(100));
-        Assert.AreEqual("creeper", FrontendDesktopSettingsService.NormalizeAppearance("unknown"));
         Assert.AreEqual("creeper_gif", FrontendDesktopSettingsService.NormalizePreset("unknown"));
-        Assert.AreEqual("slime", FrontendDesktopSettingsService.NormalizePreset(null, "slime"));
+        Assert.AreEqual("creeper_gif", FrontendDesktopSettingsService.NormalizePreset(null));
+        Assert.AreEqual("slime", FrontendDesktopSettingsService.NormalizePreset("slime"));
         Assert.AreEqual("campfire_gif", FrontendDesktopSettingsService.NormalizePreset("campfire_gif"));
         Assert.AreEqual(WindowCloseAction.MinimizeToTray,
             FrontendDesktopSettingsService.NormalizeCloseAction("MinimizeToTray", WindowCloseAction.Exit));

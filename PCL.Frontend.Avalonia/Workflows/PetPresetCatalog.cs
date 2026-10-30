@@ -8,27 +8,22 @@ namespace PCL.Frontend.Avalonia.Workflows;
 internal static class PetPresetCatalog
 {
     private const string AssetRoot = "avares://PCL.Frontend.Avalonia/Assets/Pets/";
-    private const double VectorAspectRatio = 20d / 26d;
 
     public const string DefaultId = "creeper_gif";
 
     public static IReadOnlyList<PetPreset> All { get; } =
     [
-        new("creeper", PetPresetKind.VectorMascot),
-        new("slime", PetPresetKind.VectorMascot),
-        new("grass_block", PetPresetKind.VectorMascot),
-        new("enderman", PetPresetKind.VectorMascot),
         new("creeper_gif", PetPresetKind.GifAnimation,
             AssetRoot + "creeper_n.gif", AssetRoot + "creeper_l.gif",
             PetClickAnimationMode.WaitIdleLoopEnd, AspectRatio: 1),
+        new("slime", PetPresetKind.VectorMascot),
+        new("enderman", PetPresetKind.VectorMascot),
         new("campfire_gif", PetPresetKind.GifAnimation,
             AssetRoot + "campfire.gif", AssetRoot + "campfire.gif",
             PetClickAnimationMode.None, AspectRatio: 1)
     ];
 
     public static IReadOnlyList<string> Ids { get; } = All.Select(preset => preset.Id).ToArray();
-
-    public static double DefaultAspectRatio => VectorAspectRatio;
 
     /// <summary>Resolves a persisted id, falling back to the default preset.</summary>
     public static PetPreset Find(string? id) =>

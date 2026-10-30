@@ -1483,6 +1483,10 @@ setup:
         summary: PCL-ME maintainer.
         action: Open profile
         command: Open GitHub profile
+      contributor:
+        summary: PCL-ME contributor.
+        action: Open profile
+        command: Open GitHub profile
       repo:
         title: PCL-ME
         action: Open repository
@@ -3608,9 +3612,7 @@ desktop:
     action_none: "Do nothing"
     action_play_animation: "Play interaction animation"
   appearances:
-    creeper: "Creeper"
     slime: "Slime"
-    grass_block: "Grass block"
     enderman: "Enderman"
   presets:
     creeper_gif: "Creeper"

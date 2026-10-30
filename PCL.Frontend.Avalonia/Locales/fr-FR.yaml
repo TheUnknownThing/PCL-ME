@@ -1481,6 +1481,10 @@ setup:
         summary: Responsable de maintenance de PCL-ME.
         action: Ouvrir le profil
         command: Ouvrir le profil GitHub
+      contributor:
+        summary: Contributeur à PCL-ME.
+        action: Ouvrir le profil
+        command: Ouvrir le profil GitHub
       repo:
         title: PCL-ME
         action: Dépôt ouvert
@@ -3598,9 +3602,7 @@ desktop:
     action_none: "Ne rien faire"
     action_play_animation: "Lire l’animation d’interaction"
   appearances:
-    creeper: "Creeper"
     slime: "Slime"
-    grass_block: "Bloc d’herbe"
     enderman: "Enderman"
   presets:
     creeper_gif: "Creeper"

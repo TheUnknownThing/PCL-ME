@@ -1481,6 +1481,10 @@ setup:
         summary: PCL-ME 유지 관리자.
         action: 프로필 열기
         command: GitHub 프로필 열기
+      contributor:
+        summary: PCL-ME 기여자.
+        action: 프로필 열기
+        command: GitHub 프로필 열기
       repo:
         title: PCL-ME
         action: 저장소 열기
@@ -3598,9 +3602,7 @@ desktop:
     action_none: "아무 작업 안 함"
     action_play_animation: "상호작용 애니메이션 재생"
   appearances:
-    creeper: "크리퍼"
     slime: "슬라임"
-    grass_block: "잔디 블록"
     enderman: "엔더맨"
   presets:
     creeper_gif: "크리퍼"

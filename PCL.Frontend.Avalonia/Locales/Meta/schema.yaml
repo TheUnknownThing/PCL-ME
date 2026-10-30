@@ -1671,6 +1671,10 @@ setup:
         summary: []
         action: []
         command: []
+      contributor:
+        summary: []
+        action: []
+        command: []
       repo:
         title: []
         action: []
@@ -4133,9 +4137,7 @@ desktop:
     action_none: []
     action_play_animation: []
   appearances:
-    creeper: []
     slime: []
-    grass_block: []
     enderman: []
   presets:
     creeper_gif: []
