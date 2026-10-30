@@ -33,7 +33,7 @@ internal sealed class DesktopShellController : IDisposable
     private readonly ContextMenu _petMenu;
     private readonly Func<FrontendDesktopSettings, WindowIcon> _petIconFactory;
     private WindowIcon? _petTrayIcon;
-    private string? _trayIconAppearance;
+    private string? _trayIconPreset;
     private string? _trayIconImagePath;
     private object? _trayIconImageSource;
     private FrontendDesktopSettings _settings = new();
@@ -120,7 +120,8 @@ internal sealed class DesktopShellController : IDisposable
             if (_pet is null)
             {
                 _pet = new DesktopPetWindow();
-                _pet.RestoreRequested += ShowLauncher;
+                _pet.SingleClicked += () => ExecutePetAction(_settings.PetClickAction);
+                _pet.DoubleClicked += () => ExecutePetAction(_settings.PetDoubleClickAction);
                 _pet.PositionSaved += SavePetPosition;
                 _pet.Closing += OnPetClosing;
                 _pet.PropertyChanged += OnPetPropertyChanged;
@@ -165,13 +166,14 @@ internal sealed class DesktopShellController : IDisposable
         }
 
         var source = _pet?.Sprite.CustomImage;
-        if (_petTrayIcon is null || _trayIconAppearance != _settings.PetAppearance
+        var presetId = _settings.PetUseCustom ? string.Empty : _settings.PetPresetId;
+        if (_petTrayIcon is null || _trayIconPreset != presetId
             || _trayIconImagePath != _settings.PetImagePath || !ReferenceEquals(_trayIconImageSource, source))
         {
             try
             {
                 _petTrayIcon = _petIconFactory(_settings);
-                _trayIconAppearance = _settings.PetAppearance;
+                _trayIconPreset = presetId;
                 _trayIconImagePath = _settings.PetImagePath;
                 _trayIconImageSource = source;
             }
@@ -190,6 +192,26 @@ internal sealed class DesktopShellController : IDisposable
         if (_disposed || _savedPetPosition == position) return;
         _savedPetPosition = position;
         if (_pet?.IsVisible == true) _pet.RestorePosition(position);
+    }
+
+    private void ExecutePetAction(PetAction action)
+    {
+        if (_disposed) return;
+        switch (action)
+        {
+            case PetAction.ShowLauncher:
+                ShowLauncher();
+                break;
+            case PetAction.PlayAnimation:
+                _pet?.Sprite.PlayClickAnimation();
+                break;
+            case PetAction.HidePet:
+                PetEnabledChanged?.Invoke(false);
+                break;
+            case PetAction.LaunchSelected:
+                LaunchSelectedInstance();
+                break;
+        }
     }
 
     public void ShowLauncher()
@@ -234,7 +256,10 @@ internal sealed class DesktopShellController : IDisposable
 
     private void UpdateTrayIcon()
     {
-        if (!_settings.KeepRunningInTray && !_settings.PetEnabled)
+        var closeToTray = _settings.CloseAction
+                          ?? (_settings.KeepRunningInTray ? WindowCloseAction.MinimizeToTray : WindowCloseAction.Exit);
+        if (!_settings.KeepRunningInTray && !_settings.PetEnabled
+            && closeToTray != WindowCloseAction.MinimizeToTray)
         {
             if (_trayIcon is not null) _trayIcon.IsVisible = false;
             return;
@@ -296,7 +321,12 @@ internal sealed class DesktopShellController : IDisposable
     private void OnMainWindowClosing(object? sender, WindowClosingEventArgs e)
     {
         // OS shutdown and application Quit must never turn into close-to-tray.
-        if (e.CloseReason != WindowCloseReason.WindowClosing || !_settings.KeepRunningInTray || !HasRecoverySurface) return;
+        if (e.CloseReason != WindowCloseReason.WindowClosing) return;
+        var closeAction = _settings.CloseAction
+                          ?? (_settings.KeepRunningInTray ? WindowCloseAction.MinimizeToTray : WindowCloseAction.Exit);
+        if (closeAction == WindowCloseAction.Exit) return;
+        // Without a tray icon or a visible pet there would be no way back from a hidden launcher.
+        if (!HasRecoverySurface) return;
         e.Cancel = true;
         HideLauncher();
     }

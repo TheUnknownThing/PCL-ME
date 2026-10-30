@@ -11,11 +11,17 @@ namespace PCL.Frontend.Avalonia.Desktop;
 
 internal sealed class DesktopPetWindow : Window
 {
+    private const double BaseHeightDip = 104;
+    private const double CustomAspectRatio = 80d / 104d;
+
     private readonly DesktopPetSprite _sprite = new();
+    private FrontendDesktopSettings? _appliedSettings;
+    private string? _spriteKey;
     private PixelPoint _pointerStart;
     private PixelPoint _windowStart;
     private IPointer? _pointer;
     private bool _dragged;
+    private int _pressClickCount;
 
     public DesktopPetWindow()
     {
@@ -26,7 +32,7 @@ internal sealed class DesktopPetWindow : Window
         ShowActivated = false;
         CanResize = false;
         Width = 80;
-        Height = 104;
+        Height = BaseHeightDip;
         Content = _sprite;
         FrontendWindowIdentity.Apply(this);
         PropertyChanged += (_, e) =>
@@ -34,11 +40,23 @@ internal sealed class DesktopPetWindow : Window
             if (e.Property == IsVisibleProperty || e.Property == WindowStateProperty) _sprite.SyncAnimation();
         };
         Closed += (_, _) => _sprite.Dispose();
+        // RenderScaling is only reliable after the window is opened: reload once at the real DPI.
+        Opened += (_, _) =>
+        {
+            if (_appliedSettings is not { } settings) return;
+            _appliedSettings = null;
+            ApplySettings(settings);
+        };
         Screens.Changed += OnScreensChanged;
         Closed += (_, _) => Screens.Changed -= OnScreensChanged;
     }
 
-    public event Action? RestoreRequested;
+    /// <summary>Raised for a left click that did not turn into a drag.</summary>
+    public event Action? SingleClicked;
+
+    /// <summary>Raised when the second click of a double click completes.</summary>
+    public event Action? DoubleClicked;
+
     public event Action<PixelPoint>? PositionSaved;
 
     internal DesktopPetSprite Sprite => _sprite;
@@ -46,11 +64,38 @@ internal sealed class DesktopPetWindow : Window
     public void ApplySettings(FrontendDesktopSettings settings)
     {
         Topmost = settings.PetTopmost;
-        Width = 80 * settings.PetScale;
-        Height = 104 * settings.PetScale;
-        _sprite.SetImagePath(settings.PetImagePath);
-        _sprite.SetAppearance(settings.PetAppearance);
+        if (_appliedSettings == settings) return;
+        _appliedSettings = settings;
+
+        var preset = PetPresetCatalog.Find(settings.PetPresetId);
+        var aspect = settings.PetUseCustom ? CustomAspectRatio : preset.AspectRatio;
+        PixelPoint? anchor = IsVisible ? GetBottomCenter() : null;
+        Height = Math.Max(24, preset.BaseHeightDip * settings.PetScale);
+        Width = Math.Max(24, Height * aspect);
+
+        var decodeSide = PetPresetCatalog.GetDecodeSide(Height, RenderScaling);
+        var spriteKey = string.Join('|', settings.PetUseCustom, settings.PetPresetId, settings.PetImagePath, decodeSide);
+        if (_spriteKey != spriteKey)
+        {
+            _spriteKey = spriteKey;
+            if (settings.PetUseCustom)
+            {
+                _sprite.SetImagePath(settings.PetImagePath);
+            }
+            else
+            {
+                _sprite.SetPreset(preset, decodeSide);
+            }
+        }
+
+        if (anchor is { } point)
+        {
+            Position = new PixelPoint(
+                (int)Math.Round(point.X - Width * RenderScaling / 2),
+                (int)Math.Round(point.Y - Height * RenderScaling));
+        }
         if (IsVisible) RestorePosition(Position);
+        _sprite.SyncAnimation();
     }
 
     public void SetText(string title, string hint)
@@ -76,6 +121,7 @@ internal sealed class DesktopPetWindow : Window
         _pointerStart = this.PointToScreen(e.GetPosition(this));
         _windowStart = Position;
         _dragged = false;
+        _pressClickCount = e.ClickCount;
         _pointer = e.Pointer;
         e.Pointer.Capture(this);
         e.Handled = true;
@@ -103,10 +149,13 @@ internal sealed class DesktopPetWindow : Window
             RestorePosition(Position);
             PositionSaved?.Invoke(Position);
         }
+        else if (_pressClickCount >= 2)
+        {
+            DoubleClicked?.Invoke();
+        }
         else
         {
-            _sprite.Interact();
-            RestoreRequested?.Invoke();
+            SingleClicked?.Invoke();
         }
         e.Handled = true;
     }
@@ -115,6 +164,12 @@ internal sealed class DesktopPetWindow : Window
     {
         _pointer = null;
         base.OnPointerCaptureLost(e);
+    }
+
+    private PixelPoint GetBottomCenter()
+    {
+        var size = PixelSize.FromSize(new Size(Width, Height), RenderScaling <= 0 ? 1 : RenderScaling);
+        return new PixelPoint(Position.X + size.Width / 2, Position.Y + size.Height);
     }
 
     private void OnScreensChanged(object? sender, EventArgs e) => RestorePosition(Position);

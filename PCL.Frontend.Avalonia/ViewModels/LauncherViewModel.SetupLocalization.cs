@@ -284,15 +284,43 @@ internal sealed partial class LauncherViewModel
                 DesktopPetTopmostLabel = _i18n.T("desktop.settings.topmost"),
                 DesktopPetScaleLabel = _i18n.T("desktop.settings.scale"),
                 DesktopPetImageHint = _i18n.T("desktop.settings.image_hint"),
-                DesktopPetAppearanceLabel = _i18n.T("desktop.settings.appearance"),
-                DesktopPetCustomImageLabel = _i18n.T("desktop.settings.custom_image"),
-                DesktopPetAppearanceOptions =
+                DesktopPetChooseImageButton = _i18n.T("desktop.settings.choose_image"),
+                DesktopPetUseCustomLabel = _i18n.T("desktop.settings.use_custom"),
+                DesktopPetPresetSectionLabel = _i18n.T("desktop.settings.preset_section"),
+                DesktopPetCustomSectionLabel = _i18n.T("desktop.settings.custom_section"),
+                CloseActionLabel = _i18n.T("desktop.settings.close_action"),
+                CloseActionOptions =
                 [
-                    _i18n.T("desktop.appearances.creeper"),
-                    _i18n.T("desktop.appearances.slime"),
-                    _i18n.T("desktop.appearances.grass_block"),
-                    _i18n.T("desktop.appearances.enderman"),
-                    _i18n.T("desktop.settings.choose_image")
+                    _i18n.T("desktop.settings.close_minimize_to_tray"),
+                    _i18n.T("desktop.settings.close_exit")
+                ],
+                DesktopPetPresetLabel = _i18n.T("desktop.settings.preset"),
+                DesktopPetClickActionLabel = _i18n.T("desktop.settings.click_action"),
+                DesktopPetDoubleClickActionLabel = _i18n.T("desktop.settings.double_click_action"),
+                DesktopPetPresetOptions =
+                [
+                    _i18n.T("desktop.appearances.creeper") + " (SVG)",
+                    _i18n.T("desktop.appearances.slime") + " (SVG)",
+                    _i18n.T("desktop.appearances.grass_block") + " (SVG)",
+                    _i18n.T("desktop.appearances.enderman") + " (SVG)",
+                    _i18n.T("desktop.presets.creeper_gif") + " (GIF)",
+                    _i18n.T("desktop.presets.campfire_gif") + " (GIF)"
+                ],
+                DesktopPetClickActionOptions =
+                [
+                    _i18n.T("desktop.settings.action_play_animation"),
+                    _i18n.T("desktop.actions.show_launcher"),
+                    _i18n.T("desktop.actions.hide_pet"),
+                    _i18n.T("desktop.actions.launch_selected"),
+                    _i18n.T("desktop.settings.action_none")
+                ],
+                DesktopPetDoubleClickActionOptions =
+                [
+                    _i18n.T("desktop.actions.show_launcher"),
+                    _i18n.T("desktop.settings.action_play_animation"),
+                    _i18n.T("desktop.actions.hide_pet"),
+                    _i18n.T("desktop.actions.launch_selected"),
+                    _i18n.T("desktop.settings.action_none")
                 ],
                 DesktopHint = _i18n.T("desktop.settings.hint"),
                 SystemCardHeader = _i18n.T("setup.launcher_misc.cards.system.header"),
@@ -346,7 +374,10 @@ internal sealed partial class LauncherViewModel
     private void RaiseSectionBLocalizedProperties()
     {
         RaisePropertyChanged(nameof(SetupText));
-        RaisePropertyChanged(nameof(DesktopPetAppearanceOptions));
+        RaisePropertyChanged(nameof(DesktopPetPresetOptions));
+        RaisePropertyChanged(nameof(DesktopPetClickActionOptions));
+        RaisePropertyChanged(nameof(DesktopPetDoubleClickActionOptions));
+        RaisePropertyChanged(nameof(CloseActionOptions));
         RaisePropertyChanged(nameof(UiFeatureHiddenCardHeader));
         RaisePropertyChanged(nameof(LaunchIsolationOptions));
         RaisePropertyChanged(nameof(LaunchVisibilityOptions));
@@ -577,9 +608,18 @@ internal sealed class SetupLauncherMiscLocalization
     public required string DesktopPetTopmostLabel { get; init; }
     public required string DesktopPetScaleLabel { get; init; }
     public required string DesktopPetImageHint { get; init; }
-    public required string DesktopPetAppearanceLabel { get; init; }
-    public required string DesktopPetCustomImageLabel { get; init; }
-    public required IReadOnlyList<string> DesktopPetAppearanceOptions { get; init; }
+    public required string DesktopPetChooseImageButton { get; init; }
+    public required string DesktopPetUseCustomLabel { get; init; }
+    public required string DesktopPetPresetLabel { get; init; }
+    public required string DesktopPetClickActionLabel { get; init; }
+    public required string DesktopPetDoubleClickActionLabel { get; init; }
+    public required string DesktopPetPresetSectionLabel { get; init; }
+    public required string DesktopPetCustomSectionLabel { get; init; }
+    public required string CloseActionLabel { get; init; }
+    public required IReadOnlyList<string> CloseActionOptions { get; init; }
+    public required IReadOnlyList<string> DesktopPetPresetOptions { get; init; }
+    public required IReadOnlyList<string> DesktopPetClickActionOptions { get; init; }
+    public required IReadOnlyList<string> DesktopPetDoubleClickActionOptions { get; init; }
     public required string DesktopHint { get; init; }
     public required string SystemCardHeader { get; init; }
     public required string LauncherAnnouncementsLabel { get; init; }

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Models;
+using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop;
 
@@ -12,8 +13,14 @@ internal static class DesktopPetTrayIconFactory
     {
         // Render a static frame independently of the live pet's size and reaction state.
         using var sprite = new DesktopPetSprite(animateCustomImage: false);
-        sprite.SetAppearance(settings.PetAppearance);
-        sprite.SetImagePath(settings.PetImagePath);
+        if (settings.PetUseCustom)
+        {
+            sprite.SetImagePath(settings.PetImagePath);
+        }
+        else
+        {
+            sprite.SetPreset(PetPresetCatalog.Find(settings.PetPresetId), 64, animate: false);
+        }
         var canvas = new Border
         {
             Width = 32,
