@@ -27,7 +27,7 @@ public sealed class FrontendDesktopShellTest
             var closed = false;
             var flushes = 0;
             window.Closed += (_, _) => closed = true;
-            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => flushes++);
+            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => flushes++, petIconFactory: CreateTestPetIcon);
             shell.SetTrayHostAvailable(true);
             shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true));
             Assert.IsFalse(window.IsVisible, "Enabling residency must not show the main window before startup does.");
@@ -134,7 +134,7 @@ public sealed class FrontendDesktopShellTest
                 launches++;
                 ready = false;
             }, () => ready);
-            using var shell = new DesktopShellController(window, new TestI18n(), launch, window.Close, () => { });
+            using var shell = new DesktopShellController(window, new TestI18n(), launch, window.Close, () => { }, petIconFactory: CreateTestPetIcon);
             shell.SetTrayHostAvailable(true);
             shell.ApplySettings(new(KeepRunningInTray: true));
             window.Show();
@@ -219,7 +219,7 @@ public sealed class FrontendDesktopShellTest
         {
             var i18n = new TestI18n();
             var window = new Window();
-            using var shell = new DesktopShellController(window, i18n, new ActionCommand(() => { }), window.Close, () => { });
+            using var shell = new DesktopShellController(window, i18n, new ActionCommand(() => { }), window.Close, () => { }, petIconFactory: CreateTestPetIcon);
             shell.ApplySettings(new(PetEnabled: true));
             var pet = shell.Pet!;
             var oldTitle = pet.Title;
@@ -237,7 +237,51 @@ public sealed class FrontendDesktopShellTest
     }
 
     private static DesktopShellController CreateShell(Window window) => new(
-        window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { });
+        window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { }, petIconFactory: CreateTestPetIcon);
+
+    private static WindowIcon CreateTestPetIcon(FrontendDesktopSettings settings)
+    {
+        using var stream = AssetLoader.Open(new Uri("avares://PCL.Frontend.Avalonia/Assets/icon.png"));
+        return new WindowIcon(stream);
+    }
+
+    [TestMethod]
+    public async Task TrayIcon_MatchesPetAppearanceCachesFramesAndRestoresLauncherIcon()
+    {
+        await Run(() =>
+        {
+            var window = new Window { Icon = CreateTestPetIcon(new()) };
+            var renders = 0;
+            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { },
+                petIconFactory: settings =>
+                {
+                    renders++;
+                    return CreateTestPetIcon(settings);
+                });
+            var settings = new FrontendDesktopSettings(KeepRunningInTray: true, PetEnabled: true, PetAppearance: "slime");
+            shell.ApplySettings(settings);
+            var slime = shell.TrayIcon!.Icon;
+            Assert.AreNotSame(window.Icon, slime);
+            Assert.AreEqual(1, renders);
+            shell.ApplySettings(settings with { PetScale = 1.5, PetTopmost = false });
+            Assert.AreSame(slime, shell.TrayIcon.Icon);
+            Assert.AreEqual(1, renders, "Size and topmost changes must reuse the static tray icon.");
+            settings = settings with { PetAppearance = "enderman" };
+            shell.ApplySettings(settings);
+            var enderman = shell.TrayIcon.Icon;
+            Assert.AreNotSame(slime, enderman);
+            Assert.AreEqual(2, renders);
+            shell.ApplySettings(settings with { PetEnabled = false });
+            Assert.AreSame(window.Icon, shell.TrayIcon.Icon);
+            shell.ApplySettings(settings);
+            Assert.AreSame(enderman, shell.TrayIcon.Icon);
+            Assert.AreEqual(2, renders);
+            shell.ApplySettings(settings with { PetImagePath = "custom.png" });
+            Assert.AreNotSame(enderman, shell.TrayIcon.Icon);
+            Assert.AreEqual(3, renders);
+            shell.Quit();
+        });
+    }
 
     [TestMethod]
     public async Task PetSingleClick_ShowsLauncherAndReactsForEveryBundledAppearance()
