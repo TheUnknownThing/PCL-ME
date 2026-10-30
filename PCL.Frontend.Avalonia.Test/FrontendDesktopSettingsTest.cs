@@ -48,6 +48,53 @@ public sealed class FrontendDesktopSettingsTest
     }
 
     [TestMethod]
+    public void LegacyAppearance_IsMigratedToThePresetKeyAndRemoved()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-desktop-migrate-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(root);
+            var path = Path.Combine(root, "settings.yaml");
+            var provider = new YamlFileProvider(path);
+            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
+            provider.Sync();
+
+            var settings = FrontendDesktopSettingsService.Read(provider);
+            Assert.AreEqual("slime", settings.PetPresetId);
+
+            var reopened = new YamlFileProvider(path);
+            Assert.AreEqual("slime", reopened.Get<string>(FrontendDesktopSettingsService.PetPresetKey));
+            Assert.IsFalse(reopened.Exists(FrontendDesktopSettingsService.PetAppearanceKey));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void ExplicitPreset_WinsOverLegacyAppearanceAndLegacyKeyIsRemoved()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-desktop-migrate-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(root);
+            var path = Path.Combine(root, "settings.yaml");
+            var provider = new YamlFileProvider(path);
+            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
+            provider.Set(FrontendDesktopSettingsService.PetPresetKey, "campfire_gif");
+            provider.Sync();
+
+            Assert.AreEqual("campfire_gif", FrontendDesktopSettingsService.Read(provider).PetPresetId);
+            Assert.IsFalse(new YamlFileProvider(path).Exists(FrontendDesktopSettingsService.PetAppearanceKey));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void PositionRestore_PreservesNegativeMonitorCoordinatesAndClampsEdges()
     {
         var primary = new PixelRect(0, 24, 1920, 1016);

@@ -31,6 +31,7 @@ internal static class FrontendDesktopSettingsService
         var keepRunningInTray = ReadValue(config, KeepRunningInTrayKey, false);
         var presetId = NormalizePreset(ReadValue(config, PetPresetKey, string.Empty),
             ReadValue(config, PetAppearanceKey, string.Empty));
+        MigrateLegacyAppearance(config, presetId);
         return new FrontendDesktopSettings(
             keepRunningInTray,
             ReadValue(config, PetEnabledKey, true),
@@ -42,6 +43,26 @@ internal static class FrontendDesktopSettingsService
             ReadAction(config, PetClickActionKey, PetAction.PlayAnimation),
             ReadAction(config, PetDoubleClickActionKey, PetAction.ShowLauncher),
             ReadCloseAction(config));
+    }
+
+    /// <summary>
+    /// Writes the resolved preset back and drops the legacy appearance key so the
+    /// migration only happens once instead of acting as a permanent fallback.
+    /// </summary>
+    private static void MigrateLegacyAppearance(YamlFileProvider config, string presetId)
+    {
+        if (!config.Exists(PetAppearanceKey)) return;
+        try
+        {
+            if (!config.Exists(PetPresetKey)) config.Set(PetPresetKey, presetId);
+            config.Remove(PetAppearanceKey);
+            config.Sync();
+        }
+        catch
+        {
+            // A read-only or otherwise locked configuration keeps the legacy key;
+            // the launcher-misc reset list still removes it explicitly.
+        }
     }
 
     public static string NormalizePreset(string? value, string? legacyAppearance = null)

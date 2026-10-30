@@ -80,11 +80,15 @@ public sealed class FrontendAppearanceTest
 
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetXKey, -1800);
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetYKey, 200);
+            // Simulate a profile upgraded from the pre-preset build, where only the legacy key exists.
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
             launcher.ResetLauncherMiscSettingsCommand.Execute(null);
             Tick();
             Assert.AreEqual(new FrontendDesktopSettings(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray),
                 launcher.DesktopSettings);
             Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(fixture.Paths.OpenLocalConfigProvider()));
+            Assert.IsFalse(fixture.Paths.OpenLocalConfigProvider().Exists(FrontendDesktopSettingsService.PetAppearanceKey),
+                "Resetting must drop the migrated legacy appearance key.");
         });
     }
 

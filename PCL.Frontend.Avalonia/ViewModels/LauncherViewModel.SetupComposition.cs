@@ -66,6 +66,7 @@ internal sealed partial class LauncherViewModel
         FrontendDesktopSettingsService.PetScaleKey,
         FrontendDesktopSettingsService.PetUseCustomKey,
         FrontendDesktopSettingsService.PetPresetKey,
+        FrontendDesktopSettingsService.PetAppearanceKey, // legacy migration key
         FrontendDesktopSettingsService.PetImagePathKey,
         FrontendDesktopSettingsService.PetClickActionKey,
         FrontendDesktopSettingsService.PetDoubleClickActionKey,
