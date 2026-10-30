@@ -36,7 +36,7 @@
       BorderBrush="{DynamicResource ColorBrush6}"
       BorderThickness="1"
       CornerRadius="5">
-    <Grid>
+    <Grid ColumnDefinitions="*,Auto">
       <TextBox
           x:Name="SearchTextBox"
           Classes="search-input"
@@ -80,8 +80,9 @@
 
       <controls:PclButton
           x:Name="SearchButton"
-          Width="60"
-          Height="32"
+          Grid.Column="1"
+          MinWidth="60"
+          MinHeight="0"
           Margin="0,4,4,4"
           Command="{Binding SearchCommand, ElementName=Root}"
           HorizontalAlignment="Right"
