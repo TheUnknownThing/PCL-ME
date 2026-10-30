@@ -15,21 +15,19 @@ internal sealed partial class LauncherViewModel
     private string _desktopPetPreviewPath = string.Empty;
     private Bitmap? _desktopPetImagePreview;
     private bool _isChoosingDesktopPetImage;
-    private ActionCommand? _chooseDesktopPetImageCommand;
-    private ActionCommand? _resetDesktopPetImageCommand;
     private int _selectedDesktopPetAppearanceIndex;
 
     public IReadOnlyList<string> DesktopPetAppearanceOptions => SetupText.LauncherMisc.DesktopPetAppearanceOptions;
 
     public int SelectedDesktopPetAppearanceIndex
     {
-        get => HasDesktopPetImage ? FrontendDesktopSettingsService.BuiltinAppearances.Length : _selectedDesktopPetAppearanceIndex;
+        get => HasDesktopPetImage ? -1 : _selectedDesktopPetAppearanceIndex;
         set
         {
             if (!TryNormalizeSelectionIndex(value, DesktopPetAppearanceOptions.Count, out var index)) return;
             if (index == FrontendDesktopSettingsService.BuiltinAppearances.Length)
             {
-                if (!HasDesktopPetImage) _ = ChooseDesktopPetImageAsync();
+                _ = ChooseDesktopPetImageAsync();
                 return;
             }
             SetProperty(ref _selectedDesktopPetAppearanceIndex, index);
@@ -81,12 +79,6 @@ internal sealed partial class LauncherViewModel
     public bool HasDesktopPetImage => !string.IsNullOrWhiteSpace(DesktopPetImagePath);
     public Bitmap? DesktopPetImagePreview => _desktopPetImagePreview;
 
-    public ActionCommand ChooseDesktopPetImageCommand => _chooseDesktopPetImageCommand ??= new(
-        () => _ = ChooseDesktopPetImageAsync(), () => !_isChoosingDesktopPetImage);
-
-    public ActionCommand ResetDesktopPetImageCommand => _resetDesktopPetImageCommand ??= new(
-        () => DesktopPetImagePath = string.Empty, () => HasDesktopPetImage && !_isChoosingDesktopPetImage);
-
     internal FrontendDesktopSettings DesktopSettings => new(
         KeepRunningInTray, DesktopPetEnabled, DesktopPetTopmost, DesktopPetScale, DesktopPetImagePath,
         FrontendDesktopSettingsService.BuiltinAppearances[_selectedDesktopPetAppearanceIndex]);
@@ -95,7 +87,6 @@ internal sealed partial class LauncherViewModel
     {
         if (_isChoosingDesktopPetImage) return;
         _isChoosingDesktopPetImage = true;
-        NotifyDesktopPetImageCommands();
         try
         {
             var source = await _launcherActionService.PickOpenFileAsync(
@@ -122,7 +113,6 @@ internal sealed partial class LauncherViewModel
         finally
         {
             _isChoosingDesktopPetImage = false;
-            NotifyDesktopPetImageCommands();
             RaisePropertyChanged(nameof(SelectedDesktopPetAppearanceIndex));
         }
     }
@@ -139,13 +129,6 @@ internal sealed partial class LauncherViewModel
         }
         RaisePropertyChanged(nameof(HasDesktopPetImage));
         RaisePropertyChanged(nameof(SelectedDesktopPetAppearanceIndex));
-        NotifyDesktopPetImageCommands();
-    }
-
-    private void NotifyDesktopPetImageCommands()
-    {
-        _chooseDesktopPetImageCommand?.NotifyCanExecuteChanged();
-        _resetDesktopPetImageCommand?.NotifyCanExecuteChanged();
     }
 
     private void InitializeDesktopSettings()

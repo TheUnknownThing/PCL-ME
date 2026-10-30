@@ -3582,7 +3582,6 @@ desktop:
     scale: "桌寵大小"
     hint: "欲退，請於托盤或桌寵選單擇「退出」。無托盤則留啟動器以便取用。由選單啟遊戲，則顯啟動器以處理所需之提示。"
     choose_image: "擇圖"
-    reset_image: "用預設桌寵"
     image_filter: "桌寵圖"
     image_hint: "可用 PNG、JPEG、WebP 或 BMP，以透明 PNG 為佳。"
     image_error_title: "桌寵圖不可用"

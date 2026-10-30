@@ -61,12 +61,28 @@ public sealed class FrontendAppearanceTest
             fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
             fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
             Assert.AreEqual(customImage, launcher.DesktopPetImagePath);
-            Assert.AreEqual(4, launcher.SelectedDesktopPetAppearanceIndex);
-            Assert.IsTrue(launcher.ResetDesktopPetImageCommand.CanExecute(null));
-            launcher.ResetDesktopPetImageCommand.Execute(null);
+            Assert.AreEqual(-1, launcher.SelectedDesktopPetAppearanceIndex);
+            var choice = new ComboBox();
+            choice.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(LauncherViewModel.DesktopPetAppearanceOptions)) { Source = launcher });
+            choice.Bind(PclComboBoxSelection.SelectedIndexProperty, new Binding(nameof(LauncherViewModel.SelectedDesktopPetAppearanceIndex))
+            {
+                Source = launcher,
+                Mode = BindingMode.TwoWay
+            });
+            var choiceWindow = new Window { Content = choice };
+            choiceWindow.Show();
+            Tick();
+            Assert.AreEqual(-1, choice.SelectedIndex, "A custom image is displayed using the dropdown placeholder.");
+            fixture.I18n.SetLocale("fr-FR");
+            Tick();
+            Assert.AreEqual(-1, choice.SelectedIndex);
+            Assert.IsTrue(launcher.HasDesktopPetImage, "Translating the dropdown must preserve the custom image.");
+            choice.SelectedIndex = 1;
+            Tick();
             Assert.IsFalse(launcher.HasDesktopPetImage);
             Assert.AreEqual(string.Empty, fixture.Paths.OpenLocalConfigProvider().Get<string>(FrontendDesktopSettingsService.PetImagePathKey));
             Assert.AreEqual(1, launcher.SelectedDesktopPetAppearanceIndex);
+            choiceWindow.Close();
 
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetImagePathKey, customImage);
             fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);

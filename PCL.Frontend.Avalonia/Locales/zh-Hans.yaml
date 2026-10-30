@@ -3592,7 +3592,6 @@ desktop:
     scale: "桌宠大小"
     hint: "通过托盘或桌宠菜单中的“退出”关闭启动器。托盘不可用时，启动器会保持可访问。通过菜单启动游戏时，会显示启动器以处理必要的提示。"
     choose_image: "选择图片"
-    reset_image: "使用默认桌宠"
     image_filter: "桌宠图片"
     image_hint: "支持 PNG、JPEG、WebP 或 BMP，推荐使用透明背景的 PNG 图片。"
     image_error_title: "无法使用桌宠图片"

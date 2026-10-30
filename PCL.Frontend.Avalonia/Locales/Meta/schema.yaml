@@ -4117,7 +4117,6 @@ desktop:
     scale: []
     hint: []
     choose_image: []
-    reset_image: []
     image_filter: []
     image_hint: []
     image_error_title: []

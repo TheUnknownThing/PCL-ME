@@ -3592,7 +3592,6 @@ desktop:
     scale: "桌寵大小"
     hint: "透過系統匣或桌寵選單中的「結束」關閉啟動器。系統匣無法使用時，啟動器會保持可存取。透過選單啟動遊戲時，會顯示啟動器以處理必要的提示。"
     choose_image: "選擇圖片"
-    reset_image: "使用預設桌寵"
     image_filter: "桌寵圖片"
     image_hint: "支援 PNG、JPEG、WebP 或 BMP，建議使用透明背景的 PNG 圖片。"
     image_error_title: "無法使用桌寵圖片"

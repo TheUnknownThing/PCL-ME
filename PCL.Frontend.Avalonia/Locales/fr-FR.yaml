@@ -3582,7 +3582,6 @@ desktop:
     scale: "Taille du compagnon"
     hint: "Utilisez Quitter dans le menu de notification ou du compagnon pour fermer le lanceur. Sans zone de notification, le lanceur reste accessible. Le lancement depuis ces menus affiche le lanceur pour les confirmations nécessaires."
     choose_image: "Choisir une image"
-    reset_image: "Utiliser le compagnon intégré"
     image_filter: "Images du compagnon"
     image_hint: "PNG, JPEG, WebP ou BMP. Un PNG transparent est recommandé."
     image_error_title: "Impossible d’utiliser cette image"

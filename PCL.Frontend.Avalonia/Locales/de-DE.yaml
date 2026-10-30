@@ -3582,7 +3582,6 @@ desktop:
     scale: "Größe des Begleiters"
     hint: "Zum Beenden den Menüpunkt Beenden im Infobereich oder beim Begleiter verwenden. Ohne Infobereich bleibt der Launcher erreichbar. Beim Start über diese Menüs wird der Launcher für erforderliche Rückfragen angezeigt."
     choose_image: "Bild auswählen"
-    reset_image: "Integrierten Begleiter verwenden"
     image_filter: "Begleiterbilder"
     image_hint: "PNG, JPEG, WebP oder BMP. Ein transparentes PNG eignet sich am besten."
     image_error_title: "Bild konnte nicht verwendet werden"

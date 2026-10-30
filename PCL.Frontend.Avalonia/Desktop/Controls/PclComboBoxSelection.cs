@@ -47,7 +47,7 @@ internal static class PclComboBoxSelection
         {
             combo.SetValue(RestoreQueuedProperty, false);
             var index = GetSelectedIndex(combo);
-            if (index >= 0 && index < combo.ItemCount && combo.SelectedIndex != index)
+            if (index >= -1 && index < combo.ItemCount && combo.SelectedIndex != index)
             {
                 combo.SetCurrentValue(ComboBox.SelectedIndexProperty, index);
             }

@@ -3592,7 +3592,6 @@ desktop:
     scale: "Pet size"
     hint: "Quit from the tray or pet menu to exit. If no tray is available, the launcher stays accessible. Launching from either menu shows the launcher for any required prompts."
     choose_image: "Choose image"
-    reset_image: "Use bundled pet"
     image_filter: "Pet images"
     image_hint: "PNG, JPEG, WebP, or BMP. A transparent PNG works best."
     image_error_title: "Could not use pet image"

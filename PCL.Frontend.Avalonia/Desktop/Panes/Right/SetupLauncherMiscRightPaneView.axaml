@@ -29,22 +29,13 @@
                     PlaceholderText="{Binding SetupText.LauncherMisc.DesktopPetCustomImageLabel}"
                     controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedDesktopPetAppearanceIndex}" />
               </Grid>
-              <StackPanel Orientation="Horizontal" Spacing="12">
-                <Image
-                    Width="48"
-                    Height="48"
-                    Stretch="Uniform"
-                    IsVisible="{Binding HasDesktopPetImage}"
-                    Source="{Binding DesktopPetImagePreview}" />
-                <controls:PclButton
-                    VerticalAlignment="Center"
-                    Command="{Binding ChooseDesktopPetImageCommand}"
-                    Text="{Binding SetupText.LauncherMisc.DesktopPetChooseImageLabel}" />
-                <controls:PclButton
-                    VerticalAlignment="Center"
-                    Command="{Binding ResetDesktopPetImageCommand}"
-                    Text="{Binding SetupText.LauncherMisc.DesktopPetResetImageLabel}" />
-              </StackPanel>
+              <Image
+                  Width="48"
+                  Height="48"
+                  HorizontalAlignment="Left"
+                  Stretch="Uniform"
+                  IsVisible="{Binding HasDesktopPetImage}"
+                  Source="{Binding DesktopPetImagePreview}" />
               <TextBlock
                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                   FontSize="12"
