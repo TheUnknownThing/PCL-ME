@@ -277,6 +277,57 @@ public sealed class FrontendMotionTest
         });
     }
 
+    [TestMethod]
+    public async Task Motion_ShowRevealsAVisibleButTransparentControl()
+    {
+        await RunAsync(async () =>
+        {
+            var target = new Border { Height = 80, Opacity = 0 };
+            var window = new Window { Width = 500, Height = 300, Content = target };
+            try
+            {
+                window.Show();
+                Tick();
+                Assert.IsTrue(target.IsVisible);
+                Assert.AreEqual(0d, target.Opacity);
+
+                await Motion.ShowAsync(target, () => true);
+                await Advance(350);
+                Assert.AreEqual(1d, target.Opacity, "Showing an already visible control must restore its opacity.");
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [TestMethod]
+    public async Task Motion_InterruptedExitThenShowSettlesVisible()
+    {
+        await RunAsync(async () =>
+        {
+            var target = new Border { Height = 80 };
+            var window = new Window { Width = 500, Height = 300, Content = target };
+            try
+            {
+                window.Show();
+                Tick();
+                await Motion.PlayEnterAsync(target);
+                await Advance(350);
+                Assert.AreEqual(1d, target.Opacity);
+
+                var version = 0;
+                var hide = Motion.HideAsync(target, () => version == 0);
+                await Advance(30);
+                version++;
+                await Motion.ShowAsync(target, () => version == 1);
+                await hide;
+                await Advance(350);
+                Assert.IsTrue(target.IsVisible);
+                Assert.AreEqual(1d, target.Opacity, "A superseded exit must not leave the control transparent.");
+            }
+            finally { window.Close(); }
+        });
+    }
+
     internal static async Task Advance(int milliseconds)
     {
         var deadline = DateTime.UtcNow.AddMilliseconds(milliseconds);

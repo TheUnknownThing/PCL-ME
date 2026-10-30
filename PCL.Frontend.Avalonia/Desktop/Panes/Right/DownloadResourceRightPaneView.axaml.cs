@@ -220,7 +220,8 @@ internal sealed partial class DownloadResourceRightPaneView : UserControl
 
         if (showContent)
         {
-            var shouldMaskReveal = _loadingCard.IsVisible && !_contentHost.IsVisible;
+            var needsReveal = !_contentHost.IsVisible || _contentHost.Opacity < 1;
+            var shouldMaskReveal = _loadingCard.IsVisible && needsReveal;
             if (shouldMaskReveal)
             {
                 await Task.Delay(MotionDurations.ScaleAnimationDuration(TimeSpan.FromMilliseconds(180)));
@@ -230,13 +231,13 @@ internal sealed partial class DownloadResourceRightPaneView : UserControl
                 }
 
                 await Task.WhenAll(
-                    ShowAnimatedAsync(_contentHost, version),
+                    ShowAnimatedAsync(_contentHost, version, replayWhenVisible: needsReveal),
                     HideAnimatedAsync(_loadingCard, version));
             }
             else
             {
                 await HideAnimatedAsync(_loadingCard, version);
-                await ShowAnimatedAsync(_contentHost, version);
+                await ShowAnimatedAsync(_contentHost, version, replayWhenVisible: needsReveal);
             }
         }
         else

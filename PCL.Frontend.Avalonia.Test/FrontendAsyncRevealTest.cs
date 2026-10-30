@@ -75,6 +75,50 @@ public sealed class FrontendAsyncRevealTest
     }
 
     [TestMethod]
+    public async Task DownloadPage_RapidLoadingTogglesKeepTheContentVisible()
+    {
+        await RunAsync(async () =>
+        {
+            using var fixture = new PageFixture();
+            var view = (UserControl)new DownloadResourceRightPaneView();
+            view.DataContext = fixture.Launcher;
+            var window = new Window { Width = 700, Height = 500, Content = view };
+            try
+            {
+                window.Show();
+                await Advance(350);
+                var host = view.FindControl<Control>("ContentHost")!;
+                var properties = new[]
+                {
+                    nameof(LauncherViewModel.ShowDownloadResourceLoadingCard),
+                    nameof(LauncherViewModel.ShowDownloadResourceContent)
+                };
+
+                fixture.SetLoading("_isDownloadResourceLoading", false, properties);
+                await Advance(650);
+                Assert.IsTrue(host.IsVisible);
+                Assert.AreEqual(1d, host.Opacity);
+
+                // Two fast searches: the cached result reveals the list again while the
+                // hide-to-loading transition of the previous state is still running.
+                for (var i = 0; i < 3; i++)
+                {
+                    fixture.SetLoading("_isDownloadResourceLoading", true, properties);
+                    await Advance(30);
+                    fixture.SetLoading("_isDownloadResourceLoading", false, properties);
+                    await Advance(30);
+                }
+
+                await Advance(650);
+                Assert.IsTrue(host.IsVisible, "The resource list must stay visible after rapid searches.");
+                Assert.AreEqual(1d, host.Opacity, "An interrupted reveal must not leave the list transparent.");
+                Assert.IsTrue(host.GetVisualDescendants().OfType<PclCard>().All(card => card.Opacity == 1));
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [TestMethod]
     public async Task Motion_ManualRevealKeepsNewItemTemplatesHiddenUntilLayoutIsReady()
     {
         await RunAsync(async () =>
