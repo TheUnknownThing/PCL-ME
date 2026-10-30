@@ -338,6 +338,18 @@ internal static class Motion
         }
     }
 
+    private static bool HasTransparentStaggerTargets(Control control)
+    {
+        if (!GetStaggerChildren(control))
+        {
+            return false;
+        }
+
+        // A superseded exit can leave the item cards transparent while the host
+        // itself is already visible, which looks like an empty list.
+        return CollectTargets(control).Any(target => !ReferenceEquals(target, control) && target.Opacity <= 0);
+    }
+
     private static List<Control> CollectTargets(Control control)
     {
         if (!GetStaggerChildren(control))
@@ -521,7 +533,9 @@ internal static class Motion
         }
 
         var state = States.GetOrCreateValue(control);
-        if (control.IsVisible && !state.IsExiting && state.PrimedTargets.Count == 0 && !replayWhenVisible)
+        var needsReveal = control.IsVisible && (control.Opacity <= 0 || HasTransparentStaggerTargets(control));
+        if (control.IsVisible && !state.IsExiting && state.PrimedTargets.Count == 0
+            && !needsReveal && !replayWhenVisible)
         {
             return Task.CompletedTask;
         }
