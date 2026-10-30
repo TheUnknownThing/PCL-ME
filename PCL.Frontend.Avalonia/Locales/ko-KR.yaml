@@ -3583,9 +3583,9 @@ desktop:
     hint: "런처를 종료하려면 트레이 또는 펫 메뉴에서 종료를 선택하세요. 트레이를 사용할 수 없으면 런처에 계속 접근할 수 있습니다. 메뉴에서 게임을 실행하면 필요한 확인을 위해 런처가 표시됩니다."
     choose_image: "이미지 선택"
     image_filter: "펫 이미지"
-    image_hint: "PNG, JPEG, WebP 또는 BMP를 지원합니다. 배경이 투명한 PNG를 권장합니다."
+    image_hint: "PNG, JPEG, WebP, BMP 또는 애니메이션 GIF를 지원합니다. 트레이에는 GIF의 첫 프레임이 표시됩니다."
     image_error_title: "펫 이미지를 사용할 수 없음"
-    image_error_message: "4096 × 4096픽셀 및 10MB 이하의 유효한 이미지를 선택하세요."
+    image_error_message: "4096 × 4096픽셀 및 10MB 이하의 유효한 이미지를 선택하세요. GIF는 최대 256프레임을 지원합니다. 큰 애니메이션은 해상도나 길이를 줄여 주세요."
     appearance: "외형"
     custom_image: "사용자 지정 이미지"
   appearances:

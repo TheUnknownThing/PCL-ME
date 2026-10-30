@@ -91,7 +91,7 @@ internal sealed partial class LauncherViewModel
         {
             var source = await _launcherActionService.PickOpenFileAsync(
                 T("desktop.settings.choose_image"), T("desktop.settings.image_filter"),
-                "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp");
+                "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif");
             if (string.IsNullOrWhiteSpace(source)) return;
             var imported = await Task.Run(() => FrontendDesktopPetImageService.Import(
                 _launcherActionService.RuntimePaths.DataDirectory, source));

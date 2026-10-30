@@ -1,13 +1,15 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop.Controls;
 
-/// <summary>A small pixel mascot drawn without decoded frames or per-frame bitmap allocations.</summary>
+/// <summary>A pixel mascot or cached custom image, with animation only while visible.</summary>
 internal sealed class DesktopPetSprite : Control, IDisposable
 {
     private static readonly IBrush Outline = new SolidColorBrush(Color.Parse("#253D29"));
@@ -22,6 +24,13 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     private static readonly IBrush Purple = new SolidColorBrush(Color.Parse("#DC8AFF"));
     private static readonly IBrush Heart = new SolidColorBrush(Color.Parse("#FF7195"));
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(180) };
+    private readonly Stopwatch _clock = new();
+    private readonly bool _animateCustomImage;
+    private TimeSpan _idleElapsed;
+    private TimeSpan _imageElapsed;
+    private TimeSpan? _nextImageFrame;
+    private FrontendDesktopPetImage? _customAnimation;
+    private Bitmap? _currentImage;
     private int _frame;
     private int _interactionFrames;
     private int Bob => _interactionFrames > 0 ? (_interactionFrames % 4 is 0 or 1 ? -2 : 0) : _frame % 8 is 3 or 4 ? -1 : 0;
@@ -30,15 +39,17 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     private Bitmap? _customImage;
     private string _appearance = "creeper";
 
-    public DesktopPetSprite()
+    public DesktopPetSprite(bool animateCustomImage = true)
     {
+        _animateCustomImage = animateCustomImage;
         _timer.Tick += OnTick;
         AttachedToVisualTree += (_, _) => SyncAnimation();
-        DetachedFromVisualTree += (_, _) => _timer.Stop();
+        DetachedFromVisualTree += (_, _) => StopAnimation();
     }
 
     internal bool IsAnimationRunning => _timer.IsEnabled;
     internal Bitmap? CustomImage => _customImage;
+    internal Bitmap? CurrentImage => _currentImage;
     internal string Appearance => _appearance;
     internal bool IsReacting => _interactionFrames > 0;
 
@@ -54,23 +65,36 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     {
         if (_disposed || string.Equals(path, _imagePath, StringComparison.Ordinal)
             && (_customImage is not null || string.IsNullOrWhiteSpace(path))) return;
-        var nextImage = FrontendDesktopPetImageService.TryLoad(path);
-        var previous = _customImage;
+        var nextAnimation = _animateCustomImage ? FrontendDesktopPetImageService.TryLoadAnimated(path) : null;
+        var nextImage = _animateCustomImage ? nextAnimation?.FirstFrame : FrontendDesktopPetImageService.TryLoad(path);
+        var previousAnimation = _customAnimation;
+        var previousImage = _customImage;
         _imagePath = path;
+        _customAnimation = nextAnimation;
         _customImage = nextImage;
+        _imageElapsed = TimeSpan.Zero;
+        _currentImage = nextImage;
+        _nextImageFrame = nextAnimation?.GetFrame(TimeSpan.Zero).Remaining;
+        if (_timer.IsEnabled) _clock.Restart();
+        UpdateTimerInterval();
         InvalidateVisual();
-        previous?.Dispose();
+        if (previousAnimation is not null) previousAnimation.Dispose();
+        else previousImage?.Dispose();
     }
 
     public void SyncAnimation()
     {
         if (!_disposed && IsEffectivelyVisible && TopLevel.GetTopLevel(this) is Window { IsVisible: true, WindowState: not WindowState.Minimized })
         {
-            _timer.Start();
+            if (!_timer.IsEnabled)
+            {
+                _clock.Restart();
+                _timer.Start();
+            }
         }
         else
         {
-            _timer.Stop();
+            StopAnimation();
         }
     }
 
@@ -91,7 +115,7 @@ internal sealed class DesktopPetSprite : Control, IDisposable
             DrawHeart(context, 15, 1);
         }
         using var translate = context.PushTransform(Matrix.CreateTranslation(0, Bob));
-        if (_customImage is { } image)
+        if (_currentImage is { } image)
         {
             var source = new Rect(image.Size);
             var fit = Math.Min(18 / source.Width, 22 / source.Height);
@@ -181,18 +205,53 @@ internal sealed class DesktopPetSprite : Control, IDisposable
 
     private void OnTick(object? sender, EventArgs e)
     {
+        var elapsed = _clock.Elapsed;
+        _clock.Restart();
+        AdvanceAnimation(elapsed);
+    }
+
+    internal void AdvanceAnimation(TimeSpan elapsed)
+    {
+        if (_disposed) return;
         var previousBob = Bob;
-        _frame = (_frame + 1) % 8;
-        if (_interactionFrames > 0) _interactionFrames--;
-        if (previousBob != Bob) InvalidateVisual();
+        var wasReacting = IsReacting;
+        _idleElapsed += elapsed;
+        var steps = (int)(_idleElapsed.Ticks / TimeSpan.FromMilliseconds(180).Ticks);
+        _idleElapsed -= TimeSpan.FromMilliseconds(180 * steps);
+        _frame = (_frame + steps) % 8;
+        _interactionFrames = Math.Max(0, _interactionFrames - steps);
+        var previousImage = _currentImage;
+        if (_customAnimation is not null)
+        {
+            _imageElapsed += elapsed;
+            (_currentImage, _nextImageFrame) = _customAnimation.GetFrame(_imageElapsed);
+        }
+        if (previousBob != Bob || wasReacting != IsReacting || !ReferenceEquals(previousImage, _currentImage)) InvalidateVisual();
+        UpdateTimerInterval();
+    }
+
+    private void UpdateTimerInterval()
+    {
+        var next = TimeSpan.FromMilliseconds(180) - _idleElapsed;
+        if (_nextImageFrame is { } imageDelay && imageDelay < next) next = imageDelay;
+        _timer.Interval = next < TimeSpan.FromMilliseconds(1) ? TimeSpan.FromMilliseconds(1) : next;
+    }
+
+    private void StopAnimation()
+    {
+        _timer.Stop();
+        _clock.Reset();
     }
 
     public void Dispose()
     {
         _disposed = true;
-        _timer.Stop();
+        StopAnimation();
         _timer.Tick -= OnTick;
-        _customImage?.Dispose();
+        if (_customAnimation is not null) _customAnimation.Dispose();
+        else _customImage?.Dispose();
+        _customAnimation = null;
         _customImage = null;
+        _currentImage = null;
     }
 }

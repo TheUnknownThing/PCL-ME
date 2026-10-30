@@ -11,7 +11,7 @@ internal static class DesktopPetTrayIconFactory
     public static WindowIcon Create(FrontendDesktopSettings settings)
     {
         // Render a static frame independently of the live pet's size and reaction state.
-        using var sprite = new DesktopPetSprite();
+        using var sprite = new DesktopPetSprite(animateCustomImage: false);
         sprite.SetAppearance(settings.PetAppearance);
         sprite.SetImagePath(settings.PetImagePath);
         var canvas = new Border

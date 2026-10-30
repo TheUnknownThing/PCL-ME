@@ -3607,9 +3607,9 @@ desktop:
     hint: "Usa Salir en el menú de la bandeja o de la mascota para cerrar el lanzador. Si no hay bandeja, el lanzador seguirá accesible. Al iniciar desde estos menús se muestra el lanzador para las confirmaciones necesarias."
     choose_image: "Elegir imagen"
     image_filter: "Imágenes de la mascota"
-    image_hint: "PNG, JPEG, WebP o BMP. Se recomienda un PNG transparente."
+    image_hint: "PNG, JPEG, WebP, BMP o GIF animado. La bandeja muestra el primer fotograma del GIF."
     image_error_title: "No se pudo usar la imagen"
-    image_error_message: "Elige una imagen válida de hasta 4096 × 4096 píxeles y 10 MB."
+    image_error_message: "Elige una imagen válida de hasta 4096 × 4096 píxeles y 10 MB. Los GIF admiten hasta 256 fotogramas; reduce la resolución o duración de las animaciones más grandes."
     appearance: "Apariencia"
     custom_image: "Imagen personalizada"
   appearances:

@@ -3593,9 +3593,9 @@ desktop:
     hint: "通过托盘或桌宠菜单中的“退出”关闭启动器。托盘不可用时，启动器会保持可访问。通过菜单启动游戏时，会显示启动器以处理必要的提示。"
     choose_image: "选择图片"
     image_filter: "桌宠图片"
-    image_hint: "支持 PNG、JPEG、WebP 或 BMP，推荐使用透明背景的 PNG 图片。"
+    image_hint: "支持 PNG、JPEG、WebP、BMP 或 GIF 动图。托盘显示 GIF 的首帧。"
     image_error_title: "无法使用桌宠图片"
-    image_error_message: "请选择有效图片，尺寸不超过 4096 × 4096 像素，文件大小不超过 10 MB。"
+    image_error_message: "请选择有效图片，尺寸不超过 4096 × 4096 像素，文件大小不超过 10 MB。GIF 最多支持 256 帧；较大的动图请降低分辨率或缩短时长。"
     appearance: "外观"
     custom_image: "自定义图片"
   appearances:

@@ -3593,9 +3593,9 @@ desktop:
     hint: "Quit from the tray or pet menu to exit. If no tray is available, the launcher stays accessible. Launching from either menu shows the launcher for any required prompts."
     choose_image: "Choose image"
     image_filter: "Pet images"
-    image_hint: "PNG, JPEG, WebP, or BMP. A transparent PNG works best."
+    image_hint: "PNG, JPEG, WebP, BMP, or animated GIF. The tray shows the first GIF frame."
     image_error_title: "Could not use pet image"
-    image_error_message: "Choose a valid image up to 4096 × 4096 pixels and 10 MB."
+    image_error_message: "Choose a valid image up to 4096 × 4096 pixels and 10 MB. GIFs support up to 256 frames; reduce the resolution or length of larger animations."
     appearance: "Appearance"
     custom_image: "Custom image"
   appearances:

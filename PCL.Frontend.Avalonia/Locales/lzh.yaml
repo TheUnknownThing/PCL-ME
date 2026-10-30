@@ -3583,9 +3583,9 @@ desktop:
     hint: "欲退，請於托盤或桌寵選單擇「退出」。無托盤則留啟動器以便取用。由選單啟遊戲，則顯啟動器以處理所需之提示。"
     choose_image: "擇圖"
     image_filter: "桌寵圖"
-    image_hint: "可用 PNG、JPEG、WebP 或 BMP，以透明 PNG 為佳。"
+    image_hint: "可用 PNG、JPEG、WebP、BMP 或 GIF 動圖。托盤顯其首幀。"
     image_error_title: "桌寵圖不可用"
-    image_error_message: "請擇有效之圖，長寬各不逾 4096 像素，檔案不逾 10 MB。"
+    image_error_message: "請擇有效之圖，長寬各不逾 4096 像素，檔案不逾 10 MB。GIF 不逾 256 幀；動圖過大，宜減其尺寸或時長。"
     appearance: "形貌"
     custom_image: "自定之圖"
   appearances:

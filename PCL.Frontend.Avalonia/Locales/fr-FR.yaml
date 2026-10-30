@@ -3583,9 +3583,9 @@ desktop:
     hint: "Utilisez Quitter dans le menu de notification ou du compagnon pour fermer le lanceur. Sans zone de notification, le lanceur reste accessible. Le lancement depuis ces menus affiche le lanceur pour les confirmations nécessaires."
     choose_image: "Choisir une image"
     image_filter: "Images du compagnon"
-    image_hint: "PNG, JPEG, WebP ou BMP. Un PNG transparent est recommandé."
+    image_hint: "PNG, JPEG, WebP, BMP ou GIF animé. La zone de notification affiche la première image du GIF."
     image_error_title: "Impossible d’utiliser cette image"
-    image_error_message: "Choisissez une image valide de 4096 × 4096 pixels et 10 Mo maximum."
+    image_error_message: "Choisissez une image valide de 4096 × 4096 pixels et 10 Mo maximum. Les GIF acceptent jusqu’à 256 images ; réduisez la résolution ou la durée des animations plus volumineuses."
     appearance: "Apparence"
     custom_image: "Image personnalisée"
   appearances:

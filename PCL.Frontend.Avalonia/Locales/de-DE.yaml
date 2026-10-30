@@ -3583,9 +3583,9 @@ desktop:
     hint: "Zum Beenden den Menüpunkt Beenden im Infobereich oder beim Begleiter verwenden. Ohne Infobereich bleibt der Launcher erreichbar. Beim Start über diese Menüs wird der Launcher für erforderliche Rückfragen angezeigt."
     choose_image: "Bild auswählen"
     image_filter: "Begleiterbilder"
-    image_hint: "PNG, JPEG, WebP oder BMP. Ein transparentes PNG eignet sich am besten."
+    image_hint: "PNG, JPEG, WebP, BMP oder animiertes GIF. Der Infobereich zeigt das erste GIF-Bild."
     image_error_title: "Bild konnte nicht verwendet werden"
-    image_error_message: "Wähle ein gültiges Bild mit höchstens 4096 × 4096 Pixeln und 10 MB."
+    image_error_message: "Wähle ein gültiges Bild mit höchstens 4096 × 4096 Pixeln und 10 MB. GIFs unterstützen bis zu 256 Einzelbilder; verringere bei größeren Animationen die Auflösung oder Länge."
     appearance: "Aussehen"
     custom_image: "Eigenes Bild"
   appearances:

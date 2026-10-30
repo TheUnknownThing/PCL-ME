@@ -3593,9 +3593,9 @@ desktop:
     hint: "透過系統匣或桌寵選單中的「結束」關閉啟動器。系統匣無法使用時，啟動器會保持可存取。透過選單啟動遊戲時，會顯示啟動器以處理必要的提示。"
     choose_image: "選擇圖片"
     image_filter: "桌寵圖片"
-    image_hint: "支援 PNG、JPEG、WebP 或 BMP，建議使用透明背景的 PNG 圖片。"
+    image_hint: "支援 PNG、JPEG、WebP、BMP 或 GIF 動圖。系統匣顯示 GIF 的首幀。"
     image_error_title: "無法使用桌寵圖片"
-    image_error_message: "請選擇有效圖片，尺寸不超過 4096 × 4096 像素，檔案大小不超過 10 MB。"
+    image_error_message: "請選擇有效圖片，尺寸不超過 4096 × 4096 像素，檔案大小不超過 10 MB。GIF 最多支援 256 幀；較大的動圖請降低解析度或縮短時長。"
     appearance: "外觀"
     custom_image: "自訂圖片"
   appearances:
