@@ -37,7 +37,6 @@ internal sealed partial class PclSearchBox : UserControl
         {
             SubscribeAppearance();
             RefreshClearButtonState();
-            RefreshLayoutMetrics();
             RefreshChrome();
             QueueRefreshChrome();
         };
@@ -45,7 +44,6 @@ internal sealed partial class PclSearchBox : UserControl
         DataContextChanged += (_, _) =>
         {
             RefreshClearButtonState();
-            RefreshLayoutMetrics();
             RefreshChrome();
             QueueRefreshChrome();
         };
@@ -57,7 +55,6 @@ internal sealed partial class PclSearchBox : UserControl
         ClearButton.Click += OnClearButtonClick;
 
         RefreshClearButtonState();
-        RefreshLayoutMetrics();
         RefreshChrome();
     }
 
@@ -98,11 +95,6 @@ internal sealed partial class PclSearchBox : UserControl
         if (change.Property == TextProperty)
         {
             RefreshClearButtonState();
-            RefreshLayoutMetrics();
-        }
-        else if (change.Property == ShowSearchButtonProperty)
-        {
-            RefreshLayoutMetrics();
         }
     }
 
@@ -186,17 +178,6 @@ internal sealed partial class PclSearchBox : UserControl
         ClearButton.IsEnabled = hasText;
         ClearButton.Opacity = hasText ? 1 : 0;
         ClearButton.IsHitTestVisible = hasText;
-    }
-
-    private void RefreshLayoutMetrics()
-    {
-        var hasText = !string.IsNullOrWhiteSpace(Text);
-        SearchTextBox.Padding = new Thickness(34, 0, ShowSearchButton
-            ? (hasText ? 102 : 78)
-            : 40, 0);
-        ClearButton.Margin = ShowSearchButton
-            ? new Thickness(0, 0, 70, 0)
-            : new Thickness(0, 0, 10, 0);
     }
 
     private void RefreshChrome()
