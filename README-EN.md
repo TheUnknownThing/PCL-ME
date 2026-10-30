@@ -1,81 +1,106 @@
-[简体中文](README.md) | **English** | [繁體中文](README-ZH_TW.md)
+**English** · [简体中文](README-ZH_CN.md) · [繁體中文](README-ZH_TW.md)
 
-<div align="center">
+<p align="center">
+  <img src="PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME logo" width="112" height="112">
+</p>
 
-<img src="PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME logo" width="80" height="80">
+<h1 align="center">PCL Multiplatform Edition</h1>
 
-# PCL Multiplatform Edition
+<p align="center">
+  The familiar PCL experience, across Windows, macOS, and Linux.
+</p>
 
-A cross-platform Minecraft launcher for Windows, macOS, and Linux.
+<p align="center">
+  <a href="#get-started"><img src="https://img.shields.io/badge/Platforms-Windows_%C2%B7_macOS_%C2%B7_Linux-3D948B?style=flat-square" alt="Available for Windows, macOS, and Linux"></a>
+  <a href="https://github.com/TheUnknownThing/PCL-ME/actions/workflows/build-test.yml"><img src="https://img.shields.io/github/actions/workflow/status/TheUnknownThing/PCL-ME/build-test.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="CI status"></a>
+  <a href="https://github.com/TheUnknownThing/PCL-ME/releases"><img src="https://img.shields.io/github/v/release/TheUnknownThing/PCL-ME?include_prereleases&amp;style=flat-square&amp;label=Release" alt="Latest release version, including prereleases"></a>
+</p>
 
-[⬇ Download Latest](https://github.com/TheUnknownThing/PCL-ME/releases/latest) ·
-[🐛 Report an Issue](https://github.com/TheUnknownThing/PCL-ME/issues) ·
-[📖 Contributing Guide](CONTRIBUTING.md)
+<p align="center">
+  <a href="https://github.com/TheUnknownThing/PCL-ME/releases/latest"><strong>Download</strong></a> ·
+  <a href="https://github.com/TheUnknownThing/PCL-ME/issues">Report an issue</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
 
-</div>
+PCL-ME is a Minecraft launcher that brings Plain Craft Launcher's familiar workflow to all three desktop platforms. Built with C#, .NET 10, and Avalonia, it continues [PCL-CE](https://github.com/PCL-Community/PCL-CE) as an independently maintained fork.
 
-## About PCL-ME
+- **Launch** — manage game instances and launch Minecraft from one place.
+- **Explore** — browse mods, modpacks, resource packs, and shaders for your next playthrough.
+- **Personalize** — adjust themes, color palettes, language, and interface scale to suit your desktop.
 
-PCL-ME aims to bring the familiar PCL experience to Windows, macOS, and Linux, with long-term maintenance in mind.
+## A look inside
 
-## Screenshots
-
-<table>
-<tr>
-<td><img src="docs/screenshots/launch.png" alt="Launch page"></td>
-<td><img src="docs/screenshots/download.png" alt="Download page"></td>
-<td><img src="docs/screenshots/settings.png" alt="Settings page"></td>
-</tr>
-<tr>
-<td align="center">Launching the game</td>
-<td align="center">Browsing mods and modpacks</td>
-<td align="center">Interface and theme settings</td>
-</tr>
+<table align="center" width="760">
+  <tr>
+    <td colspan="2" align="center">
+      <a href="docs/screenshots/launch.png"><img src="docs/screenshots/launch.png" alt="PCL-ME launch page with account controls and the selected Minecraft instance" width="720"></a>
+      <p>Your account, game instances, and launch controls in one place.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/download.png"><img src="docs/screenshots/download.png" alt="Mod browser with Minecraft version, loader, source, and tag filters" width="340"></a>
+      <p><strong>Find your next mod</strong><br>
+      Browse community resources<br>
+      with version and loader filters.</p>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/settings.png"><img src="docs/screenshots/settings.png" alt="Interface settings showing the dark theme, color palettes, language, and UI scale" width="340"></a>
+      <p><strong>Make it feel like home</strong><br>
+      Choose your theme, palette,<br>
+      language, and interface scale.</p>
+    </td>
+  </tr>
 </table>
 
-## Platform Support
+## Get started
 
-| Platform | Status |
-|---|---|
-| 🐧 Linux | Primary target, actively developed and tested |
-| 🍎 macOS | Primary target, actively developed and tested |
-| 🪟 Windows | Supported, but receives less testing than the above |
+Download the package for your operating system and architecture from the [latest release](https://github.com/TheUnknownThing/PCL-ME/releases/latest).
 
-## Installation
+| Platform | Support |
+| --- | --- |
+| Windows | Supported; receives less testing than Linux and macOS. |
+| macOS | Primary platform; actively developed and tested. |
+| Linux | Primary platform; actively developed and tested. |
 
-- **Windows / macOS**: Grab the installer for your platform from the [Releases page](https://github.com/TheUnknownThing/PCL-ME/releases/latest).
-- **Linux**: In addition to the Releases artifacts, Arch Linux users can install from the AUR:
+On Arch Linux, install the AUR package with an AUR helper such as `yay`:
 
-  ```bash
-  yay -S pcl-me-bin
-  ```
+```sh
+yay -S pcl-me-bin
+```
 
----
+## Build from source
 
-## For Developers
+Install the **.NET 10 SDK**, then run these commands from the repository root:
 
-If you'd like to build from source or contribute:
-
-```bash
+```sh
 dotnet restore
 dotnet build
 dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
-See the [Avalonia frontend docs](PCL.Frontend.Avalonia/README.md) and [backend docs](PCL.Core.Backend/README.md) for more details, and refer to [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.
+The codebase separates the desktop interface from the shared launcher services:
 
-> PCL-ME was forked from [PCL-CE](https://github.com/PCL-Community/PCL-CE) and is now maintained as an independent branch. Tech stack: C# + .NET 10 + Avalonia.
+| Project | Responsibility |
+| --- | --- |
+| [PCL.Frontend.Avalonia](PCL.Frontend.Avalonia/README.md) | Desktop UI, themes, assets, and application packaging. |
+| [PCL.Core.Backend](PCL.Core.Backend/README.md) | Shared launcher services, Minecraft launch workflows, downloads, and platform utilities. |
 
-## License
+Run `dotnet test` before submitting code changes. The project documentation above covers more specific build, test, packaging, and troubleshooting workflows.
 
-PCL-ME is licensed per directory:
+## Contributing
 
-- UI-related content under `PCL.Frontend.Avalonia/` follows its [custom license](PCL.Frontend.Avalonia/LICENSE).
-- The rest of the repository follows the [Apache License 2.0](LICENSE).
+Bug reports, documentation improvements, and code contributions are welcome. Read the [contribution guide](CONTRIBUTING.md) for the development workflow and submission requirements.
 
-If you are unsure which terms apply to a particular file, refer to the license notice in its directory or parent directories.
+When reporting a bug, include your operating system, launcher and game versions, reproduction steps, and logs. For a new feature, open a [feature issue](https://github.com/TheUnknownThing/PCL-ME/issues/new?template=3-feature.yml) and agree on the direction with a maintainer before submitting an implementation.
 
-#### Asset Credits
+## Licensing & credits
 
-- The application icon is based on assets from [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo) (Apache 2.0).
-- The UI uses [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/), copyrighted by Huawei Device Co., Ltd. and licensed under the HarmonyOS Sans Fonts License Agreement. We gratefully acknowledge their work.
+Licensing depends on the directory:
+
+- UI-related content under `PCL.Frontend.Avalonia/` is covered by the frontend's [custom license](PCL.Frontend.Avalonia/LICENSE).
+- The rest of the repository is covered by [Apache License 2.0](LICENSE), unless a file states otherwise.
+
+Check the license notice in a file's directory or parent directories for the applicable terms.
+
+PCL-ME builds on the work of [PCL-CE](https://github.com/PCL-Community/PCL-CE). The application icon is based on [PCL-Community/PCL-CE-Logo](https://github.com/PCL-Community/PCL-CE-Logo), licensed under Apache 2.0. The interface uses [HarmonyOS Sans](https://developer.huawei.com/consumer/en/design/resource/), copyright Huawei Device Co., Ltd., under the HarmonyOS Sans Fonts License Agreement.
