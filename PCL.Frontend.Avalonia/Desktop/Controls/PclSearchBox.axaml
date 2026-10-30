@@ -82,7 +82,7 @@
           x:Name="SearchButton"
           Grid.Column="1"
           MinWidth="60"
-          Height="32"
+          MinHeight="0"
           Margin="0,4,4,4"
           Command="{Binding SearchCommand, ElementName=Root}"
           HorizontalAlignment="Right"
