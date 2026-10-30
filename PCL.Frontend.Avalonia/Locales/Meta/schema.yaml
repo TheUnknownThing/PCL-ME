@@ -1671,6 +1671,10 @@ setup:
         summary: []
         action: []
         command: []
+      contributor:
+        summary: []
+        action: []
+        command: []
       repo:
         title: []
         action: []
@@ -4099,3 +4103,42 @@ welcome:
     tutorial: []
     feedback: []
     github: []
+desktop:
+  actions:
+    show_launcher: []
+    launch_selected: []
+    show_pet: []
+    hide_pet: []
+    quit: []
+  pet:
+    title: []
+    hint: []
+  settings:
+    header: []
+    keep_running: []
+    enable_pet: []
+    topmost: []
+    scale: []
+    hint: []
+    choose_image: []
+    image_filter: []
+    image_hint: []
+    image_error_title: []
+    image_error_message: []
+    use_custom: []
+    preset_section: []
+    custom_section: []
+    close_action: []
+    close_minimize_to_tray: []
+    close_exit: []
+    preset: []
+    click_action: []
+    double_click_action: []
+    action_none: []
+    action_play_animation: []
+  appearances:
+    slime: []
+    enderman: []
+  presets:
+    creeper_gif: []
+    campfire_gif: []

@@ -48,6 +48,7 @@
     <PackageReference Include="Avalonia" Version="11.3.13" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.13" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     <PackageReference Include="fNbt" Version="1.0.0" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
@@ -80,6 +81,7 @@
     <AvaloniaResource Include="Assets/Fonts/HarmonyOS_Sans_*.ttf" />
     <AvaloniaResource Include="Assets/icon.ico" />
     <AvaloniaResource Include="Assets/icon.png" />
+    <AvaloniaResource Include="Assets/Pets/*.gif" />
     <EmbeddedResource Include="Assets/icon.png" LogicalName="PCL.Frontend.Avalonia.Assets.icon.png" />
     <Content Include="Assets/LauncherAssets/**" Link="LauncherAssets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Locales/**" Link="Locales/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

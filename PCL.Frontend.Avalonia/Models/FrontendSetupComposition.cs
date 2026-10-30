@@ -76,7 +76,10 @@ internal sealed record FrontendSetupLauncherMiscState(
     string HttpProxyUsername,
     string HttpProxyPassword,
     double DebugAnimationSpeed,
-    bool DebugModeEnabled);
+    bool DebugModeEnabled)
+{
+    public FrontendDesktopSettings Desktop { get; init; } = new();
+}
 
 internal sealed record FrontendSetupJavaState(
     string SelectedRuntimeKey,

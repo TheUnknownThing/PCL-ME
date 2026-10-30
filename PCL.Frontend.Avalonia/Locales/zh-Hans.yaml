@@ -1483,6 +1483,10 @@ setup:
         summary: PCL-ME 维护者。
         action: 打开主页
         command: 打开 GitHub 个人主页
+      contributor:
+        summary: PCL-ME 贡献者。
+        action: 打开主页
+        command: 打开 GitHub 个人主页
       repo:
         title: PCL-ME
         action: 打开仓库
@@ -3574,3 +3578,42 @@ welcome:
     tutorial: 打开教程
     feedback: 提交反馈
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "显示启动器"
+    launch_selected: "启动选中的实例"
+    show_pet: "显示桌宠"
+    hide_pet: "隐藏桌宠"
+    quit: "退出"
+  pet:
+    title: "PCL-ME 桌宠"
+    hint: "单击或双击的行为可在设置中更改；拖动可移动，右键打开菜单以启动游戏或使用其他操作。"
+  settings:
+    header: "托盘与桌宠"
+    keep_running: "最小化窗口时驻留托盘"
+    enable_pet: "启用桌宠"
+    topmost: "桌宠置顶"
+    scale: "桌宠大小"
+    hint: "通过托盘或桌宠菜单中的“退出”关闭启动器。托盘不可用时，启动器会保持可访问。通过菜单启动游戏时，会显示启动器以处理必要的提示。"
+    choose_image: "选择图片"
+    image_filter: "桌宠图片"
+    image_hint: "仅支持 PNG、JPEG、WebP、BMP 静态图片。预设中的 GIF 动图始终可用。"
+    image_error_title: "无法使用桌宠图片"
+    image_error_message: "请选择有效图片，尺寸不超过 4096 × 4096 像素，文件大小不超过 10 MB。自定义桌宠仅支持静态图片。"
+    use_custom: "使用自定义桌宠"
+    preset_section: "预设桌宠"
+    custom_section: "自定义桌宠"
+    close_action: "点击关闭按钮时"
+    close_minimize_to_tray: "最小化到托盘"
+    close_exit: "退出启动器"
+    preset: "预设样式"
+    click_action: "单击行为"
+    double_click_action: "双击行为"
+    action_none: "无操作"
+    action_play_animation: "播放交互动画"
+  appearances:
+    slime: "史莱姆"
+    enderman: "末影人"
+  presets:
+    creeper_gif: "苦力怕"
+    campfire_gif: "营火"

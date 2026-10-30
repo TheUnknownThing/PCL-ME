@@ -86,11 +86,7 @@ internal sealed partial class MainWindow : Window
         ActualThemeVariantChanged += OnActualThemeVariantChanged;
         ResourcesChanged += OnWindowResourcesChanged;
 
-        Opened += (_, _) =>
-        {
-            InitializeCompositionVisuals();
-            RunEntranceAnimation();
-        };
+        Opened += OnWindowOpened;
         Closed += OnWindowClosed;
         Deactivated += OnWindowDeactivated;
         AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Bubble, handledEventsToo: true);
@@ -208,6 +204,13 @@ internal sealed partial class MainWindow : Window
         _compositor ??= _gridRootVisual?.Compositor
             ?? _launchLeftContentHostVisual?.Compositor
             ?? _standardLeftContentHostVisual?.Compositor;
+    }
+
+    private void OnWindowOpened(object? sender, EventArgs e)
+    {
+        Opened -= OnWindowOpened;
+        InitializeCompositionVisuals();
+        RunEntranceAnimation();
     }
 
     private async void RunEntranceAnimation()

@@ -1481,6 +1481,10 @@ setup:
         summary: PCL-ME-Betreuer.
         action: Profil öffnen
         command: GitHub-Profil öffnen
+      contributor:
+        summary: Mitwirkender an PCL-ME.
+        action: Profil öffnen
+        command: GitHub-Profil öffnen
       repo:
         title: "PCL-ME"
         action: Repository öffnen
@@ -3564,3 +3568,42 @@ welcome:
     tutorial: Tutorial öffnen
     feedback: Feedback senden
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "Launcher anzeigen"
+    launch_selected: "Ausgewählte Instanz starten"
+    show_pet: "Desktop-Begleiter anzeigen"
+    hide_pet: "Desktop-Begleiter ausblenden"
+    quit: "Beenden"
+  pet:
+    title: "PCL-ME Desktop-Begleiter"
+    hint: "Einzel- und Doppelklick-Aktionen lassen sich in den Einstellungen ändern. Zum Verschieben ziehen. Rechtsklicken für Spielstart und weitere Aktionen."
+  settings:
+    header: "Infobereich und Desktop-Begleiter"
+    keep_running: "Beim Minimieren im Infobereich weiterlaufen"
+    enable_pet: "Desktop-Begleiter aktivieren"
+    topmost: "Begleiter im Vordergrund halten"
+    scale: "Größe des Begleiters"
+    hint: "Zum Beenden den Menüpunkt Beenden im Infobereich oder beim Begleiter verwenden. Ohne Infobereich bleibt der Launcher erreichbar. Beim Start über diese Menüs wird der Launcher für erforderliche Rückfragen angezeigt."
+    choose_image: "Bild auswählen"
+    image_filter: "Begleiterbilder"
+    image_hint: "Nur statische PNG-, JPEG-, WebP- oder BMP-Bilder. GIF-Animationen sind als Voreinstellungen verfügbar."
+    image_error_title: "Bild konnte nicht verwendet werden"
+    image_error_message: "Wähle ein gültiges Bild mit höchstens 4096 × 4096 Pixeln und 10 MB. Eigene Begleiter unterstützen nur statische Bilder."
+    use_custom: "Eigenen Begleiter verwenden"
+    preset_section: "Voreingestellte Begleiter"
+    custom_section: "Eigener Begleiter"
+    close_action: "Beim Klicken auf Schließen"
+    close_minimize_to_tray: "In den Infobereich minimieren"
+    close_exit: "Launcher beenden"
+    preset: "Voreinstellung"
+    click_action: "Aktion bei einfachem Klick"
+    double_click_action: "Aktion bei Doppelklick"
+    action_none: "Nichts tun"
+    action_play_animation: "Interaktionsanimation abspielen"
+  appearances:
+    slime: "Schleim"
+    enderman: "Enderman"
+  presets:
+    creeper_gif: "Creeper"
+    campfire_gif: "Lagerfeuer"

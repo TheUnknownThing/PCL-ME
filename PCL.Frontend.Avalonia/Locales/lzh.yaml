@@ -1481,6 +1481,10 @@ setup:
         summary: PCL-ME 維護者。
         action: 開主頁
         command: 開 GitHub 個人主頁
+      contributor:
+        summary: PCL-ME 貢獻者。
+        action: 開主頁
+        command: 開 GitHub 個人主頁
       repo:
         title: "PCL-ME"
         action: 啟倉庫
@@ -3564,3 +3568,42 @@ welcome:
     tutorial: 開教學
     feedback: 提交反饋
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "顯啟動器"
+    launch_selected: "啟所選實例"
+    show_pet: "顯桌寵"
+    hide_pet: "隱桌寵"
+    quit: "退出"
+  pet:
+    title: "PCL-ME 桌寵"
+    hint: "單擊、雙擊之行，可於設置中改之；拖之可移，右擊以啟選單，可啟遊戲及行他事。"
+  settings:
+    header: "托盤與桌寵"
+    keep_running: "最小化時留於托盤"
+    enable_pet: "啟用桌寵"
+    topmost: "桌寵居頂"
+    scale: "桌寵大小"
+    hint: "欲退，請於托盤或桌寵選單擇「退出」。無托盤則留啟動器以便取用。由選單啟遊戲，則顯啟動器以處理所需之提示。"
+    choose_image: "擇圖"
+    image_filter: "桌寵圖"
+    image_hint: "唯 PNG、JPEG、WebP、BMP 靜圖可用。GIF 動圖則為預設。"
+    image_error_title: "桌寵圖不可用"
+    image_error_message: "請擇有效之圖，長寬各不逾 4096 像素，檔案不逾 10 MB。自定桌寵唯用靜圖。"
+    use_custom: "用自定之桌寵"
+    preset_section: "預設之桌寵"
+    custom_section: "自定之桌寵"
+    close_action: "擊關閉之時"
+    close_minimize_to_tray: "藏於托盤"
+    close_exit: "退啟動器"
+    preset: "預設之樣"
+    click_action: "單擊之行"
+    double_click_action: "雙擊之行"
+    action_none: "無所為"
+    action_play_animation: "播互動之動畫"
+  appearances:
+    slime: "史萊姆"
+    enderman: "末影人"
+  presets:
+    creeper_gif: "苦力怕"
+    campfire_gif: "營火"

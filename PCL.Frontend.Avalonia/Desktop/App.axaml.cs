@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -12,7 +13,7 @@ using PCL.Frontend.Avalonia.Workflows;
 
 namespace PCL.Frontend.Avalonia.Desktop;
 
-internal sealed class App : Application
+internal sealed partial class App : Application
 {
     private readonly AvaloniaCommandOptions _options;
     private readonly FrontendRuntimePaths _runtimePaths;
@@ -48,6 +49,7 @@ internal sealed class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             var startupVisual = FrontendStartupVisualCompositionService.Compose(_runtimePaths);
             var splashSession = FrontendStartupSplashPresentationService.Show(startupVisual);
             desktop.Exit += OnDesktopExit;
@@ -90,8 +92,9 @@ internal sealed class App : Application
                 DataContext = launcherViewModel
             };
 
-            mainWindow.Opened += async (_, _) =>
+            async void OnMainWindowOpened(object? sender, EventArgs args)
             {
+                mainWindow.Opened -= OnMainWindowOpened;
                 await CloseSplashScreenAsync(splashSession);
                 await FrontendMigrationDiagnostics.ShowMigrationWarningsAsync(launcherActionService, runtimePaths, _i18nService!);
 
@@ -99,9 +102,12 @@ internal sealed class App : Application
                 {
                     await FrontendFontDiagnostics.ShowMissingCjkFontWarningAsync(launcherActionService);
                 }
-            };
+            }
+
+            mainWindow.Opened += OnMainWindowOpened;
 
             desktop.MainWindow = mainWindow;
+            InitializeDesktopShell(mainWindow, launcherViewModel, launcherActionService, _i18nService);
             if (!mainWindow.IsVisible)
             {
                 mainWindow.Show();
@@ -122,6 +128,7 @@ internal sealed class App : Application
         }
         finally
         {
+            DisposeDesktopShell();
             _i18nService?.Dispose();
             FrontendLoggingBootstrap.Dispose();
         }

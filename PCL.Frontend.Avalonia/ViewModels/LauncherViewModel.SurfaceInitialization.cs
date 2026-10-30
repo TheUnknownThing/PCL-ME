@@ -54,6 +54,12 @@ internal sealed partial class LauncherViewModel
                 _i18n.T("setup.about.project.maintainer.action"),
                 CreateLinkCommand(_i18n.T("setup.about.project.maintainer.command"), "https://github.com/wanoful")),
             new AboutEntryViewModel(
+                "sclass53",
+                _i18n.T("setup.about.project.contributor.summary"),
+                LoadLauncherBitmap("Images", "Heads", "sclass53.png"),
+                _i18n.T("setup.about.project.contributor.action"),
+                CreateLinkCommand(_i18n.T("setup.about.project.contributor.command"), "https://github.com/sclass53")),
+            new AboutEntryViewModel(
                 _i18n.T("setup.about.project.repo.title"),
                 _setupComposition.About.LauncherVersionSummary,
                 LoadLauncherBitmap("Images", "icon.png"),
@@ -557,6 +563,7 @@ internal sealed partial class LauncherViewModel
 
     private void InitializeGlobalSetupSettings()
     {
+        InitializeDesktopSettings();
         _ignoreQuiltLoader = _setupComposition.GameManage.IgnoreQuiltLoader;
         _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;
         _debugModeEnabled = _setupComposition.LauncherMisc.DebugModeEnabled;
@@ -566,6 +573,7 @@ internal sealed partial class LauncherViewModel
 
     private void InitializeLauncherMiscSurface()
     {
+        InitializeDesktopSettings();
         _selectedLauncherLocaleIndex = ResolveLauncherLocaleIndex(_i18n.Locale);
         _selectedSystemActivityIndex = _setupComposition.LauncherMisc.SystemActivityIndex;
         _maxRealTimeLogValue = _setupComposition.LauncherMisc.MaxRealTimeLogValue;

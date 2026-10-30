@@ -1483,6 +1483,10 @@ setup:
         summary: PCL-ME maintainer.
         action: Open profile
         command: Open GitHub profile
+      contributor:
+        summary: PCL-ME contributor.
+        action: Open profile
+        command: Open GitHub profile
       repo:
         title: PCL-ME
         action: Open repository
@@ -3574,3 +3578,42 @@ welcome:
     tutorial: Open Tutorial
     feedback: Submit Feedback
     github: GitHub
+desktop:
+  actions:
+    show_launcher: "Show launcher"
+    launch_selected: "Launch selected instance"
+    show_pet: "Show desktop pet"
+    hide_pet: "Hide desktop pet"
+    quit: "Quit"
+  pet:
+    title: "PCL-ME desktop pet"
+    hint: "Configure the single-click and double-click actions in settings. Drag to move. Right-click for game launch and other actions."
+  settings:
+    header: "Tray and desktop pet"
+    keep_running: "Keep running in the tray when minimized"
+    enable_pet: "Enable desktop pet"
+    topmost: "Keep pet on top"
+    scale: "Pet size"
+    hint: "Quit from the tray or pet menu to exit. If no tray is available, the launcher stays accessible. Launching from either menu shows the launcher for any required prompts."
+    choose_image: "Choose image"
+    image_filter: "Pet images"
+    image_hint: "Static PNG, JPEG, WebP, or BMP only. GIF animations are available as presets."
+    image_error_title: "Could not use pet image"
+    image_error_message: "Choose a valid image up to 4096 × 4096 pixels and 10 MB. Custom pets support static images only."
+    use_custom: "Use a custom pet"
+    preset_section: "Preset pets"
+    custom_section: "Custom pet"
+    close_action: "When the close button is clicked"
+    close_minimize_to_tray: "Minimize to tray"
+    close_exit: "Exit the launcher"
+    preset: "Preset"
+    click_action: "Single-click action"
+    double_click_action: "Double-click action"
+    action_none: "Do nothing"
+    action_play_animation: "Play interaction animation"
+  appearances:
+    slime: "Slime"
+    enderman: "Enderman"
+  presets:
+    creeper_gif: "Creeper"
+    campfire_gif: "Campfire"

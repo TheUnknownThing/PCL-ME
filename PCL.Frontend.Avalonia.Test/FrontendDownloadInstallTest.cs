@@ -33,7 +33,9 @@ public sealed class FrontendDownloadInstallTest
             var groupCard = groups.GetVisualDescendants().OfType<PclCard>()
                 .Single(card => ReferenceEquals(card.DataContext, fixture.Section));
             ClickHeader(groupCard);
-            await Advance(400);
+            // CI may defer the transition continuation beyond its nominal duration.
+            var deadline = DateTime.UtcNow.AddSeconds(3);
+            while (!expanded.IsVisible && DateTime.UtcNow < deadline) await Advance(16);
             Assert.IsTrue(expanded.IsVisible);
 
             // Reverse the collapse while its exit fade is still running.

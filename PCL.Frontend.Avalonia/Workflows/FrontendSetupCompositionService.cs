@@ -136,7 +136,10 @@ internal static class FrontendSetupCompositionService
                 HttpProxyUsername: string.Empty,
                 HttpProxyPassword: string.Empty,
                 DebugAnimationSpeed: ReadValue(sharedConfig, "SystemDebugAnim", 9),
-                DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false)),
+                DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false))
+            {
+                Desktop = FrontendDesktopSettingsService.Read(localConfig)
+            },
             new FrontendSetupJavaState("auto", []),
             BuildUiState(sharedConfig, localConfig, i18n));
     }
@@ -406,7 +409,10 @@ internal static class FrontendSetupCompositionService
             HttpProxyUsername: FrontendHttpProxyService.ReadConfiguredProxyUsername(paths),
             HttpProxyPassword: FrontendHttpProxyService.ReadConfiguredProxyPassword(paths),
             DebugAnimationSpeed: ReadValue(sharedConfig, "SystemDebugAnim", 9),
-            DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false));
+            DebugModeEnabled: ReadValue(sharedConfig, "SystemDebugMode", false))
+        {
+            Desktop = FrontendDesktopSettingsService.Read(localConfig)
+        };
     }
 
     private static FrontendSetupJavaState BuildJavaState(

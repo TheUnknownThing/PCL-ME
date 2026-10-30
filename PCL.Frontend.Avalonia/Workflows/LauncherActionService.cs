@@ -43,6 +43,8 @@ internal sealed partial class LauncherActionService(
 
     public Func<string, string, IReadOnlyList<PclChoiceDialogOption>, string?, string, Task<string?>>? ChoicePresenter { get; set; }
 
+    public Action<MinecraftLaunchShellActionKind>? LauncherShellActionHandler { get; set; }
+
     public void ExitLauncher()
     {
         FlushPendingSettings();
@@ -67,6 +69,18 @@ internal sealed partial class LauncherActionService(
 
     private void ApplyLauncherShellAction(MinecraftLaunchShellAction action)
     {
+        if (action.Kind == MinecraftLaunchShellActionKind.ExitLauncher)
+        {
+            ExitLauncher();
+            return;
+        }
+
+        if (LauncherShellActionHandler is { } handler)
+        {
+            handler(action.Kind);
+            return;
+        }
+
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
             desktop.MainWindow is null)
         {
@@ -75,9 +89,6 @@ internal sealed partial class LauncherActionService(
 
         switch (action.Kind)
         {
-            case MinecraftLaunchShellActionKind.ExitLauncher:
-                ExitLauncher();
-                break;
             case MinecraftLaunchShellActionKind.HideLauncher:
                 desktop.MainWindow.Hide();
                 break;

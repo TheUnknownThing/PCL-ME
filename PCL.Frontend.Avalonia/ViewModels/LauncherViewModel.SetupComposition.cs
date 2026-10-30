@@ -59,7 +59,19 @@ internal sealed partial class LauncherViewModel
 
     private static readonly string[] LauncherMiscLocalResetKeys =
     [
-        "SystemSystemActivity"
+        "SystemSystemActivity",
+        FrontendDesktopSettingsService.KeepRunningInTrayKey,
+        FrontendDesktopSettingsService.PetEnabledKey,
+        FrontendDesktopSettingsService.PetTopmostKey,
+        FrontendDesktopSettingsService.PetScaleKey,
+        FrontendDesktopSettingsService.PetUseCustomKey,
+        FrontendDesktopSettingsService.PetPresetKey,
+        FrontendDesktopSettingsService.PetImagePathKey,
+        FrontendDesktopSettingsService.PetClickActionKey,
+        FrontendDesktopSettingsService.PetDoubleClickActionKey,
+        FrontendDesktopSettingsService.WindowCloseActionKey,
+        FrontendDesktopSettingsService.PetXKey,
+        FrontendDesktopSettingsService.PetYKey
     ];
 
     private static readonly string[] LauncherMiscSharedResetKeys =
@@ -459,6 +471,40 @@ internal sealed partial class LauncherViewModel
 
         switch (propertyName)
         {
+            case nameof(KeepRunningInTray):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.KeepRunningInTrayKey, KeepRunningInTray);
+                break;
+            case nameof(DesktopPetEnabled):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetEnabledKey, DesktopPetEnabled);
+                break;
+            case nameof(DesktopPetTopmost):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetTopmostKey, DesktopPetTopmost);
+                break;
+            case nameof(DesktopPetScale):
+                _launcherActionService.PersistLocalValueDeferred(FrontendDesktopSettingsService.PetScaleKey, DesktopPetScale);
+                break;
+            case nameof(DesktopPetImagePath):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetImagePathKey, DesktopPetImagePath);
+                break;
+            case nameof(DesktopPetUseCustom):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetUseCustomKey, DesktopPetUseCustom);
+                break;
+            case nameof(SelectedDesktopPetPresetIndex):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetPresetKey,
+                    PetPresetCatalog.All[_selectedDesktopPetPresetIndex].Id);
+                break;
+            case nameof(SelectedDesktopPetClickActionIndex):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetClickActionKey,
+                    ClickActionOrder[_selectedDesktopPetClickActionIndex].ToString());
+                break;
+            case nameof(SelectedDesktopPetDoubleClickActionIndex):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.PetDoubleClickActionKey,
+                    DoubleClickActionOrder[_selectedDesktopPetDoubleClickActionIndex].ToString());
+                break;
+            case nameof(SelectedCloseActionIndex):
+                _launcherActionService.PersistLocalValue(FrontendDesktopSettingsService.WindowCloseActionKey,
+                    CloseActionOrder[_selectedWindowCloseActionIndex].ToString());
+                break;
             case nameof(SelectedUpdateChannelIndex):
                 _launcherActionService.PersistLocalValue("SystemUpdateChannel", SelectedUpdateChannelIndex);
                 break;

@@ -170,10 +170,9 @@ internal sealed partial class LauncherViewModel
         _launcherActionService.RemoveLocalValues(LauncherMiscLocalResetKeys);
         _launcherActionService.RemoveSharedValues(LauncherMiscSharedResetKeys);
         _launcherActionService.RemoveSharedValues(LauncherMiscProtectedResetKeys);
-        if (!_i18n.ReloadLocaleFromSettings())
-        {
-            ReloadSetupComposition();
-        }
+        _i18n.ReloadLocaleFromSettings();
+        // Relocalization updates labels; reset must also reapply the stored defaults.
+        ReloadSetupComposition();
 
         AddActivity(
             LT("setup.launcher_misc.activities.reset"),

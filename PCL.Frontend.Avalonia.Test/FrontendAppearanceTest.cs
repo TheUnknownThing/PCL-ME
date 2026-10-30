@@ -31,6 +31,68 @@ namespace PCL.Frontend.Avalonia.Test;
 public sealed class FrontendAppearanceTest
 {
     [TestMethod]
+    public async Task DesktopPreferences_PersistAcrossNavigationLocaleChangesAndReset()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            var launcher = fixture.Launcher;
+            Assert.IsFalse(launcher.KeepRunningInTray);
+            Assert.IsTrue(launcher.DesktopPetEnabled);
+            Assert.AreEqual("creeper_gif", launcher.DesktopSettings.PetPresetId);
+            Assert.AreEqual(fixture.I18n.T("desktop.presets.creeper_gif") + " (GIF)",
+                launcher.DesktopPetPresetOptions[launcher.SelectedDesktopPetPresetIndex]);
+            Assert.AreEqual(4, launcher.DesktopPetPresetOptions.Count);
+            launcher.KeepRunningInTray = true;
+            launcher.DesktopPetEnabled = true;
+            launcher.DesktopPetTopmost = false;
+            launcher.DesktopPetScale = 1.5;
+            launcher.SelectedDesktopPetPresetIndex = 1;
+            fixture.Actions.FlushPendingSettings();
+            var expected = new FrontendDesktopSettings(true, true, false, 1.5, false, "slime",
+                PetClickAction: PetAction.PlayAnimation, CloseAction: WindowCloseAction.MinimizeToTray);
+            Assert.AreEqual(expected, FrontendDesktopSettingsService.Read(new YamlFileProvider(fixture.Paths.LocalConfigPath)));
+
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            Assert.AreEqual(expected, launcher.DesktopSettings);
+            fixture.I18n.SetLocale("zh-Hans");
+            Tick();
+            Assert.AreEqual(expected, launcher.DesktopSettings);
+
+            var customImage = Path.Combine(fixture.Paths.DataDirectory, "custom.png");
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetImagePathKey, customImage);
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetUseCustomKey, true);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLaunch);
+            fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
+            Assert.AreEqual(customImage, launcher.DesktopPetImagePath);
+            Assert.IsTrue(launcher.HasDesktopPetImage);
+            Assert.IsTrue(launcher.DesktopPetUseCustom);
+            Assert.IsFalse(launcher.IsDesktopPetPresetSelectionEnabled);
+            Assert.IsTrue(launcher.IsDesktopPetCustomSelectionEnabled);
+
+            fixture.I18n.SetLocale("fr-FR");
+            Tick();
+            Assert.IsTrue(launcher.HasDesktopPetImage, "Translating the settings must preserve the custom image.");
+
+            launcher.SelectedDesktopPetPresetIndex = 2;
+            Assert.IsFalse(launcher.DesktopPetUseCustom);
+            Assert.AreEqual("enderman", launcher.DesktopSettings.PetPresetId);
+            Assert.AreEqual(customImage, launcher.DesktopPetImagePath,
+                "Switching to a preset keeps the custom image for later reuse.");
+
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetXKey, -1800);
+            fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetYKey, 200);
+            launcher.ResetLauncherMiscSettingsCommand.Execute(null);
+            Tick();
+            Assert.AreEqual(new FrontendDesktopSettings(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray),
+                launcher.DesktopSettings);
+            Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(fixture.Paths.OpenLocalConfigProvider()));
+        });
+    }
+
+    [TestMethod]
     public async Task SettingsNavigation_PreservesActiveNetworkConfiguration()
     {
         await RunOnUiThread(() =>
