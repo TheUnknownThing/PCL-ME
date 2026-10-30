@@ -18,20 +18,75 @@ public sealed class FrontendDesktopSettingsTest
             Directory.CreateDirectory(root);
             var path = Path.Combine(root, "settings.yaml");
             var provider = new YamlFileProvider(path);
-            Assert.AreEqual(new FrontendDesktopSettings(), FrontendDesktopSettingsService.Read(provider));
+            Assert.AreEqual(new FrontendDesktopSettings(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray),
+                FrontendDesktopSettingsService.Read(provider));
             Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(provider));
             provider.Set(FrontendDesktopSettingsService.KeepRunningInTrayKey, true);
             provider.Set(FrontendDesktopSettingsService.PetEnabledKey, true);
             provider.Set(FrontendDesktopSettingsService.PetTopmostKey, false);
             provider.Set(FrontendDesktopSettingsService.PetScaleKey, 1.5);
+            provider.Set(FrontendDesktopSettingsService.PetUseCustomKey, true);
+            provider.Set(FrontendDesktopSettingsService.PetPresetKey, "campfire_gif");
             provider.Set(FrontendDesktopSettingsService.PetImagePathKey, Path.Combine(root, "custom.png"));
-            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
+            provider.Set(FrontendDesktopSettingsService.PetClickActionKey, "ShowLauncher");
+            provider.Set(FrontendDesktopSettingsService.PetDoubleClickActionKey, "HidePet");
+            provider.Set(FrontendDesktopSettingsService.WindowCloseActionKey, "MinimizeToTray");
             provider.Set(FrontendDesktopSettingsService.PetXKey, -1800);
             provider.Set(FrontendDesktopSettingsService.PetYKey, 140);
             provider.Sync();
             var reopened = new YamlFileProvider(path);
-            Assert.AreEqual(new FrontendDesktopSettings(true, true, false, 1.5, Path.Combine(root, "custom.png"), "slime"), FrontendDesktopSettingsService.Read(reopened));
+            Assert.AreEqual(new FrontendDesktopSettings(true, true, false, 1.5, true, "campfire_gif",
+                Path.Combine(root, "custom.png"), PetAction.ShowLauncher, PetAction.HidePet,
+                WindowCloseAction.MinimizeToTray),
+                FrontendDesktopSettingsService.Read(reopened));
             Assert.AreEqual(new PixelPoint(-1800, 140), FrontendDesktopSettingsService.ReadPosition(reopened));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void LegacyAppearance_IsMigratedToThePresetKeyAndRemoved()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-desktop-migrate-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(root);
+            var path = Path.Combine(root, "settings.yaml");
+            var provider = new YamlFileProvider(path);
+            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
+            provider.Sync();
+
+            var settings = FrontendDesktopSettingsService.Read(provider);
+            Assert.AreEqual("slime", settings.PetPresetId);
+
+            var reopened = new YamlFileProvider(path);
+            Assert.AreEqual("slime", reopened.Get<string>(FrontendDesktopSettingsService.PetPresetKey));
+            Assert.IsFalse(reopened.Exists(FrontendDesktopSettingsService.PetAppearanceKey));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void ExplicitPreset_WinsOverLegacyAppearanceAndLegacyKeyIsRemoved()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-desktop-migrate-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(root);
+            var path = Path.Combine(root, "settings.yaml");
+            var provider = new YamlFileProvider(path);
+            provider.Set(FrontendDesktopSettingsService.PetAppearanceKey, "slime");
+            provider.Set(FrontendDesktopSettingsService.PetPresetKey, "campfire_gif");
+            provider.Sync();
+
+            Assert.AreEqual("campfire_gif", FrontendDesktopSettingsService.Read(provider).PetPresetId);
+            Assert.IsFalse(new YamlFileProvider(path).Exists(FrontendDesktopSettingsService.PetAppearanceKey));
         }
         finally
         {
@@ -63,5 +118,12 @@ public sealed class FrontendDesktopSettingsTest
         Assert.AreEqual(0.5, FrontendDesktopSettingsService.NormalizeScale(-100));
         Assert.AreEqual(2, FrontendDesktopSettingsService.NormalizeScale(100));
         Assert.AreEqual("creeper", FrontendDesktopSettingsService.NormalizeAppearance("unknown"));
+        Assert.AreEqual("creeper_gif", FrontendDesktopSettingsService.NormalizePreset("unknown"));
+        Assert.AreEqual("slime", FrontendDesktopSettingsService.NormalizePreset(null, "slime"));
+        Assert.AreEqual("campfire_gif", FrontendDesktopSettingsService.NormalizePreset("campfire_gif"));
+        Assert.AreEqual(WindowCloseAction.MinimizeToTray,
+            FrontendDesktopSettingsService.NormalizeCloseAction("MinimizeToTray", WindowCloseAction.Exit));
+        Assert.AreEqual(WindowCloseAction.Exit,
+            FrontendDesktopSettingsService.NormalizeCloseAction("unknown", WindowCloseAction.Exit));
     }
 }

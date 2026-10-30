@@ -10,32 +10,88 @@ internal static class FrontendDesktopSettingsService
     internal const string PetEnabledKey = "UiDesktopPetEnabled";
     internal const string PetTopmostKey = "UiDesktopPetTopmost";
     internal const string PetScaleKey = "UiDesktopPetScale";
+    internal const string PetUseCustomKey = "UiDesktopPetUseCustom";
+    internal const string PetPresetKey = "UiDesktopPetPreset";
     internal const string PetImagePathKey = "UiDesktopPetImage";
+    internal const string PetClickActionKey = "UiDesktopPetClickAction";
+    internal const string PetDoubleClickActionKey = "UiDesktopPetDoubleClickAction";
+    internal const string WindowCloseActionKey = "UiWindowCloseAction";
+
+    // Legacy keys, read once for migration.
     internal const string PetAppearanceKey = "UiDesktopPetAppearance";
-    internal static readonly string[] BuiltinAppearances = ["creeper", "slime", "grass_block", "enderman"];
+
     internal const string PetXKey = "UiDesktopPetX";
     internal const string PetYKey = "UiDesktopPetY";
 
-    public static FrontendDesktopSettings Read(YamlFileProvider config) => new(
-        ReadValue(config, KeepRunningInTrayKey, false),
-        ReadValue(config, PetEnabledKey, false),
-        ReadValue(config, PetTopmostKey, true),
-        NormalizeScale(ReadValue(config, PetScaleKey, 1d)),
-        ReadValue(config, PetImagePathKey, string.Empty),
-        NormalizeAppearance(ReadValue(config, PetAppearanceKey, "creeper")));
+    internal static readonly string[] BuiltinAppearances = ["creeper", "slime", "grass_block", "enderman"];
+
+    public static FrontendDesktopSettings Read(YamlFileProvider config)
+    {
+        var imagePath = ReadValue(config, PetImagePathKey, string.Empty);
+        var keepRunningInTray = ReadValue(config, KeepRunningInTrayKey, false);
+        var presetId = NormalizePreset(ReadValue(config, PetPresetKey, string.Empty),
+            ReadValue(config, PetAppearanceKey, string.Empty));
+        MigrateLegacyAppearance(config, presetId);
+        return new FrontendDesktopSettings(
+            keepRunningInTray,
+            ReadValue(config, PetEnabledKey, true),
+            ReadValue(config, PetTopmostKey, true),
+            NormalizeScale(ReadValue(config, PetScaleKey, 1d)),
+            ReadValue(config, PetUseCustomKey, !string.IsNullOrWhiteSpace(imagePath)),
+            presetId,
+            imagePath,
+            ReadAction(config, PetClickActionKey, PetAction.PlayAnimation),
+            ReadAction(config, PetDoubleClickActionKey, PetAction.ShowLauncher),
+            ReadCloseAction(config));
+    }
+
+    /// <summary>
+    /// Writes the resolved preset back and drops the legacy appearance key so the
+    /// migration only happens once instead of acting as a permanent fallback.
+    /// </summary>
+    private static void MigrateLegacyAppearance(YamlFileProvider config, string presetId)
+    {
+        if (!config.Exists(PetAppearanceKey)) return;
+        try
+        {
+            if (!config.Exists(PetPresetKey)) config.Set(PetPresetKey, presetId);
+            config.Remove(PetAppearanceKey);
+            config.Sync();
+        }
+        catch
+        {
+            // A read-only or otherwise locked configuration keeps the legacy key;
+            // the launcher-misc reset list still removes it explicitly.
+        }
+    }
+
+    public static string NormalizePreset(string? value, string? legacyAppearance = null)
+    {
+        if (PetPresetCatalog.IsKnown(value)) return value!;
+        if (PetPresetCatalog.IsKnown(legacyAppearance)) return legacyAppearance!;
+        return PetPresetCatalog.DefaultId;
+    }
 
     public static string NormalizeAppearance(string value) => BuiltinAppearances.Contains(value, StringComparer.Ordinal)
         ? value
         : "creeper";
 
-    public static PixelPoint? ReadPosition(YamlFileProvider config) =>
-        config.Exists(PetXKey) && config.Exists(PetYKey)
-            ? new PixelPoint(config.Get<int>(PetXKey), config.Get<int>(PetYKey))
-            : null;
+    public static WindowCloseAction NormalizeCloseAction(string? value, WindowCloseAction fallback) =>
+        Enum.TryParse<WindowCloseAction>(value, true, out var action) ? action : fallback;
+
+    private static WindowCloseAction ReadCloseAction(YamlFileProvider config) =>
+        config.Exists(WindowCloseActionKey)
+            ? NormalizeCloseAction(config.Get<string>(WindowCloseActionKey), WindowCloseAction.Exit)
+            : WindowCloseAction.MinimizeToTray;
 
     public static double NormalizeScale(double value) => double.IsFinite(value)
         ? Math.Clamp(value, 0.5, 2)
         : 1;
+
+    public static PixelPoint? ReadPosition(YamlFileProvider config) =>
+        config.Exists(PetXKey) && config.Exists(PetYKey)
+            ? new PixelPoint(config.Get<int>(PetXKey), config.Get<int>(PetYKey))
+            : null;
 
     public static PixelPoint RestorePosition(
         PixelPoint? saved,
@@ -59,6 +115,11 @@ internal static class FrontendDesktopSettingsService
             Math.Clamp(x, area.X, Math.Max(area.X, area.Right - size.Width)),
             Math.Clamp(y, area.Y, Math.Max(area.Y, area.Bottom - size.Height)));
     }
+
+    private static PetAction ReadAction(YamlFileProvider config, string key, PetAction fallback) =>
+        config.Exists(key) && Enum.TryParse<PetAction>(config.Get<string>(key), true, out var action)
+            ? action
+            : fallback;
 
     private static T ReadValue<T>(YamlFileProvider config, string key, T fallback) =>
         config.Exists(key) ? config.Get<T>(key) : fallback;

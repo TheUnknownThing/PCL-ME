@@ -15,12 +15,13 @@ internal static class FrontendDesktopPetImageService
     private const long MaximumDecodedPixels = 64 * 1024 * 1024;
     private const long MaximumCachedPixels = 8 * 1024 * 1024;
 
-    public static string Import(string dataDirectory, string sourcePath)
+    public static string Import(string dataDirectory, string sourcePath, bool allowAnimation = true)
     {
         var bytes = ReadSource(sourcePath);
         var gif = IsGif(bytes);
         if (gif)
         {
+            if (!allowAnimation) throw new InvalidDataException("Animated pet images are not supported.");
             // Preserve timing, looping, transparency, and disposal instructions.
             // Validate every frame before the managed copy can become a setting.
             using var validated = LoadGif(bytes);
@@ -70,14 +71,18 @@ internal static class FrontendDesktopPetImageService
         if (string.IsNullOrWhiteSpace(path)) return null;
         try
         {
-            var bytes = ReadSource(path);
-            return IsGif(bytes) ? LoadGif(bytes) : new([Load(bytes)], [TimeSpan.Zero], 0);
+            return LoadAnimated(ReadSource(path));
         }
         catch
         {
             return null;
         }
     }
+
+    public static FrontendDesktopPetImage LoadAnimated(byte[] bytes, int maximumSide = MaximumImageSide) =>
+        IsGif(bytes)
+            ? LoadGif(bytes, maximumSide)
+            : new([Load(bytes, maximumSide)], [TimeSpan.Zero], 0);
 
     private static byte[] ReadSource(string path)
     {
@@ -90,7 +95,7 @@ internal static class FrontendDesktopPetImageService
 
     private static bool IsGif(byte[] bytes) => bytes.AsSpan().StartsWith("GIF87a"u8) || bytes.AsSpan().StartsWith("GIF89a"u8);
 
-    private static Bitmap Load(byte[] bytes)
+    private static Bitmap Load(byte[] bytes, int maximumSide = MaximumImageSide)
     {
         using var stream = new MemoryStream(bytes, writable: false);
         var bitmap = new Bitmap(stream);
@@ -102,8 +107,8 @@ internal static class FrontendDesktopPetImageService
             {
                 throw new InvalidDataException("The pet image has unsupported dimensions.");
             }
-            if (longestSide <= MaximumImageSide) return bitmap;
-            var ratio = MaximumImageSide / (double)longestSide;
+            if (longestSide <= maximumSide) return bitmap;
+            var ratio = maximumSide / (double)longestSide;
             var scaled = bitmap.CreateScaledBitmap(new PixelSize(
                 Math.Max(1, (int)Math.Round(size.Width * ratio)),
                 Math.Max(1, (int)Math.Round(size.Height * ratio))));
@@ -117,14 +122,14 @@ internal static class FrontendDesktopPetImageService
         }
     }
 
-    private static FrontendDesktopPetImage LoadGif(byte[] bytes)
+    private static FrontendDesktopPetImage LoadGif(byte[] bytes, int maximumSide = MaximumImageSide)
     {
         using var data = SKData.CreateCopy(bytes);
         using var codec = SKCodec.Create(data) ?? throw new InvalidDataException("Invalid GIF image.");
         var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
         var count = codec.FrameCount;
         var longestSide = Math.Max(info.Width, info.Height);
-        var ratio = Math.Min(1, MaximumImageSide / (double)longestSide);
+        var ratio = Math.Min(1, maximumSide / (double)longestSide);
         var size = new PixelSize(Math.Max(1, (int)Math.Round(info.Width * ratio)), Math.Max(1, (int)Math.Round(info.Height * ratio)));
         if (info.Width <= 0 || info.Height <= 0 || longestSide > 4096 || count is < 1 or > MaximumGifFrames
             || (long)info.Width * info.Height * count > MaximumDecodedPixels

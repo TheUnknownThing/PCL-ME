@@ -7,6 +7,7 @@ internal sealed class FrontendDesktopPetImage(Bitmap[] frames, TimeSpan[] durati
 {
     private readonly long[] _frameEnds = GetFrameEnds(durations);
     public Bitmap FirstFrame => frames[0];
+    public TimeSpan TotalDuration => TimeSpan.FromTicks(_frameEnds[^1]);
     internal IReadOnlyList<Bitmap> Frames => frames;
 
     public (Bitmap Image, TimeSpan? Remaining) GetFrame(TimeSpan elapsed)

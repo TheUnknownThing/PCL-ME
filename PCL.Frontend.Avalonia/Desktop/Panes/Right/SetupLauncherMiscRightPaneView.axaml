@@ -12,35 +12,95 @@
         <controls:PclCard.CardContent>
           <StackPanel Spacing="10">
             <CheckBox
-                Content="{Binding SetupText.LauncherMisc.KeepRunningInTrayLabel}"
-                IsChecked="{Binding KeepRunningInTray}" />
-            <CheckBox
                 Content="{Binding SetupText.LauncherMisc.DesktopPetEnabledLabel}"
                 IsChecked="{Binding DesktopPetEnabled}" />
-            <StackPanel IsEnabled="{Binding DesktopPetEnabled}" Spacing="10" Margin="20,0,0,0">
+            <Grid ColumnDefinitions="Auto,*">
+              <TextBlock
+                  Margin="0,0,20,0"
+                  VerticalAlignment="Center"
+                  Text="{Binding SetupText.LauncherMisc.CloseActionLabel}" />
+              <ComboBox
+                  Grid.Column="1"
+                  ItemsSource="{Binding CloseActionOptions}"
+                  controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedCloseActionIndex}" />
+            </Grid>
+            <CheckBox
+                Content="{Binding SetupText.LauncherMisc.KeepRunningInTrayLabel}"
+                IsChecked="{Binding KeepRunningInTray}" />
+            <Border
+                Height="1"
+                Opacity="0.3"
+                Background="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+            <StackPanel IsEnabled="{Binding DesktopPetEnabled}" Spacing="12" Margin="20,0,0,0">
+              <StackPanel Spacing="6" IsEnabled="{Binding IsDesktopPetPresetSelectionEnabled}">
+                <TextBlock FontWeight="Bold" Text="{Binding SetupText.LauncherMisc.DesktopPetPresetSectionLabel}" />
+                <Grid ColumnDefinitions="Auto,*">
+                  <TextBlock
+                      Margin="0,0,20,0"
+                      VerticalAlignment="Center"
+                      Text="{Binding SetupText.LauncherMisc.DesktopPetPresetLabel}" />
+                  <ComboBox
+                      Grid.Column="1"
+                      ItemsSource="{Binding DesktopPetPresetOptions}"
+                      controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedDesktopPetPresetIndex}" />
+                </Grid>
+              </StackPanel>
+              <Border
+                  Height="1"
+                  Opacity="0.3"
+                  Background="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+              <StackPanel Spacing="6">
+                <TextBlock FontWeight="Bold" Text="{Binding SetupText.LauncherMisc.DesktopPetCustomSectionLabel}" />
+                <CheckBox
+                    Content="{Binding SetupText.LauncherMisc.DesktopPetUseCustomLabel}"
+                    IsChecked="{Binding DesktopPetUseCustom}" />
+                <StackPanel
+                    Margin="20,0,0,0"
+                    IsEnabled="{Binding IsDesktopPetCustomSelectionEnabled}"
+                    Spacing="6">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <controls:PclButton
+                        MinWidth="120"
+                        Command="{Binding ChooseDesktopPetImageCommand}"
+                        Text="{Binding SetupText.LauncherMisc.DesktopPetChooseImageButton}" />
+                    <Image
+                        Width="48"
+                        Height="48"
+                        Stretch="Uniform"
+                        IsVisible="{Binding HasDesktopPetImage}"
+                        Source="{Binding DesktopPetImagePreview}" />
+                  </StackPanel>
+                  <TextBlock
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      FontSize="12"
+                      TextWrapping="Wrap"
+                      Text="{Binding SetupText.LauncherMisc.DesktopPetImageHint}" />
+                </StackPanel>
+              </StackPanel>
+              <Border
+                  Height="1"
+                  Opacity="0.3"
+                  Background="{DynamicResource ColorBrushEntrySecondaryIdle}" />
               <Grid ColumnDefinitions="Auto,*">
                 <TextBlock
                     Margin="0,0,20,0"
                     VerticalAlignment="Center"
-                    Text="{Binding SetupText.LauncherMisc.DesktopPetAppearanceLabel}" />
+                    Text="{Binding SetupText.LauncherMisc.DesktopPetClickActionLabel}" />
                 <ComboBox
                     Grid.Column="1"
-                    ItemsSource="{Binding DesktopPetAppearanceOptions}"
-                    PlaceholderText="{Binding SetupText.LauncherMisc.DesktopPetCustomImageLabel}"
-                    controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedDesktopPetAppearanceIndex}" />
+                    ItemsSource="{Binding DesktopPetClickActionOptions}"
+                    controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedDesktopPetClickActionIndex}" />
               </Grid>
-              <Image
-                  Width="48"
-                  Height="48"
-                  HorizontalAlignment="Left"
-                  Stretch="Uniform"
-                  IsVisible="{Binding HasDesktopPetImage}"
-                  Source="{Binding DesktopPetImagePreview}" />
-              <TextBlock
-                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                  FontSize="12"
-                  TextWrapping="Wrap"
-                  Text="{Binding SetupText.LauncherMisc.DesktopPetImageHint}" />
+              <Grid ColumnDefinitions="Auto,*">
+                <TextBlock
+                    Margin="0,0,20,0"
+                    VerticalAlignment="Center"
+                    Text="{Binding SetupText.LauncherMisc.DesktopPetDoubleClickActionLabel}" />
+                <ComboBox
+                    Grid.Column="1"
+                    ItemsSource="{Binding DesktopPetDoubleClickActionOptions}"
+                    controls:PclComboBoxSelection.SelectedIndex="{Binding SelectedDesktopPetDoubleClickActionIndex}" />
+              </Grid>
               <CheckBox
                   Content="{Binding SetupText.LauncherMisc.DesktopPetTopmostLabel}"
                   IsChecked="{Binding DesktopPetTopmost}" />

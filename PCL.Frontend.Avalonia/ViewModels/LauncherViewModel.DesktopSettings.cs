@@ -7,33 +7,109 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class LauncherViewModel
 {
+    private static readonly PetAction[] ClickActionOrder =
+    [
+        PetAction.PlayAnimation,
+        PetAction.ShowLauncher,
+        PetAction.HidePet,
+        PetAction.LaunchSelected,
+        PetAction.None
+    ];
+
+    private static readonly WindowCloseAction[] CloseActionOrder =
+    [
+        WindowCloseAction.MinimizeToTray,
+        WindowCloseAction.Exit
+    ];
+
+    private static readonly PetAction[] DoubleClickActionOrder =
+    [
+        PetAction.ShowLauncher,
+        PetAction.PlayAnimation,
+        PetAction.HidePet,
+        PetAction.LaunchSelected,
+        PetAction.None
+    ];
+
     private bool _keepRunningInTray;
     private bool _desktopPetEnabled;
     private bool _desktopPetTopmost = true;
     private double _desktopPetScale = 1;
+    private bool _desktopPetUseCustom;
+    private int _selectedDesktopPetPresetIndex;
+    private int _selectedDesktopPetClickActionIndex;
+    private int _selectedDesktopPetDoubleClickActionIndex;
+    private int _selectedWindowCloseActionIndex;
+    private bool _closeActionExplicit;
     private string _desktopPetImagePath = string.Empty;
     private string _desktopPetPreviewPath = string.Empty;
     private Bitmap? _desktopPetImagePreview;
     private bool _isChoosingDesktopPetImage;
-    private int _selectedDesktopPetAppearanceIndex;
+    private ActionCommand? _chooseDesktopPetImageCommand;
 
-    public IReadOnlyList<string> DesktopPetAppearanceOptions => SetupText.LauncherMisc.DesktopPetAppearanceOptions;
+    public IReadOnlyList<string> DesktopPetPresetOptions => SetupText.LauncherMisc.DesktopPetPresetOptions;
+    public IReadOnlyList<string> DesktopPetClickActionOptions => SetupText.LauncherMisc.DesktopPetClickActionOptions;
+    public IReadOnlyList<string> DesktopPetDoubleClickActionOptions => SetupText.LauncherMisc.DesktopPetDoubleClickActionOptions;
+    public IReadOnlyList<string> CloseActionOptions => SetupText.LauncherMisc.CloseActionOptions;
 
-    public int SelectedDesktopPetAppearanceIndex
+    public int SelectedDesktopPetPresetIndex
     {
-        get => HasDesktopPetImage ? -1 : _selectedDesktopPetAppearanceIndex;
+        get => _selectedDesktopPetPresetIndex;
         set
         {
-            if (!TryNormalizeSelectionIndex(value, DesktopPetAppearanceOptions.Count, out var index)) return;
-            if (index == FrontendDesktopSettingsService.BuiltinAppearances.Length)
-            {
-                _ = ChooseDesktopPetImageAsync();
-                return;
-            }
-            SetProperty(ref _selectedDesktopPetAppearanceIndex, index);
-            DesktopPetImagePath = string.Empty;
+            if (!TryNormalizeSelectionIndex(value, DesktopPetPresetOptions.Count, out var index)) return;
+            if (!SetProperty(ref _selectedDesktopPetPresetIndex, index)) return;
+            DesktopPetUseCustom = false;
         }
     }
+
+    public bool DesktopPetUseCustom
+    {
+        get => _desktopPetUseCustom;
+        set
+        {
+            if (!SetProperty(ref _desktopPetUseCustom, value)) return;
+            RaisePropertyChanged(nameof(IsDesktopPetPresetSelectionEnabled));
+            RaisePropertyChanged(nameof(IsDesktopPetCustomSelectionEnabled));
+        }
+    }
+
+    public bool IsDesktopPetPresetSelectionEnabled => !DesktopPetUseCustom;
+    public bool IsDesktopPetCustomSelectionEnabled => DesktopPetUseCustom;
+
+    public int SelectedDesktopPetClickActionIndex
+    {
+        get => _selectedDesktopPetClickActionIndex;
+        set
+        {
+            if (!TryNormalizeSelectionIndex(value, DesktopPetClickActionOptions.Count, out var index)) return;
+            SetProperty(ref _selectedDesktopPetClickActionIndex, index);
+        }
+    }
+
+    public int SelectedDesktopPetDoubleClickActionIndex
+    {
+        get => _selectedDesktopPetDoubleClickActionIndex;
+        set
+        {
+            if (!TryNormalizeSelectionIndex(value, DesktopPetDoubleClickActionOptions.Count, out var index)) return;
+            SetProperty(ref _selectedDesktopPetDoubleClickActionIndex, index);
+        }
+    }
+
+    public int SelectedCloseActionIndex
+    {
+        get => _selectedWindowCloseActionIndex;
+        set
+        {
+            if (!TryNormalizeSelectionIndex(value, CloseActionOptions.Count, out var index)) return;
+            if (!SetProperty(ref _selectedWindowCloseActionIndex, index)) return;
+            _closeActionExplicit = true;
+        }
+    }
+
+    public ActionCommand ChooseDesktopPetImageCommand =>
+        _chooseDesktopPetImageCommand ??= new ActionCommand(() => _ = ChooseDesktopPetImageAsync());
 
     public bool KeepRunningInTray
     {
@@ -80,8 +156,16 @@ internal sealed partial class LauncherViewModel
     public Bitmap? DesktopPetImagePreview => _desktopPetImagePreview;
 
     internal FrontendDesktopSettings DesktopSettings => new(
-        KeepRunningInTray, DesktopPetEnabled, DesktopPetTopmost, DesktopPetScale, DesktopPetImagePath,
-        FrontendDesktopSettingsService.BuiltinAppearances[_selectedDesktopPetAppearanceIndex]);
+        KeepRunningInTray,
+        DesktopPetEnabled,
+        DesktopPetTopmost,
+        DesktopPetScale,
+        DesktopPetUseCustom,
+        PetPresetCatalog.All[_selectedDesktopPetPresetIndex].Id,
+        DesktopPetImagePath,
+        ClickActionOrder[_selectedDesktopPetClickActionIndex],
+        DoubleClickActionOrder[_selectedDesktopPetDoubleClickActionIndex],
+        _closeActionExplicit ? CloseActionOrder[_selectedWindowCloseActionIndex] : null);
 
     private async Task ChooseDesktopPetImageAsync()
     {
@@ -91,10 +175,10 @@ internal sealed partial class LauncherViewModel
         {
             var source = await _launcherActionService.PickOpenFileAsync(
                 T("desktop.settings.choose_image"), T("desktop.settings.image_filter"),
-                "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif");
+                "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp");
             if (string.IsNullOrWhiteSpace(source)) return;
             var imported = await Task.Run(() => FrontendDesktopPetImageService.Import(
-                _launcherActionService.RuntimePaths.DataDirectory, source));
+                _launcherActionService.RuntimePaths.DataDirectory, source, allowAnimation: false));
             if (string.Equals(imported, DesktopPetImagePath, StringComparison.Ordinal))
             {
                 RefreshDesktopPetImagePreview(force: true);
@@ -113,7 +197,7 @@ internal sealed partial class LauncherViewModel
         finally
         {
             _isChoosingDesktopPetImage = false;
-            RaisePropertyChanged(nameof(SelectedDesktopPetAppearanceIndex));
+            RaisePropertyChanged(nameof(SelectedDesktopPetPresetIndex));
         }
     }
 
@@ -128,7 +212,6 @@ internal sealed partial class LauncherViewModel
             previous?.Dispose();
         }
         RaisePropertyChanged(nameof(HasDesktopPetImage));
-        RaisePropertyChanged(nameof(SelectedDesktopPetAppearanceIndex));
     }
 
     private void InitializeDesktopSettings()
@@ -138,15 +221,37 @@ internal sealed partial class LauncherViewModel
         _desktopPetEnabled = settings.PetEnabled;
         _desktopPetTopmost = settings.PetTopmost;
         _desktopPetScale = settings.PetScale;
+        _desktopPetUseCustom = settings.PetUseCustom;
         _desktopPetImagePath = settings.PetImagePath;
-        _selectedDesktopPetAppearanceIndex = Array.IndexOf(FrontendDesktopSettingsService.BuiltinAppearances,
-            FrontendDesktopSettingsService.NormalizeAppearance(settings.PetAppearance));
+        _selectedDesktopPetPresetIndex = FindPetPresetIndex(settings.PetPresetId);
+        _selectedDesktopPetClickActionIndex = Math.Max(0, Array.IndexOf(ClickActionOrder, settings.PetClickAction));
+        _selectedDesktopPetDoubleClickActionIndex = Math.Max(0, Array.IndexOf(DoubleClickActionOrder, settings.PetDoubleClickAction));
+        var closeAction = settings.CloseAction
+                          ?? (settings.KeepRunningInTray ? WindowCloseAction.MinimizeToTray : WindowCloseAction.Exit);
+        _selectedWindowCloseActionIndex = Math.Max(0, Array.IndexOf(CloseActionOrder, closeAction));
+        _closeActionExplicit = settings.CloseAction.HasValue;
         RaisePropertyChanged(nameof(KeepRunningInTray));
         RaisePropertyChanged(nameof(DesktopPetEnabled));
         RaisePropertyChanged(nameof(DesktopPetTopmost));
         RaisePropertyChanged(nameof(DesktopPetScale));
         RaisePropertyChanged(nameof(DesktopPetScaleText));
+        RaisePropertyChanged(nameof(DesktopPetUseCustom));
+        RaisePropertyChanged(nameof(IsDesktopPetPresetSelectionEnabled));
+        RaisePropertyChanged(nameof(IsDesktopPetCustomSelectionEnabled));
+        RaisePropertyChanged(nameof(SelectedDesktopPetPresetIndex));
+        RaisePropertyChanged(nameof(SelectedDesktopPetClickActionIndex));
+        RaisePropertyChanged(nameof(SelectedDesktopPetDoubleClickActionIndex));
+        RaisePropertyChanged(nameof(SelectedCloseActionIndex));
         RaisePropertyChanged(nameof(DesktopPetImagePath));
         RefreshDesktopPetImagePreview();
+    }
+
+    private static int FindPetPresetIndex(string? presetId)
+    {
+        for (var i = 0; i < PetPresetCatalog.All.Count; i++)
+        {
+            if (string.Equals(PetPresetCatalog.All[i].Id, presetId, StringComparison.Ordinal)) return i;
+        }
+        return 0;
     }
 }

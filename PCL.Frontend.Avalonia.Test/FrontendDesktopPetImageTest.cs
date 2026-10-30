@@ -2,8 +2,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Frontend.Avalonia.Desktop.Controls;
+using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.Workflows;
 using SkiaSharp;
 
@@ -148,7 +150,7 @@ public sealed class FrontendDesktopPetImageTest
     }
 
     [TestMethod]
-    public async Task GifSprite_ReusesFramesPausesWhenHiddenAndFallsBackWhenDamaged()
+    public async Task StaticSprite_ReusesDecodedImagePausesWhenHiddenAndFallsBackWhenDamaged()
     {
         await Run(async () =>
         {
@@ -163,24 +165,18 @@ public sealed class FrontendDesktopPetImageTest
             };
             try
             {
+                // Custom pets are documented as static images, so an animated file only shows its first frame.
                 sprite.SetImagePath(fixture.Source);
                 var first = sprite.CustomImage;
                 Assert.IsNotNull(first);
                 window.Show();
-                Assert.IsTrue(sprite.IsAnimationRunning);
+                Assert.IsFalse(sprite.IsAnimationRunning, "Custom pets are static and must not animate.");
                 sprite.AdvanceAnimation(TimeSpan.FromMilliseconds(120));
-                var second = sprite.CurrentImage;
-                Assert.AreNotSame(first, second);
-                Assert.AreSame(first, sprite.CustomImage, "The tray cache identity must not follow GIF playback.");
+                Assert.AreSame(first, sprite.CurrentImage);
                 window.Hide();
                 Assert.IsFalse(sprite.IsAnimationRunning);
-                await Task.Delay(250);
-                Assert.AreSame(second, sprite.CurrentImage);
-                File.Delete(fixture.Source);
                 sprite.SetImagePath(fixture.Source);
-                Assert.AreSame(first, sprite.CustomImage, "Settings changes must reuse all decoded frames.");
-                sprite.AdvanceAnimation(TimeSpan.FromMilliseconds(100));
-                Assert.AreSame(first, sprite.CurrentImage);
+                Assert.AreSame(first, sprite.CustomImage, "Settings changes must reuse the decoded image.");
                 File.WriteAllText(fixture.Source + ".gif", "GIF89a damaged");
                 sprite.SetImagePath(fixture.Source + ".gif");
                 Assert.IsNull(sprite.CurrentImage);
@@ -201,6 +197,56 @@ public sealed class FrontendDesktopPetImageTest
             Assert.AreEqual(expected[x].Alpha, actual.Alpha, $"Pixel {x} alpha");
             if (actual.Alpha != 0) Assert.AreEqual(expected[x], actual, $"Pixel {x} color");
         }
+    }
+
+    [TestMethod]
+    public async Task CustomPetImport_RejectsAnimatedImagesButAcceptsStaticOnes()
+    {
+        await Run(() =>
+        {
+            using var fixture = new GifFixture();
+            File.WriteAllBytes(fixture.Source, GifFixture.Create(1, 1, 0, new GifFrame(0, [1], 10, 1)));
+            Assert.Throws<InvalidDataException>(() =>
+                FrontendDesktopPetImageService.Import(fixture.Root, fixture.Source, allowAnimation: false));
+
+            var png = Path.Combine(fixture.Root, "custom.png");
+            using (var source = AssetLoader.Open(new Uri("avares://PCL.Frontend.Avalonia/Assets/icon.png")))
+            using (var output = File.Create(png)) source.CopyTo(output);
+            var imported = FrontendDesktopPetImageService.Import(fixture.Root, png, allowAnimation: false);
+            Assert.AreEqual(".png", Path.GetExtension(imported));
+            using var image = FrontendDesktopPetImageService.TryLoadAnimated(imported);
+            Assert.IsNotNull(image);
+            Assert.AreEqual(1, image.Frames.Count);
+            return Task.CompletedTask;
+        });
+    }
+
+    [TestMethod]
+    public async Task BundledPresets_ExposeIdleAndInteractionAnimations()
+    {
+        await Run(() =>
+        {
+            var creeper = PetPresetCatalog.Find("creeper_gif");
+            Assert.IsTrue(creeper.IsAnimated);
+            Assert.AreEqual(PetClickAnimationMode.WaitIdleLoopEnd, creeper.ClickMode);
+            using var idle = PetPresetCatalog.LoadAnimation(creeper, click: false, maximumSide: 128);
+            using var click = PetPresetCatalog.LoadAnimation(creeper, click: true, maximumSide: 128);
+            Assert.IsNotNull(idle);
+            Assert.IsNotNull(click);
+            Assert.AreEqual(10, idle!.Frames.Count);
+            Assert.AreEqual(68, click!.Frames.Count);
+            Assert.IsTrue(idle.TotalDuration > TimeSpan.Zero);
+            Assert.IsTrue(Math.Max(idle.Frames[0].PixelSize.Width, idle.Frames[0].PixelSize.Height) <= 128);
+
+            var campfire = PetPresetCatalog.Find("campfire_gif");
+            Assert.IsTrue(campfire.RepeatsIdleOnClick);
+            using var fire = PetPresetCatalog.LoadAnimation(campfire, click: false, maximumSide: 128);
+            Assert.IsNotNull(fire);
+            Assert.AreEqual(40, fire!.Frames.Count);
+
+            Assert.AreEqual("creeper", PetPresetCatalog.Find("missing").Id);
+            return Task.CompletedTask;
+        });
     }
 
     private static async Task Run(Func<Task> action) => await Session.Value.Dispatch(async () =>

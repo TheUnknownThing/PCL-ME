@@ -44,7 +44,11 @@ internal sealed partial class App
             or nameof(LauncherViewModel.DesktopPetEnabled)
             or nameof(LauncherViewModel.DesktopPetTopmost)
             or nameof(LauncherViewModel.DesktopPetImagePath)
-            or nameof(LauncherViewModel.SelectedDesktopPetAppearanceIndex)
+            or nameof(LauncherViewModel.DesktopPetUseCustom)
+            or nameof(LauncherViewModel.SelectedDesktopPetPresetIndex)
+            or nameof(LauncherViewModel.SelectedDesktopPetClickActionIndex)
+            or nameof(LauncherViewModel.SelectedDesktopPetDoubleClickActionIndex)
+            or nameof(LauncherViewModel.SelectedCloseActionIndex)
             or nameof(LauncherViewModel.DesktopPetScale))
         {
             ApplyDesktopSettings();

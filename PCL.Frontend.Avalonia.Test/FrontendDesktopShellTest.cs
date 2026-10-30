@@ -27,7 +27,7 @@ public sealed class FrontendDesktopShellTest
             var closed = false;
             var flushes = 0;
             window.Closed += (_, _) => closed = true;
-            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => flushes++, petIconFactory: CreateTestPetIcon);
+            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => flushes++);
             shell.SetTrayHostAvailable(true);
             shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true));
             Assert.IsFalse(window.IsVisible, "Enabling residency must not show the main window before startup does.");
@@ -65,6 +65,46 @@ public sealed class FrontendDesktopShellTest
             window.Close();
             Assert.IsFalse(pet.IsVisible);
             Assert.IsFalse(pet.Sprite.IsAnimationRunning);
+            Assert.IsNull(shell.TrayIcon);
+        });
+    }
+
+    [TestMethod]
+    public async Task CloseActionMinimizeToTray_HidesTheLauncherAndKeepsARecoverySurface()
+    {
+        await Run(() =>
+        {
+            var window = new Window();
+            using var shell = CreateShell(window);
+            shell.SetTrayHostAvailable(true);
+            window.Show();
+            shell.ApplySettings(new(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray));
+            Assert.IsNotNull(shell.TrayIcon);
+            window.Close();
+            Assert.IsFalse(window.IsVisible, "The launcher must be hidden instead of closed.");
+            Assert.IsTrue(shell.HasRecoverySurface);
+            shell.ShowLauncher();
+            Assert.IsTrue(window.IsVisible);
+            shell.Quit();
+        });
+    }
+
+    [TestMethod]
+    public async Task CloseActionExit_EndsTheProcessEvenWhenTrayIsEnabled()
+    {
+        await Run(() =>
+        {
+            var window = new Window();
+            var closed = false;
+            window.Closed += (_, _) => closed = true;
+            using var shell = CreateShell(window);
+            shell.SetTrayHostAvailable(true);
+            window.Show();
+            shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true,
+                CloseAction: WindowCloseAction.Exit));
+            Assert.IsNotNull(shell.TrayIcon);
+            window.Close();
+            Assert.IsTrue(closed, "Exit must close the main window.");
             Assert.IsNull(shell.TrayIcon);
         });
     }
@@ -134,7 +174,7 @@ public sealed class FrontendDesktopShellTest
                 launches++;
                 ready = false;
             }, () => ready);
-            using var shell = new DesktopShellController(window, new TestI18n(), launch, window.Close, () => { }, petIconFactory: CreateTestPetIcon);
+            using var shell = new DesktopShellController(window, new TestI18n(), launch, window.Close, () => { });
             shell.SetTrayHostAvailable(true);
             shell.ApplySettings(new(KeepRunningInTray: true));
             window.Show();
@@ -177,7 +217,7 @@ public sealed class FrontendDesktopShellTest
             Assert.AreSame(menu, shell.TrayIcon!.Menu);
             Assert.IsTrue(pet.Sprite.IsAnimationRunning);
             Assert.IsFalse(pet.Topmost);
-            Assert.AreEqual(120d, pet.Width);
+            Assert.AreEqual(156d, pet.Width, "The default creeper GIF preset is square.");
             shell.UpdateSavedPetPosition(new PixelPoint(200, 200));
             Assert.AreEqual(new PixelPoint(200, 200), pet.Position);
             shell.UpdateSavedPetPosition(null);
@@ -219,7 +259,7 @@ public sealed class FrontendDesktopShellTest
         {
             var i18n = new TestI18n();
             var window = new Window();
-            using var shell = new DesktopShellController(window, i18n, new ActionCommand(() => { }), window.Close, () => { }, petIconFactory: CreateTestPetIcon);
+            using var shell = new DesktopShellController(window, i18n, new ActionCommand(() => { }), window.Close, () => { });
             shell.ApplySettings(new(PetEnabled: true));
             var pet = shell.Pet!;
             var oldTitle = pet.Title;
@@ -237,74 +277,86 @@ public sealed class FrontendDesktopShellTest
     }
 
     private static DesktopShellController CreateShell(Window window) => new(
-        window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { }, petIconFactory: CreateTestPetIcon);
+        window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { });
 
-    private static WindowIcon CreateTestPetIcon(FrontendDesktopSettings settings)
+    private static WindowIcon CreateTestIcon()
     {
         using var stream = AssetLoader.Open(new Uri("avares://PCL.Frontend.Avalonia/Assets/icon.png"));
         return new WindowIcon(stream);
     }
 
     [TestMethod]
-    public async Task TrayIcon_MatchesPetAppearanceCachesFramesAndRestoresLauncherIcon()
+    public async Task TrayIcon_AlwaysUsesTheLauncherIcon()
     {
         await Run(() =>
         {
-            var window = new Window { Icon = CreateTestPetIcon(new()) };
-            var renders = 0;
-            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { },
-                petIconFactory: settings =>
-                {
-                    renders++;
-                    return CreateTestPetIcon(settings);
-                });
-            var settings = new FrontendDesktopSettings(KeepRunningInTray: true, PetEnabled: true, PetAppearance: "slime");
+            var window = new Window { Icon = CreateTestIcon() };
+            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { });
+            var settings = new FrontendDesktopSettings(KeepRunningInTray: true, PetEnabled: true, PetPresetId: "slime");
             shell.ApplySettings(settings);
-            var slime = shell.TrayIcon!.Icon;
-            Assert.AreNotSame(window.Icon, slime);
-            Assert.AreEqual(1, renders);
+            Assert.AreSame(window.Icon, shell.TrayIcon!.Icon);
+
             shell.ApplySettings(settings with { PetScale = 1.5, PetTopmost = false });
-            Assert.AreSame(slime, shell.TrayIcon.Icon);
-            Assert.AreEqual(1, renders, "Size and topmost changes must reuse the static tray icon.");
-            settings = settings with { PetAppearance = "enderman" };
-            shell.ApplySettings(settings);
-            var enderman = shell.TrayIcon.Icon;
-            Assert.AreNotSame(slime, enderman);
-            Assert.AreEqual(2, renders);
+            Assert.AreSame(window.Icon, shell.TrayIcon.Icon, "Resizing the pet must not change the tray icon.");
+
+            shell.ApplySettings(settings with { PetPresetId = "enderman" });
+            Assert.AreSame(window.Icon, shell.TrayIcon.Icon, "Switching presets must not change the tray icon.");
+
+            shell.ApplySettings(settings with { PetUseCustom = true, PetImagePath = "custom.png" });
+            Assert.AreSame(window.Icon, shell.TrayIcon.Icon, "A custom pet must not change the tray icon.");
+
             shell.ApplySettings(settings with { PetEnabled = false });
             Assert.AreSame(window.Icon, shell.TrayIcon.Icon);
-            shell.ApplySettings(settings);
-            Assert.AreSame(enderman, shell.TrayIcon.Icon);
-            Assert.AreEqual(2, renders);
-            shell.ApplySettings(settings with { PetImagePath = "custom.png" });
-            Assert.AreNotSame(enderman, shell.TrayIcon.Icon);
-            Assert.AreEqual(3, renders);
             shell.Quit();
         });
     }
 
     [TestMethod]
-    public async Task PetSingleClick_ShowsLauncherAndReactsForEveryBundledAppearance()
+    public async Task PetSingleClick_RunsTheConfiguredActionForEveryVectorPreset()
     {
         await Run(() =>
         {
-            var window = new Window();
-            using var shell = CreateShell(window);
-            shell.SetTrayHostAvailable(false);
-            window.Show();
             foreach (var appearance in FrontendDesktopSettingsService.BuiltinAppearances)
             {
-                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetAppearance: appearance));
+                var window = new Window();
+                using var shell = CreateShell(window);
+                shell.SetTrayHostAvailable(false);
+                window.Show();
+                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetPresetId: appearance,
+                    PetClickAction: PetAction.ShowLauncher));
                 window.Close();
                 Assert.IsFalse(window.IsVisible);
                 var pet = shell.Pet!;
                 Assert.AreEqual(appearance, pet.Sprite.Appearance);
-                pet.MouseDown(new Point(40, 40), MouseButton.Left, RawInputModifiers.None);
-                pet.MouseUp(new Point(40, 40), MouseButton.Left, RawInputModifiers.None);
-                Assert.IsTrue(window.IsVisible, "A single click must perform the action described in the hint.");
-                Assert.IsTrue(pet.Sprite.IsReacting);
+                var click = new Point(40, 40);
+                pet.MouseDown(click, MouseButton.Left, RawInputModifiers.None);
+                pet.MouseUp(click, MouseButton.Left, RawInputModifiers.None);
+                Assert.IsTrue(window.IsVisible, "The configured single-click action must run.");
+                shell.Quit();
             }
-            shell.Quit();
+        });
+    }
+
+    [TestMethod]
+    public async Task PetSingleClick_PlayAnimationTriggersVectorReaction()
+    {
+        await Run(() =>
+        {
+            foreach (var appearance in FrontendDesktopSettingsService.BuiltinAppearances)
+            {
+                var window = new Window();
+                using var shell = CreateShell(window);
+                shell.SetTrayHostAvailable(false);
+                window.Show();
+                shell.ApplySettings(new(KeepRunningInTray: true, PetEnabled: true, PetPresetId: appearance,
+                    PetClickAction: PetAction.PlayAnimation));
+                var pet = shell.Pet!;
+                var click = new Point(40, 40);
+                pet.MouseDown(click, MouseButton.Left, RawInputModifiers.None);
+                pet.MouseUp(click, MouseButton.Left, RawInputModifiers.None);
+                Assert.IsTrue(pet.Sprite.IsReacting, "PlayAnimation must trigger the vector reaction.");
+                shell.Quit();
+            }
         });
     }
 
@@ -322,18 +374,18 @@ public sealed class FrontendDesktopShellTest
                 using (var output = File.Create(path)) source.CopyTo(output);
                 var window = new Window();
                 using var shell = CreateShell(window);
-                shell.ApplySettings(new(PetEnabled: true, PetImagePath: path));
+                shell.ApplySettings(new(PetEnabled: true, PetUseCustom: true, PetImagePath: path));
                 var pet = shell.Pet!;
                 var image = pet.Sprite.CustomImage;
                 Assert.IsNotNull(image);
                 File.Delete(path);
-                shell.ApplySettings(new(PetEnabled: true, PetScale: 1.5, PetImagePath: path));
+                shell.ApplySettings(new(PetEnabled: true, PetUseCustom: true, PetScale: 1.5, PetImagePath: path));
                 Assert.AreSame(image, pet.Sprite.CustomImage, "Changing size must reuse the decoded image.");
-                shell.ApplySettings(new(PetEnabled: true, PetImagePath: Path.Combine(root, "missing.png")));
+                shell.ApplySettings(new(PetEnabled: true, PetUseCustom: true, PetImagePath: Path.Combine(root, "missing.png")));
                 Assert.IsNull(pet.Sprite.CustomImage);
                 Assert.IsTrue(pet.IsVisible);
                 shell.ApplySettings(new(PetEnabled: true));
-                Assert.IsNull(pet.Sprite.CustomImage);
+                Assert.IsNotNull(pet.Sprite.Preset, "Switching back to a preset must load it again.");
                 shell.Quit();
             }
             finally
