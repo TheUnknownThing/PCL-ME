@@ -31,6 +31,43 @@ namespace PCL.Frontend.Avalonia.Test;
 public sealed class FrontendAppearanceTest
 {
     [TestMethod]
+    public async Task MainWindow_UiScaleFitsClientAreaDuringStartupAndResize()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            fixture.Launcher.UiScaleFactor = .75;
+            var window = new MainWindow { DataContext = fixture.Launcher };
+            try
+            {
+                window.Show();
+                foreach (var scale in FrontendStartupScalingService.CommonUiScaleFactors)
+                {
+                    fixture.Launcher.UiScaleFactor = scale;
+                    foreach (var size in new[] { new Size(900, 540), new Size(1600, 1000), new Size(900, 720) })
+                    {
+                        window.Width = size.Width;
+                        window.Height = size.Height;
+                        Tick();
+
+                        var root = window.FindControl<Grid>("GridRoot")!;
+                        var transform = root.TransformToVisual(window)!.Value;
+                        var renderedBounds = new Rect(root.Bounds.Size).TransformToAABB(transform);
+                        Assert.AreEqual(window.ClientSize.Width, renderedBounds.Width, scale,
+                            $"The content width must fit the client area at {scale * 100}%.");
+                        Assert.AreEqual(window.ClientSize.Height, renderedBounds.Height, scale,
+                            $"The content height must fit the client area at {scale * 100}%.");
+                    }
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [TestMethod]
     public async Task DesktopPreferences_PersistAcrossNavigationLocaleChangesAndReset()
     {
         await RunOnUiThread(() =>

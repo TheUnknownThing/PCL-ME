@@ -50,23 +50,62 @@ public sealed class FrontendStartupScalingServiceTest
     }
 
     [TestMethod]
-    public void DisablePlatformScaling_SetsAvaloniaGlobalScaleFactorToOne()
+    public void DisablePlatformScaling_PreservesInheritedScreenScaleFactors()
     {
         var previousValue = Environment.GetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable);
+        var previousScreenValues = Environment.GetEnvironmentVariable(FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable);
 
         try
         {
+            Environment.SetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable, "2");
+            Environment.SetEnvironmentVariable(FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable, "eDP-1=1.75;HDMI-1=2");
             FrontendStartupScalingService.DisablePlatformScaling();
 
             Assert.AreEqual(
                 "1",
                 Environment.GetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable));
+            Assert.AreEqual(
+                "eDP-1=1.75;HDMI-1=2",
+                Environment.GetEnvironmentVariable(FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable));
         }
         finally
         {
             Environment.SetEnvironmentVariable(
                 FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable,
                 previousValue);
+            Environment.SetEnvironmentVariable(
+                FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable,
+                previousScreenValues);
+        }
+    }
+
+    [TestMethod]
+    public void DisablePlatformScaling_ForcesUnityScreenScaleFactorsWhenUnset()
+    {
+        var previousValue = Environment.GetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable);
+        var previousScreenValues = Environment.GetEnvironmentVariable(FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable);
+
+        try
+        {
+            Environment.SetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable, "2");
+            Environment.SetEnvironmentVariable(FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable, null);
+            FrontendStartupScalingService.DisablePlatformScaling();
+
+            Assert.AreEqual(
+                "1",
+                Environment.GetEnvironmentVariable(FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable));
+            Assert.AreEqual(
+                OperatingSystem.IsLinux() ? "1" : null,
+                Environment.GetEnvironmentVariable(FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                FrontendStartupScalingService.GlobalScaleFactorEnvironmentVariable,
+                previousValue);
+            Environment.SetEnvironmentVariable(
+                FrontendStartupScalingService.ScreenScaleFactorsEnvironmentVariable,
+                previousScreenValues);
         }
     }
 

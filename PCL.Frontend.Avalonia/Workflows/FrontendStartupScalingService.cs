@@ -11,6 +11,7 @@ internal static class FrontendStartupScalingService
 {
     public const string UiScaleFactorConfigKey = "UiScaleFactor";
     public const string GlobalScaleFactorEnvironmentVariable = "AVALONIA_GLOBAL_SCALE_FACTOR";
+    public const string ScreenScaleFactorsEnvironmentVariable = "AVALONIA_SCREEN_SCALE_FACTORS";
     public const double DefaultUiScaleFactor = 1d;
     public const double MinimumUiScaleFactor = 0.5d;
     public const double MaximumUiScaleFactor = 3d;
@@ -45,6 +46,19 @@ internal static class FrontendStartupScalingService
         Environment.SetEnvironmentVariable(
             GlobalScaleFactorEnvironmentVariable,
             "1");
+
+        if (OperatingSystem.IsLinux())
+        {
+            // X11 treats the global factor as a multiplier of the desktop DPI.
+            // An explicit screen configuration bypasses automatic DPI detection;
+            // unspecified screens also default to 1. UiScaleFactor scales our content.
+            // A configuration inherited from the environment is an explicit user
+            // override (e.g. per-screen HiDPI factors) and must be preserved.
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(ScreenScaleFactorsEnvironmentVariable)))
+            {
+                Environment.SetEnvironmentVariable(ScreenScaleFactorsEnvironmentVariable, "1");
+            }
+        }
     }
 
     public static double NormalizeUiScaleFactor(double value)
