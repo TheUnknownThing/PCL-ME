@@ -76,7 +76,7 @@ public sealed class FrontendAppearanceTest
             fixture.Navigate(LauncherFrontendSubpageKey.SetupLauncherMisc);
             var launcher = fixture.Launcher;
             Assert.IsFalse(launcher.KeepRunningInTray);
-            Assert.IsTrue(launcher.DesktopPetEnabled);
+            Assert.IsFalse(launcher.DesktopPetEnabled);
             Assert.AreEqual("creeper_gif", launcher.DesktopSettings.PetPresetId);
             Assert.AreEqual(fixture.I18n.T("desktop.presets.creeper_gif") + " (GIF)",
                 launcher.DesktopPetPresetOptions[launcher.SelectedDesktopPetPresetIndex]);
@@ -123,7 +123,7 @@ public sealed class FrontendAppearanceTest
             fixture.Actions.PersistLocalValue(FrontendDesktopSettingsService.PetYKey, 200);
             launcher.ResetLauncherMiscSettingsCommand.Execute(null);
             Tick();
-            Assert.AreEqual(new FrontendDesktopSettings(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray),
+            Assert.AreEqual(new FrontendDesktopSettings(CloseAction: WindowCloseAction.MinimizeToTray),
                 launcher.DesktopSettings);
             Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(fixture.Paths.OpenLocalConfigProvider()));
         });

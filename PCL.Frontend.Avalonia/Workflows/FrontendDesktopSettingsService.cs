@@ -27,7 +27,7 @@ internal static class FrontendDesktopSettingsService
         var presetId = NormalizePreset(ReadValue(config, PetPresetKey, string.Empty));
         return new FrontendDesktopSettings(
             keepRunningInTray,
-            ReadValue(config, PetEnabledKey, true),
+            ReadValue(config, PetEnabledKey, false),
             ReadValue(config, PetTopmostKey, true),
             NormalizeScale(ReadValue(config, PetScaleKey, 1d)),
             ReadValue(config, PetUseCustomKey, !string.IsNullOrWhiteSpace(imagePath)),

@@ -18,7 +18,7 @@ public sealed class FrontendDesktopSettingsTest
             Directory.CreateDirectory(root);
             var path = Path.Combine(root, "settings.yaml");
             var provider = new YamlFileProvider(path);
-            Assert.AreEqual(new FrontendDesktopSettings(PetEnabled: true, CloseAction: WindowCloseAction.MinimizeToTray),
+            Assert.AreEqual(new FrontendDesktopSettings(CloseAction: WindowCloseAction.MinimizeToTray),
                 FrontendDesktopSettingsService.Read(provider));
             Assert.AreEqual("creeper_gif", FrontendDesktopSettingsService.Read(provider).PetPresetId);
             Assert.IsNull(FrontendDesktopSettingsService.ReadPosition(provider));
