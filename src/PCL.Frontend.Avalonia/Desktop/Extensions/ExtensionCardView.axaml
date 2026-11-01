@@ -1,0 +1,43 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Extensions.ExtensionCardView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <ui:PclCard x:Name="Card" ShowChevron="True" IsChevronExpanded="False"
+                    ContentMargin="20,52,20,15">
+    <ui:PclCard.HeaderOverlayContent>
+      <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="12" Margin="0,0,40,0">
+        <TextBlock x:Name="StatusText" VerticalAlignment="Center" FontSize="12" MaxWidth="150" TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+        <CheckBox x:Name="EnabledToggle" VerticalAlignment="Center" />
+      </StackPanel>
+    </ui:PclCard.HeaderOverlayContent>
+    <ui:PclCard.CardContent>
+      <StackPanel Spacing="12">
+        <TextBlock x:Name="DescriptionText" TextWrapping="Wrap" />
+        <TextBlock x:Name="MetadataText" FontSize="12" TextWrapping="Wrap"
+                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+        <TextBlock x:Name="ErrorText" IsVisible="False" TextWrapping="Wrap"
+                   Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
+        <StackPanel x:Name="ActionsPanel" Orientation="Horizontal" Spacing="10">
+          <ui:PclButton x:Name="RetryButton" />
+          <ui:PclButton x:Name="UninstallButton" ColorType="Red" />
+        </StackPanel>
+        <StackPanel x:Name="SettingsPanel" Spacing="12" />
+        <StackPanel x:Name="ShortcutsPanel" Spacing="10" />
+        <StackPanel x:Name="NativeSettingsPanel" Spacing="12" />
+        <ui:PclButton x:Name="ResetButton" HorizontalAlignment="Left" />
+        <ui:PclCard x:Name="ExtensionDiagnosticsCard" ShowChevron="True" IsChevronExpanded="False"
+                          ContentMargin="15,50,15,12">
+          <ui:PclCard.CardContent>
+            <TextBox x:Name="ExtensionDiagnosticsText" IsReadOnly="True" AcceptsReturn="True"
+                     TextWrapping="Wrap" MaxHeight="200" />
+          </ui:PclCard.CardContent>
+        </ui:PclCard>
+        <TextBlock x:Name="OperationErrorText" IsVisible="False" TextWrapping="Wrap"
+                   Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
+      </StackPanel>
+    </ui:PclCard.CardContent>
+  </ui:PclCard>
+</UserControl>

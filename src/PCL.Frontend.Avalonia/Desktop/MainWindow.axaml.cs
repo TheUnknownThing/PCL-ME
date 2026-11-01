@@ -1,0 +1,1363 @@
+using System;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Threading;
+using Avalonia.Animation;
+using Avalonia;
+using Avalonia.Animation.Easings;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using Avalonia.Rendering.Composition;
+using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using PCL.UI.Animation;
+using PCL.Frontend.Avalonia.Desktop.Controls;
+using PCL.UI.Icons;
+using PCL.Frontend.Avalonia.ViewModels;
+using PCL.Frontend.Avalonia.Workflows;
+using System.Numerics;
+using System.Threading.Tasks;
+using System.Linq;
+
+namespace PCL.Frontend.Avalonia.Desktop;
+
+internal sealed partial class MainWindow : Window
+{
+    private readonly IBrush _defaultMainBackgroundBrush;
+    private readonly IBrush _defaultTitleBarBackgroundBrush;
+    private Color? _darkMainBackgroundBaseColor;
+    private IBrush? _darkMainBackgroundBrush;
+    private const int PromptOverlayMessageRowIndex = 3;
+    private const int PromptOverlayChoiceRowIndex = 5;
+    private static readonly GridLength PromptOverlayFlexibleRowHeight = new(1, GridUnitType.Star);
+    private static readonly GridLength PromptOverlayHiddenRowHeight = new(0);
+    private LauncherViewModel? _launcherViewModel;
+    private CompositionVisual? _gridRootVisual;
+    private CompositionVisual? _launchLeftContentHostVisual;
+    private CompositionVisual? _launchRightContentHostVisual;
+    private CompositionVisual? _standardLeftContentHostVisual;
+    private CompositionVisual? _standardRightContentHostVisual;
+    private Compositor? _compositor;
+    private int _promptOverlayAnimationVersion;
+    private bool _isPromptOverlayRenderedOpen;
+    private readonly Dictionary<string, HintPopupState> _activeHints = new(StringComparer.Ordinal);
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        FrontendWindowIdentity.Apply(this);
+        _defaultMainBackgroundBrush = MainBorder.Background ?? Brushes.Transparent;
+        _defaultTitleBarBackgroundBrush = NavBackgroundBorder.Background ?? Brushes.Transparent;
+        ConfigurePaneDividerTransitions();
+        UpdatePromptOverlayRowHeights();
+        PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
+        PromptOverlayBackdrop.IsVisible = false;
+        PromptOverlayHost.IsVisible = false;
+        PromptOverlayHost.IsHitTestVisible = false;
+
+        BackButton.IconData = PclIcons.Back.Data;
+        MinimizeButton.IconData = PclIcons.Minimize.Data;
+        MaximizeButton.IconData = PclIcons.Maximize.Data;
+        CloseButton.IconData = PclIcons.Close.Data;
+
+        if (!OperatingSystem.IsMacOS())
+        {
+            SetupSide(Left, StandardCursorType.LeftSide, WindowEdge.West);
+            SetupSide(Right, StandardCursorType.RightSide, WindowEdge.East);
+            SetupSide(Top, StandardCursorType.TopSide, WindowEdge.North);
+            SetupSide(Bottom, StandardCursorType.BottomSide, WindowEdge.South);
+            SetupSide(TopLeft, StandardCursorType.TopLeftCorner, WindowEdge.NorthWest);
+            SetupSide(TopRight, StandardCursorType.TopRightCorner, WindowEdge.NorthEast);
+            SetupSide(BottomLeft, StandardCursorType.BottomLeftCorner, WindowEdge.SouthWest);
+            SetupSide(BottomRight, StandardCursorType.BottomRightCorner, WindowEdge.SouthEast);
+        }
+
+        GridRoot.Opacity = 0;
+        AvaloniaHintBus.OnShow += OnHintWrapperShow;
+        MotionDurations.Changed += OnMotionDurationsChanged;
+        ActualThemeVariantChanged += OnActualThemeVariantChanged;
+        ResourcesChanged += OnWindowResourcesChanged;
+
+        Opened += OnWindowOpened;
+        Closed += OnWindowClosed;
+        Deactivated += OnWindowDeactivated;
+        AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(KeyUpEvent, OnWindowKeyUp, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(PointerReleasedEvent, OnSettingsPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(Thumb.DragCompletedEvent, OnSettingsDragCompleted, RoutingStrategies.Bubble, handledEventsToo: true);
+        TextInput += OnWindowTextInput;
+        PropertyChanged += OnWindowPropertyChanged;
+        DataContextChanged += OnDataContextChanged;
+        SizeChanged += (_, _) =>
+        {
+            ApplyDynamicBackgroundState();
+            ApplyUiScale();
+        };
+        ApplyMainBackgroundBrush();
+        ApplyTitleBarBackgroundBrush();
+        ApplyWindowOpacity();
+        ApplyDynamicBackgroundState();
+        UpdateWindowChromeState();
+        ApplyWindowSizingState();
+    }
+
+    private void ConfigurePaneDividerTransitions()
+    {
+        LeftPaneBackdrop.Transitions = CreatePaneDividerTransitions();
+        StandardLeftHost.Transitions = CreatePaneDividerTransitions();
+    }
+
+    private static Transitions CreatePaneDividerTransitions()
+    {
+        return new Transitions
+        {
+            new DoubleTransition
+            {
+                Property = Layoutable.WidthProperty,
+                Duration = MotionDurations.DividerResize,
+                Easing = new CubicEaseOut()
+            }
+        };
+    }
+
+    private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        try
+        {
+            BeginMoveDrag(e);
+        }
+        catch (InvalidOperationException)
+        {
+            // Ignore drag attempts that happen before the window is ready.
+        }
+    }
+
+    private void MinimizeButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void MaximizeButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        ToggleMaximize();
+    }
+
+    private void MinimizeGlyph_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void CloseGlyph_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        Close();
+    }
+
+    private void TitleBar_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        ToggleMaximize();
+    }
+
+    private void ToggleMaximize()
+    {
+        if (!IsWindowResizeAllowed(_launcherViewModel?.LockWindowSizeSetting == true))
+        {
+            return;
+        }
+
+        WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
+    }
+
+    private void SetupSide(Control control, StandardCursorType cursor, WindowEdge edge)
+    {
+        control.Cursor = new Cursor(cursor);
+        control.PointerPressed += (_, e) =>
+        {
+            if (CanResize && e.GetCurrentPoint(control).Properties.IsLeftButtonPressed)
+            {
+                BeginResizeDrag(edge, e);
+            }
+        };
+    }
+
+    private void InitializeCompositionVisuals()
+    {
+        _gridRootVisual ??= ElementComposition.GetElementVisual(GridRoot);
+        _launchLeftContentHostVisual ??= ElementComposition.GetElementVisual(LaunchLeftContentHost);
+        _launchRightContentHostVisual ??= ElementComposition.GetElementVisual(LaunchRightContentHost);
+        _standardLeftContentHostVisual ??= ElementComposition.GetElementVisual(StandardLeftContentHost);
+        _standardRightContentHostVisual ??= ElementComposition.GetElementVisual(StandardRightContentHost);
+        _compositor ??= _gridRootVisual?.Compositor
+            ?? _launchLeftContentHostVisual?.Compositor
+            ?? _standardLeftContentHostVisual?.Compositor;
+    }
+
+    private void OnWindowOpened(object? sender, EventArgs e)
+    {
+        Opened -= OnWindowOpened;
+        InitializeCompositionVisuals();
+        RunEntranceAnimation();
+    }
+
+    private async void RunEntranceAnimation()
+    {
+        await Task.Delay(MotionDurations.WindowEnterDelay);
+
+        InitializeCompositionVisuals();
+        if (_gridRootVisual is null || _compositor is null)
+        {
+            GridRoot.Opacity = 1;
+            return;
+        }
+
+        var opacityAnimation = _compositor.CreateScalarKeyFrameAnimation();
+        opacityAnimation.Duration = MotionDurations.StartupFade;
+        opacityAnimation.InsertKeyFrame(0f, 0f, new CubicEaseOut());
+        opacityAnimation.InsertKeyFrame(1f, 1f, new CubicEaseOut());
+        opacityAnimation.Target = "Opacity";
+
+        var rotationAnimation = _compositor.CreateScalarKeyFrameAnimation();
+        rotationAnimation.Duration = MotionDurations.StartupRotate;
+        rotationAnimation.InsertKeyFrame(0f, -0.06f, new CubicEaseOut());
+        rotationAnimation.InsertKeyFrame(1f, 0f, new CubicEaseOut());
+        rotationAnimation.Target = "RotationAngle";
+
+        var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
+        offsetAnimation.Duration = MotionDurations.StartupLift;
+        offsetAnimation.InsertKeyFrame(0f, new Vector3(0f, 60f, 0f), new CubicEaseOut());
+        offsetAnimation.InsertKeyFrame(1f, new Vector3(0f, 0f, 0f), new CubicEaseOut());
+        offsetAnimation.Target = "Offset";
+
+        var group = _compositor.CreateAnimationGroup();
+        group.Add(opacityAnimation);
+        group.Add(rotationAnimation);
+        group.Add(offsetAnimation);
+
+        var size = _gridRootVisual.Size;
+        _gridRootVisual.CenterPoint = new Vector3D(
+            (float)size.X / 2,
+            (float)size.Y / 2,
+            (float)_gridRootVisual.CenterPoint.Z);
+        GridRoot.Opacity = 1;
+        _gridRootVisual.StartAnimationGroup(group);
+    }
+
+    private void OnWindowPropertyChanged(object? sender, global::Avalonia.AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == WindowStateProperty)
+        {
+            UpdateWindowChromeState();
+        }
+    }
+
+    private void OnWindowClosed(object? sender, EventArgs e)
+    {
+        _launcherViewModel?.FlushPendingSettings();
+        AvaloniaHintBus.OnShow -= OnHintWrapperShow;
+        MotionDurations.Changed -= OnMotionDurationsChanged;
+        ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+        ResourcesChanged -= OnWindowResourcesChanged;
+        Closed -= OnWindowClosed;
+        Deactivated -= OnWindowDeactivated;
+        RemoveHandler(KeyDownEvent, OnWindowKeyDown);
+        RemoveHandler(KeyUpEvent, OnWindowKeyUp);
+        RemoveHandler(PointerReleasedEvent, OnSettingsPointerReleased);
+        RemoveHandler(Thumb.DragCompletedEvent, OnSettingsDragCompleted);
+        TextInput -= OnWindowTextInput;
+
+        foreach (var state in _activeHints.Values)
+        {
+            state.LifetimeCancellation.Cancel();
+            state.LifetimeCancellation.Dispose();
+        }
+
+        _activeHints.Clear();
+    }
+
+    private void OnMotionDurationsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            ConfigurePaneDividerTransitions();
+            foreach (var state in _activeHints.Values)
+            {
+                state.Border.Transitions = CreateHintTransitions();
+            }
+        });
+    }
+
+    private void OnWindowKeyDown(object? sender, KeyEventArgs e)
+    {
+        var launcherViewModel = _launcherViewModel;
+        launcherViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+        if (e.Handled) return;
+
+        if (e.Key == Key.Escape && TryClearFocusedElement())
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (launcherViewModel?.TryHandlePromptOverlayKey(e.Key) == true)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (launcherViewModel is null || e.Handled)
+        {
+            return;
+        }
+
+        if (launcherViewModel.ExtensionSession?.TryHandleShortcut(e) == true) return;
+
+        if (e.Key == Key.F12)
+        {
+            launcherViewModel.ToggleHiddenItemsOverride();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.F
+            && e.KeyModifiers == KeyModifiers.Control
+            && !ShouldSuppressSearchShortcut(e.Source, e.KeyModifiers)
+            && TryFocusPrimarySearchBox(selectAll: true))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (launcherViewModel.TryHandleTopLevelNavigationShortcut(e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Enter
+            && !ShouldSuppressPrimaryEnterShortcut(e.Source)
+            && launcherViewModel.TryHandlePrimaryEnterShortcut())
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key != Key.Escape)
+        {
+            return;
+        }
+
+        if (launcherViewModel.BackCommand.CanExecute(null))
+        {
+            launcherViewModel.BackCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    private bool TryClearFocusedElement()
+    {
+        if (TopLevel.GetTopLevel(this)?.FocusManager is not { } focusManager)
+        {
+            return false;
+        }
+
+        var focusedElement = focusManager.GetFocusedElement();
+        if (focusedElement is null || ReferenceEquals(focusedElement, this))
+        {
+            return false;
+        }
+
+        focusManager.ClearFocus();
+        return true;
+    }
+
+    private void OnWindowKeyUp(object? sender, KeyEventArgs e)
+    {
+        _launcherViewModel?.UpdateKeyboardModifiers(e.KeyModifiers);
+        if (e.Source is Visual source && (source is Slider || source.FindAncestorOfType<Slider>() is not null))
+        {
+            _launcherViewModel?.FlushPendingSettings();
+        }
+    }
+
+    private void OnSettingsPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        // Save before a button release can navigate or start a launch.
+        _launcherViewModel?.FlushPendingSettings();
+    }
+
+    private void OnSettingsDragCompleted(object? sender, VectorEventArgs e)
+    {
+        // Thumb completion also covers loss of pointer capture during a drag.
+        if (e.Source is Visual source && source.FindAncestorOfType<Slider>() is not null)
+        {
+            _launcherViewModel?.FlushPendingSettings();
+        }
+    }
+
+    private void OnWindowTextInput(object? sender, TextInputEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Text)
+            || ShouldSuppressSearchShortcut(e.Source)
+            || !ContainsSearchableText(e.Text)
+            || !TryAppendTextToPrimarySearchBox(e.Text))
+        {
+            return;
+        }
+
+        e.Handled = true;
+    }
+
+    private static bool ShouldSuppressPrimaryEnterShortcut(object? eventSource)
+    {
+        for (var current = eventSource as StyledElement; current is not null; current = current.Parent as StyledElement)
+        {
+            if (current is TextBox or ComboBox or ComboBoxItem)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool ShouldSuppressSearchShortcut(object? eventSource, KeyModifiers modifiers = KeyModifiers.None)
+    {
+        if (_launcherViewModel is null
+            || _launcherViewModel.IsWelcomeOverlayVisible
+            || _launcherViewModel.IsPromptOverlayVisible
+            || _launcherViewModel.IsLaunchDialogVisible)
+        {
+            return true;
+        }
+
+        if ((modifiers & ~KeyModifiers.Shift) != KeyModifiers.None)
+        {
+            return true;
+        }
+
+        return HasEditableInputAncestor(eventSource);
+    }
+
+    private static bool HasEditableInputAncestor(object? eventSource)
+    {
+        for (var current = eventSource as StyledElement; current is not null; current = current.Parent as StyledElement)
+        {
+            if (current is TextBox or ComboBox or ComboBoxItem)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool TryFocusPrimarySearchBox(bool selectAll)
+    {
+        var searchBox = FindPrimaryVisibleSearchBox();
+        if (searchBox is null)
+        {
+            return false;
+        }
+
+        searchBox.FocusSearchTextBox(selectAll);
+        return true;
+    }
+
+    private bool TryAppendTextToPrimarySearchBox(string text)
+    {
+        var searchBox = FindPrimaryVisibleSearchBox();
+        if (searchBox is null)
+        {
+            return false;
+        }
+
+        searchBox.AppendTextInput(text);
+        return true;
+    }
+
+    private PclSearchBox? FindPrimaryVisibleSearchBox()
+    {
+        return this
+            .GetVisualDescendants()
+            .OfType<PclSearchBox>()
+            .Where(searchBox => searchBox.IsVisible && searchBox.IsEffectivelyEnabled && searchBox.Bounds.Width > 0 && searchBox.Bounds.Height > 0)
+            .Select(searchBox => new
+            {
+                SearchBox = searchBox,
+                Origin = searchBox.TranslatePoint(default, this)
+            })
+            .Where(item => item.Origin is not null)
+            .OrderBy(item => item.Origin!.Value.Y)
+            .ThenBy(item => item.Origin!.Value.X)
+            .Select(item => item.SearchBox)
+            .FirstOrDefault();
+    }
+
+    private static bool ContainsSearchableText(string text)
+    {
+        return text.Any(character => !char.IsControl(character));
+    }
+
+    private void OnWindowDeactivated(object? sender, EventArgs e)
+    {
+        _launcherViewModel?.FlushPendingSettings();
+        _launcherViewModel?.UpdateKeyboardModifiers(KeyModifiers.None);
+    }
+
+    private void OnActualThemeVariantChanged(object? sender, EventArgs e)
+    {
+        ApplyMainBackgroundBrush();
+        ApplyTitleBarBackgroundBrush();
+        ApplyDynamicBackgroundState();
+    }
+
+    private void OnWindowResourcesChanged(object? sender, ResourcesChangedEventArgs e)
+    {
+        ApplyMainBackgroundBrush();
+        ApplyTitleBarBackgroundBrush();
+        ApplyDynamicBackgroundState();
+    }
+
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (_launcherViewModel is not null)
+        {
+            _launcherViewModel.FlushPendingSettings();
+            _launcherViewModel.NavigationTransitionRequested -= OnNavigationTransitionRequested;
+            _launcherViewModel.PropertyChanged -= OnLauncherViewModelPropertyChanged;
+        }
+
+        _launcherViewModel = DataContext as LauncherViewModel;
+
+        if (_launcherViewModel is not null)
+        {
+            _launcherViewModel.UpdateKeyboardModifiers(KeyModifiers.None);
+            _launcherViewModel.NavigationTransitionRequested += OnNavigationTransitionRequested;
+            _launcherViewModel.PropertyChanged += OnLauncherViewModelPropertyChanged;
+        }
+
+        ApplyWindowOpacity();
+        ApplyDynamicBackgroundState();
+        UpdatePromptOverlayRowHeights();
+        QueuePromptOverlaySync();
+        ApplyUiScale();
+    }
+
+    private void OnNavigationTransitionRequested(object? sender, NavigationTransitionEventArgs e)
+    {
+        Dispatcher.UIThread.Post(
+            () => PlayRouteTransition(e),
+            DispatcherPriority.Render);
+    }
+
+    private void OnLauncherViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(LauncherViewModel.IsPromptOverlayVisible))
+        {
+            UpdatePromptOverlayRowHeights();
+            QueuePromptOverlaySync();
+            return;
+        }
+
+        if (e.PropertyName == nameof(LauncherViewModel.IsPromptOverlayWarning))
+        {
+            UpdatePromptOverlayBackdropBrush();
+            return;
+        }
+
+        if (e.PropertyName == nameof(LauncherViewModel.LauncherOpacity))
+        {
+            ApplyWindowOpacity();
+            return;
+        }
+
+        if (e.PropertyName == nameof(LauncherViewModel.UiScaleFactor))
+        {
+            ApplyUiScale();
+            return;
+        }
+
+        if (e.PropertyName == nameof(LauncherViewModel.LockWindowSizeSetting)
+            || e.PropertyName == nameof(LauncherViewModel.ShowMaximizeButton))
+        {
+            ApplyWindowSizingState();
+            return;
+        }
+
+        if (e.PropertyName is nameof(LauncherViewModel.CurrentBackgroundBitmap)
+            or nameof(LauncherViewModel.BackgroundOpacity)
+            or nameof(LauncherViewModel.BackgroundBlur)
+            or nameof(LauncherViewModel.BackgroundColorful)
+            or nameof(LauncherViewModel.SelectedBackgroundSuitIndex)
+            or nameof(LauncherViewModel.CurrentBackgroundSourcePixelWidth)
+            or nameof(LauncherViewModel.CurrentBackgroundSourcePixelHeight))
+        {
+            ApplyDynamicBackgroundState();
+            return;
+        }
+
+        if (e.PropertyName == nameof(LauncherViewModel.ShowPromptOverlayTextInput)
+            || e.PropertyName == nameof(LauncherViewModel.ShowPromptOverlayChoiceList)
+            || e.PropertyName == nameof(LauncherViewModel.ShowPromptOverlayMessage))
+        {
+            UpdatePromptOverlayRowHeights();
+            QueuePromptOverlayFocus();
+        }
+    }
+
+    private void ApplyWindowOpacity()
+    {
+        var configuredOpacity = _launcherViewModel?.LauncherOpacity ?? 600d;
+        Opacity = FrontendAppearanceService.MapLauncherOpacityToWindowOpacity(configuredOpacity);
+    }
+
+    private void ApplyUiScale()
+    {
+        var scale = _launcherViewModel?.UiScaleFactor ?? FrontendStartupScalingService.DefaultUiScaleFactor;
+        var width = Bounds.Width;
+        var height = Bounds.Height;
+
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        GridRoot.RenderTransform = new ScaleTransform(scale, scale);
+        GridRoot.Width = width / scale;
+        GridRoot.Height = height / scale;
+    }
+
+    private void QueuePromptOverlaySync()
+    {
+        Dispatcher.UIThread.Post(() => _ = SyncPromptOverlayAsync(), DispatcherPriority.Render);
+    }
+
+    private void QueuePromptOverlayFocus()
+    {
+        Dispatcher.UIThread.Post(() => _ = FocusPromptOverlayPrimaryControlAsync(), DispatcherPriority.Input);
+    }
+
+    private async Task SyncPromptOverlayAsync()
+    {
+        UpdatePromptOverlayRowHeights();
+
+        var shouldShow = _launcherViewModel?.IsPromptOverlayVisible == true;
+        if (shouldShow == _isPromptOverlayRenderedOpen)
+        {
+            if (shouldShow)
+            {
+                UpdatePromptOverlayBackdropBrush();
+            }
+
+            return;
+        }
+
+        var version = ++_promptOverlayAnimationVersion;
+        _isPromptOverlayRenderedOpen = shouldShow;
+
+        if (shouldShow)
+        {
+            UpdatePromptOverlayBackdropBrush();
+            PromptOverlayBackdrop.IsVisible = true;
+            PromptOverlayHost.IsVisible = true;
+            PromptOverlayHost.IsHitTestVisible = true;
+            PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
+            await PclModalMotion.PlayOpenAsync(
+                PromptOverlayBackdrop,
+                PromptOverlayPanel,
+                () => version == _promptOverlayAnimationVersion && _isPromptOverlayRenderedOpen);
+            QueuePromptOverlayFocus();
+            return;
+        }
+
+        PromptOverlayHost.IsHitTestVisible = false;
+        await PclModalMotion.PlayCloseAsync(
+            PromptOverlayBackdrop,
+            PromptOverlayPanel,
+            () => version == _promptOverlayAnimationVersion && !_isPromptOverlayRenderedOpen);
+        if (version != _promptOverlayAnimationVersion || _isPromptOverlayRenderedOpen)
+        {
+            return;
+        }
+
+        PromptOverlayBackdrop.IsVisible = false;
+        PromptOverlayHost.IsVisible = false;
+        PclModalMotion.ResetToClosedState(PromptOverlayBackdrop, PromptOverlayPanel);
+    }
+
+    private async Task FocusPromptOverlayPrimaryControlAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+
+        if (_launcherViewModel?.IsPromptOverlayVisible != true || !PromptOverlayHost.IsVisible)
+        {
+            return;
+        }
+
+        if (_launcherViewModel?.ShowPromptOverlayTextInput == true && PromptOverlayInputTextBox.IsVisible)
+        {
+            PromptOverlayInputTextBox.Focus();
+            PromptOverlayInputTextBox.SelectionStart = 0;
+            PromptOverlayInputTextBox.SelectionEnd = PromptOverlayInputTextBox.Text?.Length ?? 0;
+            return;
+        }
+
+        if (_launcherViewModel?.ShowPromptOverlayChoiceList == true && PromptOverlayChoiceListBox.IsVisible)
+        {
+            PromptOverlayChoiceListBox.Focus();
+            return;
+        }
+
+        var primaryButton = PromptOverlayHost
+            .GetVisualDescendants()
+            .OfType<PclButton>()
+            .Where(button => button.IsVisible && button.IsEffectivelyEnabled && button.Bounds.Width > 0 && button.Bounds.Height > 0)
+            .Select(button => new
+            {
+                Button = button,
+                Origin = button.TranslatePoint(default, PromptOverlayHost)
+            })
+            .Where(item => item.Origin is not null)
+            .OrderBy(item => item.Button.ColorType == PclButtonColorState.Normal ? 1 : 0)
+            .ThenByDescending(item => item.Origin!.Value.X)
+            .FirstOrDefault()
+            ?.Button;
+
+        primaryButton?.FocusButtonHost();
+    }
+
+    private void UpdatePromptOverlayBackdropBrush()
+    {
+        var isWarning = _launcherViewModel?.IsPromptOverlayWarning == true;
+        PromptOverlayBackdrop.Background = isWarning
+            ? PclTheme.GetBrush("ColorBrushPromptOverlayWarningBackdrop")
+            : PclTheme.GetBrush("ColorBrushPromptOverlayBackdrop");
+    }
+
+    private void ApplyMainBackgroundBrush()
+    {
+        if (FrontendAppearanceService.IsDarkTheme(Application.Current))
+        {
+            var darkBaseColor = PclTheme.GetColor("ColorObjectBg0");
+            if (_darkMainBackgroundBrush is null || _darkMainBackgroundBaseColor != darkBaseColor)
+            {
+                _darkMainBackgroundBaseColor = darkBaseColor;
+                _darkMainBackgroundBrush = CreateDarkMainBackgroundBrush(darkBaseColor);
+            }
+
+            MainBorder.Background = _darkMainBackgroundBrush;
+            return;
+        }
+
+        MainBorder.Background = _defaultMainBackgroundBrush;
+    }
+
+    private void ApplyTitleBarBackgroundBrush()
+    {
+        if (FrontendAppearanceService.IsDarkTheme(Application.Current))
+        {
+            NavBackgroundBorder.Background = PclTheme.GetBrush("ColorBrushTitleBarBackground");
+            return;
+        }
+
+        NavBackgroundBorder.Background = _defaultTitleBarBackgroundBrush;
+    }
+
+    private void ApplyDynamicBackgroundState()
+    {
+        var bitmap = _launcherViewModel?.CurrentBackgroundBitmap;
+        if (bitmap is null)
+        {
+            DynamicBackgroundHost.IsVisible = false;
+            DynamicBackgroundHost.Background = Brushes.Transparent;
+            DynamicBackgroundHost.Effect = null;
+            DynamicBackgroundHost.Margin = default;
+            DynamicBackgroundHost.Width = double.NaN;
+            DynamicBackgroundHost.Height = double.NaN;
+            DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Stretch;
+            DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Stretch;
+            DynamicBackgroundOverlay.IsVisible = false;
+            DynamicBackgroundOverlay.Background = Brushes.Transparent;
+            return;
+        }
+
+        ConfigureBackgroundHostLayout(bitmap);
+        DynamicBackgroundHost.Background = CreateDynamicBackgroundBrush(bitmap);
+        DynamicBackgroundHost.Opacity = Math.Clamp((_launcherViewModel?.BackgroundOpacity ?? 1000d) / 1000d, 0d, 1d);
+        var blur = Math.Clamp(_launcherViewModel?.BackgroundBlur ?? 0d, 0d, 40d);
+        DynamicBackgroundHost.Effect = CreateDynamicBackgroundEffect(blur);
+        DynamicBackgroundHost.Margin = blur <= 0.5d
+            ? default
+            : new Thickness(-((blur + 1d) / 1.8d));
+        DynamicBackgroundHost.IsVisible = true;
+
+        var showColorfulOverlay = _launcherViewModel?.BackgroundColorful == true;
+        DynamicBackgroundOverlay.IsVisible = showColorfulOverlay;
+        DynamicBackgroundOverlay.Background = showColorfulOverlay
+            ? CreateDynamicBackgroundOverlayBrush()
+            : Brushes.Transparent;
+    }
+
+    private IBrush CreateDynamicBackgroundBrush(Bitmap bitmap)
+    {
+        var brush = new ImageBrush(bitmap);
+        ApplyBackgroundSuit(brush, bitmap);
+        return brush;
+    }
+
+    internal static IEffect? CreateDynamicBackgroundEffect(double blur)
+    {
+        var normalized = Math.Clamp(blur, 0d, 40d);
+        return normalized <= 0.5d
+            ? null
+            : new BlurEffect
+            {
+                Radius = normalized
+            };
+    }
+
+    private void ConfigureBackgroundHostLayout(Bitmap bitmap)
+    {
+        var suit = ResolveBackgroundSuitMode(bitmap);
+        var assetPixelSize = ResolveBackgroundAssetPixelSize(bitmap.PixelSize);
+        DynamicBackgroundHost.Width = double.NaN;
+        DynamicBackgroundHost.Height = double.NaN;
+
+        switch (suit)
+        {
+            case 1:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Center;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Center;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 5:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Left;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Top;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 6:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Right;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Top;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 7:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Left;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Bottom;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            case 8:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Right;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Bottom;
+                DynamicBackgroundHost.Width = assetPixelSize.Width;
+                DynamicBackgroundHost.Height = assetPixelSize.Height;
+                break;
+            default:
+                DynamicBackgroundHost.HorizontalAlignment = HorizontalAlignment.Stretch;
+                DynamicBackgroundHost.VerticalAlignment = VerticalAlignment.Stretch;
+                break;
+        }
+    }
+
+    private void ApplyBackgroundSuit(ImageBrush brush, Bitmap bitmap)
+    {
+        var suit = ResolveBackgroundSuitMode(bitmap);
+        var assetPixelSize = ResolveBackgroundAssetPixelSize(bitmap.PixelSize);
+        brush.TileMode = TileMode.None;
+        brush.SourceRect = new RelativeRect(0, 0, 1, 1, RelativeUnit.Relative);
+        brush.DestinationRect = new RelativeRect(0, 0, 1, 1, RelativeUnit.Relative);
+
+        switch (suit)
+        {
+            case 1:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                brush.Stretch = Stretch.Fill;
+                break;
+            case 3:
+                brush.Stretch = Stretch.Fill;
+                break;
+            case 4:
+                brush.Stretch = Stretch.Fill;
+                brush.TileMode = TileMode.Tile;
+                brush.DestinationRect = new RelativeRect(0, 0, assetPixelSize.Width, assetPixelSize.Height, RelativeUnit.Absolute);
+                break;
+            default:
+                brush.Stretch = Stretch.UniformToFill;
+                break;
+        }
+    }
+
+    private int ResolveBackgroundSuitMode(Bitmap bitmap)
+    {
+        var configuredSuit = _launcherViewModel?.SelectedBackgroundSuitIndex ?? 0;
+        if (configuredSuit != 0)
+        {
+            return configuredSuit;
+        }
+
+        var assetPixelSize = ResolveBackgroundAssetPixelSize(bitmap.PixelSize);
+        var availableWidth = MainClipBorder.Bounds.Width > 0 ? MainClipBorder.Bounds.Width : Bounds.Width;
+        var availableHeight = MainClipBorder.Bounds.Height > 0 ? MainClipBorder.Bounds.Height : Bounds.Height;
+        return ResolveAutomaticBackgroundSuitMode(assetPixelSize, availableWidth, availableHeight);
+    }
+
+    internal static PixelSize ResolveBackgroundAssetPixelSize(PixelSize renderedPixelSize, int sourcePixelWidth, int sourcePixelHeight)
+    {
+        if (sourcePixelWidth > 0 && sourcePixelHeight > 0)
+        {
+            return new PixelSize(sourcePixelWidth, sourcePixelHeight);
+        }
+
+        return renderedPixelSize;
+    }
+
+    internal static int ResolveAutomaticBackgroundSuitMode(PixelSize assetPixelSize, double availableWidth, double availableHeight)
+    {
+        if (assetPixelSize.Width < availableWidth / 2d && assetPixelSize.Height < availableHeight / 2d)
+        {
+            return 4;
+        }
+
+        return 2;
+    }
+
+    private PixelSize ResolveBackgroundAssetPixelSize(PixelSize renderedPixelSize)
+    {
+        return ResolveBackgroundAssetPixelSize(
+            renderedPixelSize,
+            _launcherViewModel?.CurrentBackgroundSourcePixelWidth ?? 0,
+            _launcherViewModel?.CurrentBackgroundSourcePixelHeight ?? 0);
+    }
+
+    private IBrush CreateDynamicBackgroundOverlayBrush()
+    {
+        var isDarkTheme = FrontendAppearanceService.IsDarkTheme(Application.Current);
+        var start = PclTheme.GetColor("ColorObject7");
+        var mid = PclTheme.GetColor("ColorObjectBg0");
+        var end = PclTheme.GetColor("ColorObject6");
+        return new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0.1, 0, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(0.9, 1, RelativeUnit.Relative),
+            GradientStops =
+            [
+                new GradientStop(WithAlpha(start, isDarkTheme ? (byte)84 : (byte)64), 0),
+                new GradientStop(WithAlpha(mid, isDarkTheme ? (byte)52 : (byte)28), 0.45),
+                new GradientStop(WithAlpha(end, isDarkTheme ? (byte)70 : (byte)48), 1)
+            ]
+        };
+    }
+
+    private static Color WithAlpha(Color color, byte alpha)
+    {
+        return new Color(alpha, color.R, color.G, color.B);
+    }
+
+    private void UpdatePromptOverlayRowHeights()
+    {
+        if (PromptOverlayContentGrid.RowDefinitions.Count <= PromptOverlayChoiceRowIndex)
+        {
+            return;
+        }
+
+        var showMessage = _launcherViewModel?.ShowPromptOverlayMessage == true;
+        var showTextInput = _launcherViewModel?.ShowPromptOverlayTextInput == true;
+        var showChoiceList = _launcherViewModel?.ShowPromptOverlayChoiceList == true;
+
+        PromptOverlayContentGrid.RowDefinitions[PromptOverlayMessageRowIndex].Height = showMessage
+            ? showChoiceList || showTextInput ? GridLength.Auto : PromptOverlayFlexibleRowHeight
+            : PromptOverlayHiddenRowHeight;
+        PromptOverlayContentGrid.RowDefinitions[PromptOverlayChoiceRowIndex].Height = showChoiceList
+            ? PromptOverlayFlexibleRowHeight
+            : PromptOverlayHiddenRowHeight;
+    }
+
+    private void PromptOverlayChoiceListBox_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        _launcherViewModel?.ConfirmPromptOverlayChoice();
+    }
+
+    private void UpdateWindowChromeState()
+    {
+        var isMaximized = WindowState == WindowState.Maximized;
+        GridResize.IsVisible = ShouldShowResizeChrome(isMaximized, _launcherViewModel?.LockWindowSizeSetting == true);
+        MainBorder.Margin = isMaximized ? new Thickness(0) : new Thickness(18);
+        MainBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(15, 15, 8, 8);
+        MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
+    }
+
+    private void ApplyWindowSizingState()
+    {
+        var lockWindowSize = _launcherViewModel?.LockWindowSizeSetting == true;
+        var canResizeWindow = IsWindowResizeAllowed(lockWindowSize);
+        CanResize = canResizeWindow;
+        GridResize.IsHitTestVisible = canResizeWindow;
+        MaximizeButton.IsEnabled = canResizeWindow;
+        MaximizeButton.Opacity = canResizeWindow ? 1d : 0.45d;
+        UpdateWindowChromeState();
+    }
+
+    internal static bool IsWindowResizeAllowed(bool lockWindowSize)
+    {
+        return !lockWindowSize;
+    }
+
+    internal static bool ShouldShowResizeChrome(bool isMaximized, bool lockWindowSize)
+    {
+        return !isMaximized && IsWindowResizeAllowed(lockWindowSize);
+    }
+
+    private static IBrush CreateDarkMainBackgroundBrush(Color baseColor)
+    {
+        const int textureSize = 512;
+        var pixels = new byte[textureSize * textureSize * 4];
+        var baseBlue = baseColor.B / 255d;
+        var baseGreen = baseColor.G / 255d;
+        var baseRed = baseColor.R / 255d;
+
+        for (var y = 0; y < textureSize; y++)
+        {
+            var normalizedY = textureSize == 1 ? 0d : y / (double)(textureSize - 1);
+            var linearRgb = 1d - normalizedY;
+            var linearFactor = (0.85d + (0.15d * linearRgb)) * 0.25;
+
+            for (var x = 0; x < textureSize; x++)
+            {
+                var normalizedX = textureSize == 1 ? 0.5d : x / (double)(textureSize - 1);
+                var ellipseDistance = Math.Sqrt(
+                    Math.Pow((normalizedX - 0.5d) / 0.5d, 2) +
+                    Math.Pow(normalizedY, 2));
+                var radialRgb = Math.Clamp(1d - (ellipseDistance / 1.2d), 0d, 1d);
+                var radialFactor = 0.6d + (0.4d * radialRgb);
+                var blendFactor = radialFactor * linearFactor;
+                var blue = (byte)Math.Clamp(Math.Round(255d * baseBlue * blendFactor), byte.MinValue, byte.MaxValue);
+                var green = (byte)Math.Clamp(Math.Round(255d * baseGreen * blendFactor), byte.MinValue, byte.MaxValue);
+                var red = (byte)Math.Clamp(Math.Round(255d * baseRed * blendFactor), byte.MinValue, byte.MaxValue);
+
+                var pixelIndex = ((y * textureSize) + x) * 4;
+                pixels[pixelIndex] = blue;
+                pixels[pixelIndex + 1] = green;
+                pixels[pixelIndex + 2] = red;
+                pixels[pixelIndex + 3] = byte.MaxValue;
+            }
+        }
+
+        var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+        try
+        {
+            var bitmap = new Bitmap(
+                PixelFormat.Bgra8888,
+                AlphaFormat.Opaque,
+                handle.AddrOfPinnedObject(),
+                new PixelSize(textureSize, textureSize),
+                new global::Avalonia.Vector(96, 96),
+                textureSize * 4);
+
+            return new ImageBrush(bitmap)
+            {
+                Stretch = Stretch.Fill
+            };
+        }
+        finally
+        {
+            handle.Free();
+        }
+    }
+
+    private void OnHintWrapperShow(string message, AvaloniaHintTheme theme)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(
+            () => _ = ShowHintAsync(NormalizeHintMessage(message), theme),
+            DispatcherPriority.Background);
+    }
+
+    private async Task ShowHintAsync(string message, AvaloniaHintTheme theme)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        if (_activeHints.TryGetValue(message, out var existingState))
+        {
+            existingState.ApplyTheme(theme);
+            ResetHintLifetime(existingState);
+            await NudgeHintAsync(existingState);
+            return;
+        }
+
+        if (PanHint.Children.Count >= 20)
+        {
+            return;
+        }
+
+        var border = CreateHintBorder(message, theme);
+        var state = new HintPopupState(message, border);
+        _activeHints[message] = state;
+        PanHint.Children.Add(border);
+
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Render);
+        border.Opacity = 1;
+        border.RenderTransform = new TranslateTransform(0, 0);
+        ResetHintLifetime(state);
+    }
+
+    private void ResetHintLifetime(HintPopupState state)
+    {
+        state.LifetimeCancellation.Cancel();
+        state.LifetimeCancellation.Dispose();
+        state.LifetimeCancellation = new CancellationTokenSource();
+        _ = HideHintLaterAsync(state, state.LifetimeCancellation.Token);
+    }
+
+    private async Task HideHintLaterAsync(HintPopupState state, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var visibleDuration = TimeSpan.FromMilliseconds(
+                MotionDurations.HintVisibleBaseMilliseconds +
+                Math.Clamp(
+                    state.Message.Length,
+                    MotionDurations.HintVisibleMinCharacters,
+                    MotionDurations.HintVisibleMaxCharacters) * MotionDurations.HintVisiblePerCharacterMilliseconds);
+            await Task.Delay(visibleDuration, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested || state.IsClosing)
+        {
+            return;
+        }
+
+        state.IsClosing = true;
+        state.Border.Opacity = 0;
+        state.Border.RenderTransform = new TranslateTransform(48, 0);
+
+        try
+        {
+            await Task.Delay(MotionDurations.HintSettle, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            state.IsClosing = false;
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            state.IsClosing = false;
+            return;
+        }
+
+        PanHint.Children.Remove(state.Border);
+        _activeHints.Remove(state.Message);
+        state.LifetimeCancellation.Dispose();
+    }
+
+    private async Task NudgeHintAsync(HintPopupState state)
+    {
+        if (state.IsClosing)
+        {
+            return;
+        }
+
+        state.Border.RenderTransform = new TranslateTransform(12, 0);
+        await Task.Delay(MotionDurations.HintNudge);
+        if (!state.IsClosing)
+        {
+            state.Border.RenderTransform = new TranslateTransform(0, 0);
+        }
+    }
+
+    private static string NormalizeHintMessage(string message)
+    {
+        return message
+            .Replace("\r\n", " ", StringComparison.Ordinal)
+            .Replace('\r', ' ')
+            .Replace('\n', ' ')
+            .Trim();
+    }
+
+    private static Border CreateHintBorder(string message, AvaloniaHintTheme theme)
+    {
+        var border = new Border
+        {
+            MaxWidth = 360,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            CornerRadius = new CornerRadius(6, 0, 0, 6),
+            Padding = new Thickness(14, 6, 14, 6),
+            Opacity = 0,
+            RenderTransform = new TranslateTransform(48, 0),
+            BoxShadow = PclTheme.GetBoxShadows("ColorShadowHintPopup")
+        };
+        border.Transitions = CreateHintTransitions();
+        border.Child = new TextBlock
+        {
+            Text = message,
+            FontSize = 13,
+            Foreground = Brushes.White,
+            TextWrapping = TextWrapping.NoWrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxWidth = 332
+        };
+
+        ApplyHintTheme(border, theme);
+        return border;
+    }
+
+    private static Transitions CreateHintTransitions()
+    {
+        return
+        [
+            new DoubleTransition
+            {
+                Property = Visual.OpacityProperty,
+                Duration = MotionDurations.QuickState,
+                Easing = new CubicEaseOut()
+            },
+            new TransformOperationsTransition
+            {
+                Property = Visual.RenderTransformProperty,
+                Duration = MotionDurations.EntranceTranslate,
+                Easing = new CubicEaseOut()
+            }
+        ];
+    }
+
+    private static void ApplyHintTheme(Border border, AvaloniaHintTheme theme)
+    {
+        var (startKey, endKey) = theme switch
+        {
+            AvaloniaHintTheme.Success => ("ColorObjectHintSuccessStart", "ColorObjectHintSuccessEnd"),
+            AvaloniaHintTheme.Error => ("ColorObjectHintErrorStart", "ColorObjectHintErrorEnd"),
+            _ => ("ColorObjectHintInfoStart", "ColorObjectHintInfoEnd")
+        };
+        var start = PclTheme.GetColor(startKey);
+        var end = PclTheme.GetColor(endKey);
+        border.Background = new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
+            GradientStops =
+            [
+                new GradientStop(start, 0),
+                new GradientStop(end, 1)
+            ]
+        };
+    }
+
+    private void PlayRouteTransition(NavigationTransitionEventArgs transition)
+    {
+        InitializeCompositionVisuals();
+        if (_compositor is null)
+        {
+            return;
+        }
+
+        var (leftVisual, rightVisual) = transition.IsLaunchRoute
+            ? (_launchLeftContentHostVisual, _launchRightContentHostVisual)
+            : (_standardLeftContentHostVisual, _standardRightContentHostVisual);
+
+        if (leftVisual is null || rightVisual is null)
+        {
+            return;
+        }
+
+        var leftOffset = transition.Direction == NavigationTransitionDirection.Forward ? -50f : 50f;
+        if (transition.AnimateLeftPane)
+        {
+            StartRouteAnimation(leftVisual, leftOffset);
+        }
+
+        PlayRightPaneRouteTransition(transition);
+    }
+
+    private void PlayRightPaneRouteTransition(NavigationTransitionEventArgs transition)
+    {
+        if (!transition.AnimateRightPane)
+        {
+            return;
+        }
+
+        // Standard right panes animate their presenter through PclAnimatedRightPaneHost.
+        // Only the launch pane needs a separate route animation here.
+        if (transition.IsLaunchRoute)
+        {
+            // The launch right pane is a text-heavy card. Animate the control itself to avoid
+            // composition flicker while preserving the vertical drop-in motion.
+            LaunchRightPanel.QueueRouteEnterAnimation();
+        }
+    }
+
+    private void StartRouteAnimation(CompositionVisual visual, float offsetX, float offsetY = 0f, bool useBounce = false)
+    {
+        if (_compositor is null)
+        {
+            return;
+        }
+
+        Easing easing = useBounce ? new BackEaseOut() : new CubicEaseOut();
+
+        var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
+        offsetAnimation.Duration = MotionDurations.RouteTransition;
+        offsetAnimation.InsertKeyFrame(0f, new Vector3(offsetX, offsetY, 0f), easing);
+        offsetAnimation.InsertKeyFrame(1f, new Vector3(0f, 0f, 0f), easing);
+        offsetAnimation.Target = "Offset";
+
+        var opacityAnimation = _compositor.CreateScalarKeyFrameAnimation();
+        opacityAnimation.Duration = MotionDurations.RouteTransition;
+        opacityAnimation.InsertKeyFrame(0f, 0f, easing);
+        opacityAnimation.InsertKeyFrame(1f, 1f, easing);
+        opacityAnimation.Target = "Opacity";
+
+        var group = _compositor.CreateAnimationGroup();
+        group.Add(offsetAnimation);
+        group.Add(opacityAnimation);
+
+        visual.StartAnimationGroup(group);
+    }
+
+    private sealed class HintPopupState(string message, Border border)
+    {
+        public string Message { get; } = message;
+
+        public Border Border { get; } = border;
+
+        public CancellationTokenSource LifetimeCancellation { get; set; } = new();
+
+        public bool IsClosing { get; set; }
+
+        public void ApplyTheme(AvaloniaHintTheme currentTheme)
+        {
+            ApplyHintTheme(Border, currentTheme);
+        }
+    }
+}

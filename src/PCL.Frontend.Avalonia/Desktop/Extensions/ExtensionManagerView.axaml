@@ -1,0 +1,37 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Extensions.ExtensionManagerView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,10,25,10" Spacing="15">
+      <ui:PclCard x:Name="OverviewCard" ContentMargin="20,12,20,15">
+        <ui:PclCard.CardContent>
+          <StackPanel Spacing="12">
+            <TextBlock x:Name="OverviewText" TextWrapping="Wrap" />
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock x:Name="CountText" VerticalAlignment="Center"
+                         Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+              <ui:PclButton x:Name="InstallButton" Grid.Column="1" />
+            </Grid>
+            <TextBlock x:Name="TrustText" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+            <TextBlock x:Name="SafeModeText" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ColorBrushSemanticWarningForeground}" />
+            <TextBlock x:Name="FeedbackText" IsVisible="False" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
+          </StackPanel>
+        </ui:PclCard.CardContent>
+      </ui:PclCard>
+      <StackPanel x:Name="ExtensionCards" Spacing="15" />
+      <ui:PclCard x:Name="DiagnosticsCard" ShowChevron="True" IsChevronExpanded="False"
+                        ContentMargin="20,52,20,15">
+        <ui:PclCard.CardContent>
+          <TextBox x:Name="DiagnosticsText" IsReadOnly="True" AcceptsReturn="True"
+                   TextWrapping="Wrap" MaxHeight="240" />
+        </ui:PclCard.CardContent>
+      </ui:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

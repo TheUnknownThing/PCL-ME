@@ -1,0 +1,115 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.DownloadCatalogRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{ReflectionBinding Launcher}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="5" Spacing="0">
+      <StackPanel
+          x:Name="ContentHost"
+          IsVisible="False"
+          Spacing="0">
+        <ui:PclSearchBox
+            Margin="20,15,20,0"
+            Text="{Binding DownloadCatalogSearchQuery, Mode=TwoWay}"
+            Watermark="{Binding DownloadVersionSearchWatermark}" />
+        <TextBlock
+            Margin="20,15,20,0"
+            IsVisible="{Binding ShowDownloadCatalogSearchEmpty}"
+            Text="{Binding DownloadVersionSearchEmptyText}"
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+        <ui:PclCard
+            Margin="20,20,20,0"
+            Header="{Binding DownloadCatalogIntroTitle}"
+            IsVisible="{Binding HasDownloadCatalogIntro}"
+            ContentMargin="25,40,15,20">
+          <ui:PclCard.CardContent>
+            <StackPanel Spacing="12">
+              <TextBlock
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                  FontSize="13"
+                  Text="{Binding DownloadCatalogIntroBody}"
+                  TextWrapping="Wrap" />
+              <ItemsControl ItemsSource="{Binding DownloadCatalogIntroActions}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <ui:PclButton
+                        Margin="0,0,20,0"
+                        MinWidth="140"
+                        Command="{Binding Command}"
+                        ColorType="{Binding ColorType}"
+                        ContentPadding="13,0"
+                        Text="{Binding Text}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ui:PclCard.CardContent>
+        </ui:PclCard>
+
+        <ItemsControl ItemsSource="{Binding DownloadCatalogSections}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ui:PclCard
+                  Margin="20,15,20,0"
+                  IsVisible="{Binding IsSearchMatch}"
+                  Header="{Binding Title}"
+                  ShowChevron="{Binding CanCollapse}"
+                  IsChevronExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                  ContentMargin="20,40,18,12">
+                <ui:PclCard.CardContent>
+                  <StackPanel Spacing="8">
+                    <controls:PclLoading
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding IsLoading}"
+                        Text="{Binding LoadingText}" />
+
+                    <ItemsControl ItemsSource="{Binding Items}" IsVisible="{Binding HasItems}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <VirtualizingStackPanel CacheLength="0.5" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <ui:PclListItem
+                              Margin="0,0,0,8"
+                              Command="{Binding Command}"
+                              Info="{Binding CombinedInfo}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </ui:PclCard.CardContent>
+              </ui:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <ui:PclCard
+          x:Name="LoadingCard"
+          Margin="40,50"
+          ContentMargin="20,20,20,17"
+          HorizontalAlignment="Center"
+          IsVisible="False">
+        <ui:PclCard.CardContent>
+          <controls:PclLoading
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Text="{Binding DownloadCatalogLoadingText}" />
+        </ui:PclCard.CardContent>
+      </ui:PclCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

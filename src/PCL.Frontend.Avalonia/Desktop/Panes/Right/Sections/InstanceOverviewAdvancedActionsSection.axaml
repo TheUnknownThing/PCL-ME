@@ -1,0 +1,51 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.InstanceOverviewAdvancedActionsSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <ui:PclCard Header="{Binding InstanceOverviewAdvancedHeaderText}" ContentMargin="20,40,20,18">
+    <ui:PclCard.CardContent>
+      <WrapPanel ItemWidth="150">
+        <ui:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding CreateDirectLaunchShortcutCommand}"
+            Text="{Binding InstanceOverviewDirectLaunchEntryText}" />
+        <ui:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding ExportInstanceScriptCommand}"
+            Text="{Binding InstanceOverviewExportScriptText}" />
+        <ui:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding TestInstanceCommand}"
+            Text="{Binding InstanceOverviewTestGameText}" />
+        <ui:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding CheckInstanceFilesCommand}"
+            Text="{Binding InstanceOverviewRepairFilesText}" />
+        <ui:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding RestoreInstanceCommand}"
+            Text="{Binding InstanceOverviewResetText}" />
+        <ui:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding DeleteInstanceCommand}"
+            ColorType="Red"
+            Text="{Binding InstanceOverviewDeleteText}" />
+        <ui:PclButton
+            Width="140"
+            Margin="0,0,20,12"
+            Command="{Binding PatchInstanceCoreCommand}"
+            Text="{Binding InstanceOverviewPatchCoreText}" />
+      </WrapPanel>
+    </ui:PclCard.CardContent>
+  </ui:PclCard>
+</UserControl>

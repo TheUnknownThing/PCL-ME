@@ -1,0 +1,356 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.DownloadInstallRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{ReflectionBinding Launcher}">
+  <ScrollViewer
+      x:Name="InstallScrollViewer"
+      VerticalScrollBarVisibility="Auto">
+    <Grid
+        x:Name="InstallPageGrid"
+        Margin="25,10,25,25">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <Grid
+          Grid.Row="0"
+          x:Name="MinecraftCatalogStage"
+          ColumnDefinitions="*">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:PclSearchBox
+            Grid.Row="0"
+            Margin="0,5,0,15"
+            Text="{Binding DownloadInstallMinecraftSearchQuery, Mode=TwoWay}"
+            Watermark="{Binding DownloadVersionSearchWatermark}" />
+        <ui:PclCard
+            Grid.Row="1"
+            x:Name="MinecraftCatalogLoadingCard"
+            Margin="40,50"
+            ContentMargin="20,20,20,17"
+            HorizontalAlignment="Center"
+            IsVisible="False"
+            VerticalAlignment="Center">
+          <ui:PclCard.CardContent>
+            <controls:PclLoading
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Text="{Binding DownloadInstallMinecraftCatalogStatus}" />
+          </ui:PclCard.CardContent>
+        </ui:PclCard>
+
+        <ui:PclCard
+            Grid.Row="2"
+            x:Name="MinecraftCatalogEmptyStateCard"
+            IsVisible="False"
+            ContentMargin="18,16,18,16">
+          <ui:PclCard.CardContent>
+            <TextBlock
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                FontSize="13"
+                Text="{Binding DownloadInstallMinecraftCatalogStatus}"
+                TextWrapping="Wrap" />
+          </ui:PclCard.CardContent>
+        </ui:PclCard>
+
+        <Grid Grid.Row="3">
+          <ItemsControl
+              x:Name="MinecraftCatalogGroupListHost"
+              IsVisible="False"
+              ItemsSource="{Binding DownloadInstallMinecraftSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate
+                  x:DataType="vm:DownloadInstallMinecraftSectionViewModel">
+                <ui:PclCard
+                    Margin="0,0,0,15"
+                    Header="{Binding Title}"
+                    ShowChevron="{Binding CanCollapse}"
+                    IsChevronExpanded="False"
+                    HeaderCommand="{Binding HeaderCommand}"
+                    ContentMargin="18,40,18,12">
+                  <ui:PclCard.CardContent>
+                    <ItemsControl ItemsSource="{Binding Choices}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <VirtualizingStackPanel CacheLength="0.5" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate
+                            x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
+                          <ui:PclListItem
+                              Margin="0,0,0,2"
+                              Command="{Binding SelectCommand}"
+                              IconSource="{Binding Icon}"
+                              IconScale="1"
+                              Info="{Binding Summary}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </ui:PclCard.CardContent>
+                </ui:PclCard>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <ui:PclCard
+              x:Name="MinecraftCatalogExpandedHost"
+              IsVisible="False"
+              ShowChevron="True"
+              IsChevronExpanded="True"
+              ContentFill="True"
+              ContentMargin="18,40,18,12">
+            <ui:PclCard.CardContent>
+              <ScrollViewer
+                  x:Name="MinecraftCatalogExpandedScroll"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  IsScrollChainingEnabled="False"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+                <ItemsControl
+                    x:Name="MinecraftCatalogExpandedList"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <VirtualizingStackPanel CacheLength="0.5" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate
+                        x:DataType="vm:DownloadInstallMinecraftChoiceViewModel">
+                      <ui:PclListItem
+                          Margin="0,0,0,2"
+                          Command="{Binding SelectCommand}"
+                          IconSource="{Binding Icon}"
+                          IconScale="1"
+                          Info="{Binding Summary}"
+                          Title="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </ui:PclCard.CardContent>
+          </ui:PclCard>
+        </Grid>
+      </Grid>
+
+      <StackPanel
+          Grid.Row="1"
+          x:Name="SelectionStage"
+          IsVisible="False"
+          Spacing="12">
+        <ui:PclCard ContentMargin="13,13,16,13">
+          <ui:PclCard.CardContent>
+            <Grid ColumnDefinitions="Auto,Auto,*">
+              <Button
+                  Classes="nochrome"
+                  Width="26"
+                  Height="26"
+                  Padding="0"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  Command="{Binding DownloadInstallBackCommand}"
+                  FocusAdorner="{x:Null}"
+                  CornerRadius="13">
+                <Path
+                    Width="10"
+                    Height="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Fill="{DynamicResource ColorBrushEntrySecondarySelected}"
+                    Stretch="Uniform"
+                    Data="M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z" />
+              </Button>
+                <Border
+                  Grid.Column="1"
+                  Width="32"
+                  Height="32"
+                  Margin="12,0,14,0"
+                  VerticalAlignment="Center"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  CornerRadius="6">
+                <Image Source="{Binding DownloadInstallMinecraftIcon}" Stretch="Uniform" Margin="5" />
+              </Border>
+              <TextBox
+                  Grid.Column="2"
+                  Height="30"
+                  Padding="8,4"
+                  VerticalAlignment="Center"
+                  Background="Transparent"
+                  BorderBrush="Transparent"
+                  BorderThickness="0"
+                  FontSize="15"
+                  Text="{Binding DownloadInstallName}" />
+            </Grid>
+          </ui:PclCard.CardContent>
+        </ui:PclCard>
+
+        <Border
+            IsVisible="{Binding ShowDownloadInstallNameValidation}"
+            Padding="12,10"
+            Background="{DynamicResource ColorBrushSemanticDangerBackground}"
+            BorderBrush="{DynamicResource ColorBrushSemanticDangerBorder}"
+            BorderThickness="1"
+            CornerRadius="4">
+          <TextBlock
+              Foreground="{DynamicResource ColorBrushSemanticDangerForeground}"
+              FontSize="12.5"
+              Text="{Binding DownloadInstallNameValidationMessage}"
+              TextWrapping="Wrap" />
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallHints}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border
+                  Padding="12,10"
+                  Background="{Binding BackgroundBrush}"
+                  BorderBrush="{Binding BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="4">
+                <TextBlock
+                    Foreground="{Binding ForegroundBrush}"
+                    FontSize="12.5"
+                    Text="{Binding Text}"
+                    TextWrapping="Wrap" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding DownloadInstallOptionCards}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ui:PclCard
+                  Margin="0,0,0,15"
+                  Header="{Binding Title}"
+                  ShowChevron="True"
+                  IsChevronExpanded="{Binding IsExpanded}"
+                  HeaderCommand="{Binding ToggleCommand}"
+                  ContentMargin="20,40,18,15">
+                <ui:PclCard.HeaderOverlayContent>
+                  <Grid
+                      Height="30"
+                      Margin="132,5,40,0"
+                      VerticalAlignment="Top"
+                      ColumnDefinitions="Auto,*,Auto">
+                    <Border
+                        Width="18"
+                        Height="18"
+                        Margin="0,0,7,0"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0"
+                        CornerRadius="5"
+                        IsHitTestVisible="False"
+                        IsVisible="{Binding ShowIcon}">
+                      <Image Source="{Binding Icon}" Stretch="Uniform" Margin="3" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="0,0,12,0"
+                        IsHitTestVisible="False"
+                        VerticalAlignment="Center"
+                        Foreground="{Binding SelectionForegroundBrush}"
+                        FontSize="13"
+                        Text="{Binding SelectionText}"
+                        TextTrimming="CharacterEllipsis" />
+                    <ui:PclIconButton
+                        Grid.Column="2"
+                        HorizontalAlignment="Right"
+                        Command="{Binding ClearCommand}"
+                        HoverBackgroundBrush="{DynamicResource ColorBrush8}"
+                        IconBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        IconData="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
+                        IconScale="0.72"
+                        IdleBackgroundBrush="{DynamicResource ColorBrushTransparent}"
+                        IsVisible="{Binding CanClear}"
+                        ToolTip.Tip="{Binding ClearSelectionToolTip}" />
+                  </Grid>
+                </ui:PclCard.HeaderOverlayContent>
+                <ui:PclCard.CardContent>
+                  <StackPanel Spacing="8">
+                    <TextBlock
+                        IsVisible="{Binding IsLoading}"
+                        Margin="0,2,0,8"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        FontSize="12"
+                        Text="{Binding LoadingText}" />
+
+                    <TextBlock
+                        IsVisible="{Binding ShowEmptyState}"
+                        Margin="0,2,0,8"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        FontSize="12"
+                        Text="{Binding EmptyStateText}"
+                        TextWrapping="Wrap" />
+
+                    <ui:PclSearchBox
+                        IsVisible="{Binding ShowChoiceSearchBox}"
+                        Text="{Binding ChoiceSearchQuery, Mode=TwoWay}"
+                        Watermark="{Binding ChoiceSearchWatermark}" />
+
+                    <TextBlock
+                        IsVisible="{Binding ShowFilteredEmptyState}"
+                        Margin="0,2,0,8"
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        FontSize="12"
+                        Text="{Binding FilteredEmptyStateText}"
+                        TextWrapping="Wrap" />
+
+                    <ItemsControl ItemsSource="{Binding VisibleChoices}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <VirtualizingStackPanel CacheLength="0.5" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <ui:PclListItem
+                              HorizontalAlignment="Stretch"
+                              Margin="0"
+                              Command="{Binding SelectCommand}"
+                              IconSource="{Binding Icon}"
+                              Info="{Binding Summary}"
+                              IsSelected="{Binding IsSelected}"
+                              Title="{Binding Title}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                  </StackPanel>
+                </ui:PclCard.CardContent>
+              </ui:PclCard>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid ColumnDefinitions="*,Auto">
+          <ui:PclButton
+              Grid.Column="1"
+              Width="120"
+              Margin="16,0,0,0"
+              Command="{Binding StartDownloadInstallCommand}"
+              IsEnabled="{Binding CanStartDownloadInstall}"
+              Text="{Binding DownloadInstallStartText}" />
+        </Grid>
+      </StackPanel>
+    </Grid>
+  </ScrollViewer>
+</UserControl>
