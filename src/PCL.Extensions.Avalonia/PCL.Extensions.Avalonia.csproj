@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Description>Native Avalonia UI contribution contracts for PCL-ME extensions.</Description>
   </PropertyGroup>

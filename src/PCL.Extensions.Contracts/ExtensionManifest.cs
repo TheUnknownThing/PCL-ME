@@ -9,6 +9,9 @@ public sealed record ExtensionManifest
     public string Author { get; init; } = "";
     public string? Website { get; init; }
     public int ApiVersion { get; init; } = 1;
+    public string? MinimumSdkVersion { get; init; }
+    public string[] RequiredCapabilities { get; init; } = [];
+    public string[] OptionalCapabilities { get; init; } = [];
     public int? AvaloniaMajorVersion { get; init; }
     public string? EntryAssembly { get; init; }
     public string? EntryType { get; init; }

@@ -69,6 +69,8 @@ public sealed partial class ExtensionHost : IAsyncDisposable
     }
 
     public bool SafeMode { get; }
+    /// <summary>Optional contracts implemented by this host. Configure before discovery or activation.</summary>
+    public IReadOnlyList<string> SupportedCapabilities { get; init; } = [];
     public IReadOnlyList<ExtensionInfo> Extensions => _extensions.Values.OrderBy(info => info.Manifest.Id, StringComparer.Ordinal).ToArray();
     public IReadOnlyList<ExtensionDiagnostic> Diagnostics { get { lock (_diagnostics) return _diagnostics.ToArray(); } }
     public event Action? Changed;
@@ -136,6 +138,12 @@ public sealed partial class ExtensionHost : IAsyncDisposable
 
     private void ValidateApi(ExtensionManifest manifest)
     {
+        if (manifest.MinimumSdkVersion is { } minimum &&
+            (!Version.TryParse(minimum, out var required) || required > Version.Parse(ExtensionCapabilities.SdkVersion)))
+            throw new NotSupportedException($"This extension requires SDK {minimum}; this host supports {ExtensionCapabilities.SdkVersion}.");
+        foreach (var capability in manifest.RequiredCapabilities)
+            if (!SupportedCapabilities.Contains(capability, StringComparer.Ordinal))
+                throw new NotSupportedException($"Required extension capability is unavailable: {capability}");
         if (manifest.ApiVersion != ExtensionPackage.ApiVersion) throw new NotSupportedException($"Unsupported extension API: {manifest.ApiVersion}");
         if (manifest.AvaloniaMajorVersion is int major && major != _uiMajor)
             throw new NotSupportedException($"This extension needs Avalonia {major}; the launcher uses Avalonia {_uiMajor}.");
@@ -313,6 +321,9 @@ public sealed partial class ExtensionHost : IAsyncDisposable
             if (_diagnostics.Count > 500) _diagnostics.RemoveAt(0);
         }
     }
+
+    /// <summary>Isolates errors in optional providers, hooks and mounted contributions.</summary>
+    public void LogContributionError(string extensionId, Exception exception) => Log(extensionId, ExtensionLogLevel.Error, exception.ToString());
 
     public void LocaleChanged()
     {

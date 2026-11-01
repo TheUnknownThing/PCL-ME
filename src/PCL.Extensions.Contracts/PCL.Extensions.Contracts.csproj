@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Description>Public contracts for PCL-ME extensions.</Description>
   </PropertyGroup>

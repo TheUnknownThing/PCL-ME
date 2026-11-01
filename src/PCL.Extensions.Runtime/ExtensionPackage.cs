@@ -33,6 +33,14 @@ public static partial class ExtensionPackage
         if (string.IsNullOrWhiteSpace(manifest.Name) || !Version.TryParse(manifest.Version, out _))
             throw new InvalidDataException("An extension needs a name and a numeric version.");
         if (manifest.ApiVersion != ApiVersion) throw new NotSupportedException($"Extension API {manifest.ApiVersion} is not supported.");
+        if (manifest.MinimumSdkVersion is { } minimum && !Version.TryParse(minimum, out _))
+            throw new InvalidDataException("minimumSdkVersion must be a numeric version.");
+        if (manifest.RequiredCapabilities is null || manifest.OptionalCapabilities is null)
+            throw new InvalidDataException("Capability lists cannot be null.");
+        if (manifest.RequiredCapabilities.Concat(manifest.OptionalCapabilities).Any(value => string.IsNullOrWhiteSpace(value) || !IdPattern().IsMatch(value)) ||
+            manifest.RequiredCapabilities.Concat(manifest.OptionalCapabilities).Distinct(StringComparer.Ordinal).Count() !=
+            manifest.RequiredCapabilities.Length + manifest.OptionalCapabilities.Length)
+            throw new InvalidDataException("Capability names must be unique namespaced identifiers.");
         if (manifest.EntryAssembly is null || manifest.EntryType is null)
             throw new InvalidDataException("An extension needs entryAssembly and entryType.");
         var entry = ResolvePackagePath(directory, manifest.EntryAssembly);
