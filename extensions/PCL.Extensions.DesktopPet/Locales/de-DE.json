@@ -1,0 +1,23 @@
+{
+  "actions.show_launcher": "Launcher anzeigen",
+  "actions.launch_selected": "Ausgewählte Instanz starten",
+  "actions.hide_pet": "Desktop-Begleiter ausblenden",
+  "actions.quit": "Beenden",
+  "pet.title": "PCL-ME Desktop-Begleiter",
+  "pet.hint": "Einzel- und Doppelklick-Aktionen lassen sich in den Einstellungen ändern. Zum Verschieben ziehen. Rechtsklicken für Spielstart und weitere Aktionen.",
+  "settings.topmost": "Begleiter im Vordergrund halten",
+  "settings.scale": "Größe des Begleiters",
+  "settings.choose_image": "Bild auswählen",
+  "settings.image_error_message": "Wähle ein gültiges Bild mit höchstens 4096 × 4096 Pixeln und 10 MB. Eigene Begleiter unterstützen nur statische Bilder.",
+  "settings.use_custom": "Eigenen Begleiter verwenden",
+  "settings.preset": "Voreinstellung",
+  "settings.click_action": "Aktion bei einfachem Klick",
+  "settings.double_click_action": "Aktion bei Doppelklick",
+  "settings.action_none": "Nichts tun",
+  "settings.action_play_animation": "Interaktionsanimation abspielen",
+  "appearances.slime": "Schleim",
+  "appearances.enderman": "Enderman",
+  "presets.creeper_gif": "Creeper",
+  "presets.campfire_gif": "Lagerfeuer",
+  "extension.name": "PCL-ME Desktop-Begleiter"
+}

@@ -1,0 +1,23 @@
+{
+  "actions.show_launcher": "显示启动器",
+  "actions.launch_selected": "启动选中的实例",
+  "actions.hide_pet": "隐藏桌宠",
+  "actions.quit": "退出",
+  "pet.title": "PCL-ME 桌宠",
+  "pet.hint": "单击或双击的行为可在设置中更改；拖动可移动，右键打开菜单以启动游戏或使用其他操作。",
+  "settings.topmost": "桌宠置顶",
+  "settings.scale": "桌宠大小",
+  "settings.choose_image": "选择图片",
+  "settings.image_error_message": "请选择有效图片，尺寸不超过 4096 × 4096 像素，文件大小不超过 10 MB。自定义桌宠仅支持静态图片。",
+  "settings.use_custom": "使用自定义桌宠",
+  "settings.preset": "预设样式",
+  "settings.click_action": "单击行为",
+  "settings.double_click_action": "双击行为",
+  "settings.action_none": "无操作",
+  "settings.action_play_animation": "播放交互动画",
+  "appearances.slime": "史莱姆",
+  "appearances.enderman": "末影人",
+  "presets.creeper_gif": "苦力怕",
+  "presets.campfire_gif": "营火",
+  "extension.name": "PCL-ME 桌宠"
+}

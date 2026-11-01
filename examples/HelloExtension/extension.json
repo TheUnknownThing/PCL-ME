@@ -1,0 +1,14 @@
+{
+  "id": "example.hello",
+  "name": "Hello extension",
+  "description": "A native page, instance tab, command and search provider using only the public SDK.",
+  "author": "PCL Community",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "avaloniaMajorVersion": 11,
+  "entryAssembly": "HelloExtension.dll",
+  "entryType": "HelloExtension.HelloExtension",
+  "startWithLauncher": true,
+  "commands": [ { "id": "example.hello.open", "title": "Hello", "titleKey": "title" } ],
+  "settings": [ { "key": "greeting", "title": "Greeting", "titleKey": "greeting", "kind": "String", "defaultValue": "Hello from an extension!" } ]
+}

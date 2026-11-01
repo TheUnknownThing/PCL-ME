@@ -2,12 +2,11 @@ using System.Security.Cryptography;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using PCL.Frontend.Avalonia.Models;
 using SkiaSharp;
 
-namespace PCL.Frontend.Avalonia.Workflows;
+namespace PCL.Extensions.DesktopPet;
 
-internal static class FrontendDesktopPetImageService
+internal static class PetImageService
 {
     private const int MaximumImageSide = 256;
     private const int MaximumFileBytes = 10 * 1024 * 1024;
@@ -66,7 +65,7 @@ internal static class FrontendDesktopPetImageService
         }
     }
 
-    public static FrontendDesktopPetImage? TryLoadAnimated(string path)
+    public static PetImage? TryLoadAnimated(string path)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
         try
@@ -79,7 +78,7 @@ internal static class FrontendDesktopPetImageService
         }
     }
 
-    public static FrontendDesktopPetImage LoadAnimated(byte[] bytes, int maximumSide = MaximumImageSide) =>
+    public static PetImage LoadAnimated(byte[] bytes, int maximumSide = MaximumImageSide) =>
         IsGif(bytes)
             ? LoadGif(bytes, maximumSide)
             : new([Load(bytes, maximumSide)], [TimeSpan.Zero], 0);
@@ -122,7 +121,7 @@ internal static class FrontendDesktopPetImageService
         }
     }
 
-    private static FrontendDesktopPetImage LoadGif(byte[] bytes, int maximumSide = MaximumImageSide)
+    private static PetImage LoadGif(byte[] bytes, int maximumSide = MaximumImageSide)
     {
         using var data = SKData.CreateCopy(bytes);
         using var codec = SKCodec.Create(data) ?? throw new InvalidDataException("Invalid GIF image.");

@@ -3,11 +3,8 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using PCL.Frontend.Avalonia.Desktop.Controls;
-using PCL.Frontend.Avalonia.Models;
-using PCL.Frontend.Avalonia.Workflows;
 
-namespace PCL.Frontend.Avalonia.Desktop;
+namespace PCL.Extensions.DesktopPet;
 
 internal sealed class DesktopPetWindow : Window
 {
@@ -15,7 +12,7 @@ internal sealed class DesktopPetWindow : Window
     private const double CustomAspectRatio = 80d / 104d;
 
     private readonly DesktopPetSprite _sprite = new();
-    private FrontendDesktopSettings? _appliedSettings;
+    private PetSettings? _appliedSettings;
     private string? _spriteKey;
     private PixelPoint _pointerStart;
     private PixelPoint _windowStart;
@@ -34,7 +31,6 @@ internal sealed class DesktopPetWindow : Window
         Width = 80;
         Height = BaseHeightDip;
         Content = _sprite;
-        FrontendWindowIdentity.Apply(this);
         PropertyChanged += (_, e) =>
         {
             if (e.Property == IsVisibleProperty || e.Property == WindowStateProperty) _sprite.SyncAnimation();
@@ -61,7 +57,7 @@ internal sealed class DesktopPetWindow : Window
 
     internal DesktopPetSprite Sprite => _sprite;
 
-    public void ApplySettings(FrontendDesktopSettings settings)
+    public void ApplySettings(PetSettings settings)
     {
         Topmost = settings.PetTopmost;
         if (_appliedSettings == settings) return;
@@ -112,7 +108,7 @@ internal sealed class DesktopPetWindow : Window
         var screen = Screens.ScreenFromPoint(saved ?? Position) ?? Screens.Primary;
         if (screen is null) return;
         var size = PixelSize.FromSize(new Size(Width, Height), screen.Scaling);
-        Position = FrontendDesktopSettingsService.RestorePosition(
+        Position = PetSettingsService.RestorePosition(
             saved, size, Screens.All.Select(s => s.WorkingArea).ToArray(), screen.WorkingArea);
     }
 

@@ -1,4 +1,4 @@
-namespace PCL.Frontend.Avalonia.Models;
+namespace PCL.Extensions.DesktopPet;
 
 /// <summary>How a preset renders and which animation it owns.</summary>
 internal enum PetPresetKind
@@ -30,7 +30,8 @@ internal enum PetAction
     PlayAnimation,
     ShowLauncher,
     HidePet,
-    LaunchSelected
+    LaunchSelected,
+    Quit
 }
 
 /// <summary>An immutable desktop pet preset definition.</summary>

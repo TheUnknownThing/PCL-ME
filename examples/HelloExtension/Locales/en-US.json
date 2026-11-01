@@ -1,0 +1,6 @@
+{
+  "title": "Hello extension",
+  "greeting": "Greeting",
+  "notify": "Show notification",
+  "message": "This notification came from an extension."
+}

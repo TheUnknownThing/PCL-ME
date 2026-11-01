@@ -1,13 +1,11 @@
 using Avalonia.Platform;
-using PCL.Core.Logging;
-using PCL.Frontend.Avalonia.Models;
 
-namespace PCL.Frontend.Avalonia.Workflows;
+namespace PCL.Extensions.DesktopPet;
 
 /// <summary>Defines every bundled pet preset and loads its animation assets.</summary>
 internal static class PetPresetCatalog
 {
-    private const string AssetRoot = "avares://PCL.Frontend.Avalonia/Assets/Pets/";
+    private const string AssetRoot = "avares://PCL.Extensions.DesktopPet/Assets/";
 
     public const string DefaultId = "creeper_gif";
 
@@ -33,7 +31,7 @@ internal static class PetPresetCatalog
         id is not null && All.Any(preset => string.Equals(preset.Id, id, StringComparison.Ordinal));
 
     /// <summary>Loads a preset animation at the requested decode size.</summary>
-    public static FrontendDesktopPetImage? LoadAnimation(PetPreset preset, bool click, int maximumSide)
+    public static PetImage? LoadAnimation(PetPreset preset, bool click, int maximumSide)
     {
         var asset = click ? preset.ClickAsset : preset.IdleAsset;
         if (!preset.IsAnimated || asset is null) return null;
@@ -42,11 +40,11 @@ internal static class PetPresetCatalog
             using var stream = AssetLoader.Open(new Uri(asset));
             using var buffer = new MemoryStream();
             stream.CopyTo(buffer);
-            return FrontendDesktopPetImageService.LoadAnimated(buffer.ToArray(), maximumSide);
+            return PetImageService.LoadAnimated(buffer.ToArray(), maximumSide);
         }
         catch (Exception ex)
         {
-            LogWrapper.Warn(ex, "Desktop", $"Could not load the pet preset asset '{asset}'.");
+            System.Diagnostics.Trace.TraceWarning($"Could not load the pet preset asset {asset}: {ex.Message}");
             return null;
         }
     }

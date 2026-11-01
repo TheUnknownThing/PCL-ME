@@ -1,9 +1,9 @@
 using Avalonia.Media.Imaging;
 
-namespace PCL.Frontend.Avalonia.Models;
+namespace PCL.Extensions.DesktopPet;
 
 /// <summary>Owns decoded pet frames and their presentation times.</summary>
-internal sealed class FrontendDesktopPetImage(Bitmap[] frames, TimeSpan[] durations, int repetitionCount) : IDisposable
+internal sealed class PetImage(Bitmap[] frames, TimeSpan[] durations, int repetitionCount) : IDisposable
 {
     private readonly long[] _frameEnds = GetFrameEnds(durations);
     public Bitmap FirstFrame => frames[0];

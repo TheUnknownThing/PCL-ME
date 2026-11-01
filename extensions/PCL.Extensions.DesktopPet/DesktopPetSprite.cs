@@ -4,10 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
-using PCL.Frontend.Avalonia.Models;
-using PCL.Frontend.Avalonia.Workflows;
 
-namespace PCL.Frontend.Avalonia.Desktop.Controls;
+namespace PCL.Extensions.DesktopPet;
 
 /// <summary>A vector mascot or an animated preset, with animation only while visible.</summary>
 internal sealed class DesktopPetSprite : Control, IDisposable
@@ -27,8 +25,8 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     private TimeSpan _idleElapsed;
     private TimeSpan _elapsed;
     private TimeSpan? _nextFrame;
-    private FrontendDesktopPetImage? _idleAnimation;
-    private FrontendDesktopPetImage? _clickAnimation;
+    private PetImage? _idleAnimation;
+    private PetImage? _clickAnimation;
     private Bitmap? _customImage;
     private Bitmap? _currentImage;
     private bool _showingClick;
@@ -59,8 +57,9 @@ internal sealed class DesktopPetSprite : Control, IDisposable
     {
         if (_disposed || _preset is null && string.Equals(path, _imagePath, StringComparison.Ordinal)
             && (_customImage is not null || string.IsNullOrWhiteSpace(path))) return;
-        var nextImage = FrontendDesktopPetImageService.TryLoad(path);
+        var nextImage = PetImageService.TryLoad(path);
         DisposeAnimations();
+        DisposeCustomImage();
         _preset = null;
         _imagePath = path;
         _customImage = nextImage;

@@ -1,0 +1,23 @@
+{
+  "actions.show_launcher": "Afficher le lanceur",
+  "actions.launch_selected": "Lancer l’instance sélectionnée",
+  "actions.hide_pet": "Masquer le compagnon",
+  "actions.quit": "Quitter",
+  "pet.title": "Compagnon PCL-ME",
+  "pet.hint": "Les actions du clic et du double-clic se règlent dans les paramètres. Faites glisser pour déplacer. Clic droit pour lancer le jeu et accéder aux autres actions.",
+  "settings.topmost": "Garder le compagnon au premier plan",
+  "settings.scale": "Taille du compagnon",
+  "settings.choose_image": "Choisir une image",
+  "settings.image_error_message": "Choisissez une image valide de 4096 × 4096 pixels et 10 Mo maximum. Les compagnons personnalisés n’acceptent que les images statiques.",
+  "settings.use_custom": "Utiliser un compagnon personnalisé",
+  "settings.preset": "Préréglage",
+  "settings.click_action": "Action au clic",
+  "settings.double_click_action": "Action au double-clic",
+  "settings.action_none": "Ne rien faire",
+  "settings.action_play_animation": "Lire l’animation d’interaction",
+  "appearances.slime": "Slime",
+  "appearances.enderman": "Enderman",
+  "presets.creeper_gif": "Creeper",
+  "presets.campfire_gif": "Feu de camp",
+  "extension.name": "Compagnon PCL-ME"
+}

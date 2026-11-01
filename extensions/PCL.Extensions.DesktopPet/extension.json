@@ -1,0 +1,155 @@
+{
+  "id": "pcl.desktop-pet",
+  "name": "Desktop pet",
+  "version": "1.0.0",
+  "description": "An animated desktop companion with customizable interactions.",
+  "author": "PCL Community",
+  "apiVersion": 1,
+  "avaloniaMajorVersion": 11,
+  "entryAssembly": "PCL.Extensions.DesktopPet.dll",
+  "entryType": "PCL.Extensions.DesktopPet.DesktopPetExtension",
+  "startWithLauncher": true,
+  "commands": [
+    {
+      "id": "pcl.desktop-pet.hide",
+      "title": "Hide desktop pet",
+      "titleKey": "actions.hide_pet"
+    }
+  ],
+  "settings": [
+    {
+      "key": "preset",
+      "title": "Preset",
+      "kind": "Choice",
+      "defaultValue": "creeper_gif",
+      "titleKey": "settings.preset",
+      "choices": [
+        {
+          "value": "creeper_gif",
+          "title": "Creeper",
+          "titleKey": "presets.creeper_gif"
+        },
+        {
+          "value": "slime",
+          "title": "Slime",
+          "titleKey": "appearances.slime"
+        },
+        {
+          "value": "enderman",
+          "title": "Enderman",
+          "titleKey": "appearances.enderman"
+        },
+        {
+          "value": "campfire_gif",
+          "title": "Campfire",
+          "titleKey": "presets.campfire_gif"
+        }
+      ]
+    },
+    {
+      "key": "custom",
+      "title": "Use a custom pet",
+      "kind": "Boolean",
+      "defaultValue": "false",
+      "titleKey": "settings.use_custom"
+    },
+    {
+      "key": "image",
+      "title": "Custom image",
+      "kind": "File",
+      "defaultValue": "",
+      "titleKey": "settings.choose_image",
+      "filePatterns": [
+        "*.png",
+        "*.jpg",
+        "*.jpeg",
+        "*.webp",
+        "*.bmp"
+      ]
+    },
+    {
+      "key": "topmost",
+      "title": "Keep on top",
+      "kind": "Boolean",
+      "defaultValue": "true",
+      "titleKey": "settings.topmost"
+    },
+    {
+      "key": "scale",
+      "title": "Size",
+      "kind": "Number",
+      "defaultValue": "1",
+      "titleKey": "settings.scale",
+      "minimum": 0.5,
+      "maximum": 2
+    },
+    {
+      "key": "click",
+      "title": "Single-click action",
+      "kind": "Choice",
+      "defaultValue": "PlayAnimation",
+      "titleKey": "settings.click_action",
+      "choices": [
+        {
+          "value": "PlayAnimation",
+          "title": "Play animation",
+          "titleKey": "settings.action_play_animation"
+        },
+        {
+          "value": "ShowLauncher",
+          "title": "Show launcher",
+          "titleKey": "actions.show_launcher"
+        },
+        {
+          "value": "HidePet",
+          "title": "Hide pet",
+          "titleKey": "actions.hide_pet"
+        },
+        {
+          "value": "LaunchSelected",
+          "title": "Launch selected instance",
+          "titleKey": "actions.launch_selected"
+        },
+        {
+          "value": "None",
+          "title": "Do nothing",
+          "titleKey": "settings.action_none"
+        }
+      ]
+    },
+    {
+      "key": "doubleClick",
+      "title": "Double-click action",
+      "kind": "Choice",
+      "defaultValue": "ShowLauncher",
+      "titleKey": "settings.double_click_action",
+      "choices": [
+        {
+          "value": "PlayAnimation",
+          "title": "Play animation",
+          "titleKey": "settings.action_play_animation"
+        },
+        {
+          "value": "ShowLauncher",
+          "title": "Show launcher",
+          "titleKey": "actions.show_launcher"
+        },
+        {
+          "value": "HidePet",
+          "title": "Hide pet",
+          "titleKey": "actions.hide_pet"
+        },
+        {
+          "value": "LaunchSelected",
+          "title": "Launch selected instance",
+          "titleKey": "actions.launch_selected"
+        },
+        {
+          "value": "None",
+          "title": "Do nothing",
+          "titleKey": "settings.action_none"
+        }
+      ]
+    }
+  ]
+}

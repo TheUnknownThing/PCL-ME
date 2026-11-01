@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/PCL.Extensions.Avalonia/PCL.Extensions.Avalonia.csproj" />
+    <Content Include="extension.json;Locales/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
