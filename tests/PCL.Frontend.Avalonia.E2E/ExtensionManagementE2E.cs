@@ -29,6 +29,9 @@ public sealed class ExtensionManagementE2E
         app.Screenshot("extensions-settings");
         foreach (var id in new[] { "pcl.desktop-pet", "pcl.global-search" })
         {
+            // The desktop pet is disabled by default; normalize to enabled so the
+            // toggle cycle below always starts from a known state.
+            if (!app.Session.Host.Get(id).IsEnabled) await app.Toggle(id);
             for (var i = 0; i < 3; i++)
             {
                 await app.Toggle(id);
@@ -134,7 +137,10 @@ public sealed class ExtensionManagementE2E
     public Task Shortcuts_ConflictValidation_KeyboardDispatch_AndSafeModePreferences() => Run(async () =>
     {
         await using var app = new DesktopFixture();
-        await app.Start(); await app.OpenSettings(); await app.Expand("pcl.desktop-pet");
+        await app.Start(); await app.OpenSettings();
+        // The desktop pet is disabled by default; the shortcut editor needs it active.
+        if (!app.Session.Host.Get("pcl.desktop-pet").IsEnabled) await app.Toggle("pcl.desktop-pet");
+        await app.Expand("pcl.desktop-pet");
         var pet = app.Card("pcl.desktop-pet");
         const string fieldName = "Shortcut_pcl_desktop_pet_hide";
         const string saveName = "SaveShortcut_pcl_desktop_pet_hide";

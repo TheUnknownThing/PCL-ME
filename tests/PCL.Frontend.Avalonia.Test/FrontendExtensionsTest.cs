@@ -30,6 +30,7 @@ public sealed class FrontendExtensionsTest
         {
             await using var fixture = new SessionFixture();
             await fixture.Session.StartAsync();
+            await fixture.Session.Host.SetEnabledAsync("pcl.desktop-pet", true);
             var pet = fixture.Session.Windows.OfType<DesktopPetWindow>().Single();
             Assert.IsTrue(pet.Sprite.IsAnimationRunning);
             Assert.IsNull(pet.Owner);
@@ -55,6 +56,7 @@ public sealed class FrontendExtensionsTest
         {
             await using var fixture = new SessionFixture();
             await fixture.Session.StartAsync();
+            await fixture.Session.Host.SetEnabledAsync("pcl.desktop-pet", true);
             var settings = fixture.Session.Host.Get("pcl.desktop-pet").Settings;
             var pet = fixture.Session.Windows.OfType<DesktopPetWindow>().Single();
             var preview = (UserControl)fixture.Session.CreateSettingsViews("pcl.desktop-pet").Single();

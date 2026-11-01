@@ -51,7 +51,7 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
             workerCommand: string.Equals(Path.GetFileNameWithoutExtension(Environment.ProcessPath), "dotnet", StringComparison.OrdinalIgnoreCase)
                 ? [Environment.ProcessPath!, typeof(Program).Assembly.Location] : [Environment.ProcessPath!]);
         _launcher.ExtensionSession = this;
-        AddBuiltIn("pcl.desktop-pet", () => new DesktopPetExtension());
+        AddBuiltIn("pcl.desktop-pet", () => new DesktopPetExtension(), enabledByDefault: false);
         AddBuiltIn("pcl.global-search", () => new GlobalSearchExtension());
         Host.Changed += QueueRefresh;
         Host.Discover();
@@ -68,12 +68,12 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
     private readonly HashSet<Window> _windows = [];
     internal IReadOnlyList<Window> Windows => _windows.ToArray();
 
-    private void AddBuiltIn(string id, Func<IExtension> factory)
+    private void AddBuiltIn(string id, Func<IExtension> factory, bool enabledByDefault = true)
     {
         // macOS codesign interprets dotted directories as nested bundles. Keep package folders extensionless.
         var directory = Path.Combine(AppContext.BaseDirectory, "BuiltInExtensions", id.Replace('.', '-'));
         var manifest = JsonSerializer.Deserialize<ExtensionManifest>(File.ReadAllText(Path.Combine(directory, "extension.json")), ExtensionPackage.JsonOptions)!;
-        Host.AddBuiltIn(manifest, directory, factory);
+        Host.AddBuiltIn(manifest, directory, factory, enabledByDefault);
     }
 
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
