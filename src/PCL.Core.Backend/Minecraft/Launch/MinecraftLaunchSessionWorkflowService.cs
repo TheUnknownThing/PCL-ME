@@ -6,6 +6,18 @@ namespace PCL.Core.Minecraft.Launch;
 
 public static class MinecraftLaunchSessionWorkflowService
 {
+    /// <summary>Rebuilds the exported launch script when the validated process plan changes.</summary>
+    public static MinecraftLaunchSessionStartWorkflowPlan WithProcessPlan(MinecraftLaunchSessionStartWorkflowPlan plan,
+        MinecraftLaunchProcessShellPlan process, string instanceName, string? scriptArguments = null) => plan with
+    {
+        ProcessShellPlan = process,
+        CustomCommandPlan = plan.CustomCommandPlan with
+        {
+            BatchScriptContent = BuildLaunchScriptContent(instanceName, plan.CustomCommandPlan.UseUtf8Encoding,
+                plan.CustomCommandShellPlans, plan.CustomCommandShellPlans.FirstOrDefault()?.WorkingDirectory ?? process.WorkingDirectory,
+                scriptArguments is null ? process : process with { Arguments = scriptArguments })
+        }
+    };
     public static MinecraftLaunchSessionStartWorkflowPlan BuildStartPlan(MinecraftLaunchSessionStartWorkflowRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

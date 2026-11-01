@@ -44,7 +44,8 @@ internal sealed record FrontendCommunityProjectDependencyEntry(
     string? IconUrl,
     string? IconPath,
     string? Target,
-    FrontendCommunityProjectDependencyKind Kind);
+    FrontendCommunityProjectDependencyKind Kind,
+    string? ReleaseId = null);
 
 internal sealed record FrontendCommunityProjectReleaseEntry(
     string Title,

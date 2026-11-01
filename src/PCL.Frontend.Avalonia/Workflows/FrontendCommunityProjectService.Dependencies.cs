@@ -17,7 +17,18 @@ internal static partial class FrontendCommunityProjectService
         IEnumerable<JsonObject> versions,
         int communitySourcePreference)
     {
-        var projectIds = versions
+        var versionList = versions.ToArray();
+        foreach (var dependency in versionList.SelectMany(version => (version["dependencies"] as JsonArray ?? []).OfType<JsonObject>()))
+        {
+            if (!string.IsNullOrWhiteSpace(GetString(dependency, "project_id")) || GetString(dependency, "dependency_type") != "required") continue;
+            var versionId = GetString(dependency, "version_id");
+            if (string.IsNullOrWhiteSpace(versionId)) throw new InvalidDataException("A required dependency has no resolvable project or version ID.");
+            var encoded = Uri.EscapeDataString(versionId);
+            var resolved = ReadJsonObject("Modrinth", $"https://api.modrinth.com/v2/version/{encoded}",
+                $"https://mod.mcimirror.top/modrinth/v2/version/{encoded}", communitySourcePreference, false, null);
+            dependency["project_id"] = GetString(resolved, "project_id") ?? throw new InvalidDataException("The dependency version has no project ID.");
+        }
+        var projectIds = versionList
             .SelectMany(version => (version["dependencies"] as JsonArray ?? [])
                 .Select(node => GetString(node as JsonObject, "project_id")))
             .Where(id => !string.IsNullOrWhiteSpace(id))
@@ -67,7 +78,7 @@ internal static partial class FrontendCommunityProjectService
         }
     }
 
-    private static IReadOnlyList<FrontendCommunityProjectDependencyEntry> BuildModrinthDependencyEntries(
+    internal static IReadOnlyList<FrontendCommunityProjectDependencyEntry> BuildModrinthDependencyEntries(
         JsonArray? dependencies,
         IReadOnlyDictionary<string, FrontendCommunityProjectSummary> lookup)
     {
@@ -95,23 +106,25 @@ internal static partial class FrontendCommunityProjectService
         }
 
         var projectId = GetString(dependency, "project_id");
-        if (string.IsNullOrWhiteSpace(projectId) || !lookup.TryGetValue(projectId, out var summary))
+        if (string.IsNullOrWhiteSpace(projectId))
         {
             return null;
         }
+        lookup.TryGetValue(projectId, out var summary);
 
         return new FrontendCommunityProjectDependencyEntry(
-            summary.ProjectId,
-            summary.Title,
-            summary.Summary,
-            BuildDependencyMeta(summary),
-            summary.IconUrl,
-            summary.IconPath,
-            CreateCompDetailTarget(summary.ProjectId),
-            kind.Value);
+            projectId,
+            summary?.Title ?? projectId,
+            summary?.Summary ?? "",
+            summary is null ? "" : BuildDependencyMeta(summary),
+            summary?.IconUrl,
+            summary?.IconPath,
+            CreateCompDetailTarget(projectId),
+            kind.Value,
+            GetString(dependency, "version_id"));
     }
 
-    private static IReadOnlyList<FrontendCommunityProjectDependencyEntry> BuildCurseForgeDependencyEntries(
+    internal static IReadOnlyList<FrontendCommunityProjectDependencyEntry> BuildCurseForgeDependencyEntries(
         JsonArray? dependencies,
         IReadOnlyDictionary<string, FrontendCommunityProjectSummary> lookup)
     {
@@ -138,19 +151,20 @@ internal static partial class FrontendCommunityProjectService
         }
 
         var projectId = GetInt(dependency, "modId");
-        if (projectId <= 0 || !lookup.TryGetValue(projectId.ToString(), out var summary))
+        if (projectId <= 0)
         {
             return null;
         }
+        lookup.TryGetValue(projectId.ToString(), out var summary);
 
         return new FrontendCommunityProjectDependencyEntry(
-            summary.ProjectId,
-            summary.Title,
-            summary.Summary,
-            BuildDependencyMeta(summary),
-            summary.IconUrl,
-            summary.IconPath,
-            CreateCompDetailTarget(summary.ProjectId),
+            projectId.ToString(),
+            summary?.Title ?? projectId.ToString(),
+            summary?.Summary ?? "",
+            summary is null ? "" : BuildDependencyMeta(summary),
+            summary?.IconUrl,
+            summary?.IconPath,
+            CreateCompDetailTarget(projectId.ToString()),
             kind.Value);
     }
 

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,6 +10,42 @@ namespace PCL.Core.Backend.Test.App;
 [TestClass]
 public sealed class TaskCenterTest
 {
+    [TestMethod]
+    public async Task ActiveTasks_TracksCompletionBeforeQueuedPresentationUpdates()
+    {
+        var originalContext = SynchronizationContext.Current;
+        var context = new QueuedSynchronizationContext();
+        var task = new PassiveTask("queued completion");
+        TaskModel model;
+        try
+        {
+            SynchronizationContext.SetSynchronizationContext(context);
+            TaskCenter.Register(task, start: false);
+            model = TaskCenter.Tasks.Single(item => item.Title == task.Title);
+        }
+        finally { SynchronizationContext.SetSynchronizationContext(originalContext); }
+
+        Assert.Contains(task, TaskCenter.ActiveTasks);
+        await Task.Run(() => task.ExecuteAsync());
+        Assert.DoesNotContain(task, TaskCenter.ActiveTasks);
+        Assert.AreEqual(TaskState.Waiting, model.State);
+        context.Drain();
+        Assert.AreEqual(TaskState.Success, model.State);
+    }
+
+    [TestMethod]
+    public async Task ActiveTasks_CleansUpTasksThatThrowWithoutReportingState()
+    {
+        var task = new ThrowingTask();
+        TaskCenter.Register(task);
+        await task.Started.Task.WaitAsync(System.TimeSpan.FromSeconds(5));
+        Assert.Contains(task, TaskCenter.ActiveTasks);
+        task.Release.SetResult();
+        for (var attempt = 0; attempt < 200 && TaskCenter.ActiveTasks.Contains(task); attempt++) await Task.Delay(10);
+        Assert.DoesNotContain(task, TaskCenter.ActiveTasks);
+        Assert.AreEqual(TaskState.Failed, TaskCenter.Tasks.Single(item => item.Title == task.Title).State);
+    }
+
     [TestCleanup]
     public void Cleanup()
     {
@@ -28,10 +65,12 @@ public sealed class TaskCenterTest
         try
         {
             SynchronizationContext.SetSynchronizationContext(firstContext);
-            TaskCenter.Register(new PassiveTask("first"), start: false);
+            var first = new PassiveTask("first");
+            TaskCenter.Register(first, start: false);
 
             SynchronizationContext.SetSynchronizationContext(secondContext);
-            TaskCenter.Register(new PassiveTask("second"), start: false);
+            var second = new PassiveTask("second");
+            TaskCenter.Register(second, start: false);
 
             var firstTask = TaskCenter.Tasks.Single(task => task.Title == "first");
             var secondTask = TaskCenter.Tasks.Single(task => task.Title == "second");
@@ -46,6 +85,8 @@ public sealed class TaskCenterTest
             Assert.AreEqual(1, secondContext.PostCount);
 
             TaskCenter.Remove(firstTask);
+            first.ExecuteAsync().GetAwaiter().GetResult();
+            second.ExecuteAsync().GetAwaiter().GetResult();
         }
         finally
         {
@@ -79,6 +120,27 @@ public sealed class TaskCenterTest
         {
             PostCount++;
             d(state);
+        }
+    }
+
+    private sealed class QueuedSynchronizationContext : SynchronizationContext
+    {
+        private readonly ConcurrentQueue<System.Action> _pending = new();
+        public override void Post(SendOrPostCallback callback, object? state) => _pending.Enqueue(() => callback(state));
+        public void Drain() { while (_pending.TryDequeue(out var action)) action(); }
+    }
+
+    private sealed class ThrowingTask : ITask
+    {
+        public string Title => "throwing task";
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public event TaskStateEvent StateChanged { add { } remove { } }
+        public async Task ExecuteAsync(CancellationToken cancelToken = default)
+        {
+            Started.SetResult();
+            await Release.Task;
+            throw new System.InvalidOperationException("execution failed");
         }
     }
 }

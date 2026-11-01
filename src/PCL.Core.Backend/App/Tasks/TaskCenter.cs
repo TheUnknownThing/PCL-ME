@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,6 +18,11 @@ public static class TaskCenter
     /// 可观察的任务模型集合
     /// </summary>
     public static ObservableCollection<TaskModel> Tasks { get; } = [];
+
+    private static readonly ConcurrentDictionary<ITask, byte> _activeTasks = new();
+
+    /// <summary>Execution state, independent of delayed presentation updates on a synchronization context.</summary>
+    public static IReadOnlyList<ITask> ActiveTasks => _activeTasks.Keys.ToArray();
 
     private static readonly ConditionalWeakTable<ITask, TaskModel> _ModelMap = [];
 
@@ -201,6 +207,12 @@ public static class TaskCenter
     {
         var synchronizationContext = SynchronizationContext.Current;
         var model = _InitModel(instance, synchronizationContext);
+        _activeTasks.TryAdd(instance, 0);
+        instance.StateChanged += (state, message) =>
+        {
+            if (state is TaskState.Success or TaskState.Canceled or TaskState.Failed) _activeTasks.TryRemove(instance, out _);
+            else _activeTasks.TryAdd(instance, 0);
+        };
         RunOnContext(synchronizationContext, () => Tasks.Add(model));
 
         if (start)
@@ -219,6 +231,7 @@ public static class TaskCenter
                         TouchModel(model, TaskState.Failed);
                     });
                 }
+                finally { _activeTasks.TryRemove(instance, out _); }
             });
         }
     }

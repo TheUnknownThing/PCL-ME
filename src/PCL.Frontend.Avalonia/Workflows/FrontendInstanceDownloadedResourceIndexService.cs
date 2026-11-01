@@ -114,11 +114,12 @@ internal static class FrontendInstanceDownloadedResourceIndexService
 
     public static void RecordInstalledResource(
         string instanceIndieDirectory,
-        FrontendDownloadedResourceInstallRecord record)
+        FrontendDownloadedResourceInstallRecord record,
+        bool requirePersistence = false)
     {
         if (string.IsNullOrWhiteSpace(instanceIndieDirectory)
             || string.IsNullOrWhiteSpace(record.InstalledPath)
-            || !File.Exists(record.InstalledPath))
+            || (!File.Exists(record.InstalledPath) && !Directory.Exists(record.InstalledPath)))
         {
             return;
         }
@@ -130,13 +131,13 @@ internal static class FrontendInstanceDownloadedResourceIndexService
             var fileName = Path.GetFileName(record.InstalledPath);
             var sha1 = NormalizeHash(record.Sha1);
             var sha512 = NormalizeHash(record.Sha512);
-            if (string.IsNullOrWhiteSpace(sha1))
+            if (string.IsNullOrWhiteSpace(sha1) && File.Exists(record.InstalledPath))
             {
                 sha1 = ComputeSha1(record.InstalledPath);
             }
 
             document.Entries.RemoveAll(entry =>
-                IsSameResource(entry, record.Kind, record.Source, record.ProjectId, record.ReleaseId, record.FileId)
+                (NormalizeKind(record.Kind) != "datapack" && IsSameResource(entry, record.Kind, record.Source, record.ProjectId, record.ReleaseId, record.FileId))
                 || (!string.IsNullOrWhiteSpace(relativePath)
                     && string.Equals(entry.RelativePath, relativePath, StringComparison.OrdinalIgnoreCase)));
 
@@ -158,7 +159,7 @@ internal static class FrontendInstanceDownloadedResourceIndexService
             });
             WriteDocument(instanceIndieDirectory, document);
         }
-        catch
+        catch when (!requirePersistence)
         {
             // The index is only provenance metadata; installation must remain successful if it cannot be updated.
         }
@@ -206,7 +207,7 @@ internal static class FrontendInstanceDownloadedResourceIndexService
         }
     }
 
-    public static void RemoveResourceRecord(string instanceIndieDirectory, string path)
+    public static void RemoveResourceRecord(string instanceIndieDirectory, string path, bool requirePersistence = false)
     {
         if (string.IsNullOrWhiteSpace(instanceIndieDirectory) || string.IsNullOrWhiteSpace(path))
         {
@@ -224,7 +225,7 @@ internal static class FrontendInstanceDownloadedResourceIndexService
                 WriteDocument(instanceIndieDirectory, document);
             }
         }
-        catch
+        catch when (!requirePersistence)
         {
             // Best effort metadata maintenance.
         }
@@ -237,7 +238,7 @@ internal static class FrontendInstanceDownloadedResourceIndexService
     {
         if (string.IsNullOrWhiteSpace(instanceIndieDirectory)
             || string.IsNullOrWhiteSpace(artifactPath)
-            || !File.Exists(artifactPath))
+            || (!File.Exists(artifactPath) && !Directory.Exists(artifactPath)))
         {
             return null;
         }
@@ -252,7 +253,7 @@ internal static class FrontendInstanceDownloadedResourceIndexService
                 && string.Equals(entry.RelativePath, relativePath, StringComparison.OrdinalIgnoreCase));
             if (pathMatch is not null)
             {
-                if (string.IsNullOrWhiteSpace(pathMatch.Sha1))
+                if (string.IsNullOrWhiteSpace(pathMatch.Sha1) || Directory.Exists(artifactPath))
                 {
                     return new FrontendDownloadedResourceFileMatch(pathMatch, HashVerified: false);
                 }
@@ -263,6 +264,7 @@ internal static class FrontendInstanceDownloadedResourceIndexService
                     : null;
             }
 
+            if (!File.Exists(artifactPath)) return null;
             var fileSha1 = ComputeSha1(artifactPath);
             var hashMatch = document.Entries.FirstOrDefault(entry =>
                 string.Equals(entry.Kind, normalizedKind, StringComparison.OrdinalIgnoreCase)

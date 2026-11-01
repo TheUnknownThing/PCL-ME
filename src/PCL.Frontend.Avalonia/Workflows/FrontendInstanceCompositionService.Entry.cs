@@ -38,11 +38,12 @@ internal static partial class FrontendInstanceCompositionService
         FrontendRuntimePaths runtimePaths,
         string? selectedInstanceName,
         LoadMode loadMode,
-        II18nService? i18n = null)
+        II18nService? i18n = null,
+        string? launcherDirectoryOverride = null)
     {
         var sharedConfig = runtimePaths.OpenSharedConfigProvider();
         var localConfig = runtimePaths.OpenLocalConfigProvider();
-        var launcherDirectory = FrontendLauncherPathService.ResolveLauncherFolder(
+        var launcherDirectory = launcherDirectoryOverride ?? FrontendLauncherPathService.ResolveLauncherFolder(
             ReadValue(localConfig, "LaunchFolderSelect", FrontendLauncherPathService.DefaultLauncherFolderRaw),
             runtimePaths);
         var resolvedInstanceName = selectedInstanceName?.Trim() ?? string.Empty;
