@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
   <Configurations>
     <BuildType Name="CI" />
     <BuildType Name="Beta" />
@@ -8,16 +8,37 @@
     <Platform Name="ARM64" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="PCL.Core.Backend\PCL.Core.Backend.csproj" Type="C#" />
-  <Project Path="PCL.Core.Backend.Test\PCL.Core.Backend.Test.csproj" Type="C#">
-    <Build Solution="*|*" Project="false" />
-  </Project>
-  <Project Path="PCL.Core.Backend.Foundation.Test\PCL.Core.Backend.Foundation.Test.csproj" Type="C#">
-    <Build Solution="*|*" Project="false" />
-  </Project>
-  <Project Path="PCL.Frontend.Avalonia\PCL.Frontend.Avalonia.csproj" Type="C#" />
-  <Project Path="PCL.Frontend.Avalonia.Test\PCL.Frontend.Avalonia.Test.csproj" Type="C#">
-    <Build Solution="*|*" Project="false" />
-  </Project>
-  <Project Path="PCL.Tools.I18n\PCL.Tools.I18n.csproj" Type="C#" />
+  <Folder Name="/src/">
+    <Project Path="src/PCL.Core.Backend/PCL.Core.Backend.csproj" />
+    <Project Path="src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj" />
+    <Project Path="src/PCL.UI/PCL.UI.csproj" />
+    <Project Path="src/PCL.Extensions.Contracts/PCL.Extensions.Contracts.csproj" />
+    <Project Path="src/PCL.Extensions.Avalonia/PCL.Extensions.Avalonia.csproj" />
+    <Project Path="src/PCL.Extensions.Runtime/PCL.Extensions.Runtime.csproj" />
+  </Folder>
+  <Folder Name="/extensions/">
+    <Project Path="extensions/PCL.Extensions.DesktopPet/PCL.Extensions.DesktopPet.csproj" />
+    <Project Path="extensions/PCL.Extensions.GlobalSearch/PCL.Extensions.GlobalSearch.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
+    <Project Path="tests/PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
+    <Project Path="tests/PCL.Frontend.Avalonia.Test/PCL.Frontend.Avalonia.Test.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
+    <Project Path="tests/PCL.Frontend.Avalonia.E2E/PCL.Frontend.Avalonia.E2E.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/PCL.Tools.I18n/PCL.Tools.I18n.csproj" />
+    <Project Path="tools/PCL.Tools.Extensions/PCL.Tools.Extensions.csproj" />
+  </Folder>
+  <Folder Name="/examples/">
+    <Project Path="examples/HelloExtension/HelloExtension.csproj" />
+  </Folder>
 </Solution>
