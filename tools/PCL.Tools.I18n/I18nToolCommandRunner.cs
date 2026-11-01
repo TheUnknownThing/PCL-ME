@@ -163,7 +163,7 @@ public static class I18nToolCommandRunner
 
         var candidates = new[]
         {
-            Path.Combine(Environment.CurrentDirectory, "PCL.Frontend.Avalonia", "Locales"),
+            Path.Combine(Environment.CurrentDirectory, "src", "PCL.Frontend.Avalonia", "Locales"),
             Path.Combine(Environment.CurrentDirectory, "Locales"),
             Path.Combine(AppContext.BaseDirectory, "Locales")
         };

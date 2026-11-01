@@ -1,7 +1,7 @@
 [English](README-EN.md) · **简体中文** · [繁體中文](README-ZH_TW.md)
 
 <p align="center">
-  <img src="PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME 标志" width="112" height="112">
+  <img src="src/PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME 标志" width="112" height="112">
 </p>
 
 <h1 align="center">PCL Multiplatform Edition</h1>
@@ -74,15 +74,15 @@ yay -S pcl-me-bin
 ```sh
 dotnet restore
 dotnet build
-dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
 代码按桌面界面与共享启动器服务分层组织：
 
 | 项目 | 职责 |
 | --- | --- |
-| [PCL.Frontend.Avalonia](PCL.Frontend.Avalonia/README.md) | 桌面界面、主题、资源与应用打包。 |
-| [PCL.Core.Backend](PCL.Core.Backend/README.md) | 共享启动器服务、Minecraft 启动流程、下载与跨平台工具。 |
+| [PCL.Frontend.Avalonia](src/PCL.Frontend.Avalonia/README.md) | 桌面界面、主题、资源与应用打包。 |
+| [PCL.Core.Backend](src/PCL.Core.Backend/README.md) | 共享启动器服务、Minecraft 启动流程、下载与跨平台工具。 |
 
 提交代码修改前，请运行 `dotnet test`。更详细的构建、测试、打包与故障排查流程，请参阅上方项目文档。
 
@@ -96,7 +96,7 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 
 本项目按目录分别授权：
 
-- `PCL.Frontend.Avalonia/` 下的界面相关内容遵循前端的[自定义许可证](PCL.Frontend.Avalonia/LICENSE)。
+- `src/PCL.Frontend.Avalonia/` 下的界面相关内容遵循前端的[自定义许可证](src/PCL.Frontend.Avalonia/LICENSE)。
 - 仓库其余部分遵循 [Apache License 2.0](LICENSE)，除非文件另有说明。
 
 具体适用条款，请查阅文件所在目录或上级目录中的许可证说明。

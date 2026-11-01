@@ -3,8 +3,8 @@ set -euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/../.." && pwd)"
-project_path="${repo_root}/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj"
+repo_root="$(cd "${script_dir}/../../.." && pwd)"
+project_path="${repo_root}/src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj"
 artifact_root="${ARTIFACT_ROOT:-${repo_root}/artifacts/frontend-packages}"
 configuration="${CONFIGURATION:-Release}"
 app_name="${APP_NAME:-PCL-ME}"
@@ -14,7 +14,7 @@ publish_mode="${PUBLISH_MODE:-self-contained}"
 executable_name="PCL.Frontend.Avalonia"
 linux_launcher_script="launch-pcl-me.sh"
 windows_launcher_script="Launch PCL-ME.vbs"
-icon_png="${repo_root}/PCL.Frontend.Avalonia/Assets/icon.png"
+icon_png="${repo_root}/src/PCL.Frontend.Avalonia/Assets/icon.png"
 
 sanitize_name() {
   printf '%s' "$1" | tr ' ' '-'
@@ -155,8 +155,8 @@ package_macos() {
   local rid_root="$3"
   local temp_dir="$4"
   local app_dir="${rid_root}/${app_name}.app"
-  local plist_template="${repo_root}/PCL.Frontend.Avalonia/packaging/Info.plist.template"
-  local entitlements_path="${repo_root}/PCL.Frontend.Avalonia/packaging/macos.entitlements"
+  local plist_template="${repo_root}/src/PCL.Frontend.Avalonia/packaging/Info.plist.template"
+  local entitlements_path="${repo_root}/src/PCL.Frontend.Avalonia/packaging/macos.entitlements"
   local plist_path="${app_dir}/Contents/Info.plist"
   local resources_dir="${app_dir}/Contents/Resources"
   local macos_dir="${app_dir}/Contents/MacOS"

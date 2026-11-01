@@ -1,7 +1,7 @@
 [English](README-EN.md) · [简体中文](README-ZH_CN.md) · **繁體中文**
 
 <p align="center">
-  <img src="PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME 標誌" width="112" height="112">
+  <img src="src/PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME 標誌" width="112" height="112">
 </p>
 
 <h1 align="center">PCL Multiplatform Edition</h1>
@@ -74,15 +74,15 @@ yay -S pcl-me-bin
 ```sh
 dotnet restore
 dotnet build
-dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
 程式碼依桌面介面與共用啟動器服務分層組織：
 
 | 專案 | 職責 |
 | --- | --- |
-| [PCL.Frontend.Avalonia](PCL.Frontend.Avalonia/README.md) | 桌面介面、主題、資源與應用程式封裝。 |
-| [PCL.Core.Backend](PCL.Core.Backend/README.md) | 共用啟動器服務、Minecraft 啟動流程、下載與跨平台工具。 |
+| [PCL.Frontend.Avalonia](src/PCL.Frontend.Avalonia/README.md) | 桌面介面、主題、資源與應用程式封裝。 |
+| [PCL.Core.Backend](src/PCL.Core.Backend/README.md) | 共用啟動器服務、Minecraft 啟動流程、下載與跨平台工具。 |
 
 提交程式碼修改前，請執行 `dotnet test`。更詳細的建置、測試、封裝與疑難排解流程，請參閱上方專案文件。
 
@@ -96,7 +96,7 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 
 本專案依目錄分別授權：
 
-- `PCL.Frontend.Avalonia/` 下的介面相關內容遵循前端的[自訂授權條款](PCL.Frontend.Avalonia/LICENSE)。
+- `src/PCL.Frontend.Avalonia/` 下的介面相關內容遵循前端的[自訂授權條款](src/PCL.Frontend.Avalonia/LICENSE)。
 - 儲存庫其餘部分遵循 [Apache License 2.0](LICENSE)，除非檔案另有說明。
 
 具體適用條款，請查閱檔案所在目錄或上層目錄中的授權說明。

@@ -64,8 +64,8 @@ jobs:
           cd help-docs
           rm -f ./* || true
           zip -r Help.zip . -x "./.*/*"
-          mkdir -p "${{ github.workspace }}/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources"
-          cp -f Help.zip "${{ github.workspace }}/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources/Help.zip"
+          mkdir -p "${{ github.workspace }}/src/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources"
+          cp -f Help.zip "${{ github.workspace }}/src/PCL.Frontend.Avalonia/Assets/LauncherAssets/Resources/Help.zip"
           cd ..
           rm -rf help-docs
           cd "${{ github.workspace }}"
@@ -85,8 +85,8 @@ jobs:
           ARTIFACT_ROOT: ${{ github.workspace }}/artifact
           APP_VERSION: ${{ env.describe }}
         run: |
-          chmod +x ./PCL.Frontend.Avalonia/scripts/package-frontend.sh
-          ./PCL.Frontend.Avalonia/scripts/package-frontend.sh "${{ inputs.rid }}"
+          chmod +x ./src/PCL.Frontend.Avalonia/scripts/package-frontend.sh
+          ./src/PCL.Frontend.Avalonia/scripts/package-frontend.sh "${{ inputs.rid }}"
 
       - name: Install GPG
         shell: bash

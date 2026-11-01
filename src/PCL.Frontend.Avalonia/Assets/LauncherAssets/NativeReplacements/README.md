@@ -7,11 +7,11 @@ You can either:
 - run:
 
 ```bash
-python3 PCL.Frontend.Avalonia/scripts/recalculate_native_replacements_sha1.py
+python3 src/PCL.Frontend.Avalonia/scripts/recalculate_native_replacements_sha1.py
 ```
 
 Optional check without writing changes:
 
 ```bash
-python3 PCL.Frontend.Avalonia/scripts/recalculate_native_replacements_sha1.py --dry-run
+python3 src/PCL.Frontend.Avalonia/scripts/recalculate_native_replacements_sha1.py --dry-run
 ```

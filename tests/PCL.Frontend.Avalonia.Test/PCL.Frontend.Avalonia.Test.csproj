@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PCL.Frontend.Avalonia\PCL.Frontend.Avalonia.csproj" />
+    <ProjectReference Include="../../src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj" />
+    <ProjectReference Include="../../examples/HelloExtension/HelloExtension.csproj" />
   </ItemGroup>
 </Project>

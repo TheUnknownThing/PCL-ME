@@ -40,13 +40,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Build Avalonia frontend
-        run: dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -c Debug
+        run: dotnet build src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -c Debug
 
       - name: Test foundation layer
-        run: dotnet test PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj -c Debug
+        run: dotnet test tests/PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj -c Debug
 
       - name: Test backend layer
-        run: dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug
+        run: dotnet test tests/PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug
 
       - name: Test Avalonia frontend
-        run: dotnet test PCL.Frontend.Avalonia.Test/PCL.Frontend.Avalonia.Test.csproj -c Debug
+        run: dotnet test tests/PCL.Frontend.Avalonia.Test/PCL.Frontend.Avalonia.Test.csproj -c Debug

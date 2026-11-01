@@ -33,7 +33,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "root",
         nargs="?",
-        default=Path(__file__).resolve().parent.parent,
+        default=Path(__file__).resolve().parents[2],
         type=Path,
         help="Repository root to scan. Defaults to the repository that contains this script.",
     )

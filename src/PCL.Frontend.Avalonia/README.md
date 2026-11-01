@@ -17,15 +17,15 @@
 
 ```bash
 dotnet restore
-dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj
-dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+dotnet build src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj
+dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
 常用命令：
 
-- `dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app`
-- `dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- help`
-- `./PCL.Frontend.Avalonia/scripts/package-frontend.sh`
+- `dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app`
+- `dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- help`
+- `./src/PCL.Frontend.Avalonia/scripts/package-frontend.sh`
 
 ## 打包
 
@@ -34,7 +34,7 @@ dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 例如：
 
 ```bash
-APP_VERSION=2026.04.14 ./PCL.Frontend.Avalonia/scripts/package-frontend.sh osx-arm64
+APP_VERSION=2026.04.14 ./src/PCL.Frontend.Avalonia/scripts/package-frontend.sh osx-arm64
 ```
 
 ## 故障排查
@@ -52,20 +52,20 @@ niri msg outputs
 如果需要按显示器分别覆盖缩放，再显式指定缩放启动应用：
 
 ```bash
-AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5' dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5' dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
 如果你配置了多块显示器：
 
 ```bash
-AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5;HDMI-A-1=1.0' dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+AVALONIA_SCREEN_SCALE_FACTORS='eDP-1=1.5;HDMI-A-1=1.0' dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
 ## 许可证
 
 本目录下的 UI 内容遵循本目录中的 [LICENSE](LICENSE) 自定义许可证。
 
-仓库中位于此前端 UI 层之外的启动器相关逻辑遵循 [../LICENSE](../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。
+仓库中位于此前端 UI 层之外的启动器相关逻辑遵循 [../../LICENSE](../../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。
 
 资源致谢：
 

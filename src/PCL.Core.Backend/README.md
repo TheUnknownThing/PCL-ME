@@ -14,19 +14,19 @@
 仅构建后端：
 
 ```bash
-dotnet build PCL.Core.Backend/PCL.Core.Backend.csproj --no-restore
+dotnet build src/PCL.Core.Backend/PCL.Core.Backend.csproj --no-restore
 ```
 
 修改后端后的常见验证流程：
 
 ```bash
-dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj --no-restore
-dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj --no-restore
-dotnet test PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj --no-restore
+dotnet build src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj --no-restore
+dotnet test tests/PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj --no-restore
+dotnet test tests/PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj --no-restore
 ```
 
 ## 许可证
 
-这个后端项目遵循 [../LICENSE](../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。
+这个后端项目遵循 [../../LICENSE](../../LICENSE) 中的 Apache License 2.0，除非某个文件另有说明。
 
-`PCL.Frontend.Avalonia/` 下的前端 UI 层则单独遵循 [../PCL.Frontend.Avalonia/LICENSE](../PCL.Frontend.Avalonia/LICENSE)。
+`src/PCL.Frontend.Avalonia/` 下的前端 UI 层则单独遵循 [../PCL.Frontend.Avalonia/LICENSE](../PCL.Frontend.Avalonia/LICENSE)。
