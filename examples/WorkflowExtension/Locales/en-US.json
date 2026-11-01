@@ -1,0 +1,21 @@
+{
+  "catalog.title": "Example repository",
+  "catalog.empty": "No results. Configure the private catalog JSON URL in Tools → Extensions.",
+  "catalog.invalid": "The resource catalog must be a valid JSON document served over HTTP or HTTPS.",
+  "skins.title": "Skins",
+  "skins.search": "Search skins",
+  "instances.title": "Instance tools",
+  "instances.name": "New instance name",
+  "instances.version": "Minecraft version",
+  "instances.clone": "Clone selected instance",
+  "instances.create": "Create Minecraft instance",
+  "instance.required": "Select an instance first.",
+  "preset.title": "Common mods",
+  "preset.next": "Install this preset after the next matching instance is created",
+  "preset.remembered": "Include my remembered mod projects",
+  "backup.title": "Back up world",
+  "search": "Search",
+  "review": "Review installation",
+  "install": "Install reviewed files",
+  "done": "Completed."
+}

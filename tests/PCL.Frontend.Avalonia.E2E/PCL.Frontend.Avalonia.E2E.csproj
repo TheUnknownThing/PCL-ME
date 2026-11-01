@@ -12,5 +12,17 @@
     <PackageReference Include="Avalonia.Headless" Version="11.3.13" />
     <ProjectReference Include="../../src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj" />
     <ProjectReference Include="../../examples/HelloExtension/HelloExtension.csproj" />
+    <ProjectReference Include="../Fixtures/ExtensionApiV1/LegacyExtension/LegacyExtension.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="../Fixtures/ExtensionProcessProbe/ExtensionProcessProbe.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="../../examples/WorkflowExtension/WorkflowExtension.csproj" ReferenceOutputAssembly="false" Private="false" />
   </ItemGroup>
+  <Target Name="CopyLegacyExtension" AfterTargets="Build">
+    <ItemGroup><WorkflowExampleFiles Include="../../examples/WorkflowExtension/bin/$(Configuration)/net10.0/WorkflowExtension.dll;../../examples/WorkflowExtension/bin/$(Configuration)/net10.0/extension.json" /></ItemGroup>
+    <Copy SourceFiles="@(WorkflowExampleFiles)" DestinationFolder="$(OutDir)WorkflowExample" />
+    <ItemGroup><WorkflowExampleLocales Include="../../examples/WorkflowExtension/bin/$(Configuration)/net10.0/Locales/*.json" /></ItemGroup>
+    <Copy SourceFiles="@(WorkflowExampleLocales)" DestinationFolder="$(OutDir)WorkflowExample/Locales" />
+    <ItemGroup><ProcessProbeFiles Include="../Fixtures/ExtensionProcessProbe/bin/$(Configuration)/net10.0/*" /></ItemGroup>
+    <Copy SourceFiles="@(ProcessProbeFiles)" DestinationFolder="$(OutDir)Compatibility/ProcessProbe" />
+    <Copy SourceFiles="../Fixtures/ExtensionApiV1/LegacyExtension/bin/$(Configuration)/net10.0/LegacyExtension.dll" DestinationFolder="$(OutDir)Compatibility" />
+  </Target>
 </Project>

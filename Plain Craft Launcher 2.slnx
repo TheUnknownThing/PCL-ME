@@ -34,11 +34,20 @@
       <Build Solution="*|*" Project="false" />
     </Project>
   </Folder>
+  <Folder Name="/tests/Fixtures/">
+    <Project Path="tests/Fixtures/ExtensionProcessProbe/ExtensionProcessProbe.csproj" />
+  </Folder>
+  <Folder Name="/tests/Fixtures/ExtensionApiV1/">
+    <Project Path="tests/Fixtures/ExtensionApiV1/Contracts/ContractsV1.csproj" />
+    <Project Path="tests/Fixtures/ExtensionApiV1/Avalonia/AvaloniaV1.csproj" />
+    <Project Path="tests/Fixtures/ExtensionApiV1/LegacyExtension/LegacyExtension.csproj" />
+  </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/PCL.Tools.I18n/PCL.Tools.I18n.csproj" />
     <Project Path="tools/PCL.Tools.Extensions/PCL.Tools.Extensions.csproj" />
   </Folder>
   <Folder Name="/examples/">
     <Project Path="examples/HelloExtension/HelloExtension.csproj" />
+    <Project Path="examples/WorkflowExtension/WorkflowExtension.csproj" />
   </Folder>
 </Solution>
