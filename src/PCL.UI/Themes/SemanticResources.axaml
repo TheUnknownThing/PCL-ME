@@ -1,0 +1,25 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Default">
+      <SolidColorBrush x:Key="Pcl.Surface" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="Pcl.SubtleSurface" Color="#F7F9FC" />
+      <SolidColorBrush x:Key="Pcl.MutedForeground" Color="#677586" />
+      <SolidColorBrush x:Key="Pcl.Divider" Color="#E6EBF1" />
+      <SolidColorBrush x:Key="Pcl.Overlay" Color="#660D1D2D" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="Pcl.Surface" Color="#252C35" />
+      <SolidColorBrush x:Key="Pcl.SubtleSurface" Color="#20262E" />
+      <SolidColorBrush x:Key="Pcl.MutedForeground" Color="#A2AEBD" />
+      <SolidColorBrush x:Key="Pcl.Divider" Color="#3B434E" />
+      <SolidColorBrush x:Key="Pcl.Overlay" Color="#88080F18" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+  <SolidColorBrush x:Key="Pcl.Foreground" Color="{DynamicResource ColorObject1}" />
+  <SolidColorBrush x:Key="Pcl.Accent" Color="{DynamicResource ColorObject3}" />
+  <StaticResource x:Key="Pcl.Background" ResourceKey="ColorBrushBackground" />
+  <SolidColorBrush x:Key="Pcl.Border" Color="{DynamicResource ColorObject6}" />
+  <BoxShadows x:Key="Pcl.OverlayShadow">0 12 36 0 #33091F38, 0 2 6 0 #16091F38</BoxShadows>
+  <x:Double x:Key="Pcl.Spacing">12</x:Double>
+  <x:Double x:Key="Pcl.CornerRadius">6</x:Double>
+</ResourceDictionary>
