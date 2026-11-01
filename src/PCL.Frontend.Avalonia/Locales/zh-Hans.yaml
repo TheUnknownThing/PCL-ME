@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "扩展"
         summary: "管理可选功能、设置和扩展包。"
+      tools_extensions:
+        title: "扩展"
+        summary: "管理可选功能、设置和扩展包。"
       setup_launcher_misc:
         title: 杂项
         summary: 调整零散的启动器行为。
@@ -3614,6 +3617,13 @@ desktop:
     close_exit: "退出启动器"
 
 extensions:
+  actions: "扩展操作"
+  resource_review: "检查安装计划"
+  resource_install: "安装"
+  resource_installed: "安装成功。"
+  resource_canceled: "已取消安装。"
+  resource_empty: "没有可用的版本。"
+  resource_replace: "替换："
   count: "共 {total} 个扩展 · 已启用 {enabled} 个"
   overview: "管理可选功能，并在下方调整各个扩展的设置。"
   save: "保存"

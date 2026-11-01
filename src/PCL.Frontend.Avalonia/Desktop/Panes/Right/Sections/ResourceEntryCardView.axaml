@@ -2,11 +2,14 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.ResourceEntryCardView"
     xmlns="https://github.com/avaloniaui"
     xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:extensions="clr-namespace:PCL.Frontend.Avalonia.Desktop.Extensions"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
     x:DataType="vm:InstanceResourceEntryViewModel"
     xmlns:animation="clr-namespace:PCL.UI.Animation;assembly=PCL.UI"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    extensions:ExtensionContextActions.Location="Resource"
+    extensions:ExtensionContextActions.ResourcePath="{Binding Path}"
     ClipToBounds="False">
   <Grid
       x:Name="LayoutRoot"

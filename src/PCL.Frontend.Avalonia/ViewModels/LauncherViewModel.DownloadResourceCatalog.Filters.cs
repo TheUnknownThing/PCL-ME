@@ -219,7 +219,7 @@ internal sealed partial class LauncherViewModel
         var sourceFilter = GetSelectedFilterValue(DownloadResourceSourceOptions, SelectedDownloadResourceSourceIndex);
         if (!string.IsNullOrWhiteSpace(sourceFilter))
         {
-            entries = entries.Where(entry => string.Equals(entry.Source, sourceFilter, StringComparison.OrdinalIgnoreCase));
+            entries = entries.Where(entry => string.Equals(entry.SourceFilterValue, sourceFilter, StringComparison.OrdinalIgnoreCase));
         }
 
         var tagFilter = GetSelectedFilterValue(DownloadResourceTagOptions, SelectedDownloadResourceTagIndex);
@@ -556,6 +556,7 @@ internal sealed partial class LauncherViewModel
         string? selectedSource = null)
     {
         var primarySource = runtimeState.Entries
+            .Where(entry => entry.ProviderId is null)
             .Select(entry => entry.Source)
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))
             ?? "CurseForge";
@@ -570,7 +571,11 @@ internal sealed partial class LauncherViewModel
                 CreateDownloadResourceFilterOption(primarySource, primarySource)
             ];
 
-        return MergeFilterOptions(baseOptions, [], selectedSource);
+        var kind = Desktop.Extensions.FrontendExtensionSession.ResourceKind(_currentRoute.Subpage);
+        var extensionSources = ExtensionSession?.GetResourceProviderDefinitions()
+            .Where(provider => !provider.Id.StartsWith("pcl.", StringComparison.Ordinal) && kind is { } value && provider.Kinds.Contains(value))
+            .Select(provider => CreateDownloadResourceFilterOption(provider.Title, provider.Id)) ?? [];
+        return MergeFilterOptions(baseOptions, extensionSources, selectedSource);
     }
     private static int ClampFilterIndex(int value, IReadOnlyList<DownloadResourceFilterOptionViewModel> options)
     {

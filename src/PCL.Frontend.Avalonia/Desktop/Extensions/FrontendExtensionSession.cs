@@ -47,9 +47,10 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
         _toolbar = window.FindControl<StackPanel>("ExtensionToolbar") ?? new StackPanel { Orientation = Orientation.Horizontal };
         _workspace = window.FindControl<ContentControl>("ExtensionWorkspace") ?? new ContentControl();
         Host = new ExtensionHost(Path.Combine(actions.RuntimePaths.DataDirectory, "Extensions"), this, () => text.Locale,
-            DispatchAsync, context => new Dictionary<Type, object> { [typeof(IExtensionUi)] = new ScopedUi(this, context) }, safeMode: safeMode,
+            DispatchAsync, CreateServices, safeMode: safeMode,
             workerCommand: string.Equals(Path.GetFileNameWithoutExtension(Environment.ProcessPath), "dotnet", StringComparison.OrdinalIgnoreCase)
-                ? [Environment.ProcessPath!, typeof(Program).Assembly.Location] : [Environment.ProcessPath!]);
+                ? [Environment.ProcessPath!, typeof(Program).Assembly.Location] : [Environment.ProcessPath!])
+        { SupportedCapabilities = Array.AsReadOnly(AllCapabilities) };
         _launcher.ExtensionSession = this;
         AddBuiltIn("pcl.desktop-pet", () => new DesktopPetExtension(), enabledByDefault: false);
         AddBuiltIn("pcl.global-search", () => new GlobalSearchExtension());
@@ -78,6 +79,7 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
 
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
     {
+        await StartLifecycleAsync();
         await Host.StartAsync(cancellationToken);
         Host.PublishHostEvent("launcher.ready", JsonSerializer.SerializeToElement(new { }));
         QueueRefresh();
@@ -89,14 +91,21 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
         await Dispatcher.UIThread.InvokeAsync(() => action().AsTask());
     }
 
-    private void OnLocaleChanged() { _locations = _launcher.GetExtensionLocations(); Host.LocaleChanged(); }
+    private void OnLocaleChanged() { _locations = _launcher.GetExtensionLocations(); Host.LocaleChanged(); RefreshContributions(recreate: true); }
     private void OnLauncherChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(LauncherViewModel.CurrentStandardRightPane) or nameof(LauncherViewModel.LaunchVersionSubtitle)
+            or nameof(LauncherViewModel.DownloadInstallMinecraftVersion) or nameof(LauncherViewModel.DownloadInstallOptionCards)
+            or nameof(LauncherViewModel.SelectedDownloadResourceVersionOption) or nameof(LauncherViewModel.SelectedDownloadResourceLoaderOption)
+            or nameof(LauncherViewModel.SelectedDownloadResourceSourceOption) or nameof(LauncherViewModel.DownloadResourceSearchQuery) or nameof(LauncherViewModel.VersionSaveTitle)
+            or nameof(LauncherViewModel.HasSelectedInstance)) RefreshContributions();
         if (e.PropertyName == nameof(LauncherViewModel.IsPromptOverlayVisible) && _launcher.IsPromptOverlayVisible) _overlay?.Dispose();
         if (e.PropertyName is nameof(LauncherViewModel.LaunchVersionSubtitle) or nameof(LauncherViewModel.HasSelectedInstance))
         {
+            RefreshLifecycleWatchers();
             Host.PublishHostEvent("launcher.instance.changed", JsonSerializer.SerializeToElement(_launcher.ExtensionSelectedInstanceId));
             RefreshInstanceTabs();
+            RefreshContributions();
         }
     }
 
@@ -126,7 +135,7 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
         if (!CanInteract) return;
         _shell.ShowLauncher();
         CloseWorkspace();
-        _launcher.OpenExtensionSettings();
+        _launcher.OpenExtensionManager();
     }
 
     private void Present(Control control, string title, string? owner)
@@ -180,13 +189,12 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
 
     internal static string Localize(IExtensionContext context, string? key, string fallback) => key is null ? fallback : context.Text.Get(key, fallback);
 
-    private void RefreshToolbar()
+    internal bool HasExtensionMenuEntries => _views.Values.Any(view => view.Definition.Location == ExtensionViewLocation.Page)
+        || _uiActions.Values.Any(item => item.Definition.Location == ExtensionActionLocation.Menu);
+
+    internal MenuFlyout CreateExtensionMenu()
     {
-        _toolbar.Children.Clear();
         var menu = new MenuFlyout();
-        var manager = new MenuItem { Header = T("title") };
-        manager.Click += (_, _) => ShowManager();
-        menu.Items.Add(manager);
         foreach (var view in _views.Values.Where(view => view.Definition.Location is ExtensionViewLocation.Page))
         {
             var entry = new MenuItem { Header = Localize(view.Context, view.Definition.TitleKey, view.Definition.Title) };
@@ -199,6 +207,12 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
             entry.Click += (_, _) => Run(() => ExecuteCommandAsync(contribution.Definition.CommandId));
             menu.Items.Add(entry);
         }
+        return menu;
+    }
+
+    private void RefreshToolbar()
+    {
+        _toolbar.Children.Clear();
         foreach (var contribution in _uiActions.Values.Where(item => item.Definition.Location == ExtensionActionLocation.Toolbar))
         {
             var title = Localize(contribution.Context, contribution.Definition.TitleKey, contribution.Definition.Title);
@@ -210,12 +224,6 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
             button.Click += (_, _) => Run(() => ExecuteCommandAsync(contribution.Definition.CommandId));
             _toolbar.Children.Add(button);
         }
-        var extensions = new PclIconButton { IconData = PclIcons.Extensions.Data, Width = 28, Height = 28, IconScale = .85 };
-        extensions.Bind(PclIconButton.IconBrushProperty, new global::Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("ColorBrushTitleBarForeground"));
-        extensions.Bind(PclIconButton.HoverBackgroundBrushProperty, new global::Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("ColorBrushTitleBarHoverBackground"));
-        extensions.Click += (_, _) => menu.ShowAt(extensions);
-        ToolTip.SetTip(extensions, T("title"));
-        _toolbar.Children.Add(extensions);
         _shell.SetExtensionTrayItems(_uiActions.Values.Where(item => item.Definition.Location == ExtensionActionLocation.Tray).Select(item =>
             new NativeMenuItem
             {
@@ -260,7 +268,8 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
 
     internal ContextMenu CreateInstanceMenu()
     {
-        var menu = new ContextMenu();
+        var menu = _launcher.ExtensionSelectedInstanceId is { } instance
+            ? CreateContributionMenu(ExtensionContextActionLocation.Instance, new() { InstanceId = instance }) : new ContextMenu();
         foreach (var contribution in _uiActions.Values.Where(item => item.Definition.Location == ExtensionActionLocation.InstanceMenu))
         {
             var item = new MenuItem { Header = Localize(contribution.Context, contribution.Definition.TitleKey, contribution.Definition.Title) };
@@ -274,11 +283,18 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
     {
         if (_disposed) return;
         _disposed = true;
+        _lifecycleLifetime.Cancel();
+        foreach (var watcher in _lifecycleWatchers.Values) watcher.Dispose();
+        _lifecycleWatchers.Clear();
         _text.Changed -= OnLocaleChanged;
         _launcher.PropertyChanged -= OnLauncherChanged;
         _launcher.ExtensionSession = null;
         Host.Changed -= QueueRefresh;
         _overlay?.Dispose();
+        CloseContributionPage();
+        foreach (var region in _regions.Keys.ToArray()) DetachRegion(region);
+        foreach (var menu in _contributionMenus.Keys.ToArray()) menu.Close();
+        _contributionMenus.Clear();
         CloseWorkspace();
         foreach (var manager in _managers.ToArray()) manager.Dispose();
         DisposeInstanceTabs();

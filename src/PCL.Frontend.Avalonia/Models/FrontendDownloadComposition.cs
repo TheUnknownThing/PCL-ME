@@ -107,4 +107,5 @@ internal sealed record FrontendDownloadResourceEntry(
     int DownloadCount,
     int FollowCount,
     int ReleaseRank,
-    int UpdateRank);
+    int UpdateRank,
+    string? ProviderId = null);

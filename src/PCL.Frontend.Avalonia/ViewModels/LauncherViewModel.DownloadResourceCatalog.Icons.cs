@@ -54,13 +54,13 @@ internal sealed partial class LauncherViewModel
                         ? new ActionCommand(() => AddActivity(
                             T("download.resource.activities.entry_action", ("entry_title", entry.Title)),
                             BuildActivityDetail(entry.Info, entry.Source)))
-                        : FrontendCommunityProjectService.TryParseCompDetailTarget(entry.TargetPath, out var projectId)
+                        : ExtensionSession?.CreateExtensionResourceCommand(entry.TargetPath, entry.Title) ?? (FrontendCommunityProjectService.TryParseCompDetailTarget(entry.TargetPath, out var projectId)
                             ? new ActionCommand(() => OpenCommunityProjectDetail(projectId, entry.Title, entry.Version, entry.Loader, _currentRoute.Subpage))
                             : CreateOpenTargetCommand(
                                 T("download.resource.activities.open_page", ("entry_title", entry.Title)),
                                 entry.TargetPath,
-                                entry.TargetPath),
-                    entry.IconUrl);
+                                entry.TargetPath)),
+                    entry.IconUrl, entry.ProviderId);
             })
             .ToArray();
     }

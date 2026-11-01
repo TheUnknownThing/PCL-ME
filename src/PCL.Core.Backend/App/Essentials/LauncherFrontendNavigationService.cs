@@ -106,12 +106,12 @@ public static class LauncherFrontendNavigationService
                     LauncherFrontendSubpageKey.SetupFeedback,
                     LauncherFrontendSubpageKey.SetupUpdate,
                     LauncherFrontendSubpageKey.SetupJava,
-                    LauncherFrontendSubpageKey.SetupLauncherMisc,
-                    LauncherFrontendSubpageKey.SetupExtensions),
+                    LauncherFrontendSubpageKey.SetupLauncherMisc),
                 CreateSidebarGroup(
                     LauncherFrontendPageKey.Tools,
                     LauncherFrontendSubpageKey.ToolsTest,
-                    LauncherFrontendSubpageKey.ToolsLauncherHelp),
+                    LauncherFrontendSubpageKey.ToolsLauncherHelp,
+                    LauncherFrontendSubpageKey.ToolsExtensions),
                 CreateSidebarGroup(
                     LauncherFrontendPageKey.InstanceSetup,
                     LauncherFrontendSubpageKey.VersionOverall,
@@ -436,6 +436,7 @@ public enum LauncherFrontendSubpageKey
     SetupExtensions = 111,
     ToolsLauncherHelp = 201,
     ToolsTest = 202,
+    ToolsExtensions = 203,
     VersionOverall = 301,
     VersionSetup = 302,
     VersionExport = 303,

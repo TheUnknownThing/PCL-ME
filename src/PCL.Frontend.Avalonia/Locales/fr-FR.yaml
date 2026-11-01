@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "Extensions"
         summary: "Gérez les fonctions facultatives, les réglages et les paquets d’extensions."
+      tools_extensions:
+        title: "Extensions"
+        summary: "Gérez les fonctions facultatives, les réglages et les paquets d’extensions."
       setup_launcher_misc:
         title: Divers
         summary: Ajuster les comportements divers du lanceur.
@@ -3604,6 +3607,13 @@ desktop:
     close_exit: "Quitter le lanceur"
 
 extensions:
+  actions: "Actions des extensions"
+  resource_review: "Vérifier l’installation"
+  resource_install: "Installer"
+  resource_installed: "Installation réussie."
+  resource_canceled: "Installation annulée."
+  resource_empty: "Aucune version disponible."
+  resource_replace: "Remplacer :"
   count: "{total} extensions · {enabled} activées"
   overview: "Gérez les fonctions facultatives et configurez chaque extension ci-dessous."
   save: "Enregistrer"

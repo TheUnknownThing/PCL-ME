@@ -26,7 +26,7 @@ internal sealed partial class LauncherViewModel
                 .Select(entry => new SimpleListEntryViewModel(
                     entry.Title,
                     entry.Summary,
-                    new ActionCommand(() => OpenVersionSaveDetails(entry.Path)))));
+                    new ActionCommand(() => OpenVersionSaveDetails(entry.Path)), entry.Path)));
     }
 
     private IEnumerable<FrontendInstanceDirectoryEntry> ApplyInstanceWorldSort(IEnumerable<FrontendInstanceDirectoryEntry> entries)

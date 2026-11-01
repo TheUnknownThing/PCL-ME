@@ -231,6 +231,7 @@ internal sealed partial class LauncherViewModel
             CreateDownloadResourceFilterOption("CurseForge", "CurseForge"),
             CreateDownloadResourceFilterOption("Modrinth", "Modrinth")
         ];
+        RefreshExtensionResourceProviders();
         _downloadResourceTagOptions = BuildFallbackDownloadResourceTagOptions();
         _downloadResourceSortOptions = BuildDownloadResourceSortOptions();
         _downloadResourceVersionOptions = BuildDefaultDownloadResourceVersionOptions(

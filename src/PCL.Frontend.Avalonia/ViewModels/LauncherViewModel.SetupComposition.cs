@@ -255,8 +255,6 @@ internal sealed partial class LauncherViewModel
     {
         switch (_currentRoute.Subpage)
         {
-            case LauncherFrontendSubpageKey.SetupExtensions:
-                break;
             case LauncherFrontendSubpageKey.SetupAbout:
                 InitializeAboutEntries();
                 break;
@@ -292,8 +290,6 @@ internal sealed partial class LauncherViewModel
     {
         switch (_currentRoute.Subpage)
         {
-            case LauncherFrontendSubpageKey.SetupExtensions:
-                break;
             case LauncherFrontendSubpageKey.SetupAbout:
                 RaisePropertyChanged(nameof(HasAboutProjectEntries));
                 RaisePropertyChanged(nameof(HasAboutAcknowledgementEntries));

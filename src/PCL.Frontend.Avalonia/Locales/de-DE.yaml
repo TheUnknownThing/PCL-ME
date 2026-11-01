@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "Erweiterungen"
         summary: "Optionale Funktionen, Einstellungen und Erweiterungspakete verwalten."
+      tools_extensions:
+        title: "Erweiterungen"
+        summary: "Optionale Funktionen, Einstellungen und Erweiterungspakete verwalten."
       setup_launcher_misc:
         title: Sonstiges
         summary: "Verschiedene Launcher-Verhaltensweisen anpassen."
@@ -3604,6 +3607,13 @@ desktop:
     close_exit: "Launcher beenden"
 
 extensions:
+  actions: "Erweiterungsaktionen"
+  resource_review: "Installation prüfen"
+  resource_install: "Installieren"
+  resource_installed: "Erfolgreich installiert."
+  resource_canceled: "Installation abgebrochen."
+  resource_empty: "Keine Versionen verfügbar."
+  resource_replace: "Ersetzen:"
   count: "{total} Erweiterungen · {enabled} aktiviert"
   overview: "Optionale Funktionen verwalten und einzelne Erweiterungen unten anpassen."
   save: "Speichern"

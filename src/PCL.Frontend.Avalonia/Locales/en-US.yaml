@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "Extensions"
         summary: "Manage optional features, settings, and extension packages."
+      tools_extensions:
+        title: "Extensions"
+        summary: "Manage optional features, settings, and extension packages."
       setup_launcher_misc:
         title: Misc
         summary: Adjust miscellaneous launcher behaviors.
@@ -3614,6 +3617,13 @@ desktop:
     close_exit: "Exit the launcher"
 
 extensions:
+  actions: "Extension actions"
+  resource_review: "Review installation"
+  resource_install: "Install"
+  resource_installed: "Installed successfully."
+  resource_canceled: "Installation canceled."
+  resource_empty: "No releases are available."
+  resource_replace: "Replace:"
   count: "{total} extensions · {enabled} enabled"
   overview: "Manage optional features and customize each extension below."
   save: "Save"

@@ -20,10 +20,16 @@ namespace PCL.Frontend.Avalonia.E2E;
 public sealed class ExtensionManagementE2E
 {
     [TestMethod]
-    public Task SettingsNavigation_RepeatedToggles_PetSettings_LocaleAndRestart() => Run(async () =>
+    public Task ToolsNavigation_RepeatedToggles_PetSettings_LocaleAndRestart() => Run(async () =>
     {
         await using var app = new DesktopFixture();
-        await app.Start(); await app.OpenSettings();
+        await app.Start();
+        var toolbar = app.Window.Find<StackPanel>("ExtensionToolbar")!;
+        Assert.IsFalse(toolbar.Children.OfType<PclIconButton>().Any(button => (string?)ToolTip.GetTip(button) == "Extensions"), "The extension manager must not add a toolbar button.");
+        await Click(app.Window, app.Window.GetVisualDescendants().OfType<PclTabButton>().Single(tab => tab.IsEffectivelyVisible && tab.Text == "Settings"));
+        Assert.IsFalse(app.Launcher.SidebarSections.SelectMany(section => section.Items).Any(item => item.Title == "Extensions"));
+        await app.OpenExtensions();
+        Assert.AreEqual("Tools/ToolsExtensions", app.Launcher.ExtensionRoute);
         Assert.AreEqual(2, app.Window.GetVisualDescendants().OfType<ExtensionCardView>().Count());
         CollectionAssert.AreEquivalent(new[] { "pcl.desktop-pet", "pcl.global-search" }, app.Session.Host.Extensions.Select(info => info.Manifest.Id).ToArray());
         app.Screenshot("extensions-settings");
@@ -54,7 +60,7 @@ public sealed class ExtensionManagementE2E
         app.Text.SetLocale("zh-Hans"); await Settle();
         Assert.AreEqual("PCL-ME 桌宠", card.Find<PclCard>("Card")!.Header);
         app.Screenshot("extensions-settings-zh");
-        await app.Restart(); await app.OpenSettings();
+        await app.Restart(); await app.OpenExtensions();
         Assert.AreEqual(expectedPreset, app.Session.Host.Get("pcl.desktop-pet").Settings.Get("preset", ""));
         Assert.AreEqual(ExtensionStatus.Disabled, app.Session.Host.Get("pcl.global-search").Status);
     });
@@ -63,20 +69,30 @@ public sealed class ExtensionManagementE2E
     public Task ExternalPage_SearchNavigation_DisableCleanup_AndRestartPersistence() => Run(async () =>
     {
         await using var app = new DesktopFixture();
-        await app.Start(); await app.OpenSettings();
+        await app.Start(); await app.OpenExtensions();
         await Install(app, CreatePackage(app, "1.0.0"));
         await app.Toggle("example.hello");
-        await OpenPage();
+        var actions = app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Single().Find<PclButton>("ActionsButton")!;
+        await Click(app.Window, actions);
+        var menu = (MenuFlyout)actions.ContextFlyout!;
+        await Wait(() => menu.IsOpen, "Extension actions did not open from the Tools page.");
+        var open = menu.Items.OfType<MenuItem>().Single(item => (string?)item.Header == "Hello extension");
+        await Click(TopLevel.GetTopLevel(open)!, open);
+        await Wait(() => app.Window.Find<ContentControl>("ExtensionWorkspace")!.IsVisible, "The relocated menu did not open the installed extension page.");
         var workspace = app.Window.Find<ContentControl>("ExtensionWorkspace")!;
         Assert.IsTrue(workspace.GetVisualDescendants().OfType<PclCard>().Any(card => card.Header == "Hello extension"),
             "An installed extension must render its native page using the shared PCL controls and its own localization.");
+        await app.Session.NavigateAsync("Setup/SetupUI");
+        await app.Session.NavigateAsync("Setup/SetupExtensions");
+        Assert.AreEqual("Tools/ToolsExtensions", app.Launcher.ExtensionRoute, "Existing extension links must redirect to the new manager route.");
+        await Wait(() => app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any(), "The legacy management link did not open Tools → Extensions.");
         await app.Search("Extensions");
         app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
         app.Window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
         await Wait(() => app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any(), "Search did not navigate to extension settings");
         await app.Toggle("example.hello");
         Assert.AreEqual(ExtensionStatus.Disabled, app.Session.Host.Get("example.hello").Status);
-        await app.Restart(); await app.OpenSettings();
+        await app.Restart(); await app.OpenExtensions();
         Assert.AreEqual(ExtensionStatus.Disabled, app.Session.Host.Get("example.hello").Status);
         await app.Toggle("example.hello");
         await OpenPage();
@@ -98,7 +114,7 @@ public sealed class ExtensionManagementE2E
     public Task PackagePicker_Cancel_InvalidArchive_Install_Enable_Update_Restart_Uninstall() => Run(async () =>
     {
         await using var app = new DesktopFixture();
-        await app.Start(); await app.OpenSettings();
+        await app.Start(); await app.OpenExtensions();
         var manager = app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Single();
         await Click(app.Window, manager.Find<PclButton>("InstallButton")!);
         Assert.IsNotNull(app.Picker.Dialog);
@@ -115,11 +131,11 @@ public sealed class ExtensionManagementE2E
         Assert.AreEqual(ExtensionStatus.Active, app.Session.Host.Get("example.hello").Status);
         await Install(app, CreatePackage(app, "2.0.0"));
         Assert.IsTrue(app.Session.Host.Get("example.hello").RestartRequired);
-        await app.Restart(); await app.OpenSettings(); await app.Expand("example.hello");
+        await app.Restart(); await app.OpenExtensions(); await app.Expand("example.hello");
         Assert.AreEqual("2.0.0", app.Session.Host.Get("example.hello").Manifest.Version);
         await Click(app.Window, app.Card("example.hello").Find<PclButton>("UninstallButton")!);
         Assert.IsTrue(app.Session.Host.Get("example.hello").RemovalPending);
-        await app.Restart(); await app.OpenSettings();
+        await app.Restart(); await app.OpenExtensions();
         Assert.IsFalse(app.Session.Host.Extensions.Any(info => info.Manifest.Id == "example.hello"));
     });
 
@@ -137,7 +153,7 @@ public sealed class ExtensionManagementE2E
     public Task Shortcuts_ConflictValidation_KeyboardDispatch_AndSafeModePreferences() => Run(async () =>
     {
         await using var app = new DesktopFixture();
-        await app.Start(); await app.OpenSettings();
+        await app.Start(); await app.OpenExtensions();
         // The desktop pet is disabled by default; the shortcut editor needs it active.
         if (!app.Session.Host.Get("pcl.desktop-pet").IsEnabled) await app.Toggle("pcl.desktop-pet");
         await app.Expand("pcl.desktop-pet");
@@ -154,14 +170,14 @@ public sealed class ExtensionManagementE2E
         app.Window.KeyPressQwerty(PhysicalKey.H, (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control) | RawInputModifiers.Alt);
         app.Window.KeyReleaseQwerty(PhysicalKey.H, RawInputModifiers.None);
         await Wait(() => app.Session.Host.Get("pcl.desktop-pet").Status == ExtensionStatus.Disabled, "Updated shortcut did not execute");
-        await app.Restart(safeMode: true); await app.OpenSettings();
+        await app.Restart(safeMode: true); await app.OpenExtensions();
         Assert.IsTrue(app.Session.Host.SafeMode);
         Assert.AreEqual(0, app.Session.Windows.Count);
         Assert.IsTrue(app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Single().Find<TextBlock>("SafeModeText")!.IsVisible);
         await app.Toggle("pcl.desktop-pet");
         Assert.AreEqual(ExtensionStatus.Inactive, app.Session.Host.Get("pcl.desktop-pet").Status);
         Assert.AreEqual(0, app.Session.Windows.Count);
-        await app.Restart(); await app.OpenSettings(); await app.Expand("pcl.desktop-pet");
+        await app.Restart(); await app.OpenExtensions(); await app.Expand("pcl.desktop-pet");
         Assert.AreEqual(ExtensionStatus.Active, app.Session.Host.Get("pcl.desktop-pet").Status);
         Assert.AreEqual("Primary+Alt+H", app.Card("pcl.desktop-pet").Find<TextBox>(fieldName)!.Text);
     });
@@ -170,7 +186,7 @@ public sealed class ExtensionManagementE2E
     public Task SettingsEditors_Reset_DarkTheme_AllLocales_AndReturnNavigation() => Run(async () =>
     {
         await using var app = new DesktopFixture();
-        await app.Start(); await app.OpenSettings(); await app.Expand("pcl.global-search");
+        await app.Start(); await app.OpenExtensions(); await app.Expand("pcl.global-search");
         var card = app.Card("pcl.global-search");
         var limit = card.Find<NumericUpDown>("Setting_limit")!;
         await Type(app.Window, limit.GetVisualDescendants().OfType<TextBox>().Single(), "12");
@@ -190,9 +206,9 @@ public sealed class ExtensionManagementE2E
         }
         app.Text.SetLocale("en-US"); await Task.Delay(500); Tick();
         card.BringIntoView(); await Settle(); app.Screenshot("extensions-dark");
-        await Click(app.Window, app.Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == "Misc"));
-        Assert.IsFalse(app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any());
-        await app.OpenSettings();
+        await Click(app.Window, app.Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == "Tests"));
+        await Wait(() => !app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any(), "Leaving the Extensions tool did not release its view.");
+        await app.OpenExtensions();
         Assert.IsFalse(app.Card("pcl.global-search").Find<PclCard>("Card")!.IsChevronExpanded);
     });
 
@@ -201,7 +217,7 @@ public sealed class ExtensionManagementE2E
     {
         await using var app = new DesktopFixture();
         var instance = app.CreateInstance("E2E-example");
-        await app.Start(); await app.OpenSettings();
+        await app.Start(); await app.OpenExtensions();
         await Install(app, CreatePackage(app, "1.0.0")); await app.Toggle("example.hello");
         await app.Search("E2E-example");
         var search = app.Window;
@@ -210,7 +226,7 @@ public sealed class ExtensionManagementE2E
         await Wait(() => app.Window.GetVisualDescendants().OfType<TabItem>().Any(tab => (string?)tab.Header == "Extension information"), "Instance search did not open the extension tab");
         var tab = app.Window.GetVisualDescendants().OfType<TabItem>().Single(tab => (string?)tab.Header == "Extension information");
         Assert.AreEqual(instance, ((TextBlock)tab.Content!).Text);
-        await app.OpenSettings(); await app.Toggle("example.hello");
+        await app.OpenExtensions(); await app.Toggle("example.hello");
         Assert.IsNull(app.Launcher.ExtensionInstanceTabsContent);
     });
 

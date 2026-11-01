@@ -162,8 +162,7 @@ internal sealed partial class LauncherViewModel
                 or LauncherFrontendSubpageKey.SetupJava
                 or LauncherFrontendSubpageKey.SetupGameManage => "game",
             LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupUI
-                or LauncherFrontendSubpageKey.SetupLauncherMisc
-                or LauncherFrontendSubpageKey.SetupExtensions => "launcher",
+                or LauncherFrontendSubpageKey.SetupLauncherMisc => "launcher",
             LauncherFrontendPageKey.Setup => "about",
             LauncherFrontendPageKey.Tools => "tools",
             LauncherFrontendPageKey.InstanceSetup when subpage is LauncherFrontendSubpageKey.VersionOverall
@@ -267,12 +266,12 @@ internal sealed partial class LauncherViewModel
         return page switch
         {
             LauncherFrontendPageKey.Download => (refreshToolTip, PclIcons.Refresh.Data, refreshToolTip, "refresh"),
+            LauncherFrontendPageKey.Tools when subpage == LauncherFrontendSubpageKey.ToolsExtensions => (string.Empty, string.Empty, string.Empty, null),
             LauncherFrontendPageKey.Tools => (refreshToolTip, PclIcons.Refresh.Data, refreshToolTip, "refresh"),
             LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupJava
                 or LauncherFrontendSubpageKey.SetupFeedback
                 or LauncherFrontendSubpageKey.SetupUpdate => (refreshToolTip, PclIcons.Refresh.Data, refreshToolTip, "refresh"),
-            LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupAbout or LauncherFrontendSubpageKey.SetupLog
-                or LauncherFrontendSubpageKey.SetupExtensions => (string.Empty, string.Empty, string.Empty, null),
+            LauncherFrontendPageKey.Setup when subpage is LauncherFrontendSubpageKey.SetupAbout or LauncherFrontendSubpageKey.SetupLog => (string.Empty, string.Empty, string.Empty, null),
             LauncherFrontendPageKey.Setup => (resetToolTip, PclIcons.Reset.Data, resetToolTip, "reset"),
             _ => (string.Empty, string.Empty, string.Empty, null)
         };
@@ -311,10 +310,10 @@ internal sealed partial class LauncherViewModel
             (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupUpdate) => "update",
             (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupJava) => "Java",
             (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupLauncherMisc) => "launcher_misc",
-            (LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupExtensions) => "extensions",
             (LauncherFrontendPageKey.Setup, _) => "settings",
             (LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsLauncherHelp) => "help",
             (LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsTest) => "test",
+            (LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsExtensions) => "extensions",
             (LauncherFrontendPageKey.Tools, _) => "tools",
             (LauncherFrontendPageKey.InstanceSelect, _) => "instance_select",
             (LauncherFrontendPageKey.TaskManager, _) => "task_manager",

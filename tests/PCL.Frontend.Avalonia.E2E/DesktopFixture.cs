@@ -60,14 +60,14 @@ internal sealed class DesktopFixture : IAsyncDisposable
         await Wait(() => Launcher.IsTopLevelNavigationInteractive, "Startup prompt did not close");
     }
 
-    public async Task OpenSettings()
+    public async Task OpenExtensions()
     {
-        for (var i = 0; i < 4 && !Window.GetVisualDescendants().OfType<PclTabButton>().Any(tab => tab.IsEffectivelyVisible && tab.Text == "Settings"); i++)
+        for (var i = 0; i < 4 && !Window.GetVisualDescendants().OfType<PclTabButton>().Any(tab => tab.IsEffectivelyVisible && tab.Text == "Tools"); i++)
             await Click(Window, Window.Find<PclIconButton>("BackButton")!);
-        await Click(Window, Window.GetVisualDescendants().OfType<PclTabButton>().First(tab => tab.IsEffectivelyVisible && tab.Text == "Settings"));
+        await Click(Window, Window.GetVisualDescendants().OfType<PclTabButton>().First(tab => tab.IsEffectivelyVisible && tab.Text == "Tools"));
         await Wait(() => Window.GetVisualDescendants().OfType<PclListItem>().Any(item => item.Title == "Extensions"), "Extensions sidebar missing: " + string.Join(",", Launcher.SidebarSections.SelectMany(section => section.Items).Select(item => item.Title)));
         await Click(Window, Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == "Extensions"));
-        await Wait(() => Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any(), "Extensions settings page did not open");
+        await Wait(() => Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any(), "Extensions tools page did not open");
         Assert.IsFalse(Window.Find<ContentControl>("ExtensionWorkspace")!.IsVisible);
     }
 
@@ -125,9 +125,30 @@ internal sealed class DesktopFixture : IAsyncDisposable
         .GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
         .Single(field => field.FieldType == typeof(IApplicationLifetime)).SetValue(Application.Current, lifetime);
 
-    public static async Task Click(Window window, Control control)
+    public static async Task Click(TopLevel window, Control control)
     {
         control.BringIntoView(); await Settle();
+        ClickNow(window, control);
+        await Settle();
+    }
+    public static async Task Click(TopLevel window, Func<Control?> resolve)
+    {
+        await Wait(() => resolve() is { IsEffectivelyVisible: true, IsEffectivelyEnabled: true }, "The click target did not appear.");
+        resolve()!.BringIntoView(); await Settle();
+        // Virtualized catalogs can replace a row during layout. Resolve it again
+        // after settling, before delivering any pointer input.
+        await Wait(() =>
+        {
+            if (resolve() is not { IsEffectivelyVisible: true, IsEffectivelyEnabled: true } target) return false;
+            var point = target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), window);
+            return point is { } position && window.InputHitTest(position) is Visual hit &&
+                (ReferenceEquals(hit, target) || hit.GetVisualAncestors().Contains(target));
+        }, "The click target is covered or detached.");
+        ClickNow(window, resolve()!);
+        await Settle();
+    }
+    private static void ClickNow(TopLevel window, Control control)
+    {
         var point = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window);
         Assert.IsNotNull(point, control.Name);
         Assert.IsTrue(control.IsEffectivelyVisible && control.IsEffectivelyEnabled, $"Cannot click {control.Name}");
@@ -137,7 +158,6 @@ internal sealed class DesktopFixture : IAsyncDisposable
         window.MouseMove(point.Value);
         window.MouseDown(point.Value, MouseButton.Left, RawInputModifiers.None);
         window.MouseUp(point.Value, MouseButton.Left, RawInputModifiers.None);
-        await Settle();
     }
     public static async Task Type(Window window, TextBox field, string text)
     {

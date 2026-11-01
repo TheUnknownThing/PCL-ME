@@ -182,7 +182,6 @@ internal sealed partial class LauncherViewModel
             LauncherFrontendSubpageKey.SetupLog => CreateRightPaneDescriptor(StandardRightPaneKind.SetupLog, StandardRightPaneGroup.SetupFamily, "setup-log", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupUpdate => CreateRightPaneDescriptor(StandardRightPaneKind.SetupUpdate, StandardRightPaneGroup.SetupFamily, "setup-update", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupGameManage => CreateRightPaneDescriptor(StandardRightPaneKind.SetupGameManage, StandardRightPaneGroup.SetupFamily, "setup-game-manage", usesCompatibilityView: false),
-            LauncherFrontendSubpageKey.SetupExtensions => CreateRightPaneDescriptor(StandardRightPaneKind.SetupExtensions, StandardRightPaneGroup.SetupFamily, "setup-extensions", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupLauncherMisc => CreateRightPaneDescriptor(StandardRightPaneKind.SetupLauncherMisc, StandardRightPaneGroup.SetupFamily, "setup-launcher-misc", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupJava => CreateRightPaneDescriptor(StandardRightPaneKind.SetupJava, StandardRightPaneGroup.SetupFamily, "setup-java", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.SetupUI => CreateRightPaneDescriptor(StandardRightPaneKind.SetupUi, StandardRightPaneGroup.SetupFamily, "setup-ui", usesCompatibilityView: false),
@@ -220,6 +219,7 @@ internal sealed partial class LauncherViewModel
     {
         return _currentRoute.Subpage switch
         {
+            LauncherFrontendSubpageKey.ToolsExtensions => CreateRightPaneDescriptor(StandardRightPaneKind.ToolsExtensions, StandardRightPaneGroup.ToolsFamily, "tools-extensions", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsTest => CreateRightPaneDescriptor(StandardRightPaneKind.ToolsTest, StandardRightPaneGroup.ToolsFamily, "tools-test", usesCompatibilityView: false),
             LauncherFrontendSubpageKey.ToolsLauncherHelp => CreateRightPaneDescriptor(StandardRightPaneKind.ToolsHelp, StandardRightPaneGroup.ToolsFamily, "tools-help", usesCompatibilityView: false),
             _ => CreateRightPaneDescriptor(StandardRightPaneKind.ToolsTest, StandardRightPaneGroup.ToolsFamily, "tools-test", usesCompatibilityView: false)

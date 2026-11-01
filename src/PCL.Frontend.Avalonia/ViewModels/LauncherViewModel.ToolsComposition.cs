@@ -127,6 +127,8 @@ internal sealed partial class LauncherViewModel
     {
         switch (_currentRoute.Subpage)
         {
+            case LauncherFrontendSubpageKey.ToolsExtensions:
+                break;
             case LauncherFrontendSubpageKey.ToolsLauncherHelp:
                 RefreshHelpTopics();
                 RefreshHelpDetailSurface();

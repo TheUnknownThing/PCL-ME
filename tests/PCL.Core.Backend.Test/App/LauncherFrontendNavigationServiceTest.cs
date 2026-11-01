@@ -23,6 +23,8 @@ public sealed class LauncherFrontendNavigationServiceTest
             catalog.TopLevelPages.Select(page => page.Page).ToArray());
         Assert.IsTrue(catalog.SidebarGroups.Any(group => group.Page == LauncherFrontendPageKey.InstanceSetup));
         Assert.IsTrue(catalog.SecondaryPages.Any(page => page.Page == LauncherFrontendPageKey.GameLog));
+        Assert.IsFalse(catalog.SidebarGroups.Single(group => group.Page == LauncherFrontendPageKey.Setup).Items.Any(item => item.Subpage == LauncherFrontendSubpageKey.SetupExtensions));
+        Assert.IsTrue(catalog.SidebarGroups.Single(group => group.Page == LauncherFrontendPageKey.Tools).Items.Any(item => item.Subpage == LauncherFrontendSubpageKey.ToolsExtensions));
     }
 
     [TestMethod]

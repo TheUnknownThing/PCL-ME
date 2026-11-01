@@ -593,6 +593,7 @@ internal sealed partial class LauncherViewModel
         string activityMessage,
         RouteNavigationBehavior behavior = RouteNavigationBehavior.Automatic)
     {
+        ExtensionSession?.CloseContributionPage();
         route = NormalizeRoute(route);
         if (route == _currentRoute)
         {
@@ -608,6 +609,8 @@ internal sealed partial class LauncherViewModel
     {
         var normalized = route switch
         {
+            { Subpage: LauncherFrontendSubpageKey.SetupExtensions } =>
+                new LauncherFrontendRoute(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsExtensions),
             { Page: LauncherFrontendPageKey.Download, Subpage: LauncherFrontendSubpageKey.Default } =>
                 new LauncherFrontendRoute(LauncherFrontendPageKey.Download, LauncherFrontendSubpageKey.DownloadInstall),
             { Page: LauncherFrontendPageKey.Setup, Subpage: LauncherFrontendSubpageKey.SetupLink } =>

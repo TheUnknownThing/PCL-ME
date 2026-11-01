@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "擴充"
         summary: "管理擴充及其設定。"
+      tools_extensions:
+        title: "擴充"
+        summary: "管理擴充及其設定。"
       setup_launcher_misc:
         title: 雜項
         summary: 調零散之啟動器行。
@@ -3604,6 +3607,13 @@ desktop:
     close_exit: "退啟動器"
 
 extensions:
+  actions: "擴充之用"
+  resource_review: "審安裝之計"
+  resource_install: "安裝"
+  resource_installed: "安裝既成。"
+  resource_canceled: "已止安裝。"
+  resource_empty: "暫無可用之版。"
+  resource_replace: "易："
   count: "擴充凡 {total} · 已啟 {enabled}"
   overview: "啟閉諸擴充，於下設之。"
   save: "存"

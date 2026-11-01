@@ -8,7 +8,7 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class LauncherViewModel
 {
     internal FrontendExtensionSession? ExtensionSession { get; set; }
-    internal void OpenExtensionSettings() => NavigateTo(new(LauncherFrontendPageKey.Setup, LauncherFrontendSubpageKey.SetupExtensions), "Extensions");
+    internal void OpenExtensionManager() => NavigateTo(new(LauncherFrontendPageKey.Tools, LauncherFrontendSubpageKey.ToolsExtensions), "Extensions");
     private object? _extensionInstanceTabsContent;
     public object? ExtensionInstanceTabsContent => _extensionInstanceTabsContent;
     internal void SetExtensionInstanceTabs(object? content) => SetProperty(ref _extensionInstanceTabsContent, content, nameof(ExtensionInstanceTabsContent));
@@ -16,9 +16,7 @@ internal sealed partial class LauncherViewModel
 
     internal async ValueTask<IReadOnlyList<LauncherInstance>> GetExtensionInstancesAsync(CancellationToken cancellationToken)
     {
-        var paths = _launcherActionService.RuntimePaths;
-        var folders = LoadConfiguredInstanceSelectionFolders(paths.OpenSharedConfigProvider(), paths.OpenLocalConfigProvider(), paths)
-            .Select(folder => folder.Directory).Append(_instanceComposition.Selection.LauncherDirectory).Distinct(GetPathComparer()).ToArray();
+        var folders = GetExtensionLauncherFolders();
         var selected = _instanceComposition.Selection.InstanceDirectory;
         return await Task.Run<IReadOnlyList<LauncherInstance>>(() =>
         {
@@ -31,6 +29,7 @@ internal sealed partial class LauncherViewModel
                 foreach (var path in Directory.EnumerateDirectories(versions))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    if (Path.GetFileName(path).StartsWith(".pcl-", StringComparison.Ordinal)) continue;
                     if (!FrontendRuntimePaths.IsRecognizedInstanceDirectory(path)) continue;
                     var version = FrontendVersionManifestInspector.ReadProfile(folder, Path.GetFileName(path)).VanillaVersion;
                     instances.Add(new(path, Path.GetFileName(path), path, version, string.Equals(path, selected, GetPathComparison())));
@@ -38,6 +37,13 @@ internal sealed partial class LauncherViewModel
             }
             return instances;
         }, cancellationToken);
+    }
+
+    internal string[] GetExtensionLauncherFolders()
+    {
+        var paths = _launcherActionService.RuntimePaths;
+        return LoadConfiguredInstanceSelectionFolders(paths.OpenSharedConfigProvider(), paths.OpenLocalConfigProvider(), paths)
+            .Select(folder => folder.Directory).Append(_instanceComposition.Selection.LauncherDirectory).Distinct(GetPathComparer()).ToArray();
     }
 
     internal IReadOnlyList<LauncherLocation> GetExtensionLocations()

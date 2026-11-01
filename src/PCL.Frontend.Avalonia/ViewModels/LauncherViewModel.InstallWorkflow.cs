@@ -434,6 +434,7 @@ internal sealed partial class LauncherViewModel
                     _i18n,
                     async (installTask, cancelToken) =>
                     {
+                        using var extensionMutation = ExtensionSession is { } extensions ? await extensions.BeginLauncherInstallAsync(cancelToken) : null;
                         installTask.AdvancePhase(
                             FrontendInstallApplyPhase.PrepareManifest,
                             T("download.install.workflow.tasks.prepare_environment"));
@@ -495,7 +496,7 @@ internal sealed partial class LauncherViewModel
                                     ("target_name", targetInstanceName),
                                     ("manifest_path", result.ManifestPath),
                                     ("downloaded_count", result.DownloadedFiles.Count),
-                                    ("reused_count", result.ReusedFiles.Count)));
+                                ("reused_count", result.ReusedFiles.Count)));
 
                             if (!isExistingInstance)
                             {
@@ -507,7 +508,8 @@ internal sealed partial class LauncherViewModel
                             T(
                                 "download.install.workflow.messages.apply_completed",
                                 ("downloaded_count", result.DownloadedFiles.Count),
-                                ("reused_count", result.ReusedFiles.Count)));
+                                    ("reused_count", result.ReusedFiles.Count)));
+                        Dispatcher.UIThread.Post(() => ExtensionSession?.PublishLifecycle(PCL.Extensions.Contracts.ExtensionTopics.InstanceInstalled, result.TargetDirectory, isNewInstance: !isExistingInstance));
                     },
                     async ex =>
                     {

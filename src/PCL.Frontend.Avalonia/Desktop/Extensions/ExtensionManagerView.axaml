@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Extensions.ExtensionManagerView"
     xmlns="https://github.com/avaloniaui"
     xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:extensions="clr-namespace:PCL.Frontend.Avalonia.Desktop.Extensions"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
   <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -13,7 +14,10 @@
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock x:Name="CountText" VerticalAlignment="Center"
                          Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
-              <ui:PclButton x:Name="InstallButton" Grid.Column="1" />
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                <ui:PclButton x:Name="ActionsButton" />
+                <ui:PclButton x:Name="InstallButton" />
+              </StackPanel>
             </Grid>
             <TextBlock x:Name="TrustText" FontSize="12" TextWrapping="Wrap"
                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
@@ -24,6 +28,7 @@
           </StackPanel>
         </ui:PclCard.CardContent>
       </ui:PclCard>
+      <extensions:ExtensionRegionHost Region="settings.extensions.sections" />
       <StackPanel x:Name="ExtensionCards" Spacing="15" />
       <ui:PclCard x:Name="DiagnosticsCard" ShowChevron="True" IsChevronExpanded="False"
                         ContentMargin="20,52,20,15">

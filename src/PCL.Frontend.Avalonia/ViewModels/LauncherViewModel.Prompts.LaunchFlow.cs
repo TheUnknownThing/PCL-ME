@@ -237,6 +237,8 @@ internal sealed partial class LauncherViewModel
 
             RefreshGameLogSurface();
 
+            if (ExtensionSession is { } operationHost) await operationHost.WaitForExtensionMutationsAsync(launchCancellation.Token);
+
             await AwaitLatestSelectedInstanceRefreshAsync();
             launchCancellation.Token.ThrowIfCancellationRequested();
 
@@ -326,6 +328,9 @@ internal sealed partial class LauncherViewModel
             await EnsureLaunchRequiredArtifactsAsync(launchCancellation.Token);
             launchCancellation.Token.ThrowIfCancellationRequested();
 
+            if (ExtensionSession is { } extensions)
+                _launchComposition = await extensions.PrepareExtensionLaunchAsync(_launchComposition, _instanceComposition.Selection.InstanceDirectory, launchCancellation.Token);
+
             SetLaunchDialogRunningState(
                 T("launch.dialog.state.running.title"),
                 T("launch.status.steps.write_launch_script"),
@@ -345,6 +350,7 @@ internal sealed partial class LauncherViewModel
                 launchCancellation.Token,
                 ensureRequiredArtifacts: false));
             _activeLaunchProcess = startResult.Process;
+            ExtensionSession?.PublishLifecycle(PCL.Extensions.Contracts.ExtensionTopics.GameStarted, _instanceComposition.Selection.InstanceDirectory, startResult.Process.Id);
             _latestLaunchScriptPath = startResult.LaunchScriptPath;
             _latestLaunchSessionSummaryPath = startResult.SessionSummaryPath;
             _latestLaunchRawOutputLogPath = startResult.RawOutputLogPath;
@@ -367,7 +373,7 @@ internal sealed partial class LauncherViewModel
             _isLaunchInProgress = false;
             RaiseLaunchSessionProperties();
 
-            _ = MonitorLaunchSessionAsync(startResult);
+            _ = MonitorLaunchSessionAsync(startResult, _instanceComposition.Selection.InstanceDirectory);
         }
         catch (OperationCanceledException)
         {
@@ -548,7 +554,7 @@ internal sealed partial class LauncherViewModel
             : Math.Clamp(snapshot.CompletedFileCount / (double)snapshot.TotalFileCount, 0d, 1d);
     }
 
-    private async Task MonitorLaunchSessionAsync(FrontendLaunchStartResult startResult)
+    private async Task MonitorLaunchSessionAsync(FrontendLaunchStartResult startResult, string instanceId)
     {
         try
         {
@@ -588,6 +594,7 @@ internal sealed partial class LauncherViewModel
             }
 
             await startResult.Process.WaitForExitAsync();
+            ExtensionSession?.PublishLifecycle(PCL.Extensions.Contracts.ExtensionTopics.GameExited, instanceId, startResult.Process.Id, startResult.Process.ExitCode);
             await Dispatcher.UIThread.InvokeAsync(() => _launcherActionService.ApplyWatcherStopShellPlan(_launchComposition));
             AppendLaunchLogLine(T("shell.prompts.launch_logs.process_exited", ("exit_code", startResult.Process.ExitCode)));
             AddActivity(T("shell.prompts.activities.game_process_ended.title"), T("shell.prompts.activities.game_process_ended.body", ("instance", LaunchVersionSubtitle), ("exit_code", startResult.Process.ExitCode)));

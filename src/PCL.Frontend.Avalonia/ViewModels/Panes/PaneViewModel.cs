@@ -183,6 +183,6 @@ internal sealed class TaskManagerRightPaneViewModel(
     StandardRightPaneDescriptor descriptor)
     : RightPaneViewModel(launcher, descriptor);
 
-internal sealed class SetupExtensionsRightPaneViewModel(
+internal sealed class ToolsExtensionsRightPaneViewModel(
     LauncherViewModel launcher, StandardRightPaneDescriptor descriptor)
     : RightPaneViewModel(launcher, descriptor);

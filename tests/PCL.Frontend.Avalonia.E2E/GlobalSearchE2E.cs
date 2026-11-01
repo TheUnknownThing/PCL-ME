@@ -55,7 +55,7 @@ public sealed class GlobalSearchE2E
         Key(app, PhysicalKey.Escape);
         Assert.IsNull(app.Session.OverlayContent);
         await app.Search("Extensions");
-        var result = Results(app).Items.OfType<ExtensionSearchResult>().Single(item => item.Route == "Setup/SetupExtensions");
+        var result = Results(app).Items.OfType<ExtensionSearchResult>().Single(item => item.Route == "Tools/ToolsExtensions");
         var row = app.Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == result.Title);
         await Click(app.Window, row);
         await Wait(() => app.Session.OverlayContent is null, "Clicking a search result did not close the palette");

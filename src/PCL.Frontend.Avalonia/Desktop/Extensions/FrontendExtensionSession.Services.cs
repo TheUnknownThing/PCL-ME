@@ -50,7 +50,7 @@ internal sealed partial class FrontendExtensionSession
                 {
                     Id = pair.location.Route + ":" + pair.index, Title = pair.location.Title,
                     Description = pair.location.Description, Route = pair.location.Route, Kind = pair.location.Kind,
-                    IconData = pair.location.Route == "Setup/SetupExtensions" ? PCL.UI.Icons.PclIcons.Extensions.Data : null, Score = .5
+                    IconData = pair.location.Route == "Tools/ToolsExtensions" ? PCL.UI.Icons.PclIcons.Extensions.Data : null, Score = .5
                 }).ToList();
             if (query.Text.Length is > 0 and <= 64 && System.Text.RegularExpressions.Regex.IsMatch(query.Text, @"^(?:\d|(?:rd|inf)-|[ab]\d)[A-Za-z0-9._+-]*$", System.Text.RegularExpressions.RegexOptions.CultureInvariant))
                 result.Add(new() { Id = "minecraft-version", Kind = ExtensionSearchKind.Page, Title = T("search_version") + " " + query.Text, Route = "Download/DownloadInstall", Arguments = new Dictionary<string, string> { ["query"] = query.Text } });
@@ -74,7 +74,7 @@ internal sealed partial class FrontendExtensionSession
         await DispatchAsync(async () => result = await _launcher.GetExtensionInstancesAsync(cancellationToken));
         return result;
     }
-    public IReadOnlyList<LauncherLocation> GetLocations() => _locations;
+    public IReadOnlyList<LauncherLocation> GetLocations() => _locations.Concat(_contributionLocations).ToArray();
     internal void RefreshLocations() => _locations = _launcher.GetExtensionLocations();
 
     public ValueTask NavigateAsync(string route, IReadOnlyDictionary<string, string>? arguments = null, CancellationToken cancellationToken = default) => DispatchAsync(async () =>
@@ -82,6 +82,14 @@ internal sealed partial class FrontendExtensionSession
         if (!CanInteract) throw new ExtensionOperationException("launcher.busy", T("unavailable"));
         CloseWorkspace();
         _shell.ShowLauncher();
+        if (route.StartsWith("extension-page/", StringComparison.Ordinal))
+        {
+            var id = route["extension-page/".Length..];
+            var page = _pages.GetValueOrDefault(id) ?? throw new ExtensionOperationException("page.unavailable", T("unavailable"));
+            await _launcher.NavigateExtensionAsync(PageAreaRoute(page.Definition.Area), null, cancellationToken);
+            ShowContributionPage(id);
+            return;
+        }
         await _launcher.NavigateExtensionAsync(route, arguments, cancellationToken);
     });
 

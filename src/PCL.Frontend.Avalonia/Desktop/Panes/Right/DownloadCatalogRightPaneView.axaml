@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.DownloadCatalogRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:extensions="clr-namespace:PCL.Frontend.Avalonia.Desktop.Extensions"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
     x:DataType="vm:LauncherViewModel"
@@ -110,6 +111,7 @@
               Text="{Binding DownloadCatalogLoadingText}" />
         </ui:PclCard.CardContent>
       </ui:PclCard>
+      <extensions:ExtensionRegionHost Region="download.catalog.extras" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

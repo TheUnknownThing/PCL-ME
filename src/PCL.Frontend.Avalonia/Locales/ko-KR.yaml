@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "확장 기능"
         summary: "선택 기능, 설정 및 확장 패키지를 관리합니다."
+      tools_extensions:
+        title: "확장 기능"
+        summary: "선택 기능, 설정 및 확장 패키지를 관리합니다."
       setup_launcher_misc:
         title: 기타
         summary: 기타 런처 동작을 조정합니다.
@@ -3604,6 +3607,13 @@ desktop:
     close_exit: "런처 종료"
 
 extensions:
+  actions: "확장 기능 작업"
+  resource_review: "설치 계획 검토"
+  resource_install: "설치"
+  resource_installed: "설치했습니다."
+  resource_canceled: "설치를 취소했습니다."
+  resource_empty: "사용 가능한 버전이 없습니다."
+  resource_replace: "교체:"
   count: "확장 기능 {total}개 · {enabled}개 활성화"
   overview: "선택 기능을 관리하고 아래에서 각 확장 기능을 설정하세요."
   save: "저장"

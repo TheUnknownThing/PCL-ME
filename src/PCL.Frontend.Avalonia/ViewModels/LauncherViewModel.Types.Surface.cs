@@ -99,11 +99,13 @@ internal sealed class AboutEntryViewModel(
     public bool HasAction => ActionCommand is not null && !string.IsNullOrWhiteSpace(ActionText);
 }
 
-internal sealed class SimpleListEntryViewModel(string title, string info, ActionCommand command)
+internal sealed class SimpleListEntryViewModel(string title, string info, ActionCommand command, string? path = null)
 {
     public string Title { get; } = title;
 
     public string Info { get; } = info;
+
+    public string? Path { get; } = path;
 
     public ActionCommand Command { get; } = command;
 }

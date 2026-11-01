@@ -28,12 +28,14 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
         if (_launcher is not null)
         {
             _launcher.SidebarSections.CollectionChanged -= OnSidebarSectionsChanged;
+            _launcher.ExtensionNavigationEntries.CollectionChanged -= OnExtensionNavigationChanged;
         }
 
         _launcher = DataContext as LauncherViewModel;
         if (_launcher is not null)
         {
             _launcher.SidebarSections.CollectionChanged += OnSidebarSectionsChanged;
+            _launcher.ExtensionNavigationEntries.CollectionChanged += OnExtensionNavigationChanged;
         }
 
         ScheduleRefresh(animateOutCurrent: false);
@@ -43,6 +45,8 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
     {
         ScheduleRefresh(animateOutCurrent: RenderRows.Count > 0);
     }
+
+    private void OnExtensionNavigationChanged(object? sender, NotifyCollectionChangedEventArgs e) => ScheduleRefresh(animateOutCurrent: false);
 
     private void ScheduleRefresh(bool animateOutCurrent)
     {
@@ -68,7 +72,11 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
             return;
         }
 
-        var nextRows = BuildRenderRows(_launcher.SidebarSections);
+        var sections = _launcher.SidebarSections.ToList();
+        if (_launcher.ExtensionNavigationEntries.Count > 0)
+            sections.Add(new("", false, 0, _launcher.ExtensionNavigationEntries.Select(entry => new SidebarListItemViewModel(
+                entry.Title, "", entry.IsSelected, PCL.UI.Icons.PclIcons.Extensions.Data, 1, 0, entry.Command, "", "", null)).ToArray()));
+        var nextRows = BuildRenderRows(sections);
         if (animateOutCurrent && RenderRows.Count > 0)
         {
             var animatedRows = SidebarRowsHost

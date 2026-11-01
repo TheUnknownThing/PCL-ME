@@ -4,11 +4,11 @@ using PCL.Frontend.Avalonia.ViewModels.Panes;
 
 namespace PCL.Frontend.Avalonia.Desktop.Panes.Right;
 
-internal sealed class SetupExtensionsRightPaneView : UserControl
+internal sealed class ToolsExtensionsRightPaneView : UserControl
 {
     private ExtensionManagerView? _manager;
 
-    public SetupExtensionsRightPaneView()
+    public ToolsExtensionsRightPaneView()
     {
         AttachedToVisualTree += (_, _) => ShowManager();
         DataContextChanged += (_, _) => { if (VisualRoot is not null) ShowManager(); };
@@ -18,7 +18,7 @@ internal sealed class SetupExtensionsRightPaneView : UserControl
     private void ShowManager()
     {
         if (_manager is not null) return;
-        if (DataContext is SetupExtensionsRightPaneViewModel { Launcher.ExtensionSession: { } session })
+        if (DataContext is ToolsExtensionsRightPaneViewModel { Launcher.ExtensionSession: { } session })
             Content = _manager = new ExtensionManagerView(session);
     }
 

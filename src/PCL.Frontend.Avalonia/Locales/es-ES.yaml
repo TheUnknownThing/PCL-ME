@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "Extensiones"
         summary: "Gestiona las funciones opcionales, los ajustes y los paquetes de extensiones."
+      tools_extensions:
+        title: "Extensiones"
+        summary: "Gestiona las funciones opcionales, los ajustes y los paquetes de extensiones."
       setup_launcher_misc:
         title: Varios
         summary: Ajustar comportamientos varios del lanzador.
@@ -3628,6 +3631,13 @@ desktop:
     close_exit: "Salir del lanzador"
 
 extensions:
+  actions: "Acciones de extensiones"
+  resource_review: "Revisar instalación"
+  resource_install: "Instalar"
+  resource_installed: "Instalación completada."
+  resource_canceled: "Instalación cancelada."
+  resource_empty: "No hay versiones disponibles."
+  resource_replace: "Reemplazar:"
   count: "{total} extensiones · {enabled} activadas"
   overview: "Gestiona las funciones opcionales y configura cada extensión a continuación."
   save: "Guardar"

@@ -80,6 +80,7 @@ internal sealed partial class LauncherViewModel
         bool resetPage,
         int? targetPageIndex)
     {
+        var filtersAtStart = BuildCurrentDownloadResourceQuery();
         try
         {
             if (delayMilliseconds > 0)
@@ -87,7 +88,7 @@ internal sealed partial class LauncherViewModel
                 await Task.Delay(delayMilliseconds, cancellationToken);
             }
 
-            var result = await Task.Run(
+            var result = (ExtensionSession is { } extensions ? await extensions.QueryExtensionResourcesAsync(route, query, targetResultCount, cancellationToken) : null) ?? await Task.Run(
                 () => FrontendCommunityResourceCatalogService.QueryResources(route, query, instanceComposition, communitySourcePreference, targetResultCount),
                 cancellationToken);
 
@@ -98,6 +99,14 @@ internal sealed partial class LauncherViewModel
                     || _currentRoute.Subpage != route
                     || !IsCurrentStandardRightPane(StandardRightPaneKind.DownloadResource))
                 {
+                    return;
+                }
+
+                // Filters can be edited before Search is submitted. An older request
+                // must not replace those edits with the query it originally captured.
+                if (filtersAtStart != BuildCurrentDownloadResourceQuery())
+                {
+                    SetDownloadResourceLoading(false);
                     return;
                 }
 

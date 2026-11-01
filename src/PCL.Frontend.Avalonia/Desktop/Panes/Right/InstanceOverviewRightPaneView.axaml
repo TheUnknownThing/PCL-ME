@@ -1,6 +1,7 @@
 <UserControl
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.InstanceOverviewRightPaneView"
     xmlns="https://github.com/avaloniaui"
+    xmlns:extensions="clr-namespace:PCL.Frontend.Avalonia.Desktop.Extensions"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
     x:DataType="vm:LauncherViewModel"
@@ -11,6 +12,7 @@
       <sections:InstanceOverviewHeroSection />
       <sections:InstanceOverviewInfoSection />
       <ContentControl Content="{Binding ExtensionInstanceTabsContent}" />
+      <extensions:ExtensionRegionHost Region="instance.overview.cards" />
       <sections:InstanceOverviewPersonalizationSection />
       <sections:InstanceOverviewShortcutsSection />
       <sections:InstanceOverviewAdvancedActionsSection />

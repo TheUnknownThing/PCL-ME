@@ -16,6 +16,7 @@ internal sealed partial class ExtensionManagerView : UserControl, IDisposable
         _session = session;
         InitializeComponent();
         InstallButton.Command = new ActionCommand(() => InstallPackage());
+        ActionsButton.Command = new ActionCommand(() => ActionsButton.ContextFlyout?.ShowAt(ActionsButton));
         session.AttachManager(this);
         Refresh();
     }
@@ -23,9 +24,13 @@ internal sealed partial class ExtensionManagerView : UserControl, IDisposable
     internal void Refresh()
     {
         if (_disposed) return;
+        ActionsButton.ContextFlyout?.Hide();
+        ActionsButton.ContextFlyout = _session.HasExtensionMenuEntries ? _session.CreateExtensionMenu() : null;
         OverviewCard.Header = _session.T("title");
         OverviewText.Text = _session.T("overview");
         InstallButton.Text = _session.T("install");
+        ActionsButton.Text = _session.T("actions");
+        ActionsButton.IsVisible = _session.HasExtensionMenuEntries;
         TrustText.Text = _session.T("native_code");
         SafeModeText.Text = _session.T("safe_mode");
         SafeModeText.IsVisible = _session.Host.SafeMode;
@@ -94,6 +99,8 @@ internal sealed partial class ExtensionManagerView : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        ActionsButton.ContextFlyout?.Hide();
+        ActionsButton.ContextFlyout = null;
         _session.DetachManager(this);
         foreach (var card in _cards.Values) card.Dispose();
         _cards.Clear();

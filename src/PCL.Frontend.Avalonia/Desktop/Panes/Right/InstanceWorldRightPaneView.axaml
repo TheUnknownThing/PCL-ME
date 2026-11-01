@@ -2,6 +2,7 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.InstanceWorldRightPaneView"
     xmlns="https://github.com/avaloniaui"
     xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:extensions="clr-namespace:PCL.Frontend.Avalonia.Desktop.Extensions"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
     x:DataType="vm:LauncherViewModel"
@@ -49,7 +50,7 @@
             <ItemsControl ItemsSource="{Binding InstanceWorldEntries}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
+                  <Grid Margin="0,0,0,12" Background="Transparent" ColumnDefinitions="*,Auto" extensions:ExtensionContextActions.Location="World" extensions:ExtensionContextActions.ResourcePath="{Binding Path}">
                     <StackPanel Margin="0,0,18,0" Spacing="3">
                       <TextBlock
                           Foreground="{DynamicResource ColorBrush1}"

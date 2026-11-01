@@ -355,7 +355,8 @@ internal sealed class DownloadResourceEntryViewModel(
     string updatedLabel,
     string actionText,
     ActionCommand command,
-    string? iconUrl)
+    string? iconUrl,
+    string? sourceFilterValue = null)
     : INotifyPropertyChanged
 {
     private Bitmap? _icon = icon;
@@ -384,6 +385,7 @@ internal sealed class DownloadResourceEntryViewModel(
     public string Info { get; } = info;
 
     public string Source { get; } = source;
+    public string SourceFilterValue { get; } = sourceFilterValue ?? source;
 
     public string Version { get; } = version;
 

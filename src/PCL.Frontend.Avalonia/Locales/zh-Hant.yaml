@@ -119,6 +119,9 @@ shell:
       setup_extensions:
         title: "擴充功能"
         summary: "管理選用功能、設定與擴充功能套件。"
+      tools_extensions:
+        title: "擴充功能"
+        summary: "管理選用功能、設定與擴充功能套件。"
       setup_launcher_misc:
         title: 雜項
         summary: 調整零散的啟動器行為。
@@ -3614,6 +3617,13 @@ desktop:
     close_exit: "結束啟動器"
 
 extensions:
+  actions: "擴充套件操作"
+  resource_review: "檢查安裝計畫"
+  resource_install: "安裝"
+  resource_installed: "安裝成功。"
+  resource_canceled: "已取消安裝。"
+  resource_empty: "沒有可用的版本。"
+  resource_replace: "取代："
   count: "共 {total} 個擴充功能 · 已啟用 {enabled} 個"
   overview: "管理選用功能，並在下方調整各個擴充功能的設定。"
   save: "儲存"

@@ -207,6 +207,7 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
         var fillMode = hasFullCatalog && isCatalogStage;
         var desiredScroll = fillMode ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
         var desiredStageRow = fillMode ? GridLength.Star : GridLength.Auto;
+        var wasFillMode = _installScrollViewer.VerticalScrollBarVisibility == ScrollBarVisibility.Disabled;
 
         if (_installScrollViewer.VerticalScrollBarVisibility != desiredScroll)
         {
@@ -218,7 +219,9 @@ internal sealed partial class DownloadInstallRightPaneView : UserControl
             _installPageGrid.RowDefinitions[0].Height = desiredStageRow;
         }
 
-        if (!fillMode)
+        // Routine layout changes must preserve the user's position in the long
+        // selection page, including extension sections below the loader choices.
+        if (wasFillMode && !fillMode)
         {
             _installScrollViewer.ScrollToHome();
         }
