@@ -4,7 +4,7 @@ PCL-ME extensions are .NET 10 modules. They can contribute native Avalonia UI, c
 
 ## Using extensions
 
-Open **Settings → Extensions**. The title bar menu and the global search command also navigate to this settings page. Each extension has a standard PCL card with an enable checkbox and expandable settings, shortcuts and diagnostics. Bundled extensions can be enabled or disabled. Global search opens with **Ctrl+Shift+P** on Windows/Linux or **Cmd+Shift+P** on macOS. Search is an in-launcher command palette with category filters, icons, shortcuts and keyboard navigation. It includes commands, launcher pages, settings, installed instances, help and extension providers. Click a result or press Enter to open it; Escape, clicking outside or pressing the shortcut again closes the palette and restores focus.
+Open **Tools → Extensions**. Global search also opens this page. Its Extension actions menu contains extension pages and registered menu actions. Each extension has a standard PCL card with an enable checkbox and expandable settings, shortcuts and diagnostics. Bundled extensions can be enabled or disabled. Global search opens with **Ctrl+Shift+P** on Windows/Linux or **Cmd+Shift+P** on macOS. Search is an in-launcher command palette with category filters, icons, shortcuts and keyboard navigation. It includes commands, launcher pages, settings, installed instances, help and extension providers. Click a result or press Enter to open it; Escape, clicking outside or pressing the shortcut again closes the palette and restores focus.
 
 Install a `.pclext` archive in the manager. New external extensions are disabled until explicitly enabled. Installing a higher version updates an existing external extension. Updates or removals involving an already loaded assembly take effect after restart; the manager displays this state. Bundled extensions update with the launcher and can be disabled, rather than uninstalled. User settings and extension data survive disabling, updates and uninstalling.
 
@@ -130,10 +130,10 @@ Command, search, event and UI registrations are automatically owned by the conte
 
 | Contribution | Placement |
 | --- | --- |
-| `Page` | Full native workspace with Back navigation; automatically discoverable in the extension menu |
+| `Page` | Full native workspace with Back navigation; discoverable in Tools → Extensions → Extension actions |
 | `InstanceTab` | Instance overview tabs; factory receives the selected instance ID |
 | `Settings` | Extension manager detail panel |
-| `Menu` | Title bar extension menu |
+| `Menu` | Extension actions menu in Tools → Extensions |
 | `Toolbar` | PCL title bar action button; optional vector `IconData` and accessible title |
 | `Tray` | Native tray menu |
 | `InstanceMenu` | Context menu on instance overview |
@@ -201,6 +201,101 @@ Events carry JSON values:
 
 Extensions may publish their own namespaced topics. Subscribe during activation and read current state from the services as well; events do not replay historical values.
 
+## Optional capabilities (SDK 1.1)
+
+API version 1 remains compatible with existing extension binaries. SDK package versions advance to 1.1.0 while the Contracts and Avalonia SDK assembly identities remain 1.0.0.0. The existing context, launcher, UI, worker and command interfaces retain their signatures. New features are separate optional services:
+
+| Capability | Service |
+| --- | --- |
+| `pcl.ui.contributions` | `IExtensionContributions`: contextual pages and section factories |
+| `pcl.ui.context-actions` | `IExtensionContributions`: contextual actions |
+| `pcl.instances` | `IExtensionInstances`: details, create, clone, recoverable removal and refresh |
+| `pcl.resources` | `IExtensionResources`: catalogs, releases, installation previews and application |
+| `pcl.resource-providers` | `IExtensionResourceProviders`: register additional resource sources |
+| `pcl.tasks` | `IExtensionTasks`: progress, cancellation and errors in the normal task manager |
+| `pcl.lifecycle` | Additional `ExtensionTopics` events |
+| `pcl.launch-hooks` | `IExtensionLaunchHooks`: asynchronous launch preparation |
+
+Declare `"minimumSdkVersion": "1.1.0"` and the needed names in `requiredCapabilities`. The host rejects unsupported requirements before activating code. `optionalCapabilities` documents optional integrations; unknown optional capabilities are accepted. `context.GetService<IExtensionCapabilities>()` provides `SdkVersion`, an immutable `Available` list and `Supports(name)`. `GetService<T>()` continues to throw when a service is unavailable. Older hosts predating capability negotiation may report an activation error for new SDK code; new extensions must declare their SDK requirement. Keep optional features behind capability checks, preserve existing signatures, and add defaulted properties rather than changing positional constructors or adding required members to published records.
+
+### Contextual UI
+
+`IExtensionContributions.RegisterPage` places an extension page in the Download, Settings or Tools sidebar. Pages also enter global search through host-provided locations. `ShowPageAsync(id)` opens an extension's own page; other callers can use the route returned by `Launcher.GetLocations()`. Registration order is `Order`, then ordinal contribution ID. IDs remain owned by the extension namespace.
+
+`RegisterSection` mounts a native control inside a host-owned PCL card in one of these semantic regions:
+
+| SDK constant | Region |
+| --- | --- |
+| `ExtensionRegions.DownloadInstallExtras` | `download.install.extras`: additional controls in the installation selection stage |
+| `ExtensionRegions.DownloadCatalogExtras` | `download.catalog.extras`: manual loader download catalogs |
+| `ExtensionRegions.DownloadResourceExtras` | `download.resources.extras`: resource browsing pages |
+| `ExtensionRegions.InstanceOverviewCards` | `instance.overview.cards`: instance overview cards |
+| `ExtensionRegions.InstanceResourceExtras` | `instance.resources.extras`: instance resource pages, including empty states |
+| `ExtensionRegions.SettingsSections` | `settings.extensions.sections`: extension settings sections in the Tools manager (stable region ID) |
+
+Factories receive `ExtensionSurfaceContext`: selected instance ID, Minecraft version, loader, selected world, optional resource-query snapshot and a mount lifetime token. Installation cards receive the draft version/loader; the selected instance can have a different version. Resource browsing cards receive the current query and its version/loader filters, including null for unrestricted filters. Use the instance service for detailed facts about an existing target. Factories run on the UI thread and must return promptly. Start asynchronous work with the supplied token; do not retain private launcher controls or view models.
+
+A semantic context or locale change recreates affected content, cancels its old token and disposes `IDisposable` controls. Unrelated registrations preserve existing editors. Leaving a surface, removing its registration or disabling its extension releases its mounts. Factories that fail are logged independently; healthy sections and the extension remain available. Registration leases are context-owned, including when registered from a factory.
+
+`RegisterAction` supports Instance, Mod, World and Resource locations. Resource actions also appear on mod rows. Handlers and quick `canExecute` predicates receive an immutable `ExtensionActionContext` with the exact instance ID and optional resource path captured when the menu opens. Selection changes do not retarget an action. Disabling an owner closes its open menus and cancels its callbacks. This service is independent of the original command-based menu/toolbar/tray actions.
+
+### Instance and resource workflows
+
+`IExtensionInstances.GetAsync(id)` returns the opaque launcher snapshot, actual game directory, loader/version and installed resources. Inventory includes enabled/disabled mods, resource packs, shaders, worlds, skins and world datapacks. Provenance supplies provider/project/release IDs when known; unidentified files retain their paths and checksums. A migration must surface unidentified or incompatible mods for a user decision.
+
+`CreateAsync` uses the launcher's existing Minecraft/loader installer and download settings. An optional HTTP(S) `MinecraftManifestUrl` supports custom catalogs; the manifest ID must match the requested Minecraft version. Creation and cloning use private staging directories and publish the new directory only after preparation succeeds. Cloning copies isolated game data, rewrites the instance manifest/JAR names and makes the clone isolated. `RemoveAsync` moves the instance to `<minecraft>/PCL/RemovedInstances/<id>-<name>` and returns the retained directory. Shared game data remains shared data and is preserved. All operations refresh the launcher inventory.
+
+`IExtensionResourceProviders.Register` adds a provider with a namespaced ID and supported kinds. Custom mod/resource-pack/shader/world/datapack sources enter the existing source picker; skins can use a contextual extension page. Built-in providers are `pcl.modrinth` and `pcl.curseforge`. Providers receive cancellation and run off the UI thread with a 30-second deadline. Search failures are isolated when querying several providers. Selecting one failed source produces an operation error. Explicit-provider queries support `Offset` and `Limit` (1–100); federated first pages retain each provider's quota and subsequent pages require a provider ID. Release order expresses provider preference. Provider removal cancels requests and invalidates its prepared installations.
+
+A managed installation has two distinct steps:
+
+```csharp
+var resources = context.GetService<IExtensionResources>();
+var plan = await resources.PrepareInstallAsync(new()
+{
+    InstanceId = selectedId,
+    Resources = [new() { ProviderId = "pcl.modrinth", ProjectId = "sodium" }]
+}, token);
+// Present plan.Entries, destinations and ReplacedPaths before applying.
+await context.GetService<IExtensionTasks>().RunAsync(
+    new() { Id = "author.feature.install", Title = "Install selected mods" },
+    async (progress, cancellation) => await resources.ApplyInstallAsync(plan.Id, progress, cancellation), token);
+```
+
+Preparation performs no installation writes. It picks the first release matching the target Minecraft version, loader and any explicit release ID, resolves required dependencies in dependency-first order, and rejects cycles, incompatible releases, conflicting exact versions and destination collisions. The graph is limited to 256 resources. Modrinth exact-version dependencies are retained, including references that require a version-to-project lookup; missing decorative project metadata does not discard required dependencies. The host retains immutable plan data; caller-edited previews never become executable plans. Each activation retains up to 32 previews, evicting the oldest. Plans belong to the service instance that prepared them and can be applied once.
+
+Application checks inventory, target files, manifest and provenance revisions before and after staging. It observes caller/extension/provider cancellation, honors launcher transfer settings and verifies supplied SHA-1/SHA-256/SHA-512 checksums. It stages all downloads before replacing any destination. Failed commits restore replaced files/directories and provenance metadata. Mod upgrades remove the prior known artifact for that project. World archives are extracted into `saves/<archive-name>` with traversal/link checks and limits of 100,000 entries/8 GiB; datapacks require an existing `WorldPath` in the target instance and upgrades preserve copies in other worlds. Existing destinations appear in `ReplacedPaths`; plans reject overlapping replacement paths across resources. Skins are downloaded into its `skins` directory. Managed paths cannot traverse symbolic links within the target tree. Mutations serialize across extensions and native installer tasks; launch guards protect game files. Cancellation is cooperative and a completed filesystem commit remains committed.
+
+Migration extensions can inspect the source, resolve candidate releases for a chosen target version, obtain a user decision for unresolved files, create a separate target and install its reviewed resource plan. The E2E migration scenario verifies target-version selection and preserves the source. These primitives avoid exposing internal install requests or forcing every extension to reproduce the launcher installer.
+
+`IExtensionTasks.RunAsync` runs its callback off the UI thread and reports progress, messages, speed and remaining-file counts through `IProgress<ExtensionTaskProgress>`. Caller cancellation, the task card's cancel action and extension disablement share the operation token. A namespaced task ID can run once at a time. Success, cancellation and failure use the existing task manager; callers should handle expected operation errors in their own UI.
+
+### Lifecycle and launch participation
+
+Additional topics carry `ExtensionLifecycleEvent` JSON records (property names `InstanceId`, `ProcessId`, `ExitCode`, `IsNewInstance`):
+
+| Topic | Meaning |
+| --- | --- |
+| `launcher.instance.created` | A recognized instance appeared; filesystem observations can precede an installation finishing |
+| `launcher.instance.installed` | A native or API installation/clone completed; `IsNewInstance` distinguishes creation from modification |
+| `launcher.instance.updated` | An instance or its game content changed |
+| `launcher.instance.removed` | An instance left the active inventory |
+| `launcher.resources.changed` | Resource files changed, including changes outside the extension API |
+| `launcher.game.started` | The real process started; includes its process ID |
+| `launcher.game.exited` | That process exited; includes its process ID and exit code |
+
+Filesystem notifications are coalesced and can overlap explicit operation notifications. They are observations, not asynchronous barriers or an exactly-once delivery mechanism. Subscribe and read current snapshots as well. Use `instance.installed` for post-install presets, and dispatch UI updates explicitly from event callbacks. Game events retain the launched instance ID even if global selection changes while the process runs.
+
+Launch hooks are awaited after native preparation and before process creation. They receive the target instance/version, without authentication tokens. Hooks execute off the UI thread in `Order`/ordinal-ID order. Each declares a 10 ms–2 minute timeout (10 seconds by default) and either `StopLaunch` or `ContinueLaunch` failure policy. Caller cancellation always stops preparation. A failed or timed-out hook's entire result is discarded; errors appear in extension diagnostics without faulting its activation. Disabling its owner cancels it. No synchronous event is used to block launch.
+
+Hooks return `ExtensionLaunchChanges` containing individual JVM options and environment additions. The host validates option forms, environment names, lengths and conflicting contributions. Contributions are additions; existing launcher JVM options remain in place. Classpath/main-class replacement is not a hook contract. The actual process, exported script and displayed argument plan receive the same validated changes, with process/shell quoting handled separately. Use the existing worker API for blocking native workloads; timeouts cannot forcibly interrupt arbitrary in-process code.
+
+### Workflow reference extension
+
+[`examples/WorkflowExtension`](../examples/WorkflowExtension) references only the public SDK. It provides a private JSON repository, a Download → Skins page, an installation preset card, Tools → Instance tools, a captured world-backup action, optional mod preference recording and a JVM-property hook. The preset can include remembered mod projects, can be armed for the next matching new installation and runs as its own managed task after `instance.installed`.
+
+Build/publish, pack and validate it using the same commands as HelloExtension, substituting `WorkflowExtension`. Install and enable it in Tools → Extensions. Configure `catalogUrl` to an HTTP(S) document with a `projects` array. Each project has `id`, `title`, optional `description`, `kind`, and `releases` using the public `ExtensionResourceRelease` JSON fields. Kinds can be enum names; release download URLs must be HTTP(S). Dependencies use full provider/project IDs, for example `example.workflows.catalog`. Configure preset provider/project IDs separately; the defaults use Modrinth's Sodium and Lithium projects. No extension marketplace or executable catalog content is required.
+
 ## Settings and localization
 
 `context.Settings.Get(key, fallback)` and `Set(key, value)` read/write extension-owned JSON data. Writes use atomic file replacement. `Changed` identifies the changed key; use `ui.Dispatch` when a subscriber updates UI. Arbitrary serializable values are supported, so an extension can maintain richer data beyond the settings exposed in the manager.
@@ -226,6 +321,8 @@ Native extensions additionally declare `avaloniaMajorVersion: 11`. An incompatib
 Installed modules are trusted native .NET code with access to the user's files, network and process. Separate load contexts and fault reporting do not sandbox native UI or protect against malicious code, unmanaged crashes or a blocked UI thread. The manager explains this before enabling external code. Use extensions from authors you trust, and use safe mode to recover when necessary.
 
 ## Validation
+
+`ExtensionCapabilitiesE2E` additionally exercises every contextual region and page area, native menus, resource-provider browsing and reviewed installs, dependency upgrades, staged cancellation, commit rollback, world/datapack/skin targets, lifecycle observations, version migration, real child-process launch hooks and exported scripts. It installs the WorkflowExtension package and loads a legacy plugin built against frozen API 1 reference assemblies in `tests/Fixtures/ExtensionApiV1`; the compatibility fixture never references current SDK source. Network tests use a local HTTP repository and verify actual downloaded bytes, manifests, provenance and cleanup.
 
 `ExtensionRuntimeTest` exercises activation serialization, cleanup, dependency rejection, safe mode, package validation and updates, settings recovery, isolated loading, search cancellation, and real worker requests/cancellation. `FrontendExtensionsTest` uses Avalonia headless integration to verify native pages/tabs/menus/dialogs, language changes, pet lifecycle, hidden-window recovery and global search. `PCL.Frontend.Avalonia.E2E` loads the production application styles, real main window, pane navigation, runtime and bundled extensions with Skia rendering. It drives mouse and keyboard input through settings toggles, editors, global search (categories, keyboard selection, click-to-open, focus restoration, stale results, repeated shortcuts, outside-click and disable cleanup), package installation/update/removal and restart persistence. The platform uses Avalonia headless input with real Skia rendering, including screenshots of light/dark search, empty results, eight locales and the minimum launcher size. It does not automate a native operating-system window server. The operating system file picker is substituted at the platform boundary; archives, isolated loading and settings files are real. Worker process round trips, cancellation and failure recovery are verified by the runtime tests. Screenshots are written to `TestResults/screenshots` under the test output, or to `PCL_E2E_ARTIFACTS` when set. Existing sprite/image and desktop shell tests cover pet rendering and generic recovery behavior.
 

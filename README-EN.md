@@ -27,6 +27,7 @@ PCL-ME is a Minecraft launcher that brings Plain Craft Launcher's familiar workf
 - **Launch** — manage game instances and launch Minecraft from one place.
 - **Explore** — browse mods, modpacks, resource packs, and shaders for your next playthrough.
 - **Personalize** — adjust themes, color palettes, language, and interface scale to suit your desktop.
+- **Extend** — install `.pclext` packages in Tools → Extensions to add native pages, resource sources, instance workflows and launch hooks. See the [extension SDK and examples](docs/extension-system.md).
 
 ## A look inside
 

@@ -29,9 +29,22 @@ Read `docs/extension-system.md` first — it is the authoritative guide. This sk
 
 `extension.json` (schema: `docs/extension-manifest.schema.json`) declares `id` (lowercase, namespaced like `author.feature`), `version`, `apiVersion`, `entryAssembly`, `entryType`, optional `commands`, `settings`, `dependencies`, `platforms`, `architectures`.
 
-Native UI contributions via `IExtensionUi.RegisterView` with `ExtensionViewLocation`: `Page`, `InstanceTab`, `Settings`, `Menu`, `Toolbar`, `Tray`, `InstanceMenu`. Use factory lambdas (views are recreated on selection/language changes) and the shared `PCL.UI` controls — the same `PclCard`/`PclButton`/`PclSearchBox`/`PclIcons` the launcher itself uses.
+Native views use `IExtensionUi.RegisterView` with `ExtensionViewLocation.Page`, `InstanceTab` or `Settings`. Command-based actions use `RegisterAction` with `ExtensionActionLocation.Menu`, `Toolbar`, `Tray` or `InstanceMenu`. Use factory lambdas (views are recreated on selection/language changes) and the shared `PCL.UI` controls — the same `PclCard`/`PclButton`/`PclSearchBox`/`PclIcons` the launcher itself uses.
 
 Manifest settings (`"settings": [{ "key", "title", "kind", "defaultValue" }]`) surface in the extension manager; read them through `context.Settings`.
+
+## SDK 1.1 capabilities
+
+Keep the original SDK interfaces and assembly identities compatible. New functionality is exposed through optional services from `GetService<T>()`; declare `minimumSdkVersion: "1.1.0"` and required/optional capability IDs in the manifest. Check `IExtensionCapabilities.Supports` for optional integration. Add defaulted DTO properties; do not change old positional constructors or add abstract members to published interfaces.
+
+- `IExtensionContributions`: Download/Settings/Tools pages (`RegisterPage`/`ShowPageAsync`), cards in `ExtensionRegions`, and captured Instance/Mod/World/Resource actions. Pages enter launcher locations/global search. Factories receive instance/version/loader/world/query snapshots and a mount token. Use that token, keep factories short, and implement `IDisposable` for view cleanup. Unrelated registrations preserve editors.
+- `IExtensionInstances`: detailed resource provenance, loader/game-directory snapshots, staged create/clone, recoverable removal and refresh. Use public records; all file and install workflows live under frontend `Workflows/` behind host adapters.
+- `IExtensionResourceProviders`/`IExtensionResources`: typed, cancellable catalogs and releases; prepare a dependency-resolved preview, display destinations/replacements, then apply its host-owned one-use ID. Provider ordering selects the first compatible release. Handle unidentified files explicitly when migrating. Explicit-provider pagination supports limits 1–100; federated queries are first-page only.
+- `IExtensionTasks`: managed progress, failure and cancellation through the real task manager. Callbacks run off the UI thread; capture control values before entering them. IDs are namespaced and unique while running.
+- `ExtensionTopics`: observe discovery/content/process changes. `InstanceInstalled` is the completed-install barrier, with `IsNewInstance`; filesystem discovery events can arrive earlier and may overlap/coalesce. UI updates require `ui.Dispatch`.
+- `IExtensionLaunchHooks`: ordered, bounded async preparation with explicit stop/continue policy, validated JVM/environment additions and no authentication snapshot. Observe cancellation; use a worker for blocking native work.
+
+`examples/WorkflowExtension` demonstrates private JSON catalogs, skins, post-install mod presets, instance tools, world backups, preference recording and a launch hook using only public assemblies. Its E2E tests install it as an external `.pclext`. `ExtensionCapabilitiesE2E` verifies real workflows and rollback, not just activation; frozen API 1 fixtures check binary compatibility. Never update the frozen reference sources to match current SDK changes.
 
 ## Build, pack, validate, test
 
@@ -41,7 +54,7 @@ dotnet run --project tools/PCL.Tools.Extensions -- pack artifacts/extensions/hel
 dotnet run --project tools/PCL.Tools.Extensions -- validate artifacts/extensions/hello.pclext
 ```
 
-Install the `.pclext` in **Settings → Extensions**; newly installed external extensions start disabled. Updates/removals of already-loaded assemblies apply after restart (the manager shows this state).
+Install the `.pclext` in **Tools → Extensions**; newly installed external extensions start disabled. Updates/removals of already-loaded assemblies apply after restart (the manager shows this state).
 
 Test coverage:
 
