@@ -32,9 +32,11 @@ public sealed class VersionCatalogE2E
         var view = app.Window.GetVisualDescendants().OfType<DownloadInstallRightPaneView>().Single();
         var groups = view.Find<ItemsControl>("MinecraftCatalogGroupListHost")!;
         var full = view.Find<PclCard>("MinecraftCatalogExpandedHost")!;
-        var inner = view.Find<ScrollViewer>("MinecraftCatalogExpandedScroll")!;
+        // The expanded host builds its card content only once it becomes visible, so these
+        // are re-resolved after each expansion instead of being captured while collapsed.
+        ScrollViewer inner = null!;
         var outer = view.Find<ScrollViewer>("InstallScrollViewer")!;
-        var list = view.Find<ItemsControl>("MinecraftCatalogExpandedList")!;
+        ItemsControl list = null!;
         var field = view.GetVisualDescendants().OfType<PclSearchBox>().Single().Find<TextBox>("SearchTextBox")!;
         await Wait(() => groups.IsVisible && groups.GetVisualDescendants().OfType<PclCard>().Count() >= 3, "Version groups did not load.");
         await Settle();
@@ -47,6 +49,8 @@ public sealed class VersionCatalogE2E
                     && section.Choices[0].Title.StartsWith("1.21.", StringComparison.Ordinal));
             await Click(app.Window, release.Find<Button>("HeaderButton")!);
             await Wait(() => full.IsVisible && !groups.IsVisible, "Version group did not expand.");
+            inner = view.Find<ScrollViewer>("MinecraftCatalogExpandedScroll")!;
+            list = view.Find<ItemsControl>("MinecraftCatalogExpandedList")!;
             await Settle();
             if (atEnd) inner.ScrollToEnd(); else inner.ScrollToHome();
             await Settle();
