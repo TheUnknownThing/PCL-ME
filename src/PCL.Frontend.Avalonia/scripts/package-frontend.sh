@@ -161,6 +161,8 @@ package_macos() {
   local resources_dir="${app_dir}/Contents/Resources"
   local macos_dir="${app_dir}/Contents/MacOS"
   local archive_path="${rid_root}/$(sanitize_name "${app_name}")-${rid}.zip"
+  local bundle_version="${app_version#v}"
+  bundle_version="${bundle_version%%[-+]*}"
 
   prepare_directory "$app_dir"
   mkdir -p "$resources_dir" "$macos_dir"
@@ -170,7 +172,7 @@ package_macos() {
     -e "s|__APP_NAME__|${app_name}|g" \
     -e "s|__LAUNCHER_NAME__|${executable_name}|g" \
     -e "s|__BUNDLE_IDENTIFIER__|${bundle_identifier}|g" \
-    -e "s|__APP_VERSION__|${app_version}|g" \
+    -e "s|__APP_VERSION__|${bundle_version}|g" \
     "$plist_template" > "$plist_path"
   chmod +x "${macos_dir}/${executable_name}"
   # TCC needs a signed native bundle executable to identify microphone requests from Java.
