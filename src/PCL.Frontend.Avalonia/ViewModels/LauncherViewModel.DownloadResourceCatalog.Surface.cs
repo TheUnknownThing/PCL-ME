@@ -181,6 +181,8 @@ internal sealed partial class LauncherViewModel
     {
         if (!IsCurrentStandardRightPane(StandardRightPaneKind.DownloadResource))
         {
+            _downloadResourceRefreshCts?.Cancel();
+            _downloadResourceRefreshVersion++;
             DownloadResourceSurfaceTitle = string.Empty;
             DownloadResourceLoadingText = string.Empty;
             DownloadResourceEmptyStateText = T("download.resource.empty.default");

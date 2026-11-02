@@ -6,7 +6,7 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
-internal static partial class FrontendCommunityResourceCatalogService
+internal sealed partial class FrontendCommunityResourceCatalogService
 {
 
     private static string BuildHintText(

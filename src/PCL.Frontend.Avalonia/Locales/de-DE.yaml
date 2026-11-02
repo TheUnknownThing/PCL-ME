@@ -2519,6 +2519,11 @@ download:
       open_target_missing: Unable to open the target folder
       runtime_state_missing: Download state is unavailable
       target_missing: Install target is missing
+    pagination:
+      previous: "Zurück"
+      next: "Weiter"
+      page: "Seite {page}"
+      page_of: "Seite {page} von {total}"
     results:
       summary: "Showing {shown_count} of {total_count}"
     search:

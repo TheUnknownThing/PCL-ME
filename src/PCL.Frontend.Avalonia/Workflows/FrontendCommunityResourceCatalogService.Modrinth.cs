@@ -6,21 +6,22 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
-internal static partial class FrontendCommunityResourceCatalogService
+internal sealed partial class FrontendCommunityResourceCatalogService
 {
 
-    private static SourceFetchResult FetchModrinthEntries(
+    private async Task<SourceFetchResult> FetchModrinthEntriesAsync(
         RouteConfig config,
         string? preferredVersion,
         int communitySourcePreference,
         FrontendCommunityResourceQuery query,
-        int offset)
+        int offset,
+        CancellationToken cancellationToken)
     {
         try
         {
             var officialUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: false, offset);
             var mirrorUrl = BuildModrinthSearchUrl(config, preferredVersion, query, useMirror: true, offset);
-            var response = ReadJsonObject("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: false);
+            var response = await ReadJsonObjectAsync("Modrinth", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: false, cancellationToken).ConfigureAwait(false);
             var hits = response["hits"]?.AsArray() ?? [];
             var totalHits = GetInt(response, "total_hits");
 
@@ -36,6 +37,10 @@ internal static partial class FrontendCommunityResourceCatalogService
             var hasMoreEntries = receivedCount > 0
                 && (totalHits <= 0 || offset + receivedCount < totalHits);
             return new SourceFetchResult(entries, null, receivedCount, totalHits > 0 ? totalHits : null, hasMoreEntries);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

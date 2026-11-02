@@ -434,9 +434,9 @@ internal sealed partial class LauncherViewModel
         _resetDownloadResourceFiltersCommand = new ActionCommand(ResetDownloadResourceFilters);
         _searchDownloadResourceCommand = new ActionCommand(SearchDownloadResource);
         _installDownloadResourceModPackCommand = new ActionCommand(InstallDownloadResourceModPack);
-        _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => _downloadResourcePageIndex > 0);
-        _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => _downloadResourcePageIndex > 0);
-        _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => _downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries);
+        _firstDownloadResourcePageCommand = new ActionCommand(GoToFirstDownloadResourcePage, () => CanGoToPreviousDownloadResourcePage);
+        _previousDownloadResourcePageCommand = new ActionCommand(GoToPreviousDownloadResourcePage, () => CanGoToPreviousDownloadResourcePage);
+        _nextDownloadResourcePageCommand = new ActionCommand(GoToNextDownloadResourcePage, () => CanGoToNextDownloadResourcePage);
         _manageDownloadFavoriteTargetCommand = new ActionCommand(() => _ = ManageDownloadFavoriteTargetsAsync());
         _resetInstanceExportOptionsCommand = new ActionCommand(ResetInstanceExportOptions);
         _importInstanceExportConfigCommand = new ActionCommand(() => _ = ImportInstanceExportConfigAsync());

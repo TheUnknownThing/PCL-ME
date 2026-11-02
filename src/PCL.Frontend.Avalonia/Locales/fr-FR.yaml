@@ -2519,6 +2519,11 @@ download:
       open_target_missing: Impossible d'ouvrir le dossier cible
       runtime_state_missing: L'état de téléchargement n'est pas disponible
       target_missing: La cible d'installation est manquante
+    pagination:
+      previous: "Précédent"
+      next: "Suivant"
+      page: "Page {page}"
+      page_of: "Page {page} sur {total}"
     results:
       summary: Affichage de {shown_count} de {total_count}
     search:

@@ -2529,6 +2529,11 @@ download:
       open_target_missing: 无法打开目标文件夹
       runtime_state_missing: 下载状态不可用
       target_missing: 缺少安装目标
+    pagination:
+      previous: "上一页"
+      next: "下一页"
+      page: "第 {page} 页"
+      page_of: "第 {page} 页，共 {total} 页"
     results:
       summary: 显示 {total_count} 项中的 {shown_count} 项
     search:

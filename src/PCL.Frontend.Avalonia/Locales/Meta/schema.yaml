@@ -2886,6 +2886,14 @@ download:
       open_target_missing: []
       runtime_state_missing: []
       target_missing: []
+    pagination:
+      previous: []
+      next: []
+      page:
+        - page
+      page_of:
+        - page
+        - total
     results:
       summary:
         - shown_count

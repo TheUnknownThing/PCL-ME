@@ -2535,6 +2535,11 @@ download:
       open_target_missing: No se puede abrir la carpeta de destino
       runtime_state_missing: El estado de descarga no está disponible
       target_missing: Falta el destino de instalación
+    pagination:
+      previous: "Anterior"
+      next: "Siguiente"
+      page: "Página {page}"
+      page_of: "Página {page} de {total}"
     results:
       summary: Mostrando {shown_count} de {total_count}
     search:

@@ -6,7 +6,7 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
-internal static partial class FrontendCommunityResourceCatalogService
+internal sealed partial class FrontendCommunityResourceCatalogService
 {
 
     private const int SearchPageSize = 40;
@@ -17,17 +17,16 @@ internal static partial class FrontendCommunityResourceCatalogService
 
     private static readonly string CurseForgeApiKey = FrontendEmbeddedSecrets.GetCurseForgeApiKey();
 
-    private static readonly HttpClient HttpClient = CreateHttpClient();
-
-    public static IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState> BuildResourceStates(
+    public async Task<IReadOnlyDictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>> BuildResourceStatesAsync(
         FrontendInstanceComposition instanceComposition,
-        int communitySourcePreference)
+        int communitySourcePreference,
+        CancellationToken cancellationToken = default)
     {
         var routeStates = new Dictionary<LauncherFrontendSubpageKey, FrontendDownloadResourceState>();
 
         foreach (var config in RouteConfigs)
         {
-            routeStates[config.Route] = QueryResources(
+            routeStates[config.Route] = (await QueryResourcesAsync(
                 config.Route,
                 new FrontendCommunityResourceQuery(
                     SearchText: string.Empty,
@@ -37,19 +36,22 @@ internal static partial class FrontendCommunityResourceCatalogService
                     Version: string.Empty,
                     Loader: string.Empty),
                 instanceComposition,
-                communitySourcePreference).State;
+                communitySourcePreference,
+                cancellationToken: cancellationToken).ConfigureAwait(false)).State;
         }
 
         return routeStates;
     }
 
-    public static FrontendCommunityResourceQueryResult QueryResources(
+    public async Task<FrontendCommunityResourceQueryResult> QueryResourcesAsync(
         LauncherFrontendSubpageKey route,
         FrontendCommunityResourceQuery query,
         FrontendInstanceComposition instanceComposition,
         int communitySourcePreference,
-        int targetResultCount = DefaultTargetResultCount)
+        int targetResultCount = DefaultTargetResultCount,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var config = GetRouteConfig(route);
         var preferredVersion = ResolvePreferredMinecraftVersion(instanceComposition);
         var effectiveTargetResultCount = Math.Max(SearchPageSize, targetResultCount);
@@ -69,35 +71,57 @@ internal static partial class FrontendCommunityResourceCatalogService
             Loader = normalizedLoader
         };
         var cacheKey = BuildQueryCacheKey(route, effectiveQuery, preferredVersion, communitySourcePreference);
-        if (TryGetFreshQueryResult(cacheKey, effectiveTargetResultCount, out var cachedResult))
-        {
-            return cachedResult;
-        }
+        var now = DateTimeOffset.UtcNow;
+        var session = _queryResultCache.AddOrUpdate(
+            cacheKey,
+            _ => new CacheEntry<QuerySession>(new QuerySession(), now),
+            (_, entry) => now - entry.CreatedAt < TimeSpan.FromMinutes(10)
+                ? entry
+                : new CacheEntry<QuerySession>(new QuerySession(), now)).State;
 
-        var state = BuildState(config, communitySourcePreference, effectiveQuery, effectiveTargetResultCount);
-        var result = new FrontendCommunityResourceQueryResult(
-            state,
-            GetMinecraftVersionOptions(
+        await session.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var cached = session.CachedResult;
+            if (cached is not null
+                && (cached.Result.State.Entries.Count >= effectiveTargetResultCount || !cached.Result.State.HasMoreEntries))
+            {
+                return cached.Result;
+            }
+
+            var fetchResult = await FetchEntriesAsync(
+                config, communitySourcePreference, effectiveQuery, effectiveTargetResultCount,
+                cached?.FetchResult, cancellationToken).ConfigureAwait(false);
+            var state = BuildState(config, effectiveQuery, effectiveTargetResultCount, fetchResult);
+            var versions = await GetMinecraftVersionOptionsAsync(
                 preferredVersion,
                 normalizedVersion,
-                state.Entries.SelectMany(entry => entry.SupportedVersions.Count == 0 ? [entry.Version] : entry.SupportedVersions)),
-            GetSourceOptions(config));
-        QueryResultCache[cacheKey] = new CacheEntry<CachedQueryResult>(
-            new CachedQueryResult(result, effectiveTargetResultCount),
-            DateTimeOffset.UtcNow);
-        return result;
+                state.Entries.SelectMany(entry => entry.SupportedVersions.Count == 0 ? [entry.Version] : entry.SupportedVersions),
+                cancellationToken).ConfigureAwait(false);
+            var result = new FrontendCommunityResourceQueryResult(state, versions, GetSourceOptions(config));
+
+            // Publish the entries and provider cursors together, only after the entire
+            // request succeeds. A cancelled continuation must leave the previous snapshot intact.
+            cancellationToken.ThrowIfCancellationRequested();
+            session.CachedResult = new CachedQueryResult(result, fetchResult);
+            return result;
+        }
+        finally
+        {
+            session.Gate.Release();
+        }
     }
 
     private static FrontendDownloadResourceState BuildState(
         RouteConfig config,
-        int communitySourcePreference,
         FrontendCommunityResourceQuery query,
-        int targetResultCount)
+        int targetResultCount,
+        FetchResult versionAwareResult)
     {
         var selectedVersion = string.IsNullOrWhiteSpace(query.Version)
             ? null
             : query.Version;
-        var versionAwareResult = FetchEntries(config, selectedVersion, communitySourcePreference, query, targetResultCount);
 
         var filteredEntries = ApplyFinalClientSideFilters(versionAwareResult.Entries, query)
             .ToArray();
@@ -112,84 +136,77 @@ internal static partial class FrontendCommunityResourceCatalogService
             config.UseShaderLoaderOptions,
             BuildHintText(config, selectedVersion, versionAwareResult.SourceErrors, entries.Length > 0, usedVersionFallback: false),
             BuildTagOptions(entries),
-            versionAwareResult.TotalCount ?? filteredEntries.Length,
+            versionAwareResult.CanContinue ? versionAwareResult.TotalCount ?? filteredEntries.Length : filteredEntries.Length,
             filteredEntries.Length > targetResultCount || versionAwareResult.CanContinue,
             entries);
     }
 
-    private static FetchResult FetchEntries(
+    private async Task<FetchResult> FetchEntriesAsync(
         RouteConfig config,
-        string? preferredVersion,
         int communitySourcePreference,
         FrontendCommunityResourceQuery query,
-        int targetResultCount)
+        int targetResultCount,
+        FetchResult? cachedResult,
+        CancellationToken cancellationToken)
     {
-        var maxSearchRounds = Math.Max(MaxSearchRoundsPerQuery, (int)Math.Ceiling(targetResultCount / (double)SearchPageSize) + 1);
         var wantsCurseForge = !string.Equals(query.Source, "Modrinth", StringComparison.OrdinalIgnoreCase);
         var wantsModrinth = !string.Equals(query.Source, "CurseForge", StringComparison.OrdinalIgnoreCase);
-        var sourceStates = new List<SourcePaginationState>(2);
+        var sourceStates = cachedResult?.SourceStates.ToList() ?? [];
 
-        if (wantsModrinth && !string.IsNullOrWhiteSpace(config.ModrinthProjectType))
+        if (cachedResult is null)
         {
-            sourceStates.Add(new SourcePaginationState("Modrinth"));
+            if (wantsModrinth && !string.IsNullOrWhiteSpace(config.ModrinthProjectType))
+            {
+                sourceStates.Add(new SourcePaginationState("Modrinth"));
+            }
+
+            if (wantsCurseForge && config.CurseForgeClassId is not null)
+            {
+                sourceStates.Add(new SourcePaginationState("CurseForge"));
+            }
         }
 
-        if (wantsCurseForge && config.CurseForgeClassId is not null)
-        {
-            sourceStates.Add(new SourcePaginationState("CurseForge"));
-        }
-
-        var entries = new List<FrontendDownloadResourceEntry>();
+        var entries = cachedResult?.Entries.ToList() ?? [];
         var errors = new List<string>();
-        var sourceTotalCountMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var failedSources = new HashSet<string>(StringComparer.Ordinal);
+        var remainingCount = Math.Max(0, targetResultCount - entries.Count);
+        var maxSearchRounds = Math.Max(MaxSearchRoundsPerQuery, (int)Math.Ceiling(remainingCount / (double)SearchPageSize) + 1);
 
         for (var round = 0; round < maxSearchRounds; round++)
         {
-            var activeStates = sourceStates
-                .Where(state => state.HasMoreEntries)
-                .ToArray();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (entries.Count >= targetResultCount)
+            {
+                break;
+            }
+
+            var activeStates = sourceStates.Where(state => state.HasMoreEntries && !failedSources.Contains(state.SourceName)).ToArray();
             if (activeStates.Length == 0)
             {
                 break;
             }
 
-            var tasks = activeStates
-                .Select(state => Task.Run(() => state.SourceName switch
-                {
-                    "Modrinth" => FetchModrinthEntries(config, preferredVersion, communitySourcePreference, query, state.Offset),
-                    "CurseForge" => FetchCurseForgeEntries(config, preferredVersion, communitySourcePreference, query, state.Offset),
-                    _ => new SourceFetchResult([], "Unknown community source.", 0, null, false)
-                }))
-                .ToArray();
-
-            Task.WaitAll(tasks);
+            var tasks = activeStates.Select(state => state.SourceName switch
+            {
+                "Modrinth" => FetchModrinthEntriesAsync(config, query.Version, communitySourcePreference, query, state.Offset, cancellationToken),
+                "CurseForge" => FetchCurseForgeEntriesAsync(config, query.Version, communitySourcePreference, query, state.Offset, cancellationToken),
+                _ => throw new InvalidOperationException("Unknown community source.")
+            });
+            var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
 
             var madeRemoteProgress = false;
-            foreach (var (state, task) in activeStates.Zip(tasks))
+            foreach (var (state, result) in activeStates.Zip(results))
             {
-                var result = task.Result;
-                state.Advance(result);
+                sourceStates[sourceStates.IndexOf(state)] = state.Advance(result);
                 if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
                 {
                     errors.Add(result.ErrorMessage!);
+                    failedSources.Add(state.SourceName);
                 }
 
-                if (result.TotalCount is > 0)
-                {
-                    sourceTotalCountMap[state.SourceName] = result.TotalCount.Value;
-                }
-
-                if (result.Entries.Count > 0)
-                {
-                    entries.AddRange(result.Entries);
-                }
-
+                entries.AddRange(ApplyFinalClientSideFilters(result.Entries, query));
                 madeRemoteProgress |= result.ReceivedCount > 0;
-            }
-
-            if (ApplyFinalClientSideFilters(entries, query).Take(targetResultCount).Count() >= targetResultCount)
-            {
-                break;
             }
 
             if (!madeRemoteProgress)
@@ -198,17 +215,16 @@ internal static partial class FrontendCommunityResourceCatalogService
             }
         }
 
-        int? totalCount = null;
-        if (sourceStates.Count > 0 && sourceStates.All(state => sourceTotalCountMap.ContainsKey(state.SourceName)))
-        {
-            totalCount = sourceStates.Sum(state => sourceTotalCountMap[state.SourceName]);
-        }
+        int? totalCount = sourceStates.Count > 0 && sourceStates.All(state => state.TotalCount is not null)
+            ? sourceStates.Sum(state => state.TotalCount!.Value)
+            : null;
 
         return new FetchResult(
             entries,
             errors.Distinct(StringComparer.Ordinal).ToArray(),
             totalCount,
-            sourceStates.Any(state => state.HasMoreEntries));
+            sourceStates.Any(state => state.HasMoreEntries),
+            sourceStates);
     }
 
 }

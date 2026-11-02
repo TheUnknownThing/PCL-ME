@@ -40,13 +40,11 @@ internal sealed partial class LauncherViewModel
         var targetResultCount = GetDownloadResourceTargetResultCount(targetPageIndex);
         var communitySourcePreference = SelectedCommunityDownloadSourceIndex;
         var instanceComposition = _instanceComposition;
-        var hasVisibleEntries = DownloadResourceEntries.Count > 0 || _allDownloadResourceEntries.Count > 0;
-        var shouldShowLoadingAnimation = resetPage || !hasVisibleEntries;
 
         DownloadResourceLoadingText = T(
             "download.resource.surface.loading",
             ("surface_name", GetLocalizedDownloadResourceSurfaceName(route)));
-        SetDownloadResourceLoading(shouldShowLoadingAnimation);
+        SetDownloadResourceLoading(true);
         if (resetPage)
         {
             _downloadResourcePageIndex = 0;
@@ -62,7 +60,7 @@ internal sealed partial class LauncherViewModel
             communitySourcePreference,
             targetResultCount,
             refreshVersion,
-            cts.Token,
+            cts,
             immediate ? 0 : 300,
             resetPage,
             targetPageIndex);
@@ -75,11 +73,12 @@ internal sealed partial class LauncherViewModel
         int communitySourcePreference,
         int targetResultCount,
         int refreshVersion,
-        CancellationToken cancellationToken,
+        CancellationTokenSource cancellationSource,
         int delayMilliseconds,
         bool resetPage,
         int? targetPageIndex)
     {
+        var cancellationToken = cancellationSource.Token;
         var filtersAtStart = BuildCurrentDownloadResourceQuery();
         try
         {
@@ -88,9 +87,9 @@ internal sealed partial class LauncherViewModel
                 await Task.Delay(delayMilliseconds, cancellationToken);
             }
 
-            var result = (ExtensionSession is { } extensions ? await extensions.QueryExtensionResourcesAsync(route, query, targetResultCount, cancellationToken) : null) ?? await Task.Run(
-                () => FrontendCommunityResourceCatalogService.QueryResources(route, query, instanceComposition, communitySourcePreference, targetResultCount),
-                cancellationToken);
+            var result = (ExtensionSession is { } extensions ? await extensions.QueryExtensionResourcesAsync(route, query, targetResultCount, cancellationToken) : null)
+                ?? await FrontendCommunityResourceCatalogService.Instance.QueryResourcesAsync(
+                    route, query, instanceComposition, communitySourcePreference, targetResultCount, cancellationToken);
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -131,6 +130,15 @@ internal sealed partial class LauncherViewModel
                 DownloadResourceEmptyStateHintText = T("download.resource.hints.retry_later");
                 SetDownloadResourceLoading(false);
             });
+        }
+        finally
+        {
+            if (ReferenceEquals(_downloadResourceRefreshCts, cancellationSource))
+            {
+                _downloadResourceRefreshCts = null;
+            }
+
+            cancellationSource.Dispose();
         }
     }
 
@@ -216,7 +224,7 @@ internal sealed partial class LauncherViewModel
         _allDownloadResourceEntries = CreateDownloadResourceEntries(runtimeState.Entries);
         if (targetPageIndex is not null)
         {
-            _downloadResourcePageIndex = Math.Max(0, targetPageIndex.Value);
+            _downloadResourcePageIndex = Math.Clamp(targetPageIndex.Value, 0, GetLoadedDownloadResourcePageCount() - 1);
         }
 
         RaiseDownloadResourceFilterState();
@@ -280,5 +288,6 @@ internal sealed partial class LauncherViewModel
         _isDownloadResourceLoading = isLoading;
         RaisePropertyChanged(nameof(ShowDownloadResourceLoadingCard));
         RaisePropertyChanged(nameof(ShowDownloadResourceContent));
+        NotifyDownloadResourcePageCommandState();
     }
 }

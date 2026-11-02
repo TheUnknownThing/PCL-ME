@@ -2519,6 +2519,11 @@ download:
       open_target_missing: 대상 폴더를 열 수 없습니다
       runtime_state_missing: 다운로드 상태를 사용할 수 없습니다.
       target_missing: 설치 대상이 누락되었습니다.
+    pagination:
+      previous: "이전"
+      next: "다음"
+      page: "{page}페이지"
+      page_of: "{page} / {total}페이지"
     results:
       summary: "{total_count}개 중 {shown_count}개 표시 중"
     search:

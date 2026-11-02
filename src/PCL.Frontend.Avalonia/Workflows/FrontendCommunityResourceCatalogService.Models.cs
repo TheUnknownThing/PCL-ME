@@ -6,7 +6,7 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
-internal static partial class FrontendCommunityResourceCatalogService
+internal sealed partial class FrontendCommunityResourceCatalogService
 {
 
     private sealed record RouteConfig(
@@ -23,13 +23,14 @@ internal static partial class FrontendCommunityResourceCatalogService
 
     private sealed record CachedQueryResult(
         FrontendCommunityResourceQueryResult Result,
-        int TargetResultCount);
+        FetchResult FetchResult);
 
     private sealed record FetchResult(
         IReadOnlyList<FrontendDownloadResourceEntry> Entries,
         IReadOnlyList<string> SourceErrors,
         int? TotalCount,
-        bool CanContinue);
+        bool CanContinue,
+        IReadOnlyList<SourcePaginationState> SourceStates);
 
     private sealed record SourceFetchResult(
         IReadOnlyList<FrontendDownloadResourceEntry> Entries,
@@ -40,19 +41,25 @@ internal static partial class FrontendCommunityResourceCatalogService
 
     private sealed record RequestCandidate(string Url, bool UseCurseForgeApiKey);
 
-    private sealed class SourcePaginationState(string sourceName)
+    private sealed class QuerySession
     {
-        public string SourceName { get; } = sourceName;
+        public SemaphoreSlim Gate { get; } = new(1, 1);
 
-        public int Offset { get; private set; }
+        public CachedQueryResult? CachedResult { get; set; }
+    }
 
-        public bool HasMoreEntries { get; private set; } = true;
-
-        public void Advance(SourceFetchResult result)
+    private sealed record SourcePaginationState(
+        string SourceName,
+        int Offset = 0,
+        bool HasMoreEntries = true,
+        int? TotalCount = null)
+    {
+        public SourcePaginationState Advance(SourceFetchResult result) => result.ErrorMessage is not null ? this : this with
         {
-            Offset += Math.Max(0, result.ReceivedCount);
-            HasMoreEntries = result.HasMoreEntries;
-        }
+            Offset = Offset + Math.Max(0, result.ReceivedCount),
+            HasMoreEntries = result.HasMoreEntries,
+            TotalCount = result.TotalCount ?? TotalCount
+        };
     }
 
 }

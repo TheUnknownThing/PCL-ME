@@ -6,21 +6,23 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
-internal static partial class FrontendCommunityResourceCatalogService
+internal sealed partial class FrontendCommunityResourceCatalogService
 {
 
-    private static JsonObject ReadJsonObject(
+    private async Task<JsonObject> ReadJsonObjectAsync(
         string sourceName,
         string officialUrl,
         string mirrorUrl,
         int communitySourcePreference,
-        bool officialRequiresApiKey)
+        bool officialRequiresApiKey,
+        CancellationToken cancellationToken)
     {
         var candidates = BuildCandidateUrls(officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey);
         var errors = new List<string>();
 
         foreach (var candidate in candidates)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, candidate.Url);
@@ -30,11 +32,15 @@ internal static partial class FrontendCommunityResourceCatalogService
                     request.Headers.TryAddWithoutValidation("x-api-key", CurseForgeApiKey);
                 }
 
-                using var response = HttpClient.Send(request);
+                using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 return JsonNode.Parse(content)?.AsObject()
                        ?? throw new InvalidOperationException($"{sourceName} returned an invalid JSON object.");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {

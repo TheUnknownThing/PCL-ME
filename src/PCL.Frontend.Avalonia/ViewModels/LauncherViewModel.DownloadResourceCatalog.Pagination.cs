@@ -34,6 +34,15 @@ internal sealed partial class LauncherViewModel
         ? "0"
         : (_downloadResourcePageIndex + 1).ToString();
 
+    public string DownloadResourcePreviousPageText => T("download.resource.pagination.previous");
+
+    public string DownloadResourceNextPageText => T("download.resource.pagination.next");
+
+    public string DownloadResourcePageSummary => _downloadResourceHasMoreEntries
+        && _downloadResourceTotalEntryCount <= _allDownloadResourceEntries.Count
+            ? T("download.resource.pagination.page", ("page", DownloadResourcePageLabel))
+            : T("download.resource.pagination.page_of", ("page", DownloadResourcePageLabel), ("total", _downloadResourceTotalPages));
+
     public ActionCommand ResetDownloadResourceFiltersCommand => _resetDownloadResourceFiltersCommand;
 
     public ActionCommand InstallDownloadResourceModPackCommand => _installDownloadResourceModPackCommand;
@@ -46,9 +55,10 @@ internal sealed partial class LauncherViewModel
 
     public ActionCommand NextDownloadResourcePageCommand => _nextDownloadResourcePageCommand;
 
-    public bool CanGoToPreviousDownloadResourcePage => _downloadResourcePageIndex > 0;
+    public bool CanGoToPreviousDownloadResourcePage => !_isDownloadResourceLoading && _downloadResourcePageIndex > 0;
 
-    public bool CanGoToNextDownloadResourcePage => _downloadResourcePageIndex < _downloadResourceTotalPages - 1;
+    public bool CanGoToNextDownloadResourcePage => !_isDownloadResourceLoading
+        && (_downloadResourcePageIndex < _downloadResourceTotalPages - 1 || _downloadResourceHasMoreEntries);
 
     public bool CanNotGoToPreviousDownloadResourcePage => !CanGoToPreviousDownloadResourcePage;
 
@@ -67,7 +77,7 @@ internal sealed partial class LauncherViewModel
     }
     private void GoToFirstDownloadResourcePage()
     {
-        if (_downloadResourcePageIndex == 0)
+        if (!CanGoToPreviousDownloadResourcePage)
         {
             return;
         }
@@ -78,7 +88,7 @@ internal sealed partial class LauncherViewModel
 
     private void GoToPreviousDownloadResourcePage()
     {
-        if (_downloadResourcePageIndex <= 0)
+        if (!CanGoToPreviousDownloadResourcePage)
         {
             return;
         }
@@ -89,8 +99,13 @@ internal sealed partial class LauncherViewModel
 
     private void GoToNextDownloadResourcePage()
     {
+        if (!CanGoToNextDownloadResourcePage)
+        {
+            return;
+        }
+
         var nextPageIndex = _downloadResourcePageIndex + 1;
-        if (nextPageIndex < _downloadResourceTotalPages)
+        if (nextPageIndex < _downloadResourceTotalPages || _downloadResourceHasMoreEntries)
         {
             if (nextPageIndex < GetLoadedDownloadResourcePageCount() || !_downloadResourceHasMoreEntries)
             {
@@ -105,6 +120,11 @@ internal sealed partial class LauncherViewModel
 
     private void GoToDownloadResourcePage(int pageIndex)
     {
+        if (_isDownloadResourceLoading)
+        {
+            return;
+        }
+
         var clampedPageIndex = Math.Clamp(pageIndex, 0, Math.Max(0, _downloadResourceTotalPages - 1));
         if (clampedPageIndex == _downloadResourcePageIndex)
         {
@@ -130,6 +150,7 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(CanNotGoToPreviousDownloadResourcePage));
         RaisePropertyChanged(nameof(CanNotGoToNextDownloadResourcePage));
         RaisePropertyChanged(nameof(DownloadResourceResultSummary));
+        RaisePropertyChanged(nameof(DownloadResourcePageSummary));
         RebuildDownloadResourcePaginationItems();
     }
 
@@ -159,7 +180,7 @@ internal sealed partial class LauncherViewModel
             var targetPage = page;
             items.Add(new DownloadResourcePaginationItemViewModel(
                 targetPage.ToString(),
-                new ActionCommand(() => GoToDownloadResourcePage(targetPage - 1)),
+                new ActionCommand(() => GoToDownloadResourcePage(targetPage - 1), () => !_isDownloadResourceLoading),
                 isCurrent: targetPage == currentPage,
                 isEllipsis: false));
             previousPage = page;

@@ -2519,6 +2519,11 @@ download:
       open_target_missing: 不能啟目標夾
       runtime_state_missing: 下載狀態不可用
       target_missing: 缺少安裝目標
+    pagination:
+      previous: "前頁"
+      next: "後頁"
+      page: "第 {page} 頁"
+      page_of: "第 {page} 頁，凡 {total} 頁"
     results:
       summary: 顯 {total_count} 項中之 {shown_count} 項
     search:

@@ -16,12 +16,13 @@ internal sealed partial class FrontendExtensionSession
     private sealed class LauncherResourceProvider(FrontendExtensionSession session, ExtensionResourceProviderDefinition definition) : IExtensionResourceProvider
     {
         private readonly ConcurrentDictionary<string, ExtensionResourceKind> _kinds = new(StringComparer.Ordinal);
-        public ValueTask<ExtensionResourcePage> SearchAsync(ExtensionResourceQuery query, CancellationToken cancellationToken)
+        public async ValueTask<ExtensionResourcePage> SearchAsync(ExtensionResourceQuery query, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var composition = FrontendInstanceCompositionService.Compose(session._actions.RuntimePaths, FrontendInstanceCompositionService.LoadMode.Lightweight);
-            var result = FrontendCommunityResourceCatalogService.QueryResources(ResourceRoute(query.Kind),
-                new(query.Text, definition.Title, "", "", query.MinecraftVersion ?? "", query.Loader ?? ""), composition, session._launcher.SelectedCommunityDownloadSourceIndex, query.Offset + query.Limit);
+            var result = await FrontendCommunityResourceCatalogService.Instance.QueryResourcesAsync(ResourceRoute(query.Kind),
+                new(query.Text, definition.Title, "", "", query.MinecraftVersion ?? "", query.Loader ?? ""), composition,
+                session._launcher.SelectedCommunityDownloadSourceIndex, query.Offset + query.Limit, cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
             var projects = result.State.Entries.Skip(query.Offset).Take(query.Limit).Select(entry =>
             {
@@ -29,7 +30,7 @@ internal sealed partial class FrontendExtensionSession
                 _kinds[id] = query.Kind;
                 return new ExtensionResourceProject { ProviderId = definition.Id, ProjectId = id, Title = entry.Title, Description = entry.Info, Kind = query.Kind };
             }).OfType<ExtensionResourceProject>().ToArray();
-            return ValueTask.FromResult(new ExtensionResourcePage { Projects = projects, HasMore = result.State.HasMoreEntries || result.State.Entries.Count > query.Offset + query.Limit });
+            return new ExtensionResourcePage { Projects = projects, HasMore = result.State.HasMoreEntries || result.State.Entries.Count > query.Offset + query.Limit };
         }
         public ValueTask<IReadOnlyList<ExtensionResourceRelease>> GetReleasesAsync(string projectId, CancellationToken cancellationToken)
         {

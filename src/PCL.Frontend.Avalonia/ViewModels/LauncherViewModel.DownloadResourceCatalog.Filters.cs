@@ -259,9 +259,10 @@ internal sealed partial class LauncherViewModel
         };
 
         var filteredEntries = entries.ToArray();
-        _downloadResourceTotalPages = _downloadResourceTotalEntryCount > 0
-            ? Math.Max(1, (int)Math.Ceiling(_downloadResourceTotalEntryCount / (double)DownloadResourcePageSize))
-            : Math.Max(1, (int)Math.Ceiling(filteredEntries.Length / (double)DownloadResourcePageSize));
+        var loadedPageCount = Math.Max(1, (int)Math.Ceiling(filteredEntries.Length / (double)DownloadResourcePageSize));
+        _downloadResourceTotalPages = _downloadResourceHasMoreEntries
+            ? Math.Max(loadedPageCount + 1, (int)Math.Ceiling(_downloadResourceTotalEntryCount / (double)DownloadResourcePageSize))
+            : loadedPageCount;
         _downloadResourcePageIndex = Math.Clamp(_downloadResourcePageIndex, 0, _downloadResourceTotalPages - 1);
 
         var pagedEntries = filteredEntries
@@ -307,6 +308,9 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(SelectedDownloadResourceLoaderOption));
         RaisePropertyChanged(nameof(ShowDownloadResourceInstallModPackAction));
         RaisePropertyChanged(nameof(DownloadResourcePageLabel));
+        RaisePropertyChanged(nameof(DownloadResourcePreviousPageText));
+        RaisePropertyChanged(nameof(DownloadResourceNextPageText));
+        RaisePropertyChanged(nameof(DownloadResourcePageSummary));
         RaisePropertyChanged(nameof(ShowDownloadResourcePagination));
     }
 

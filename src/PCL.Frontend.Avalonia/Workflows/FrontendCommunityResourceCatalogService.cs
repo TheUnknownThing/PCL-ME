@@ -7,28 +7,18 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
-internal static partial class FrontendCommunityResourceCatalogService
+internal sealed partial class FrontendCommunityResourceCatalogService
 {
 
-    private static readonly ConcurrentDictionary<string, CacheEntry<CachedQueryResult>> QueryResultCache = new(StringComparer.Ordinal);
+    public static FrontendCommunityResourceCatalogService Instance { get; } = new(CreateHttpClient());
 
-    private static CacheEntry<IReadOnlyList<string>>? MinecraftVersionOptionsCache;
+    private readonly HttpClient _httpClient;
+    private readonly ConcurrentDictionary<string, CacheEntry<QuerySession>> _queryResultCache = new(StringComparer.Ordinal);
+    private CacheEntry<IReadOnlyList<string>>? _minecraftVersionOptionsCache;
 
-    private static bool TryGetFreshQueryResult(
-        string cacheKey,
-        int targetResultCount,
-        out FrontendCommunityResourceQueryResult result)
+    internal FrontendCommunityResourceCatalogService(HttpClient httpClient)
     {
-        if (QueryResultCache.TryGetValue(cacheKey, out var entry)
-            && DateTimeOffset.UtcNow - entry.CreatedAt < TimeSpan.FromMinutes(10)
-            && entry.State.TargetResultCount >= targetResultCount)
-        {
-            result = entry.State.Result;
-            return true;
-        }
-
-        result = default!;
-        return false;
+        _httpClient = httpClient;
     }
 
     private static string BuildQueryCacheKey(
@@ -139,22 +129,25 @@ internal static partial class FrontendCommunityResourceCatalogService
         return obj[propertyName]!.GetValue<int>();
     }
 
-    private static IReadOnlyList<string> GetMinecraftVersionOptions(
+    private async Task<IReadOnlyList<string>> GetMinecraftVersionOptionsAsync(
         string? preferredVersion,
         string? selectedVersion,
-        IEnumerable<string> resultVersions)
+        IEnumerable<string> resultVersions,
+        CancellationToken cancellationToken)
     {
-        if (MinecraftVersionOptionsCache is null
-            || DateTimeOffset.UtcNow - MinecraftVersionOptionsCache.CreatedAt > TimeSpan.FromHours(6))
+        if (_minecraftVersionOptionsCache is null
+            || DateTimeOffset.UtcNow - _minecraftVersionOptionsCache.CreatedAt > TimeSpan.FromHours(6))
         {
-            MinecraftVersionOptionsCache = new CacheEntry<IReadOnlyList<string>>(FetchMinecraftVersionOptions(), DateTimeOffset.UtcNow);
+            var options = await FetchMinecraftVersionOptionsAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            _minecraftVersionOptionsCache = new CacheEntry<IReadOnlyList<string>>(options, DateTimeOffset.UtcNow);
         }
 
         var versions = new List<string>();
         AddIfVersionMissing(versions, preferredVersion);
         AddIfVersionMissing(versions, selectedVersion);
 
-        foreach (var version in MinecraftVersionOptionsCache.State)
+        foreach (var version in _minecraftVersionOptionsCache.State)
         {
             AddIfVersionMissing(versions, version);
         }
@@ -169,7 +162,7 @@ internal static partial class FrontendCommunityResourceCatalogService
             .ToArray();
     }
 
-    private static IReadOnlyList<string> FetchMinecraftVersionOptions()
+    private async Task<IReadOnlyList<string>> FetchMinecraftVersionOptionsAsync(CancellationToken cancellationToken)
     {
         var sources = new[]
         {
@@ -182,9 +175,9 @@ internal static partial class FrontendCommunityResourceCatalogService
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, source);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                using var response = HttpClient.Send(request);
+                using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 var root = JsonNode.Parse(content)?.AsObject();
                 var versions = root?["versions"]?.AsArray()
                     .Select(node => node as JsonObject)
@@ -199,6 +192,10 @@ internal static partial class FrontendCommunityResourceCatalogService
                 {
                     return versions;
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch
             {

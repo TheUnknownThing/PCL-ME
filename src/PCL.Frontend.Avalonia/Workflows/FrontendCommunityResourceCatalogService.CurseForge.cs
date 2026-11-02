@@ -6,21 +6,22 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
-internal static partial class FrontendCommunityResourceCatalogService
+internal sealed partial class FrontendCommunityResourceCatalogService
 {
 
-    private static SourceFetchResult FetchCurseForgeEntries(
+    private async Task<SourceFetchResult> FetchCurseForgeEntriesAsync(
         RouteConfig config,
         string? preferredVersion,
         int communitySourcePreference,
         FrontendCommunityResourceQuery query,
-        int offset)
+        int offset,
+        CancellationToken cancellationToken)
     {
         try
         {
             var officialUrl = BuildCurseForgeSearchUrl(config, preferredVersion, query, useMirror: false, offset);
             var mirrorUrl = BuildCurseForgeSearchUrl(config, preferredVersion, query, useMirror: true, offset);
-            var response = ReadJsonObject("CurseForge", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: true);
+            var response = await ReadJsonObjectAsync("CurseForge", officialUrl, mirrorUrl, communitySourcePreference, officialRequiresApiKey: true, cancellationToken).ConfigureAwait(false);
             var data = response["data"]?.AsArray() ?? [];
             var pagination = response["pagination"] as JsonObject;
             var resultCount = GetInt(pagination, "resultCount");
@@ -39,6 +40,10 @@ internal static partial class FrontendCommunityResourceCatalogService
             var hasMoreEntries = receivedCount > 0
                 && (totalCount <= 0 || currentIndex + receivedCount < totalCount);
             return new SourceFetchResult(entries, null, receivedCount, totalCount > 0 ? totalCount : null, hasMoreEntries);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
