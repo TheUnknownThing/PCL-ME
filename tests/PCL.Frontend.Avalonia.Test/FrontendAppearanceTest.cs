@@ -19,6 +19,7 @@ using PCL.Frontend.Avalonia.Cli;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Desktop;
 using PCL.Frontend.Avalonia.Desktop.Panes.Right;
+using PCL.UI.Animation;
 using PCL.Frontend.Avalonia.Models;
 using PCL.Frontend.Avalonia.ViewModels;
 using PCL.Frontend.Avalonia.Workflows;
@@ -30,6 +31,74 @@ namespace PCL.Frontend.Avalonia.Test;
 [DoNotParallelize]
 public sealed class FrontendAppearanceTest
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task MainWindow_ChromeFitsClientAreaAcrossWindowStates(bool usesTilingWindowManager)
+    {
+        await FrontendMotionTest.RunAsync(async () =>
+        {
+            using var fixture = new AppearanceFixture();
+            var window = new MainWindow(usesTilingWindowManager) { DataContext = fixture.Launcher };
+            try
+            {
+                window.Show();
+                await Task.Delay(MotionDurations.WindowEnterDelay + TimeSpan.FromMilliseconds(50));
+                Tick();
+                await Task.Delay(MotionDurations.StartupLift + TimeSpan.FromMilliseconds(50));
+                Tick();
+                var border = window.FindControl<Border>("MainBorder")!;
+                var clip = window.FindControl<Border>("MainClipBorder")!;
+                var resize = window.FindControl<Grid>("GridResize")!;
+                foreach (var scale in FrontendStartupScalingService.CommonUiScaleFactors)
+                {
+                    fixture.Launcher.UiScaleFactor = scale;
+                    foreach (var state in new[] { WindowState.Normal, WindowState.Maximized,
+                                 WindowState.Normal, WindowState.FullScreen, WindowState.Normal })
+                    {
+                        window.WindowState = state;
+                        Tick();
+
+                        var inset = !usesTilingWindowManager && state == WindowState.Normal ? 18d : 0d;
+                        var renderedBounds = new Rect(border.Bounds.Size)
+                            .TransformToAABB(border.TransformToVisual(window)!.Value);
+                        Assert.AreEqual(inset * scale, renderedBounds.X, scale);
+                        Assert.AreEqual(inset * scale, renderedBounds.Y, scale);
+                        Assert.AreEqual(window.ClientSize.Width - 2 * inset * scale, renderedBounds.Width, scale);
+                        Assert.AreEqual(window.ClientSize.Height - 2 * inset * scale, renderedBounds.Height, scale);
+                        Assert.AreEqual(inset == 0 ? new CornerRadius(0) : new CornerRadius(6), clip.CornerRadius);
+                        Assert.AreEqual(state == WindowState.Normal, resize.IsVisible);
+                    }
+                }
+
+                if (usesTilingWindowManager)
+                {
+                    foreach (var name in new[] { "TopLeft", "Top", "TopRight", "Right",
+                                 "BottomRight", "Bottom", "BottomLeft", "Left" })
+                    {
+                        var grip = window.FindControl<Border>(name)!;
+                        var gripCenter = grip.TranslatePoint(new Point(grip.Bounds.Width / 2, grip.Bounds.Height / 2), window)!.Value;
+                        var hit = window.InputHitTest(gripCenter);
+                        Assert.AreSame(grip, hit, $"The {name} resize grip must remain reachable; hit {hit} at {gripCenter}.");
+                    }
+
+                    var center = new Point(window.ClientSize.Width / 2, window.ClientSize.Height / 2);
+                    Assert.AreNotSame(resize, window.InputHitTest(center), "Resize grips must not block the content.");
+                }
+
+                fixture.Launcher.LockWindowSizeSetting = true;
+                Tick();
+                Assert.IsFalse(window.CanResize);
+                Assert.IsFalse(resize.IsVisible);
+                Assert.IsFalse(resize.IsHitTestVisible);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     [TestMethod]
     public async Task MainWindow_UiScaleFitsClientAreaDuringStartupAndResize()
     {

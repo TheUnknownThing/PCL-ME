@@ -31,6 +31,7 @@ namespace PCL.Frontend.Avalonia.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
+    private readonly bool _usesTilingWindowManager;
     private readonly IBrush _defaultMainBackgroundBrush;
     private readonly IBrush _defaultTitleBarBackgroundBrush;
     private Color? _darkMainBackgroundBaseColor;
@@ -50,8 +51,13 @@ internal sealed partial class MainWindow : Window
     private bool _isPromptOverlayRenderedOpen;
     private readonly Dictionary<string, HintPopupState> _activeHints = new(StringComparer.Ordinal);
 
-    public MainWindow()
+    public MainWindow() : this(FrontendWindowManagerService.IsTilingWindowManager())
     {
+    }
+
+    internal MainWindow(bool usesTilingWindowManager)
+    {
+        _usesTilingWindowManager = usesTilingWindowManager;
         InitializeComponent();
         FrontendWindowIdentity.Apply(this);
         _defaultMainBackgroundBrush = MainBorder.Background ?? Brushes.Transparent;
@@ -67,6 +73,21 @@ internal sealed partial class MainWindow : Window
         MinimizeButton.IconData = PclIcons.Minimize.Data;
         MaximizeButton.IconData = PclIcons.Maximize.Data;
         CloseButton.IconData = PclIcons.Close.Data;
+
+        if (_usesTilingWindowManager)
+        {
+            // Tiling compositors can keep WindowState.Normal. Keep resize grips
+            // inside the client area instead of reserving space for a shadow.
+            GridResize.Margin = new Thickness(0);
+            GridResize.RowDefinitions = new RowDefinitions("5,*,5");
+            GridResize.ColumnDefinitions = new ColumnDefinitions("5,*,5");
+            GridResize.ZIndex = 1;
+            Top.Height = Bottom.Height = Left.Width = Right.Width = 5;
+            foreach (var border in GridResize.Children.OfType<Border>())
+            {
+                border.Background = Brushes.Transparent;
+            }
+        }
 
         if (!OperatingSystem.IsMacOS())
         {
@@ -999,11 +1020,12 @@ internal sealed partial class MainWindow : Window
 
     private void UpdateWindowChromeState()
     {
-        var isMaximized = WindowState == WindowState.Maximized;
-        GridResize.IsVisible = ShouldShowResizeChrome(isMaximized, _launcherViewModel?.LockWindowSizeSetting == true);
-        MainBorder.Margin = isMaximized ? new Thickness(0) : new Thickness(18);
-        MainBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(15, 15, 8, 8);
-        MainClipBorder.CornerRadius = isMaximized ? new CornerRadius(0) : new CornerRadius(6);
+        var isExpanded = WindowState is WindowState.Maximized or WindowState.FullScreen;
+        var useInsetChrome = !_usesTilingWindowManager && !isExpanded;
+        GridResize.IsVisible = ShouldShowResizeChrome(isExpanded, _launcherViewModel?.LockWindowSizeSetting == true);
+        MainBorder.Margin = useInsetChrome ? new Thickness(18) : new Thickness(0);
+        MainBorder.CornerRadius = useInsetChrome ? new CornerRadius(15, 15, 8, 8) : new CornerRadius(0);
+        MainClipBorder.CornerRadius = useInsetChrome ? new CornerRadius(6) : new CornerRadius(0);
     }
 
     private void ApplyWindowSizingState()

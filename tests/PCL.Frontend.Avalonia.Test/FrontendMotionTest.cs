@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 using PCL.UI.Animation;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using static PCL.Frontend.Avalonia.Test.FrontendDeferredContentTest;
@@ -136,42 +137,51 @@ public sealed class FrontendMotionTest
     }
 
     [TestMethod]
-    public async Task Card_ExpandsAndCollapsesWithoutPerFrameLayoutAndRetainsEdits()
+    [DataRow(9d)]
+    [DataRow(0d)]
+    public async Task Card_ExpandsAndCollapsesWithoutPerFrameLayoutAndRetainsEdits(double debugAnimationSpeed)
     {
         await RunAsync(async () =>
         {
-            var editor = new TextBox { Text = "Unsaved edit", Height = 250 };
-            var card = new PclCard { Header = "Card", ShowChevron = true, IsChevronExpanded = false, CardContent = editor };
-            var following = new TextBox { Height = 40 };
-            var panel = new StackPanel { Children = { card, following } };
-            var window = new Window { Width = 500, Height = 500, Content = new ScrollViewer { Content = panel } };
-            window.Show();
-            Tick();
-            var collapsedY = following.Bounds.Y;
-            var layouts = 0;
-            window.LayoutUpdated += (_, _) => layouts++;
-            card.IsChevronExpanded = true;
-            // Loaded CI runners can stretch the compositor handshake and the
-            // real-time animation waits well past their nominal durations, so
-            // the settle budgets stay several times larger than the animations.
-            await Advance(600);
-            Assert.IsTrue(double.IsNaN(card.Height));
-            Assert.IsTrue(following.Bounds.Y > collapsedY + 200);
-            Assert.IsTrue(layouts < 8, $"Expansion performed {layouts} layout passes.");
+            var speed = MotionDurations.Source.DebugAnimationSpeed;
+            var window = new Window { Width = 500, Height = 500 };
+            try
+            {
+                MotionDurations.ApplyRuntimePreferences(debugAnimationSpeed);
+                var editor = new TextBox { Text = "Unsaved edit", Height = 250 };
+                var card = new PclCard { Header = "Card", ShowChevron = true, IsChevronExpanded = false, CardContent = editor };
+                var following = new TextBox { Height = 40 };
+                var panel = new StackPanel { Children = { card, following } };
+                window.Content = new ScrollViewer { Content = panel };
+                window.Show();
+                Tick();
+                var collapsedY = following.Bounds.Y;
+                var layouts = 0;
+                window.LayoutUpdated += (_, _) => layouts++;
+                card.IsChevronExpanded = true;
+                await WaitForCardAnimationAsync(card);
+                Assert.IsTrue(double.IsNaN(card.Height));
+                Assert.IsTrue(following.Bounds.Y > collapsedY + 200);
+                Assert.IsTrue(layouts < 8, $"Expansion performed {layouts} layout passes.");
 
-            layouts = 0;
-            card.IsChevronExpanded = false;
-            await Advance(600);
-            Assert.AreEqual(40d, card.Height);
-            Assert.IsFalse(card.IsContentVisible);
-            Assert.AreEqual(collapsedY, following.Bounds.Y, .01);
-            Assert.AreEqual(following.Bounds.Y, ElementComposition.GetElementVisual(following)!.Offset.Y, .01);
-            Assert.IsTrue(layouts < 8, $"Collapse performed {layouts} layout passes.");
-            card.IsChevronExpanded = true;
-            await Advance(600);
-            Assert.AreEqual("Unsaved edit", editor.Text);
-            Assert.IsFalse(card.FindControl<Grid>("CardLayoutRoot")!.ClipToBounds);
-            window.Close();
+                layouts = 0;
+                card.IsChevronExpanded = false;
+                await WaitForCardAnimationAsync(card);
+                Assert.AreEqual(40d, card.Height);
+                Assert.IsFalse(card.IsContentVisible);
+                Assert.AreEqual(collapsedY, following.Bounds.Y, .01);
+                Assert.AreEqual(following.Bounds.Y, ElementComposition.GetElementVisual(following)!.Offset.Y, .01);
+                Assert.IsTrue(layouts < 8, $"Collapse performed {layouts} layout passes.");
+                card.IsChevronExpanded = true;
+                await WaitForCardAnimationAsync(card);
+                Assert.AreEqual("Unsaved edit", editor.Text);
+                Assert.IsFalse(card.FindControl<Grid>("CardLayoutRoot")!.ClipToBounds);
+            }
+            finally
+            {
+                window.Close();
+                MotionDurations.ApplyRuntimePreferences(speed);
+            }
         });
     }
 
@@ -329,6 +339,28 @@ public sealed class FrontendMotionTest
             }
             finally { window.Close(); }
         });
+    }
+
+    private static async Task WaitForCardAnimationAsync(PclCard card)
+    {
+        var root = card.FindControl<Grid>("CardLayoutRoot")!;
+        var timeout = TimeSpan.FromSeconds(5);
+        var elapsed = Stopwatch.StartNew();
+        // The animation starts after a compositor handshake. Pump frames until
+        // cleanup removes the clip, allowing for scheduler delays on CI runners.
+        do
+        {
+            Tick();
+            if (!root.ClipToBounds)
+            {
+                return;
+            }
+            await Task.Delay(16);
+        } while (elapsed.Elapsed < timeout);
+        Tick();
+        Assert.IsFalse(root.ClipToBounds,
+            $"Card {(card.IsChevronExpanded ? "expansion" : "collapse")} did not finish within {timeout.TotalSeconds} seconds " +
+            $"(height: {card.Height}, content visible: {card.IsContentVisible}).");
     }
 
     internal static async Task Advance(int milliseconds)
