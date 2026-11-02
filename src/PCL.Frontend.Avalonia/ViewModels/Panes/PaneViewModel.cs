@@ -28,6 +28,13 @@ internal sealed class SharedRouteRightPaneViewModel(
     StandardRightPaneDescriptor descriptor)
     : RightPaneViewModel(launcher, descriptor);
 
+internal sealed class ExtensionRightPaneViewModel(
+    LauncherViewModel launcher, StandardRightPaneDescriptor descriptor, object content)
+    : RightPaneViewModel(launcher, descriptor)
+{
+    public object Content { get; } = content;
+}
+
 internal sealed class StandardNavigationListPaneViewModel(
     LauncherViewModel launcher,
     StandardLeftPaneDescriptor descriptor)

@@ -14,6 +14,7 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
 {
     private LauncherViewModel? _launcher;
     private int _refreshVersion;
+    private bool _animateOutQueued;
 
     public StandardNavigationListPaneView()
     {
@@ -50,6 +51,7 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
 
     private void ScheduleRefresh(bool animateOutCurrent)
     {
+        _animateOutQueued |= animateOutCurrent;
         var version = ++_refreshVersion;
         Dispatcher.UIThread.Post(
             async () =>
@@ -59,7 +61,9 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
                     return;
                 }
 
-                await RefreshRowsAsync(animateOutCurrent, version);
+                var animateOut = _animateOutQueued;
+                _animateOutQueued = false;
+                await RefreshRowsAsync(animateOut, version);
             },
             DispatcherPriority.Background);
     }
@@ -72,11 +76,9 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
             return;
         }
 
-        var sections = _launcher.SidebarSections.ToList();
-        if (_launcher.ExtensionNavigationEntries.Count > 0)
-            sections.Add(new("", false, 0, _launcher.ExtensionNavigationEntries.Select(entry => new SidebarListItemViewModel(
-                entry.Title, "", entry.IsSelected, PCL.UI.Icons.PclIcons.Extensions.Data, 1, 0, entry.Command, "", "", null)).ToArray()));
-        var nextRows = BuildRenderRows(sections);
+        var nativeRows = BuildRenderRows(_launcher.SidebarSections);
+        var nextRows = nativeRows.Concat(_launcher.ExtensionNavigationEntries.Select((entry, index) =>
+            new SidebarItemRenderRow(entry.Item, (nativeRows.Length + index) * SidebarListItemViewModel.EnterStaggerMilliseconds))).ToArray();
         if (animateOutCurrent && RenderRows.Count > 0)
         {
             var animatedRows = SidebarRowsHost
@@ -95,14 +97,34 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
             }
         }
 
-        RenderRows.Clear();
-        foreach (var row in nextRows)
+        if (animateOutCurrent) RenderRows.Clear();
+        // Remove retired rows first. Moving surviving rows past an obsolete one
+        // makes ItemsControl recreate their containers and replay their entrance.
+        for (var index = RenderRows.Count - 1; index >= 0; index--)
+            if (!nextRows.Any(next => MatchesRow(RenderRows[index], next))) RenderRows.RemoveAt(index);
+        for (var index = 0; index < nextRows.Length; index++)
         {
-            RenderRows.Add(row);
+            var next = nextRows[index];
+            var existing = RenderRows.FirstOrDefault(row => MatchesRow(row, next));
+            if (existing is null) RenderRows.Insert(index, next);
+            else
+            {
+                existing.EnterDelay = next.EnterDelay;
+                var previousIndex = RenderRows.IndexOf(existing);
+                if (previousIndex != index) RenderRows.Move(previousIndex, index);
+            }
         }
+        while (RenderRows.Count > nextRows.Length) RenderRows.RemoveAt(RenderRows.Count - 1);
 
         Dispatcher.UIThread.Post(UpdateAutoPaneWidth, DispatcherPriority.Loaded);
     }
+
+    private static bool MatchesRow(SidebarRenderRow current, SidebarRenderRow next) => (current, next) switch
+    {
+        (SidebarItemRenderRow item, SidebarItemRenderRow candidate) => ReferenceEquals(item.Item, candidate.Item),
+        (SidebarHeaderRenderRow header, SidebarHeaderRenderRow candidate) => header.Title == candidate.Title && header.EnterDelay == candidate.EnterDelay,
+        _ => false
+    };
 
     private static SidebarRenderRow[] BuildRenderRows(IEnumerable<SidebarSectionViewModel> sections)
     {
@@ -162,9 +184,14 @@ internal sealed partial class StandardNavigationListPaneView : UserControl
     }
 }
 
-internal abstract class SidebarRenderRow(int enterDelay)
+internal abstract class SidebarRenderRow(int enterDelay) : ViewModelBase
 {
-    public int EnterDelay { get; } = enterDelay;
+    private int _enterDelay = enterDelay;
+    public int EnterDelay
+    {
+        get => _enterDelay;
+        set => SetProperty(ref _enterDelay, value);
+    }
 }
 
 internal sealed class SidebarHeaderRenderRow(string title, int enterDelay) : SidebarRenderRow(enterDelay)

@@ -73,6 +73,7 @@ internal sealed class SidebarListItemViewModel(
     string accessoryIconPath,
     ActionCommand? accessoryCommand) : ViewModelBase
 {
+    internal const int EnterStaggerMilliseconds = 28;
     private bool _isSelected = isSelected;
 
     public string Title { get; } = title;

@@ -21,23 +21,42 @@ internal sealed class ExtensionContextActions : AvaloniaObject
     {
         ResourcePathProperty.Changed.AddClassHandler<Control>((control, _) =>
         {
+            control.RemoveHandler(InputElement.PointerPressedEvent, OnPointerPressed);
             control.RemoveHandler(InputElement.PointerReleasedEvent, OnPointerReleased);
             if (GetResourcePath(control) is not null)
+            {
+                control.AddHandler(InputElement.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
                 control.AddHandler(InputElement.PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
+            }
         });
+    }
+
+    private static void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is not Control control || !e.GetCurrentPoint(control).Properties.IsRightButtonPressed ||
+            GetResourcePath(control) is not { } path ||
+            TopLevel.GetTopLevel(control)?.DataContext is not LauncherViewModel { ExtensionSession: { } session }) return;
+        // Native list selection can recycle the row during the press and clear
+        // its captured target before release. Reserve presses that open our menu.
+        if (session.HasContributionActions(ResourceLocation(control, path))) e.Handled = true;
     }
     private static void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (e.InitialPressMouseButton != MouseButton.Right || sender is not Control control || GetResourcePath(control) is not { } path ||
             TopLevel.GetTopLevel(control)?.DataContext is not LauncherViewModel { ExtensionSession: { } session } launcher || launcher.ExtensionSelectedInstanceId is not { } instance) return;
-        var location = GetLocation(control);
-        if (location == ExtensionContextActionLocation.Resource && string.Equals(Path.GetFileName(Path.GetDirectoryName(path)), "mods", StringComparison.OrdinalIgnoreCase))
-            location = ExtensionContextActionLocation.Mod;
+        var location = ResourceLocation(control, path);
         var menu = session.CreateContributionMenu(location, new() { InstanceId = instance, ResourcePath = path });
         if (menu.ItemCount == 0) return;
         e.Handled = true;
         // Open after the release is routed so popup light-dismiss does not consume the same pointer event.
         var anchor = TopLevel.GetTopLevel(control) ?? control;
         Dispatcher.UIThread.Post(() => menu.Open(anchor), DispatcherPriority.Input);
+    }
+
+    private static ExtensionContextActionLocation ResourceLocation(Control control, string path)
+    {
+        var location = GetLocation(control);
+        return location == ExtensionContextActionLocation.Resource && string.Equals(Path.GetFileName(Path.GetDirectoryName(path)), "mods", StringComparison.OrdinalIgnoreCase)
+            ? ExtensionContextActionLocation.Mod : location;
     }
 }

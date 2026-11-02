@@ -179,7 +179,7 @@ internal sealed partial class LauncherViewModel
             .Select(group =>
             {
                 var hasTitle = !string.IsNullOrWhiteSpace(group.Key);
-                var enterDelay = hasTitle ? itemIndex++ * 28 : itemIndex * 28;
+                var enterDelay = hasTitle ? itemIndex++ * SidebarListItemViewModel.EnterStaggerMilliseconds : itemIndex * SidebarListItemViewModel.EnterStaggerMilliseconds;
                 return new SidebarSectionViewModel(
                     group.Key,
                     hasTitle,
@@ -193,10 +193,10 @@ internal sealed partial class LauncherViewModel
                         return new SidebarListItemViewModel(
                             title,
                             summary,
-                            entry.IsSelected,
+                            entry.IsSelected && !HasExtensionPage,
                             iconPath,
                             iconScale,
-                            itemIndex++ * 28,
+                            itemIndex++ * SidebarListItemViewModel.EnterStaggerMilliseconds,
                             new ActionCommand(() => NavigateTo(
                                 entry.Route,
                                 LauncherLocalizationService.DescribeNavigationActivity(title, "left_pane", _i18n),
@@ -417,7 +417,7 @@ internal sealed partial class LauncherViewModel
                     return new SidebarItemSnapshot(
                         title,
                         summary,
-                        entry.IsSelected,
+                        entry.IsSelected && !HasExtensionPage,
                         iconPath,
                         iconScale,
                         accessory.ToolTip,
@@ -591,18 +591,25 @@ internal sealed partial class LauncherViewModel
     private void NavigateTo(
         LauncherFrontendRoute route,
         string activityMessage,
-        RouteNavigationBehavior behavior = RouteNavigationBehavior.Automatic)
+        RouteNavigationBehavior behavior = RouteNavigationBehavior.Automatic) => NavigateToTarget(route, activityMessage, behavior);
+
+    private void NavigateToTarget(
+        LauncherFrontendRoute route,
+        string activityMessage,
+        RouteNavigationBehavior behavior = RouteNavigationBehavior.Automatic,
+        string? extensionPageId = null)
     {
-        ExtensionSession?.CloseContributionPage();
         route = NormalizeRoute(route);
         if (route == _currentRoute)
         {
+            if (extensionPageId is not null) ExtensionSession?.RestoreContributionPage(extensionPageId);
+            else ExtensionSession?.CloseContributionPage();
             AddActivity(LauncherLocalizationService.DescribeStayedOnCurrentRoute(_i18n), $"{route.Page}/{route.Subpage}");
             return;
         }
 
         ApplyRouteNavigation(route, behavior);
-        ChangeRoute(route, activityMessage, NavigationTransitionDirection.Forward);
+        ChangeRoute(route, activityMessage, NavigationTransitionDirection.Forward, extensionPageId);
     }
 
     private LauncherFrontendRoute NormalizeRoute(LauncherFrontendRoute route)
@@ -630,7 +637,7 @@ internal sealed partial class LauncherViewModel
         switch (ResolveRouteNavigationBehavior(route, behavior))
         {
             case RouteNavigationBehavior.Child:
-                _routeAncestors.Add(_currentRoute);
+                _routeAncestors.Add(new(_currentRoute, _extensionPageId));
                 break;
             case RouteNavigationBehavior.Lateral:
                 break;
@@ -675,6 +682,7 @@ internal sealed partial class LauncherViewModel
 
         if (_currentNavigation.BackTarget?.Route is { } backRoute)
         {
+            var extensionPageId = _routeAncestors.LastOrDefault() is { } target && target.Route == backRoute ? target.ExtensionPageId : null;
             if (_routeAncestors.Count > 0)
             {
                 _routeAncestors.RemoveAt(_routeAncestors.Count - 1);
@@ -683,7 +691,7 @@ internal sealed partial class LauncherViewModel
             ChangeRoute(
                 backRoute,
                 LauncherLocalizationService.DescribeFollowedBackTarget(backRoute, _i18n),
-                NavigationTransitionDirection.Backward);
+                NavigationTransitionDirection.Backward, extensionPageId);
         }
     }
 
@@ -701,24 +709,29 @@ internal sealed partial class LauncherViewModel
             return;
         }
 
+        var extensionPageId = _routeAncestors.FirstOrDefault() is { } target && target.Route == homeRoute ? target.ExtensionPageId : null;
         _routeAncestors.Clear();
         ResetCommunityProjectNavigationStack();
         ChangeRoute(
             homeRoute,
             LauncherLocalizationService.DescribeReturnedHome(homeRoute, _i18n),
-            NavigationTransitionDirection.Backward);
+            NavigationTransitionDirection.Backward, extensionPageId);
     }
 
     private void ChangeRoute(
         LauncherFrontendRoute route,
         string activityMessage,
-        NavigationTransitionDirection direction)
+        NavigationTransitionDirection direction,
+        string? extensionPageId = null)
     {
         _launcherActionService.FlushPendingSettings();
         route = NormalizeRoute(route);
         var previousIsLaunchRoute = IsLaunchRoute;
         var previousLeftPaneKey = CurrentStandardLeftPaneDescriptor?.Key;
         var previousRightPaneKey = CurrentStandardRightPaneDescriptor?.Key;
+        // Dispose the outgoing extension without resolving an intermediate native pane.
+        // Back, Home and native sidebar navigation all pass through this boundary.
+        ExtensionSession?.CloseContributionPage(refreshPanes: false);
 
         if (_currentRoute.Page == LauncherFrontendPageKey.CompDetail
             && route.Page != LauncherFrontendPageKey.CompDetail)
@@ -730,6 +743,7 @@ internal sealed partial class LauncherViewModel
         _currentRoute = route;
         ReloadRouteCompositions(previousRoute, route);
         RefreshLauncherState(activityMessage);
+        if (extensionPageId is not null) ExtensionSession?.RestoreContributionPage(extensionPageId, direction, requestTransition: false);
         RequestNavigationTransition(
             direction,
             previousIsLaunchRoute,
@@ -792,7 +806,7 @@ internal sealed partial class LauncherViewModel
     {
         if (_routeAncestors.Count > 0)
         {
-            return _routeAncestors[^1];
+            return _routeAncestors[^1].Route;
         }
 
         return ResolveDefaultParentRoute(_currentRoute);
@@ -807,7 +821,7 @@ internal sealed partial class LauncherViewModel
 
         if (_routeAncestors.Count > 0)
         {
-            return _routeAncestors[0];
+            return _routeAncestors[0].Route;
         }
 
         return ResolveDefaultParentRoute(_currentRoute);

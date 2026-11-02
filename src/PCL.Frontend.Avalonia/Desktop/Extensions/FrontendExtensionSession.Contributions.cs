@@ -32,6 +32,7 @@ internal sealed partial class FrontendExtensionSession
     internal IReadOnlyList<ContextMenu> OpenContributionMenus => _contributionMenus.Keys.Where(menu => menu.IsOpen).ToArray();
     private MountedContribution? _contributionPageMount;
     private string? _contributionPageId;
+    private string? _contributionPageOwner;
     private string? _contributionRoute;
     private ExtensionSurfaceContext? _surfaceSelection;
     private bool _refreshingContributions;
@@ -143,34 +144,49 @@ internal sealed partial class FrontendExtensionSession
             var selectionChanged = surface != _surfaceSelection;
             _surfaceSelection = surface;
             foreach (var region in _regions.Keys.ToArray()) RefreshRegion(region, recreate);
-            if ((selectionChanged || recreate) && _contributionPageId is { } selected) ShowContributionPage(selected);
+            if ((selectionChanged || recreate) && _contributionPageId is { } selected) ShowContributionPage(selected, recreate: true);
             var entries = _pages.Values.Where(item => item.Definition.Area == _launcher.ExtensionPageArea)
                 .OrderBy(item => item.Definition.Order).ThenBy(item => item.Definition.Id, StringComparer.Ordinal)
-                .Select(item => new ExtensionNavigationEntry(Localize(item.Context, item.Definition.TitleKey, item.Definition.Title),
-                    item.Definition.Id == _contributionPageId, new ActionCommand(() => ShowContributionPage(item.Definition.Id)))).ToArray();
+                .Select(item => new ExtensionNavigationEntry(item.Definition.Id, new SidebarListItemViewModel(
+                    Localize(item.Context, item.Definition.TitleKey, item.Definition.Title), "", item.Definition.Id == _contributionPageId,
+                    PCL.UI.Icons.PclIcons.Extensions.Data, 1, 0,
+                    new ActionCommand(() => Run(() => NavigateAsync("extension-page/" + item.Definition.Id))), "", "", null))).ToArray();
             _launcher.SetExtensionNavigation(entries);
 
         }
         finally { _refreshingContributions = false; }
     }
-    private void ShowContributionPage(string id)
+    internal void RestoreContributionPage(string id, NavigationTransitionDirection direction = NavigationTransitionDirection.Forward, bool requestTransition = true)
     {
-        if (!CanInteract || !_pages.TryGetValue(id, out var page)) return;
-        CloseContributionPage();
+        if (_pages.TryGetValue(id, out var page) && page.Definition.Area == _launcher.ExtensionPageArea)
+            ShowContributionPage(id, direction: direction, requestTransition: requestTransition);
+    }
+    private void ShowContributionPage(string id, bool recreate = false,
+        NavigationTransitionDirection direction = NavigationTransitionDirection.Forward, bool requestTransition = true)
+    {
+        if (_disposed || (!recreate && !CanInteract) || !_pages.TryGetValue(id, out var page) || page.Context.Lifetime.IsCancellationRequested) return;
+        if (!recreate && _contributionPageId == id) return;
         var lifetime = CancellationTokenSource.CreateLinkedTokenSource(page.Context.Lifetime);
+        Control content;
         try
         {
-            var content = page.Create(SurfaceContext(lifetime.Token)) ?? throw new InvalidOperationException("The extension page factory returned null.");
-            _contributionPageMount = new(lifetime, content);
-            _contributionPageId = id;
-            _launcher.SetExtensionPage(content);
-            RefreshContributions();
+            content = page.Create(SurfaceContext(lifetime.Token)) ?? throw new InvalidOperationException("The extension page factory returned null.");
         }
         catch (Exception ex)
         {
-            if (_contributionPageId == id) CloseContributionPage(); else CancelFailedMount(lifetime, page.Context);
+            CancelFailedMount(lifetime, page.Context);
             Host.LogContributionError(page.Context.Manifest.Id, ex);
+            return;
         }
+        var previousMount = _contributionPageMount;
+        var previousOwner = _contributionPageOwner;
+        _contributionPageMount = new(lifetime, content);
+        _contributionPageId = id;
+        _contributionPageOwner = page.Context.Manifest.Id;
+        _launcher.SetExtensionPage(id, content, direction: direction, requestTransition: requestTransition);
+        try { previousMount?.Dispose(); }
+        catch (Exception ex) { Host.LogContributionError(previousOwner ?? page.Context.Manifest.Id, ex); }
+        RefreshContributions();
     }
     private void CancelFailedMount(CancellationTokenSource lifetime, IExtensionContext context)
     {
@@ -179,22 +195,23 @@ internal sealed partial class FrontendExtensionSession
         finally { lifetime.Dispose(); }
     }
 
-    internal void CloseContributionPage()
+    internal void CloseContributionPage(bool refreshPanes = true)
     {
-        var owner = _contributionPageId is { } id ? _pages.GetValueOrDefault(id)?.Context.Manifest.Id : null;
+        if (_contributionPageId is null) return;
+        var owner = _contributionPageOwner;
         _contributionPageId = null;
+        _contributionPageOwner = null;
         try { _contributionPageMount?.Dispose(); }
         catch (Exception ex) { if (owner is not null) Host.LogContributionError(owner, ex); }
         _contributionPageMount = null;
-        _launcher.SetExtensionPage(null);
+        _launcher.SetExtensionPage(null, null, refreshPanes);
     }
 
     internal ContextMenu CreateContributionMenu(ExtensionContextActionLocation location, ExtensionActionContext target)
     {
         var menu = new ContextMenu();
         var owners = new List<IExtensionContext>();
-        foreach (var item in _contextActions.Values.Where(item => item.Definition.Location == location ||
-                         location == ExtensionContextActionLocation.Mod && item.Definition.Location == ExtensionContextActionLocation.Resource)
+        foreach (var item in MatchingContextActions(location)
                      .OrderBy(item => item.Definition.Order).ThenBy(item => item.Definition.Id, StringComparer.Ordinal))
         {
             bool enabled;
@@ -220,6 +237,11 @@ internal sealed partial class FrontendExtensionSession
         }
         return menu;
     }
+
+    internal bool HasContributionActions(ExtensionContextActionLocation location) => MatchingContextActions(location).Any();
+    private IEnumerable<ContextActionRegistration> MatchingContextActions(ExtensionContextActionLocation location) =>
+        _contextActions.Values.Where(item => item.Definition.Location == location ||
+            location == ExtensionContextActionLocation.Mod && item.Definition.Location == ExtensionContextActionLocation.Resource);
 
     private sealed class ScopedContributions(FrontendExtensionSession session, IExtensionContext context) : IExtensionContributions
     {

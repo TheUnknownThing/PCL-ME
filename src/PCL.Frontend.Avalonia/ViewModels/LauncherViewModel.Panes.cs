@@ -114,6 +114,8 @@ internal sealed partial class LauncherViewModel
 
     private RightPaneViewModel ResolveStandardRightPane(StandardRightPaneDescriptor descriptor)
     {
+        if (descriptor.Kind == StandardRightPaneKind.Extension)
+            return new ExtensionRightPaneViewModel(this, descriptor, _extensionPageContent!);
         if (ShouldCacheRightPane(descriptor)
             && _cachedRightPanes.TryGetValue(descriptor.Key, out var cachedPane))
         {
@@ -139,6 +141,9 @@ internal sealed partial class LauncherViewModel
 
     private StandardRightPaneDescriptor ResolveStandardRightPaneDescriptor()
     {
+        if (HasExtensionPage)
+            return new(StandardRightPaneKind.Extension, StandardRightPaneGroup.Generic,
+                $"extension-page/{_extensionPageId}/{_extensionPageRevision}", false);
         return _currentRoute.Page switch
         {
             LauncherFrontendPageKey.Setup => ResolveSetupRightPaneDescriptor(),

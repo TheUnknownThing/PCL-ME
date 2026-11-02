@@ -222,6 +222,8 @@ Declare `"minimumSdkVersion": "1.1.0"` and the needed names in `requiredCapabili
 
 `IExtensionContributions.RegisterPage` places an extension page in the Download, Settings or Tools sidebar. Pages also enter global search through host-provided locations. `ShowPageAsync(id)` opens an extension's own page; other callers can use the route returned by `Launcher.GetLocations()`. Registration order is `Order`, then ordinal contribution ID. IDs remain owned by the extension namespace.
 
+Pages use the launcher's standard right-pane presenter and transitions. Their sidebar items use the same motion template and continue the built-in items' staggered entrance sequence. Selecting a page updates existing sidebar items in place; selecting the active page again preserves its control, editor state and mount lifetime. Native sidebar navigation and area changes release the outgoing page. Back/Home from a child surface restores the originating extension page with a new mount, or its native area if the registration is no longer available. Keep longer-lived workflow state in the extension rather than in a mounted control. A failed page factory preserves the current page when navigating within the same area.
+
 `RegisterSection` mounts a native control inside a host-owned PCL card in one of these semantic regions:
 
 | SDK constant | Region |

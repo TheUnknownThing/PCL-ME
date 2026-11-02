@@ -54,7 +54,14 @@ public sealed partial class ExtensionCapabilitiesE2E
         await app.Session.NavigateAsync("Download/DownloadInstall"); await Settle();
         await Wait(() => app.Window.GetVisualDescendants().OfType<PclListItem>().Any(item => item.Title == "1.20.1" && item.IsEffectivelyVisible), "The native installation catalog did not render.");
         await Click(app.Window, () => app.Window.GetVisualDescendants().OfType<PclListItem>().SingleOrDefault(item => item.Title == "1.20.1" && item.IsEffectivelyVisible));
-        await Wait(() => app.Window.GetVisualDescendants().OfType<CheckBox>().Any(box => (string?)box.Content == "Install this preset after the next matching instance is created" && box.IsEffectivelyVisible), "The install preset contribution did not appear.");
+        try { await Wait(() => app.Window.GetVisualDescendants().OfType<CheckBox>().Any(box => (string?)box.Content == "Install this preset after the next matching instance is created" && box.IsEffectivelyVisible), "The install preset contribution did not appear."); }
+        catch
+        {
+            app.Screenshot("extension-install-preset-failure");
+            Assert.Fail($"Preset extension {info.Status}; pane {app.Launcher.CurrentStandardRightPaneDescriptor?.Key}; " +
+                $"version {app.Launcher.DownloadInstallMinecraftVersion}; " +
+                string.Join(" | ", app.Session.Host.Diagnostics.Select(item => item.Message)));
+        }
         var rememberedBox = app.Window.Find<CheckBox>("ExampleRememberedMods")!;
         await Click(app.Window, rememberedBox);
         Assert.IsTrue(app.Window.Find<CheckBox>("ExampleRememberedMods")!.IsChecked, "The preset checkbox must remain clickable after scrolling the installation page.");
@@ -282,7 +289,15 @@ public sealed partial class ExtensionCapabilitiesE2E
                 return point is { } position && app.Window.InputHitTest(position) is Visual hit && (ReferenceEquals(hit, target) || hit.GetVisualAncestors().Contains(target));
             }, "The context target is covered.");
             app.Window.MouseMove(point!.Value); app.Window.MouseDown(point.Value, MouseButton.Right, RawInputModifiers.None); app.Window.MouseUp(point.Value, MouseButton.Right, RawInputModifiers.None);
-            await Wait(() => app.Session.OpenContributionMenus.Count > 0, "Context menu did not open.");
+            try { await Wait(() => app.Session.OpenContributionMenus.Count > 0, "Context menu did not open."); }
+            catch
+            {
+                app.Screenshot("extension-context-menu-failure");
+                Assert.Fail($"Context menu target: {target?.GetType().Name}; path {ExtensionContextActions.GetResourcePath(target!)}; " +
+                    $"location {ExtensionContextActions.GetLocation(target!)}; selected {app.Launcher.ExtensionSelectedInstanceId}; " +
+                    $"interactive {app.Session.CanInteract}; visible {target?.IsEffectivelyVisible}; " +
+                    $"hit {app.Window.InputHitTest(point!.Value)?.GetType().Name}");
+            }
         }
         async Task Invoke(string title)
         {
@@ -359,7 +374,14 @@ public sealed partial class ExtensionCapabilitiesE2E
         provider.Search = null;
         app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None); app.Window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
         app.Screenshot("extension-provider-search");
-        await Wait(() => app.Launcher.DownloadResourceEntries.Count == 1 && app.Launcher.DownloadResourceEntries[0].Title == "searchable-mod", "The provider search did not render.");
+        try { await Wait(() => app.Launcher.DownloadResourceEntries.Count == 1 && app.Launcher.DownloadResourceEntries[0].Title == "searchable-mod", "The provider search did not render."); }
+        catch
+        {
+            Assert.Fail($"Provider search: {string.Join(" | ", provider.Queries.Select(query => query.Text + ":" + query.ProviderId))}; " +
+                $"pane {app.Launcher.CurrentStandardRightPaneDescriptor?.Kind}; query {app.Launcher.DownloadResourceSearchQuery}; " +
+                $"source {app.Launcher.SelectedDownloadResourceSourceOption?.FilterValue}; loading {app.Launcher.ShowDownloadResourceLoadingCard}; " +
+                $"hint {app.Launcher.DownloadResourceHintText}; entries {string.Join(",", app.Launcher.DownloadResourceEntries.Select(entry => entry.Title))}");
+        }
         await Wait(() => app.Window.GetVisualDescendants().OfType<Button>().Any(button => button.IsEffectivelyVisible && button.DataContext == app.Launcher.DownloadResourceEntries[0]), "The provider result row did not finish entering the view.");
         await Click(app.Window, () => app.Window.GetVisualDescendants().OfType<Button>().SingleOrDefault(button => button.IsEffectivelyVisible && button.DataContext == app.Launcher.DownloadResourceEntries[0]));
         await Wait(() => app.Window.Find<PclButton>("ReviewResource_browser-main") is { IsEffectivelyVisible: true }, "The native provider release view did not open.");

@@ -79,6 +79,7 @@ internal sealed partial class FrontendExtensionSession
 
     public ValueTask NavigateAsync(string route, IReadOnlyDictionary<string, string>? arguments = null, CancellationToken cancellationToken = default) => DispatchAsync(async () =>
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!CanInteract) throw new ExtensionOperationException("launcher.busy", T("unavailable"));
         CloseWorkspace();
         _shell.ShowLauncher();
@@ -86,8 +87,9 @@ internal sealed partial class FrontendExtensionSession
         {
             var id = route["extension-page/".Length..];
             var page = _pages.GetValueOrDefault(id) ?? throw new ExtensionOperationException("page.unavailable", T("unavailable"));
-            await _launcher.NavigateExtensionAsync(PageAreaRoute(page.Definition.Area), null, cancellationToken);
-            ShowContributionPage(id);
+            cancellationToken.ThrowIfCancellationRequested();
+            var areaRoute = _launcher.ExtensionPageArea == page.Definition.Area ? _launcher.ExtensionRoute : PageAreaRoute(page.Definition.Area);
+            await _launcher.NavigateExtensionAsync(areaRoute, null, cancellationToken, id);
             return;
         }
         await _launcher.NavigateExtensionAsync(route, arguments, cancellationToken);

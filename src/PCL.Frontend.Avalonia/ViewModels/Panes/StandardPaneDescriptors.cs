@@ -42,7 +42,8 @@ internal enum StandardRightPaneKind
     InstanceSelection = 29,
     Generic = 30,
     TaskManager = 31,
-    ToolsExtensions = 32
+    ToolsExtensions = 32,
+    Extension = 33
 }
 
 internal enum StandardRightPaneGroup

@@ -514,8 +514,6 @@
               <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushPaneOverlay}">
                 <Grid x:Name="StandardRightContentHost">
                   <controls:PclAnimatedRightPaneHost PaneContent="{Binding CurrentStandardRightPane}" />
-                  <ContentControl Content="{Binding ExtensionPageContent}" IsVisible="{Binding HasExtensionPage}"
-                                  Background="{DynamicResource ColorBrushBackground}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
                 </Grid>
               </Border>
             </Grid>

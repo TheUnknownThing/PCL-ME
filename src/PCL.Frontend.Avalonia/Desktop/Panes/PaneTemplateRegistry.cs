@@ -84,6 +84,12 @@ internal static class PaneTemplateRegistry
 
     public static void Register(Application application)
     {
+        application.DataTemplates.Add(new FuncDataTemplate<ExtensionRightPaneViewModel>((pane, _) => new ContentControl
+        {
+            Content = pane?.Content,
+            HorizontalContentAlignment = global::Avalonia.Layout.HorizontalAlignment.Stretch,
+            VerticalContentAlignment = global::Avalonia.Layout.VerticalAlignment.Stretch
+        }));
         foreach (var registerTemplate in TemplateRegistrations)
         {
             registerTemplate(application);

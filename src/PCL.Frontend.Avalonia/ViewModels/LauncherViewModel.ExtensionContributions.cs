@@ -8,12 +8,14 @@ using PCL.Frontend.Avalonia.Models;
 
 namespace PCL.Frontend.Avalonia.ViewModels;
 
-internal sealed record ExtensionNavigationEntry(string Title, bool IsSelected, ActionCommand Command);
+internal sealed record ExtensionNavigationEntry(string Id, SidebarListItemViewModel Item);
 
 internal sealed partial class LauncherViewModel
 {
     public ObservableCollection<ExtensionNavigationEntry> ExtensionNavigationEntries { get; } = [];
     private object? _extensionPageContent;
+    private string? _extensionPageId;
+    private int _extensionPageRevision;
     public object? ExtensionPageContent => _extensionPageContent;
     public bool HasExtensionPage => _extensionPageContent is not null;
     internal string ExtensionRoute => _currentRoute.Page + "/" + _currentRoute.Subpage;
@@ -46,21 +48,50 @@ internal sealed partial class LauncherViewModel
         LauncherFrontendPageKey.Tools => PCL.Extensions.Avalonia.ExtensionPageArea.Tools,
         _ => null
     };
-    internal void SetExtensionPage(object? content)
+    internal void SetExtensionPage(string? id, object? content, bool refreshPanes = true,
+        NavigationTransitionDirection direction = NavigationTransitionDirection.Forward, bool requestTransition = true)
     {
+        _extensionPageId = id;
         if (SetProperty(ref _extensionPageContent, content, nameof(ExtensionPageContent)))
         {
+            _extensionPageRevision++;
             if (content is not null)
                 foreach (var entry in SidebarSections.SelectMany(section => section.Items)) entry.IsSelected = false;
             else if (_currentNavigation is not null)
                 ReplaceSidebarSectionsIfChanged(ResolveSidebarNavigation(_currentNavigation));
             RaisePropertyChanged(nameof(HasExtensionPage));
+            foreach (var entry in ExtensionNavigationEntries) entry.Item.IsSelected = entry.Id == id;
+            if (refreshPanes)
+            {
+                var previousLeftKey = CurrentStandardLeftPaneDescriptor?.Key;
+                var previousRightKey = CurrentStandardRightPaneDescriptor?.Key;
+                RefreshStandardPanes();
+                if (content is null) RefreshActiveRightPaneSurface();
+                if (requestTransition) RequestNavigationTransition(direction, IsLaunchRoute, previousLeftKey, previousRightKey);
+            }
         }
     }
     internal void SetExtensionNavigation(ExtensionNavigationEntry[] entries)
     {
-        if (ExtensionNavigationEntries.Select(item => (item.Title, item.IsSelected)).SequenceEqual(entries.Select(item => (item.Title, item.IsSelected)))) return;
-        ReplaceItems(ExtensionNavigationEntries, entries);
+        for (var index = ExtensionNavigationEntries.Count - 1; index >= 0; index--)
+        {
+            var current = ExtensionNavigationEntries[index];
+            if (!entries.Any(next => next.Id == current.Id && next.Item.Title == current.Item.Title))
+                ExtensionNavigationEntries.RemoveAt(index);
+        }
+        for (var index = 0; index < entries.Length; index++)
+        {
+            var next = entries[index];
+            var current = ExtensionNavigationEntries.FirstOrDefault(item => item.Id == next.Id && item.Item.Title == next.Item.Title);
+            if (current is null) ExtensionNavigationEntries.Insert(index, next);
+            else
+            {
+                current.Item.IsSelected = next.Item.IsSelected;
+                var previousIndex = ExtensionNavigationEntries.IndexOf(current);
+                if (previousIndex != index) ExtensionNavigationEntries.Move(previousIndex, index);
+            }
+        }
+        while (ExtensionNavigationEntries.Count > entries.Length) ExtensionNavigationEntries.RemoveAt(ExtensionNavigationEntries.Count - 1);
     }
     internal ExtensionSurfaceContext GetExtensionSurfaceContext(bool install = false, string? region = null)
     {

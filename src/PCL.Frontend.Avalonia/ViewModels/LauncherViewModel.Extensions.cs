@@ -77,8 +77,10 @@ internal sealed partial class LauncherViewModel
         }
     }
 
-    internal async ValueTask NavigateExtensionAsync(string route, IReadOnlyDictionary<string, string>? arguments, CancellationToken cancellationToken)
+    internal async ValueTask NavigateExtensionAsync(string route, IReadOnlyDictionary<string, string>? arguments, CancellationToken cancellationToken,
+        string? extensionPageId = null)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!IsTopLevelNavigationInteractive) throw new ExtensionOperationException("launcher.busy", T("launch.profile.activities.busy"));
         if (route == "instance")
         {
@@ -98,7 +100,7 @@ internal sealed partial class LauncherViewModel
         if (!Enum.TryParse<LauncherFrontendPageKey>(parts[0], out var page) || !Enum.IsDefined(page)) throw new ArgumentException("Unknown launcher route.", nameof(route));
         var subpage = parts.Length > 1 && Enum.TryParse<LauncherFrontendSubpageKey>(parts[1], out var parsed) && Enum.IsDefined(parsed)
             ? parsed : LauncherFrontendSubpageKey.Default;
-        NavigateTo(new(page, subpage), "Extension navigation");
+        NavigateToTarget(new(page, subpage), "Extension navigation", extensionPageId: extensionPageId);
         if (arguments?.TryGetValue("query", out var query) == true)
         {
             if (subpage == LauncherFrontendSubpageKey.DownloadInstall) DownloadInstallMinecraftSearchQuery = query;

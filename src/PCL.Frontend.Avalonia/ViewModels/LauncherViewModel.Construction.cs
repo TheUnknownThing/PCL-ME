@@ -40,7 +40,8 @@ internal sealed partial class LauncherViewModel
     private FrontendLaunchComposition _launchComposition;
     private CrashAvaloniaPlan _activeCrashPlan;
     private readonly Dictionary<AvaloniaPromptLaneKind, List<PromptCardViewModel>> _promptCatalog;
-    private readonly List<LauncherFrontendRoute> _routeAncestors = [];
+    private sealed record NavigationTarget(LauncherFrontendRoute Route, string? ExtensionPageId);
+    private readonly List<NavigationTarget> _routeAncestors = [];
     private readonly ActionCommand _backCommand;
     private readonly ActionCommand _homeCommand;
     private readonly ActionCommand _togglePromptOverlayCommand;

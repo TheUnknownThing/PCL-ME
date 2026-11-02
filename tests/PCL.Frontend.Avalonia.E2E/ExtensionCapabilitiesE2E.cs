@@ -333,6 +333,10 @@ public sealed partial class ExtensionCapabilitiesE2E
     {
         var flags = BindingFlags.Instance | BindingFlags.NonPublic;
         void Set(string name, object value) => typeof(LauncherViewModel).GetField(name, flags)!.SetValue(launcher, value);
+        // Ignore a live catalog request started before this deterministic fixture
+        // was installed. Its late completion must not replace the local manifest.
+        var version = typeof(LauncherViewModel).GetField("_downloadInstallMinecraftCatalogVersion", flags)!;
+        version.SetValue(launcher, (int)version.GetValue(launcher)! + 1);
         Set("_downloadInstallMinecraftCatalogLoaded", true); Set("_isDownloadInstallMinecraftCatalogLoading", false);
         Set("_downloadInstallMinecraftCatalogChoices", new[] { new FrontendInstallChoice("minecraft:1.20.1", "1.20.1", "Test version", "1.20.1", FrontendInstallChoiceKind.Minecraft, ManifestUrl: manifestUrl,
             Metadata: new JsonObject { ["catalogGroup"] = "release" }) });
