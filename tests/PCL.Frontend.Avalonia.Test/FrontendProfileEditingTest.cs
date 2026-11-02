@@ -243,6 +243,12 @@ public sealed class FrontendProfileEditingTest
 
         public ProfileFixture(MinecraftLaunchProfileDocument? document = null)
         {
+            if (OperatingSystem.IsLinux()
+                && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PCL_ENCRYPTION_KEY")))
+            {
+                Environment.SetEnvironmentVariable("PCL_ENCRYPTION_KEY", "pcl-frontend-profile-tests");
+            }
+
             Paths = new FrontendRuntimePaths(_root, _root + "/temp", _root + "/data", _root + "/shared",
                 _root + "/shared/config.json", _root + "/data/config.yml", _root + "/appdata", []);
             if (document is not null) FrontendProfileStorageService.Save(Paths, document);
