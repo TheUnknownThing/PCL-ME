@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
 using PCL.Extensions.Contracts;
@@ -106,8 +107,19 @@ internal sealed class ExtensionWorkerClient : IExtensionWorker
         if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
         _lifetime.Cancel();
         foreach (var request in _pending.Values) request.TrySetException(new ObjectDisposedException(nameof(IExtensionWorker)));
-        try { if (!_process.HasExited) _process.Kill(entireProcessTree: true); }
+        try
+        {
+            if (!_process.HasExited)
+            {
+                _process.Kill(entireProcessTree: true);
+                // A killed process releases its assembly file locks only once it has
+                // actually exited; callers may delete package directories right
+                // after disposal, so the kill must settle before returning.
+                _process.WaitForExit(TimeSpan.FromSeconds(3));
+            }
+        }
         catch (InvalidOperationException) { }
+        catch (Win32Exception) { }
         _shutdown.Unregister();
         _process.Dispose();
     }
