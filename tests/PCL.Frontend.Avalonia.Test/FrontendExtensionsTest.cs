@@ -1,10 +1,13 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text.Json;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
+using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Extensions.Contracts;
@@ -14,6 +17,7 @@ using PCL.Extensions.Runtime;
 using PCL.Frontend.Avalonia.Desktop;
 using PCL.Frontend.Avalonia.Desktop.Extensions;
 using PCL.Frontend.Avalonia.Workflows;
+using PCL.UI.Animation;
 using static PCL.Frontend.Avalonia.Test.FrontendProfileEditingTest;
 using static PCL.Frontend.Avalonia.Test.FrontendDeferredContentTest;
 
@@ -103,6 +107,51 @@ public sealed class FrontendExtensionsTest
             Assert.IsFalse(fixture.Session.Host.Commands.Any(command => command.Definition.Id == "pcl.global-search.open"));
             await fixture.DisposeSessionAsync();
         });
+    }
+
+    [TestMethod]
+    public async Task GlobalSearch_OverlayUsesDialogCardMotionAndAnimatesCategorySwitches()
+    {
+        await FrontendMotionTest.RunAsync(async () =>
+        {
+            await using var fixture = new SessionFixture();
+            await fixture.Session.StartAsync();
+            fixture.Launcher.DismissPromptOverlayCommand.Execute(null); Tick();
+            await fixture.Session.Host.ExecuteCommandAsync("pcl.global-search.open");
+            Tick();
+            var overlay = fixture.Session.OverlayContent!;
+            Assert.IsTrue(overlay.GetVisualAncestors().OfType<Border>().Any(border => border.Classes.Contains("pcl-dialog-panel")),
+                "Extension overlays must present their surface on the launcher dialog card panel.");
+            var results = overlay.FindControl<ListBox>("SearchResults")!;
+            Assert.IsTrue(Motion.GetStaggerChildren(results), "Result rows must enter with the staggered card motion.");
+            await WaitPaletteAsync(() => results.ItemCount > 0, "Palette suggestions did not load");
+            Assert.IsTrue(Motion.IsAnimating(results), "The initial result list must play the entrance motion.");
+
+            overlay.GetVisualDescendants().OfType<ToggleButton>().Single(filter => filter.Name == "Filter_pages")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await WaitPaletteAsync(() => results.Items.Cast<ExtensionSearchResult>().Any()
+                && results.Items.Cast<ExtensionSearchResult>().All(result => result.Kind == ExtensionSearchKind.Page),
+                "Page category was not applied");
+            Assert.IsTrue(Motion.IsAnimating(results), "Switching categories must replay the entrance motion.");
+
+            await FrontendMotionTest.Advance(800);
+            Assert.IsFalse(Motion.IsAnimating(results));
+            Assert.AreEqual(1d, results.Opacity);
+            await fixture.DisposeSessionAsync();
+        });
+    }
+
+    private static async Task WaitPaletteAsync(Func<bool> condition, string message)
+    {
+        var timeout = TimeSpan.FromSeconds(5);
+        var elapsed = Stopwatch.StartNew();
+        do
+        {
+            Tick();
+            if (condition()) return;
+            await Task.Delay(16);
+        } while (elapsed.Elapsed < timeout);
+        Assert.Fail(message);
     }
 
     [TestMethod]

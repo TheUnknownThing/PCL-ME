@@ -9,6 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Extensions.Contracts;
+using PCL.UI.Animation;
 using PCL.UI.Commands;
 using PCL.UI.Controls;
 using PCL.UI.Icons;
@@ -21,6 +22,8 @@ internal sealed partial class SearchPalette : UserControl, IDisposable
     private readonly Dictionary<ToggleButton, (ExtensionSearchKind? Kind, string Key)> _filters = [];
     private CancellationTokenSource? _queryCancellation;
     private ExtensionSearchKind? _kind;
+    private ExtensionSearchKind? _presentedKind;
+    private bool _hasPresentedResults;
     private int _generation;
     private bool _disposed;
     private bool _searching;
@@ -66,6 +69,14 @@ internal sealed partial class SearchPalette : UserControl, IDisposable
             return row;
         });
         SearchQuery.PropertyChanged += (_, e) => { if (e.Property == PclSearchBox.TextProperty) QueueQuery(); };
+        Motion.SetInitialOpacity(SearchResults, 0);
+        Motion.SetOffsetX(SearchResults, 0);
+        Motion.SetOffsetY(SearchResults, -8);
+        Motion.SetExitOffsetX(SearchResults, 0);
+        Motion.SetExitOffsetY(SearchResults, -8);
+        Motion.SetOvershootTranslation(SearchResults, true);
+        Motion.SetStaggerChildren(SearchResults, true);
+        Motion.SetStaggerStep(SearchResults, 38);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
         AttachedToVisualTree += (_, _) => Dispatcher.UIThread.Post(() =>
         {
@@ -124,6 +135,7 @@ internal sealed partial class SearchPalette : UserControl, IDisposable
         _queryCancellation = CancellationTokenSource.CreateLinkedTokenSource(_context.Lifetime);
         var token = _queryCancellation.Token;
         var generation = ++_generation;
+        var replayEntrance = !_hasPresentedResults || _presentedKind != _kind;
         _searching = true;
         SearchResults.SelectedIndex = -1;
         SearchResults.IsEnabled = false;
@@ -137,6 +149,7 @@ internal sealed partial class SearchPalette : UserControl, IDisposable
             var results = await _context.Search.QueryAsync(new(SearchQuery.Text, _context.Settings.Get("limit", 30), _kind), token);
             if (_disposed || generation != _generation) return;
             _searching = false;
+            _presentedKind = _kind; _hasPresentedResults = true;
             SearchResults.ItemsSource = results;
             SearchResults.IsEnabled = true;
             SearchResults.Opacity = 1;
@@ -144,6 +157,7 @@ internal sealed partial class SearchPalette : UserControl, IDisposable
             if (results.Count > 0) SearchResults.ScrollIntoView(results[0]);
             EmptyState.IsVisible = results.Count == 0;
             EmptyTitle.Text = T("empty"); EmptyHint.Text = T("empty_hint");
+            await Motion.ShowAsync(SearchResults, () => generation == _generation && !_disposed, replayWhenVisible: replayEntrance);
             SearchStatus.Text = results.Count == 0 ? T("no_results") : string.IsNullOrWhiteSpace(SearchQuery.Text) ? T("suggested") : T("results").Replace("{count}", results.Count.ToString(), StringComparison.Ordinal);
         }
         catch (OperationCanceledException) { }
