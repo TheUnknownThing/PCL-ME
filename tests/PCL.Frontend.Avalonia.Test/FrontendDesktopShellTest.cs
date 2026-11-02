@@ -24,6 +24,8 @@ public sealed class FrontendDesktopShellTest
             using var shell = new DesktopShellController(window, new TestI18n(), command, window.Close, () => { });
             shell.SetTrayHostAvailable(true);
             shell.ApplySettings(new(true));
+            var icon = shell.TrayIcon;
+            Assert.IsNotNull(icon);
             window.Show();
             window.WindowState = WindowState.Maximized;
             window.Close();
@@ -35,6 +37,9 @@ public sealed class FrontendDesktopShellTest
             Assert.AreEqual(1, launches);
             shell.Quit();
             Assert.IsNull(shell.TrayIcon);
+            Assert.IsNull(icon.Menu);
+            Assert.IsNull(icon.Command);
+            Assert.IsFalse(icon.IsVisible);
             return Task.CompletedTask;
         });
     }
@@ -76,11 +81,47 @@ public sealed class FrontendDesktopShellTest
             using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { });
             shell.SetTrayHostAvailable(false);
             shell.ApplySettings(new(true)); window.Show();
+            Assert.IsNull(shell.TrayIcon, "Do not create a native tray icon until a tray host is available.");
             shell.ApplyShellAction(MinecraftLaunchShellActionKind.HideLauncher);
             Assert.IsTrue(window.IsVisible);
             Assert.AreEqual(WindowState.Minimized, window.WindowState);
             window.Close();
             Assert.IsTrue(closed);
+            return Task.CompletedTask;
+        });
+    }
+
+    [TestMethod]
+    public async Task TrayHostChanges_KeepTheSameIconAndMenuAndRestoreTheHiddenLauncher()
+    {
+        await FrontendMotionTest.RunAsync(() =>
+        {
+            var window = new Window();
+            using var shell = new DesktopShellController(window, new TestI18n(), new ActionCommand(() => { }), window.Close, () => { });
+            shell.SetTrayHostAvailable(false);
+            shell.ApplySettings(new(true));
+            window.Show();
+            shell.SetTrayHostAvailable(true);
+            var icon = shell.TrayIcon;
+            Assert.IsNotNull(icon);
+            var menu = icon.Menu;
+            Assert.IsNotNull(menu);
+            window.Close();
+            Assert.IsFalse(window.IsVisible);
+
+            shell.SetTrayHostAvailable(false);
+            Assert.IsTrue(window.IsVisible);
+            Assert.IsFalse(shell.HasRecoverySurface);
+            Assert.AreSame(icon, shell.TrayIcon, "Host discovery must not dispose an exporter with queued menu updates.");
+            Assert.AreSame(menu, shell.TrayIcon?.Menu);
+
+            shell.SetTrayHostAvailable(true);
+            Assert.AreSame(icon, shell.TrayIcon);
+            Assert.AreSame(menu, shell.TrayIcon?.Menu);
+            Assert.IsTrue(shell.HasRecoverySurface);
+            window.Close();
+            Assert.IsFalse(window.IsVisible);
+            shell.Quit();
             return Task.CompletedTask;
         });
     }

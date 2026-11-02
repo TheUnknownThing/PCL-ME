@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using PCL.Core.Minecraft.Launch;
 using PCL.Extensions.Runtime;
 using PCL.Frontend.Avalonia.Models;
@@ -91,10 +92,8 @@ internal sealed class DesktopShellController : IDisposable
     {
         if (_disposed || _trayHostAvailable == available) return;
         _trayHostAvailable = available;
-        if (TrayIcon?.Menu is { } previousMenu)
-            foreach (var item in previousMenu.Items.ToArray()) previousMenu.Items.Remove(item);
-        TrayIcon?.Dispose();
-        TrayIcon = null;
+        // Avalonia monitors Linux tray hosts itself. Disposing its exporter here
+        // can leave a queued D-Bus menu update targeting a removed handler.
         UpdateTray();
         RestoreWithoutRecoverySurface();
     }
@@ -142,6 +141,7 @@ internal sealed class DesktopShellController : IDisposable
         {
             if (TrayIcon is null)
             {
+                if (!_trayHostAvailable) return;
                 TrayIcon = new TrayIcon { Icon = _mainWindow.Icon, ToolTipText = FrontendApplicationIdentity.DisplayName, Command = _showCommand };
                 UpdateTrayMenu();
             }
@@ -205,8 +205,18 @@ internal sealed class DesktopShellController : IDisposable
         _i18n.Changed -= RefreshText;
         foreach (var window in _recovery) window.PropertyChanged -= OnRecoveryChanged;
         _recovery.Clear();
-        TrayIcon?.Dispose();
+        var trayIcon = TrayIcon;
         TrayIcon = null;
+        if (trayIcon is not null)
+        {
+            trayIcon.Menu = null;
+            trayIcon.Command = null;
+            trayIcon.IsVisible = false;
+            // Detach subscribers before clearing commands, and let already queued
+            // D-Bus menu updates finish before removing their handler.
+            if (OperatingSystem.IsLinux()) Dispatcher.UIThread.Post(trayIcon.Dispose, DispatcherPriority.Background);
+            else trayIcon.Dispose();
+        }
         _showItem.Command = _launchItem.Command = _quitItem.Command = null;
         foreach (var item in _extensionItems) item.Command = null;
     }
