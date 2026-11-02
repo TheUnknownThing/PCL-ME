@@ -1,0 +1,36 @@
+{
+  "id": "pcl.global-search",
+  "name": "Global search",
+  "description": "Search launcher commands, settings, instances and help.",
+  "version": "1.0.0",
+  "author": "PCL Community",
+  "apiVersion": 1,
+  "avaloniaMajorVersion": 11,
+  "entryAssembly": "PCL.Extensions.GlobalSearch.dll",
+  "entryType": "PCL.Extensions.GlobalSearch.GlobalSearchExtension",
+  "startWithLauncher": true,
+  "commands": [
+    {
+      "id": "pcl.global-search.open",
+      "title": "Global search",
+      "titleKey": "title",
+      "shortcut": "Primary+Shift+P",
+      "keywords": [
+        "search",
+        "find",
+        "commands"
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "key": "limit",
+      "title": "Maximum results",
+      "titleKey": "limit",
+      "kind": "Number",
+      "defaultValue": "30",
+      "minimum": 5,
+      "maximum": 100
+    }
+  ]
+}

@@ -1,0 +1,714 @@
+<Window
+    x:Class="PCL.Frontend.Avalonia.Desktop.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:animation="clr-namespace:PCL.UI.Animation;assembly=PCL.UI"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:motion="clr-namespace:PCL.UI.Animation;assembly=PCL.UI"
+    Title="PCL-ME"
+    Width="900"
+    Height="540"
+    MinWidth="810"
+    MinHeight="470"
+    Background="Transparent"
+    SystemDecorations="None"
+    TransparencyLevelHint="Transparent"
+    WindowStartupLocation="CenterScreen">
+  <Window.Resources>
+    <LinearGradientBrush x:Key="MainBackgroundBrush" StartPoint="90%,0%" EndPoint="10%,100%">
+      <GradientStop Color="{DynamicResource ColorObjectBg0}" Offset="-0.1" />
+      <GradientStop Color="{DynamicResource ColorObject7}" Offset="0.4" />
+      <GradientStop Color="{DynamicResource ColorObject6}" Offset="1.1" />
+    </LinearGradientBrush>
+  </Window.Resources>
+  <Window.Styles>
+    <Style Selector="Button.chrome">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinWidth" Value="28" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style Selector="Button.flat">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="Border.prompt-overlay-choice-item">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:pointerover Border.prompt-overlay-choice-item">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrushTransparent}" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected Border.prompt-overlay-choice-item">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="ListBox.prompt-overlay-choice-list ListBoxItem:selected:pointerover Border.prompt-overlay-choice-item">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush4}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+  </Window.Styles>
+
+  <Grid x:Name="GridRoot" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0,0">
+    <Grid x:Name="GridResize" Margin="10" RowDefinitions="14,*,14" ColumnDefinitions="14,*,14">
+      <Border x:Name="TopLeft" Grid.Row="0" Grid.Column="0">
+        <Border.Background>
+          <RadialGradientBrush Center="100%,100%" GradientOrigin="100%,100%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="TopRight" Grid.Row="0" Grid.Column="2">
+        <Border.Background>
+          <RadialGradientBrush Center="0%,100%" GradientOrigin="0%,100%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="BottomLeft" Grid.Row="2" Grid.Column="0">
+        <Border.Background>
+          <RadialGradientBrush Center="100%,0%" GradientOrigin="100%,0%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="BottomRight" Grid.Row="2" Grid.Column="2">
+        <Border.Background>
+          <RadialGradientBrush Center="0%,0%" GradientOrigin="0%,0%" RadiusX="100%" RadiusY="100%">
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="0.43" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.6" />
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Top" Grid.Row="0" Grid.Column="1" Height="8" VerticalAlignment="Top">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Right" Grid.Row="1" Grid.Column="2" Width="8" HorizontalAlignment="Right">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="100%,0%" EndPoint="0%,0%">
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Bottom" Grid.Row="2" Grid.Column="1" Height="8" VerticalAlignment="Bottom">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,100%" EndPoint="0%,0%">
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+      <Border x:Name="Left" Grid.Row="1" Grid.Column="0" Width="8" HorizontalAlignment="Left">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Color="{DynamicResource ColorObjectTransparent}" Offset="0" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowSoft}" Offset="0.7" />
+            <GradientStop Color="{DynamicResource ColorObjectWindowResizeShadowStrong}" Offset="1.0" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+    </Grid>
+
+    <Border x:Name="MainBorder" Margin="18" CornerRadius="15,15,8,8" Background="{DynamicResource MainBackgroundBrush}">
+      <Border.Transitions>
+        <Transitions>
+          <BrushTransition Property="Background" Duration="{Binding SurfaceState, Source={x:Static animation:MotionDurations.Source}}" />
+        </Transitions>
+      </Border.Transitions>
+
+      <Border x:Name="MainClipBorder" ClipToBounds="True" CornerRadius="6">
+        <Grid RowDefinitions="Auto,*">
+          <Border
+              x:Name="DynamicBackgroundHost"
+              Grid.RowSpan="2"
+              Background="{DynamicResource ColorBrushTransparent}"
+              IsHitTestVisible="False"
+              IsVisible="False" />
+
+          <Border
+              x:Name="DynamicBackgroundOverlay"
+              Grid.RowSpan="2"
+              Background="{DynamicResource ColorBrushTransparent}"
+              IsHitTestVisible="False"
+              IsVisible="False" />
+
+          <Grid
+              Margin="19,0,0,0"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Center"
+              ZIndex="3">
+            <StackPanel
+                IsVisible="{Binding ShowDefaultTitleBarBranding}"
+                Orientation="Horizontal"
+                Spacing="0">
+              <Path
+                  Width="48"
+                  Height="16"
+                  Data="M26,29 v-25 h5 a7,7 180 0 1 0,14 h-5 M61,6.5 a10,11.5 180 1 0 0,18 M68,2.5 v24.5 h12 M98,2"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Center"
+                  IsHitTestVisible="False"
+                  Stretch="Fill"
+                  Stroke="{DynamicResource ColorBrushTitleBarForeground}"
+                  StrokeThickness="1.9"
+                  UseLayoutRounding="False" />
+
+              <Border
+                  Width="32"
+                  Height="20"
+                  Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
+                  CornerRadius="5"
+                  IsHitTestVisible="False"
+                  VerticalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
+                    Text="ME" />
+              </Border>
+            </StackPanel>
+
+            <StackPanel
+                IsVisible="{Binding ShowTextTitleBarBranding}"
+                Orientation="Horizontal"
+                Spacing="10">
+              <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource ColorBrushTitleBarForeground}"
+                  FontSize="16"
+                  FontWeight="SemiBold"
+                  Text="{Binding TitleBarCustomText}" />
+              <Border
+                  MinWidth="32"
+                  Height="20"
+                  Padding="8,0"
+                  Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
+                  CornerRadius="5"
+                  IsHitTestVisible="False"
+                  VerticalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
+                    Text="ME" />
+              </Border>
+            </StackPanel>
+
+            <StackPanel
+                IsVisible="{Binding ShowImageTitleBarBranding}"
+                Orientation="Horizontal"
+                Spacing="10">
+              <Border
+                  Height="24"
+                  Padding="0"
+                  Background="{DynamicResource ColorBrushTransparent}"
+                  VerticalAlignment="Center">
+                <Image
+                    Height="24"
+                    Source="{Binding TitleBarCustomLogoImage}"
+                    Stretch="Uniform" />
+              </Border>
+              <Border
+                  MinWidth="32"
+                  Height="20"
+                  Padding="8,0"
+                  Background="{DynamicResource ColorBrushTitleBarBadgeBackground}"
+                  CornerRadius="5"
+                  IsHitTestVisible="False"
+                  VerticalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource ColorBrushTitleBarBadgeForeground}"
+                    Text="ME" />
+              </Border>
+            </StackPanel>
+          </Grid>
+
+          <StackPanel
+              Grid.Row="0"
+              HorizontalAlignment="Right"
+              Margin="0,0,12,0"
+              Orientation="Horizontal"
+              VerticalAlignment="Center"
+              ZIndex="3"
+              Spacing="2">
+            <StackPanel x:Name="ExtensionToolbar" Orientation="Horizontal" VerticalAlignment="Center" Spacing="2" />
+            <ui:PclIconButton
+                x:Name="MinimizeButton"
+                Width="28"
+                Height="28"
+                IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
+                Click="MinimizeButton_OnClick" />
+            <ui:PclIconButton
+                x:Name="MaximizeButton"
+                Width="28"
+                Height="28"
+                IsVisible="{Binding ShowMaximizeButton}"
+                IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
+                Click="MaximizeButton_OnClick" />
+            <ui:PclIconButton
+                x:Name="CloseButton"
+                Width="28"
+                Height="28"
+                IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
+                Click="CloseButton_OnClick" />
+          </StackPanel>
+
+          <Grid x:Name="ExtensionOverlayHost" Grid.RowSpan="2" ZIndex="50" IsVisible="False" />
+
+          <ContentControl
+              x:Name="ExtensionWorkspace"
+              Grid.Row="1"
+              ZIndex="20"
+              IsVisible="False"
+              Background="{DynamicResource ColorBrushBackground}" />
+
+          <Border
+              x:Name="NavBackgroundBorder"
+              Grid.Row="0"
+              Height="48"
+              PointerPressed="TitleBar_OnPointerPressed"
+              DoubleTapped="TitleBar_OnDoubleTapped"
+              ZIndex="2">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Color="{DynamicResource ColorObject2}" Offset="0" />
+                <GradientStop Color="{DynamicResource ColorObject3}" Offset="0.5" />
+                <GradientStop Color="{DynamicResource ColorObject2}" Offset="1" />
+              </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Grid Grid.Column="1">
+                <ItemsControl
+                    Margin="15,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="{Binding IsTopLevelNavigationInteractive}"
+                    motion:Motion.AnimateOnVisible="True"
+                    motion:Motion.OffsetY="8"
+                    IsVisible="{Binding ShowLeftAlignedTopLevelNavigation}"
+                    ItemsSource="{Binding TopLevelEntries}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <ui:PclTabButton
+                          Margin="5,0"
+                          Command="{Binding Command}"
+                          IconData="{Binding IconPath}"
+                          IconScale="{Binding IconScale}"
+                          IsSelected="{Binding IsSelected}"
+                          Text="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ItemsControl
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="{Binding IsTopLevelNavigationInteractive}"
+                    motion:Motion.AnimateOnVisible="True"
+                    motion:Motion.OffsetY="8"
+                    IsVisible="{Binding ShowCenteredTopLevelNavigation}"
+                    ItemsSource="{Binding TopLevelEntries}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <ui:PclTabButton
+                          Margin="5,0"
+                          Command="{Binding Command}"
+                          IconData="{Binding IconPath}"
+                          IconScale="{Binding IconScale}"
+                          IsSelected="{Binding IsSelected}"
+                          Text="{Binding Title}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid
+                    Margin="15,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    motion:Motion.AnimateOnVisible="True"
+                    motion:Motion.OffsetX="-12"
+                    ColumnDefinitions="Auto,Auto,*"
+                    IsVisible="{Binding ShowInnerNavigation}">
+                  <ui:PclIconButton
+                      x:Name="BackButton"
+                      Width="27"
+                      Height="27"
+                      VerticalAlignment="Center"
+                      Command="{Binding BackCommand}"
+                      IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                      HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
+                      ToolTip.Tip="{Binding BackTooltip}" />
+                  <ui:PclIconButton
+                      Grid.Column="1"
+                      Width="27"
+                      Height="27"
+                      Margin="8,0,0,0"
+                      VerticalAlignment="Center"
+                      Command="{Binding HomeCommand}"
+                      IconBrush="{DynamicResource ColorBrushTitleBarForeground}"
+                      HoverBackgroundBrush="{DynamicResource ColorBrushTitleBarHoverBackground}"
+                      IconData="M12 3.172 3 10v10h5v-6h8v6h5V10l-9-6.828zm0-2.5 11 8.344V22h-9v-6h-4v6H1V9.016L12 .672z"
+                      IsVisible="{Binding ShowHomeNavigation}"
+                      ToolTip.Tip="{Binding HomeTooltip}" />
+                  <TextBlock
+                      Grid.Column="2"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource ColorBrushTitleBarForeground}"
+                      FontSize="15"
+                      Text="{Binding TitleBarLabel}" />
+                </Grid>
+	          </Grid>
+	        </Grid>
+      </Border>
+
+          <Grid Grid.Row="1">
+            <Border
+                x:Name="LeftPaneBackdrop"
+                Width="{Binding CurrentLeftPaneWidth}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource ColorBrushBackgroundTransparentSidebar}"
+                IsHitTestVisible="False">
+              <Border
+                  Width="1"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Stretch"
+                  Background="{DynamicResource ColorBrushPaneDividerHighlight}" />
+            </Border>
+
+            <Grid
+                x:Name="LaunchRouteGrid"
+                IsVisible="{Binding IsLaunchRoute}"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.InitialOpacity="0"
+                motion:Motion.OffsetX="0"
+                motion:Motion.OffsetY="0"
+                ColumnDefinitions="Auto,*">
+              <Border
+                  x:Name="LaunchLeftHost"
+                  Grid.Column="0"
+                  Width="300"
+                  ClipToBounds="True"
+                  Background="Transparent">
+                <Grid x:Name="LaunchLeftContentHost">
+                  <controls:PclLaunchLeftPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+                </Grid>
+              </Border>
+
+              <Border x:Name="LaunchRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushPaneOverlay}">
+                <Grid x:Name="LaunchRightContentHost">
+                  <controls:PclLaunchRightPanel x:Name="LaunchRightPanel" />
+                </Grid>
+              </Border>
+            </Grid>
+
+            <Grid
+                x:Name="StandardRouteGrid"
+                IsVisible="{Binding IsStandardRoute}"
+                motion:Motion.AnimateOnVisible="True"
+                motion:Motion.InitialOpacity="0"
+                motion:Motion.OffsetX="0"
+                motion:Motion.OffsetY="0"
+                ColumnDefinitions="Auto,*">
+              <Border
+                  x:Name="StandardLeftHost"
+                  Grid.Column="0"
+                  IsVisible="{Binding ShowStandardLeftPane}"
+                  Width="{Binding StandardLeftPaneWidth}"
+                  ClipToBounds="True"
+                  Background="Transparent">
+                <Grid x:Name="StandardLeftContentHost">
+                  <ContentControl
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      Content="{Binding CurrentStandardLeftPane}" />
+                </Grid>
+              </Border>
+
+              <Border x:Name="StandardRightHost" Grid.Column="1" ClipToBounds="True" Background="{DynamicResource ColorBrushPaneOverlay}">
+                <Grid x:Name="StandardRightContentHost">
+                  <controls:PclAnimatedRightPaneHost PaneContent="{Binding CurrentStandardRightPane}" />
+                </Grid>
+              </Border>
+            </Grid>
+
+            <StackPanel
+                Margin="0,0,12,20"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                IsVisible="{Binding ShowBottomRightExtraButtons}"
+                Spacing="10">
+              <ItemsControl ItemsSource="{Binding UtilityEntries}" IsVisible="{Binding ShowBottomRightUtilityEntryButtons}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <ui:PclExtraButton
+                        Margin="0,0,0,10"
+                        Command="{Binding Command}"
+                        IconData="{Binding IconPath}"
+                        ToolTip.Tip="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <ui:PclExtraButton
+                  Command="{Binding OpenTaskManagerShortcutCommand}"
+                  IconData="M955 610h-59c-15 0-29 13-29 29v196c0 15-13 29-29 29h-649c-15 0-29-13-29-29v-196c0-15-13-29-29-29h-59c-15 0-29 13-29 29V905c0 43 35 78 78 78h787c43 0 78-35 78-78V640c0-15-13-29-29-29zM492 740c11 11 29 11 41 0l265-265c11-11 11-29 0-41l-41-41c-11-11-29-11-41 0l-110 110c-11 11-33 3-33-13V68C571 53 555 39 541 39h-59c-15 0-29 13-29 29v417c0 17-21 25-33 13l-110-110c-11-11-29-11-41 0L226 433c-11 11-11 29 0 41L492 740z"
+                  IsVisible="{Binding ShowTaskManagerShortcutButton}"
+                  ToolTip.Tip="{Binding TaskManagerTooltip}" />
+            </StackPanel>
+
+            <StackPanel
+                x:Name="PanHint"
+                Margin="0,0,28,24"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                IsHitTestVisible="False"
+                Spacing="6"
+                ZIndex="20" />
+
+            <Border
+                x:Name="PromptOverlayBackdrop"
+                IsVisible="False"
+                Classes="pcl-dialog-overlay"
+                Background="{DynamicResource ColorBrushPromptOverlayBackdrop}"
+                ZIndex="70" />
+
+            <Border
+                x:Name="PromptOverlayHost"
+                IsVisible="False"
+                MinWidth="400"
+                MaxWidth="620"
+                MaxHeight="540"
+                Margin="25"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource ColorBrushTransparent}"
+                BorderBrush="{DynamicResource ColorBrushTransparent}"
+                BorderThickness="0"
+                CornerRadius="7"
+                ZIndex="71">
+              <Border
+                  x:Name="PromptOverlayPanel"
+                  Classes="pcl-dialog-panel"
+                  Background="{DynamicResource ColorBrushMsgBox}"
+                  BoxShadow="{DynamicResource ColorShadowPromptPanel}"
+                  CornerRadius="7">
+                <Grid x:Name="PromptOverlayContentGrid" Margin="22,22,22,23">
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="2" />
+                    <RowDefinition Height="13" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="0" />
+                    <RowDefinition Height="Auto" />
+                  </Grid.RowDefinitions>
+                  <TextBlock
+                      Margin="7,-1,70,9"
+                      Foreground="{Binding PromptOverlayTitleBrush}"
+                      FontSize="23"
+                      Text="{Binding PromptOverlayTitle}" />
+
+                  <Rectangle
+                      Grid.Row="1"
+                      Height="2"
+                      Fill="{Binding PromptOverlayAccentBrush}" />
+
+                  <Border
+                      Grid.Row="3"
+                      IsVisible="{Binding ShowPromptOverlayMessage}"
+                      Margin="0,0,0,17"
+                      Padding="7,0,15,0">
+                    <ScrollViewer
+                        x:Name="PromptOverlayMessageScrollViewer"
+                        MaxHeight="380"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                      <TextBlock
+                          Padding="1,1,1,2"
+                          Width="{Binding Viewport.Width, ElementName=PromptOverlayMessageScrollViewer}"
+                          Foreground="{DynamicResource ColorBrushMsgBoxText}"
+                          FontSize="15"
+                          LineHeight="20"
+                          Text="{Binding PromptOverlayMessage}"
+                          TextWrapping="WrapWithOverflow" />
+                    </ScrollViewer>
+                  </Border>
+
+                  <TextBox
+                      x:Name="PromptOverlayInputTextBox"
+                      Grid.Row="4"
+                      IsVisible="{Binding ShowPromptOverlayTextInput}"
+                      MinWidth="450"
+                      Margin="7,0,7,12"
+                      HorizontalAlignment="Stretch"
+                      Padding="10,6"
+                      PasswordChar="{Binding PromptOverlayInputPasswordChar}"
+                      Text="{Binding PromptOverlayInputText, Mode=TwoWay}"
+                      Watermark="{Binding PromptOverlayInputPlaceholderText}" />
+
+                  <ScrollViewer
+                      Grid.Row="5"
+                      IsVisible="{Binding ShowPromptOverlayChoiceList}"
+                      Margin="0,0,0,17"
+                      MaxHeight="280"
+                      Padding="7,0,15,0"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+                    <ListBox
+                        x:Name="PromptOverlayChoiceListBox"
+                        Classes="prompt-overlay-choice-list"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        DoubleTapped="PromptOverlayChoiceListBox_OnDoubleTapped"
+                        ItemsSource="{Binding PromptOverlayChoiceOptions}"
+                        SelectedItem="{Binding SelectedPromptOverlayChoice, Mode=TwoWay}">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <Border
+                              Classes="prompt-overlay-choice-item"
+                              Padding="10,8"
+                              BorderThickness="0"
+                              CornerRadius="4">
+                            <StackPanel Spacing="4">
+                              <TextBlock
+                                  MaxWidth="520"
+                                  Foreground="{DynamicResource ColorBrush1}"
+                                  FontSize="14"
+                                  Text="{Binding Title}"
+                                  TextWrapping="WrapWithOverflow" />
+                              <TextBlock
+                                  MaxWidth="520"
+                                  Foreground="{DynamicResource ColorBrushPromptOverlayChoiceSummary}"
+                                  FontSize="12.5"
+                                  Text="{Binding Summary}"
+                                  TextWrapping="WrapWithOverflow" />
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </ScrollViewer>
+
+                  <ItemsControl
+                      Grid.Row="6"
+                      Margin="150,0,8,0"
+                      HorizontalAlignment="Right"
+                      ItemsSource="{Binding PromptOverlayOptions}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <ui:PclButton
+                            MinWidth="96"
+                            Margin="12,0,0,0"
+                            ColorType="{Binding ColorType}"
+                            Command="{Binding Command}"
+                            ContentPadding="8,5"
+                            Text="{Binding Label}"
+                            TextMargin="0,-1,0,0" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Grid>
+              </Border>
+	            </Border>
+
+	            <controls:WelcomeOnboardingOverlay Grid.RowSpan="2" ZIndex="60" />
+
+	          </Grid>
+	        </Grid>
+
+      </Border>
+    </Border>
+  </Grid>
+</Window>

@@ -1,0 +1,23 @@
+{
+  "actions.show_launcher": "Show launcher",
+  "actions.launch_selected": "Launch selected instance",
+  "actions.hide_pet": "Hide desktop pet",
+  "actions.quit": "Quit",
+  "pet.title": "PCL-ME desktop pet",
+  "pet.hint": "Configure the single-click and double-click actions in settings. Drag to move. Right-click for game launch and other actions.",
+  "settings.topmost": "Keep pet on top",
+  "settings.scale": "Pet size",
+  "settings.choose_image": "Choose image",
+  "settings.image_error_message": "Choose a valid image up to 4096 × 4096 pixels and 10 MB. Custom pets support static images only.",
+  "settings.use_custom": "Use a custom pet",
+  "settings.preset": "Preset",
+  "settings.click_action": "Single-click action",
+  "settings.double_click_action": "Double-click action",
+  "settings.action_none": "Do nothing",
+  "settings.action_play_animation": "Play interaction animation",
+  "appearances.slime": "Slime",
+  "appearances.enderman": "Enderman",
+  "presets.creeper_gif": "Creeper",
+  "presets.campfire_gif": "Campfire",
+  "extension.name": "PCL-ME desktop pet"
+}

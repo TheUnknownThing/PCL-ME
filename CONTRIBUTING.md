@@ -15,18 +15,33 @@
 
 ## 开始之前
 
-- 先阅读 [README](README.md) 与 [PCL.Frontend.Avalonia/README.md](PCL.Frontend.Avalonia/README.md)。
+- 先阅读 [README](README.md) 与 [src/PCL.Frontend.Avalonia/README.md](src/PCL.Frontend.Avalonia/README.md)。
 - 查看当前 [Issues](https://github.com/TheUnknownThing/PCL-ME/issues)，确认问题或提案是否已经存在。
 - 如果你准备为新功能提交 PR，请先创建对应的 Feature Issue，并等待 maintainer 在 Issue 中确认方向。
-- 涉及界面改动时，请优先修改 `PCL.Frontend.Avalonia/`，不要把新功能继续加回旧的 WPF 路线。
+- 涉及界面改动时，请优先修改 `src/PCL.Frontend.Avalonia/`，不要把新功能继续加回旧的 WPF 路线。
+
+## 仓库结构
+
+| 目录 | 内容 |
+| --- | --- |
+| `src/` | 启动器前后端、共享 UI、扩展 SDK 与运行时。 |
+| `extensions/` | 随启动器提供的内置扩展，每个扩展独立维护。 |
+| `tests/` | 单元测试、集成测试与桌面端到端测试。 |
+| `tools/` | 国际化编辑器与扩展打包工具。 |
+| `examples/` | 面向扩展开发者的可构建示例。 |
+| `docs/` | 架构、开发与维护文档。 |
+
+新增项目应放在对应目录，并加入解决方案中同名的文件夹，避免在仓库根目录堆积项目。
 
 ## 本地开发
+
+扩展系统的架构、稳定 API、原生 Avalonia UI、打包流程与示例见 [扩展开发指南](docs/extension-system.md)。可独立启用的功能可以通过扩展实现，无需引用启动器的内部程序集。
 
 ```bash
 dotnet restore
 dotnet build
 dotnet test
-dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
 建议：

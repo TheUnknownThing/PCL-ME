@@ -1,0 +1,23 @@
+{
+  "actions.show_launcher": "顯啟動器",
+  "actions.launch_selected": "啟所選實例",
+  "actions.hide_pet": "隱桌寵",
+  "actions.quit": "退出",
+  "pet.title": "PCL-ME 桌寵",
+  "pet.hint": "單擊、雙擊之行，可於設置中改之；拖之可移，右擊以啟選單，可啟遊戲及行他事。",
+  "settings.topmost": "桌寵居頂",
+  "settings.scale": "桌寵大小",
+  "settings.choose_image": "擇圖",
+  "settings.image_error_message": "請擇有效之圖，長寬各不逾 4096 像素，檔案不逾 10 MB。自定桌寵唯用靜圖。",
+  "settings.use_custom": "用自定之桌寵",
+  "settings.preset": "預設之樣",
+  "settings.click_action": "單擊之行",
+  "settings.double_click_action": "雙擊之行",
+  "settings.action_none": "無所為",
+  "settings.action_play_animation": "播互動之動畫",
+  "appearances.slime": "史萊姆",
+  "appearances.enderman": "末影人",
+  "presets.creeper_gif": "苦力怕",
+  "presets.campfire_gif": "營火",
+  "extension.name": "PCL-ME 桌寵"
+}

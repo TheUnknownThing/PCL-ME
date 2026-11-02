@@ -1,0 +1,156 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.SetupUpdateRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    DataContext="{ReflectionBinding Launcher}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10" Spacing="15">
+      <ui:PclCard ContentMargin="20,15,20,15">
+        <ui:PclCard.CardContent>
+          <Grid ColumnDefinitions="Auto,*,8,75" RowDefinitions="28,7,28">
+            <TextBlock
+                Grid.Row="0"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13.5"
+                Text="{Binding SetupText.Update.UpdateChannelLabel}" />
+            <ComboBox
+                Grid.Row="0"
+                Grid.Column="1"
+                Grid.ColumnSpan="3"
+                Height="28"
+                ItemsSource="{Binding UpdateChannelOptions}"
+                ui:PclComboBoxSelection.SelectedIndex="{Binding SelectedUpdateChannelIndex}" />
+
+            <TextBlock
+                Grid.Row="2"
+                Margin="0,0,25,0"
+                VerticalAlignment="Center"
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13.5"
+                Text="{Binding SetupText.Update.UpdateModeLabel}" />
+            <ComboBox
+                Grid.Row="2"
+                Grid.Column="1"
+                Grid.ColumnSpan="3"
+                Height="28"
+                ItemsSource="{Binding UpdateModeOptions}"
+                ui:PclComboBoxSelection.SelectedIndex="{Binding SelectedUpdateModeIndex}" />
+
+          </Grid>
+        </ui:PclCard.CardContent>
+      </ui:PclCard>
+
+      <ui:PclCard IsVisible="{Binding ShowAvailableUpdateCard}" ContentMargin="20,20,20,20">
+        <ui:PclCard.CardContent>
+          <Grid ColumnDefinitions="50,10,*,85" RowDefinitions="29,1,20,8,Auto,10,Auto">
+            <Border
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Width="50"
+                Height="50"
+                CornerRadius="12"
+                ClipToBounds="True">
+              <Image Source="{Binding UpdateAvailableIcon}" Stretch="UniformToFill" />
+            </Border>
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                VerticalAlignment="Bottom"
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="20"
+                Text="{Binding AvailableUpdateName}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="2"
+                VerticalAlignment="Top"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                FontSize="14"
+                Text="{Binding AvailableUpdatePublisher}" />
+            <ui:PclButton
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="3"
+                Width="85"
+                Height="30"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Command="{Binding DownloadUpdateCommand}"
+                ColorType="Highlight"
+                Text="{Binding SetupText.Update.DownloadAndInstallButton}" />
+            <TextBlock
+                Grid.Row="4"
+                Grid.ColumnSpan="4"
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="13"
+                Text="{Binding AvailableUpdateSummary}"
+                TextWrapping="Wrap" />
+            <Button
+                Grid.Row="6"
+                Grid.ColumnSpan="4"
+                Padding="0"
+                HorizontalAlignment="Left"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Command="{Binding ShowUpdateDetailCommand}">
+              <TextBlock
+                  Foreground="{DynamicResource ColorBrush3}"
+                  FontSize="12.5"
+                  Text="{Binding SetupText.Update.MoreInfoButton}" />
+            </Button>
+          </Grid>
+        </ui:PclCard.CardContent>
+      </ui:PclCard>
+
+      <ui:PclCard IsVisible="{Binding ShowCurrentVersionCard}" ContentMargin="20,20,20,20">
+        <ui:PclCard.CardContent>
+          <Grid ColumnDefinitions="50,10,*,80,10,100" RowDefinitions="29,1,20">
+            <Border
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Width="50"
+                Height="50"
+                CornerRadius="12"
+                ClipToBounds="True">
+              <Image Source="{Binding UpdateCurrentIcon}" Stretch="UniformToFill" />
+            </Border>
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                VerticalAlignment="Bottom"
+                Foreground="{DynamicResource ColorBrush1}"
+                FontSize="20"
+                Text="{Binding CurrentVersionName}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="2"
+                VerticalAlignment="Top"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                FontSize="14"
+                Text="{Binding CurrentVersionDescription}" />
+            <ui:PclButton
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="3"
+                Command="{Binding CheckUpdateAgainCommand}"
+                ColorType="Highlight"
+                Text="{Binding SetupText.Update.CheckAgainButton}" />
+            <ui:PclButton
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="5"
+                Command="{Binding OpenFullChangelogCommand}"
+                Text="{Binding SetupText.Update.ViewChangelogButton}" />
+          </Grid>
+        </ui:PclCard.CardContent>
+      </ui:PclCard>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

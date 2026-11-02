@@ -1,0 +1,96 @@
+<UserControl x:Class="PCL.Extensions.GlobalSearch.SearchPalette"
+    xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    Foreground="{DynamicResource Pcl.Foreground}" MaxHeight="520">
+  <UserControl.Styles>
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,2" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Template">
+        <ControlTemplate><ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="Stretch" /></ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="ToggleButton.filter">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.MutedForeground}" />
+    </Style>
+    <Style Selector="ToggleButton.filter:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ColorBrush8}" />
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.Foreground}" />
+    </Style>
+    <Style Selector="ToggleButton.filter:checked">
+      <Setter Property="Background" Value="{DynamicResource ColorBrush7}" />
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.Accent}" />
+    </Style>
+    <Style Selector="Border.keycap">
+      <Setter Property="Background" Value="{DynamicResource Pcl.Surface}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Pcl.Divider}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="Padding" Value="5,1" />
+      <Setter Property="MinWidth" Value="22" />
+    </Style>
+    <Style Selector="TextBlock.key">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.MutedForeground}" />
+    </Style>
+  </UserControl.Styles>
+  <Border Name="SearchSurface" Background="{DynamicResource Pcl.Surface}" BorderBrush="{DynamicResource Pcl.Border}"
+      BorderThickness="1" CornerRadius="8" BoxShadow="{DynamicResource Pcl.OverlayShadow}">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+      <StackPanel Margin="20,15,20,12" Spacing="10">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+          <TextBlock Name="Heading" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource Pcl.MutedForeground}" VerticalAlignment="Center" />
+          <Border Grid.Column="1" Classes="keycap" Margin="0,0,10,0" VerticalAlignment="Center"><TextBlock Name="Shortcut" Classes="key" /></Border>
+          <ui:PclIconButton Name="CloseSearch" Grid.Column="2" Width="24" Height="24" ButtonSize="24" IconScale="0.7" IconBrush="{DynamicResource Pcl.MutedForeground}" />
+        </Grid>
+        <ui:PclSearchBox Name="SearchQuery" Height="46" FontSize="16" />
+      </StackPanel>
+      <Grid Grid.Row="1" RowDefinitions="Auto,Auto">
+        <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="12,0,12,10">
+          <StackPanel Name="Filters" Orientation="Horizontal" Spacing="3" />
+        </ScrollViewer>
+        <Border Grid.Row="1" Height="1" Background="{DynamicResource Pcl.Divider}" />
+      </Grid>
+      <Grid Grid.Row="2" MinHeight="140">
+        <ListBox Name="SearchResults" Background="Transparent" BorderThickness="0" Margin="8,6,8,8"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+        <StackPanel Name="EmptyState" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="28,26" Spacing="10">
+          <Path Name="EmptyIcon" Width="28" Height="28" Stretch="Uniform" Fill="{DynamicResource Pcl.MutedForeground}" Opacity="0.6" HorizontalAlignment="Center" />
+          <TextBlock Name="EmptyTitle" FontSize="15" FontWeight="Medium" TextAlignment="Center" TextWrapping="Wrap" />
+          <TextBlock Name="EmptyHint" FontSize="12" Foreground="{DynamicResource Pcl.MutedForeground}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420" />
+          <ui:PclButton Name="RetrySearch" Width="110" IsVisible="False" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+      <Border Grid.Row="3" Background="{DynamicResource Pcl.SubtleSurface}" BorderBrush="{DynamicResource Pcl.Divider}" BorderThickness="0,1,0,0" CornerRadius="0,0,8,8" Padding="16,9">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Name="SearchStatus" FontSize="11" Foreground="{DynamicResource Pcl.MutedForeground}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="12,0,0,0">
+            <Border Classes="keycap"><TextBlock Text="↑ ↓" Classes="key" /></Border>
+            <TextBlock Name="NavigateHint" Classes="key" VerticalAlignment="Center" Margin="0,0,7,0" />
+            <Border Classes="keycap"><TextBlock Text="↵" Classes="key" /></Border>
+            <TextBlock Name="OpenHint" Classes="key" VerticalAlignment="Center" Margin="0,0,7,0" />
+            <Border Classes="keycap"><TextBlock Text="Esc" Classes="key" /></Border>
+            <TextBlock Name="CloseHint" Classes="key" VerticalAlignment="Center" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</UserControl>

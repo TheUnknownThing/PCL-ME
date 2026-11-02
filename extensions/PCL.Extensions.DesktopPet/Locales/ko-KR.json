@@ -1,0 +1,23 @@
+{
+  "actions.show_launcher": "런처 표시",
+  "actions.launch_selected": "선택한 인스턴스 실행",
+  "actions.hide_pet": "데스크톱 펫 숨기기",
+  "actions.quit": "종료",
+  "pet.title": "PCL-ME 데스크톱 펫",
+  "pet.hint": "클릭 및 더블 클릭 동작은 설정에서 변경할 수 있습니다. 드래그하여 이동하세요. 게임 실행 및 다른 작업은 마우스 오른쪽 버튼 메뉴에서 선택하세요.",
+  "settings.topmost": "펫을 항상 위에 표시",
+  "settings.scale": "펫 크기",
+  "settings.choose_image": "이미지 선택",
+  "settings.image_error_message": "4096 × 4096픽셀 및 10MB 이하의 유효한 이미지를 선택하세요. 사용자 지정 펫은 정적 이미지만 지원합니다.",
+  "settings.use_custom": "사용자 지정 펫 사용",
+  "settings.preset": "프리셋",
+  "settings.click_action": "클릭 동작",
+  "settings.double_click_action": "더블 클릭 동작",
+  "settings.action_none": "아무 작업 안 함",
+  "settings.action_play_animation": "상호작용 애니메이션 재생",
+  "appearances.slime": "슬라임",
+  "appearances.enderman": "엔더맨",
+  "presets.creeper_gif": "크리퍼",
+  "presets.campfire_gif": "캠프파이어",
+  "extension.name": "PCL-ME 데스크톱 펫"
+}

@@ -1,0 +1,117 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclLaunchRightPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel
+        Margin="25,25,25,10"
+        Spacing="15">
+      <Border x:Name="LaunchAnnouncementHost" IsVisible="False" Background="Transparent">
+        <ui:PclCard
+            x:Name="LaunchAnnouncementCard"
+            Header="{Binding LaunchAnnouncementHeader}"
+            IsClosable="True"
+            CloseCommand="{Binding DismissLaunchCommunityHintCommand}"
+            ContentMargin="20,12,20,15">
+          <ui:PclCard.CardContent>
+            <StackPanel Spacing="2">
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchAnnouncementPrimaryText}" />
+              <TextBlock
+                  FontSize="13.5"
+                  TextWrapping="Wrap"
+                  Text="{Binding LaunchAnnouncementSecondaryText}" />
+            </StackPanel>
+          </ui:PclCard.CardContent>
+        </ui:PclCard>
+      </Border>
+
+      <ui:PclCard
+          Header="{Binding LaunchHomepageStatusTitle}"
+          IsVisible="{Binding ShowLaunchHomepageStatusCard}"
+          ContentMargin="20,16,20,16">
+        <ui:PclCard.CardContent>
+          <StackPanel Spacing="12">
+            <TextBlock
+                FontSize="13.5"
+                Foreground="{DynamicResource ColorBrush1}"
+                Text="{Binding LaunchHomepageStatusText}"
+                TextWrapping="Wrap" />
+            <ui:PclButton
+                Width="120"
+                Height="35"
+                Command="{Binding RefreshHomepageCommand}"
+                IsVisible="{Binding ShowLaunchHomepageRefreshAction}"
+                Text="{Binding LaunchHomepageRefreshButtonText}" />
+          </StackPanel>
+        </ui:PclCard.CardContent>
+      </ui:PclCard>
+
+      <ItemsControl ItemsSource="{Binding LaunchHomepageSections}" IsVisible="{Binding HasLaunchHomepageSections}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ui:PclCard Margin="0,0,0,15" Header="{Binding Title}" ContentMargin="18,18,18,16">
+              <ui:PclCard.CardContent>
+                <StackPanel Spacing="12">
+                  <ItemsControl ItemsSource="{Binding Images}" IsVisible="{Binding HasImages}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border
+                            Height="180"
+                            Background="{DynamicResource ColorBrushSemiTransparent}"
+                            BorderBrush="{DynamicResource ColorBrush6}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            IsVisible="{Binding HasBitmap}">
+                          <Image Source="{Binding Bitmap}" Stretch="UniformToFill" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <TextBlock
+                      FontSize="12"
+                      Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                      IsVisible="{Binding HasSubtitle}"
+                      Text="{Binding Subtitle}"
+                      TextWrapping="Wrap" />
+
+                  <ItemsControl ItemsSource="{Binding Lines}" IsVisible="{Binding HasLines}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="13.5"
+                            Foreground="{DynamicResource ColorBrush1}"
+                            Text="{Binding}"
+                            TextWrapping="Wrap" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <ItemsControl ItemsSource="{Binding Actions}" IsVisible="{Binding HasActions}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <ui:PclListItem
+                            Margin="0,0,0,8"
+                            Command="{Binding Command}"
+                            Info="{Binding Info}"
+                            Title="{Binding Title}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </ui:PclCard.CardContent>
+            </ui:PclCard>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

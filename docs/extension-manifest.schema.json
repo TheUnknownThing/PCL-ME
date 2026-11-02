@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PCL-ME extension manifest (API 1)",
+  "type": "object",
+  "required": ["id", "name", "version", "apiVersion", "entryAssembly", "entryType"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "$ref": "#/$defs/version" },
+    "description": { "type": "string" },
+    "author": { "type": "string" },
+    "website": { "type": ["string", "null"], "format": "uri" },
+    "apiVersion": { "const": 1 },
+    "minimumSdkVersion": { "$ref": "#/$defs/version" },
+    "requiredCapabilities": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "optionalCapabilities": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "avaloniaMajorVersion": { "type": ["integer", "null"], "minimum": 1 },
+    "entryAssembly": { "type": "string", "minLength": 1 },
+    "entryType": { "type": "string", "minLength": 1 },
+    "startWithLauncher": { "type": "boolean", "default": false },
+    "defaultLocale": { "type": "string", "default": "en-US", "minLength": 1 },
+    "platforms": { "type": "array", "uniqueItems": true, "items": { "enum": ["windows", "linux", "macos"] } },
+    "architectures": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "minimumVersion"],
+        "properties": { "id": { "$ref": "#/$defs/id" }, "minimumVersion": { "$ref": "#/$defs/version" } }
+      }
+    },
+    "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } },
+    "settings": { "type": "array", "items": { "$ref": "#/$defs/setting" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+){0,2}$" },
+    "command": {
+      "type": "object", "additionalProperties": false, "required": ["id", "title"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "titleKey": { "type": ["string", "null"] },
+        "shortcut": { "type": ["string", "null"] },
+        "keywords": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "choice": {
+      "type": "object", "additionalProperties": false, "required": ["value", "title"],
+      "properties": {
+        "value": { "type": "string" }, "title": { "type": "string" }, "titleKey": { "type": ["string", "null"] }
+      }
+    },
+    "setting": {
+      "type": "object", "additionalProperties": false, "required": ["key", "title", "kind", "defaultValue"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "titleKey": { "type": ["string", "null"] },
+        "kind": { "enum": ["Boolean", "String", "Number", "Choice", "File"] },
+        "defaultValue": { "type": ["string", "null"] },
+        "minimum": { "type": ["number", "null"] },
+        "maximum": { "type": ["number", "null"] },
+        "choices": { "type": "array", "items": { "$ref": "#/$defs/choice" } },
+        "filePatterns": { "type": "array", "items": { "type": "string" } }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "Boolean" } } }, "then": { "properties": { "defaultValue": { "enum": ["true", "false"] } } } },
+        { "if": { "properties": { "kind": { "const": "Number" } } }, "then": { "properties": { "defaultValue": { "type": "string", "pattern": "^-?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$" } } } },
+        { "if": { "properties": { "kind": { "const": "Choice" } } }, "then": { "required": ["choices"], "properties": { "choices": { "minItems": 1 }, "defaultValue": { "type": "string" } } } }
+      ]
+    }
+  }
+}

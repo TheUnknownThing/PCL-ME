@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Description>Native Avalonia UI contribution contracts for PCL-ME extensions.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.13" />
+    <ProjectReference Include="../PCL.Extensions.Contracts/PCL.Extensions.Contracts.csproj" />
+    <ProjectReference Include="../PCL.UI/PCL.UI.csproj" />
+  </ItemGroup>
+</Project>

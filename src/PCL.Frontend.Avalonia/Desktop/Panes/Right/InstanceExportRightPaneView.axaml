@@ -1,0 +1,48 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.InstanceExportRightPaneView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
+    xmlns:sections="clr-namespace:PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections"
+    DataContext="{ReflectionBinding Launcher}">
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="25,10,25,65">
+        <sections:InstanceExportHeaderSection />
+        <sections:InstanceExportOptionsSection />
+        <sections:InstanceExportAdvancedSection />
+      </StackPanel>
+    </ScrollViewer>
+
+    <ui:PclIconTextButton
+        Margin="0,0,0,15"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Bottom"
+        Command="{Binding StartInstanceExportCommand}"
+        ColorType="Highlight"
+        IsEnabled="{Binding CanStartInstanceExport}"
+        IsVisible="{Binding ShowInstanceExportStartButton}"
+        UseFloatingSurface="True"
+        IconData="{Binding InstanceExportStartIconData}"
+        IconScale="{Binding InstanceExportStartIconScale}"
+        Text="{Binding InstanceExportStartText}" />
+    <ui:PclCard
+        Width="180"
+        Margin="0,0,0,15"
+        ContentMargin="14,12,14,11"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        IsVisible="{Binding IsInstanceExportRunning}">
+      <ui:PclCard.CardContent>
+        <controls:PclLoading
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsRunning="{Binding IsInstanceExportRunning}"
+            Text="{Binding InstanceExportLoadingText}" />
+      </ui:PclCard.CardContent>
+    </ui:PclCard>
+  </Grid>
+</UserControl>

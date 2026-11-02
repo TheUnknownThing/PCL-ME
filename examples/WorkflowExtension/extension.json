@@ -1,0 +1,21 @@
+{
+  "$schema": "../../docs/extension-manifest.schema.json",
+  "id": "example.workflows",
+  "name": "Workflow examples",
+  "description": "A private resource catalog, skin browser, mod presets, instance tools and world backups.",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "minimumSdkVersion": "1.1.0",
+  "requiredCapabilities": ["pcl.ui.contributions", "pcl.ui.context-actions", "pcl.instances", "pcl.resources", "pcl.resource-providers", "pcl.tasks", "pcl.lifecycle", "pcl.launch-hooks"],
+  "avaloniaMajorVersion": 11,
+  "entryAssembly": "WorkflowExtension.dll",
+  "entryType": "WorkflowExtension.WorkflowExtension",
+  "startWithLauncher": true,
+  "settings": [
+    { "key": "catalogUrl", "title": "Private catalog JSON URL", "kind": "String", "defaultValue": "" },
+    { "key": "presetProvider", "title": "Preset provider ID", "kind": "String", "defaultValue": "pcl.modrinth" },
+    { "key": "presetProjects", "title": "Preset project IDs, separated by commas", "kind": "String", "defaultValue": "sodium,lithium" },
+    { "key": "recordProjects", "title": "Remember installed mod project IDs", "kind": "Boolean", "defaultValue": "false" },
+    { "key": "launchProperty", "title": "Add the example JVM system property", "kind": "Boolean", "defaultValue": "false" }
+  ]
+}

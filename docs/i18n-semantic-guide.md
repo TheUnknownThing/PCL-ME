@@ -5,13 +5,13 @@
 Translation files live under:
 
 ```text
-PCL.Frontend.Avalonia/Locales/<locale-name>.yaml
+src/PCL.Frontend.Avalonia/Locales/<locale-name>.yaml
 ```
 
 This translates to the following directory structure:
 
 ```text
-PCL.Frontend.Avalonia/
+src/PCL.Frontend.Avalonia/
   Locales/
     Meta/
       schema.yaml

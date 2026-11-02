@@ -3,7 +3,7 @@ dotnet = "10.0.201"
 
 [tasks.launch]
 description = "Build and Launch Avalonia Frontend for PCL-ME"
-run = "dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app"
+run = "dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app"
 
 [tasks.build]
 description = "Build the Solution"
@@ -12,11 +12,11 @@ run = "dotnet build"
 [tasks.test]
 description = "Run the same build and test steps as the GitHub Actions Build And Test workflow"
 run = """
-dotnet build PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -c Debug
-dotnet test PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj -c Debug
-dotnet test PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug
+dotnet build src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -c Debug
+dotnet test tests/PCL.Core.Backend.Foundation.Test/PCL.Core.Backend.Foundation.Test.csproj -c Debug
+dotnet test tests/PCL.Core.Backend.Test/PCL.Core.Backend.Test.csproj -c Debug
 """
 
 [tasks.i18n]
 description = "Run the standalone i18n developer tool"
-run = "dotnet run -p:NuGetAudit=false --project PCL.Tools.I18n/PCL.Tools.I18n.csproj --"
+run = "dotnet run -p:NuGetAudit=false --project tools/PCL.Tools.I18n/PCL.Tools.I18n.csproj --"

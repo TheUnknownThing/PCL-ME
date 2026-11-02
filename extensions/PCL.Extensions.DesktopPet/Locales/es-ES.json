@@ -1,0 +1,23 @@
+{
+  "actions.show_launcher": "Mostrar el lanzador",
+  "actions.launch_selected": "Iniciar la instancia seleccionada",
+  "actions.hide_pet": "Ocultar la mascota",
+  "actions.quit": "Salir",
+  "pet.title": "Mascota de PCL-ME",
+  "pet.hint": "Las acciones de clic y doble clic se configuran en los ajustes. Arrastra para mover. Haz clic derecho para iniciar el juego y ver otras acciones.",
+  "settings.topmost": "Mantener la mascota en primer plano",
+  "settings.scale": "Tamaño de la mascota",
+  "settings.choose_image": "Elegir imagen",
+  "settings.image_error_message": "Elige una imagen válida de hasta 4096 × 4096 píxeles y 10 MB. Las mascotas personalizadas solo admiten imágenes estáticas.",
+  "settings.use_custom": "Usar una mascota personalizada",
+  "settings.preset": "Preajuste",
+  "settings.click_action": "Acción al hacer clic",
+  "settings.double_click_action": "Acción al hacer doble clic",
+  "settings.action_none": "No hacer nada",
+  "settings.action_play_animation": "Reproducir animación de interacción",
+  "appearances.slime": "Slime",
+  "appearances.enderman": "Enderman",
+  "presets.creeper_gif": "Creeper",
+  "presets.campfire_gif": "Hoguera",
+  "extension.name": "Mascota de PCL-ME"
+}

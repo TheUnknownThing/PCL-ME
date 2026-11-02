@@ -179,9 +179,9 @@ jobs:
           EOF
 
           desktop_sha="$(sha256sum pcl-me.desktop | awk '{print $1}')"
-          icon_sha="$(curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${RELEASE_TAG}/PCL.Frontend.Avalonia/Assets/icon.png" | sha256sum | awk '{print $1}')"
+          icon_sha="$(curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${RELEASE_TAG}/src/PCL.Frontend.Avalonia/Assets/icon.png" | sha256sum | awk '{print $1}')"
           license_sha="$(curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${RELEASE_TAG}/LICENSE" | sha256sum | awk '{print $1}')"
-          frontend_license_sha="$(curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${RELEASE_TAG}/PCL.Frontend.Avalonia/LICENSE" | sha256sum | awk '{print $1}')"
+          frontend_license_sha="$(curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${RELEASE_TAG}/src/PCL.Frontend.Avalonia/LICENSE" | sha256sum | awk '{print $1}')"
 
           cat > PKGBUILD <<EOF
           # Maintainer: TheUnknownThing <TheUnknownThing@users.noreply.github.com>
@@ -214,9 +214,9 @@ jobs:
           _tag="v\${pkgver/beta./-beta.}"
           source=(
             'pcl-me.desktop'
-            "pcl-me.png::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/\${_tag}/PCL.Frontend.Avalonia/Assets/icon.png"
+            "pcl-me.png::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/\${_tag}/src/PCL.Frontend.Avalonia/Assets/icon.png"
             "LICENSE::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/\${_tag}/LICENSE"
-            "FRONTEND-LICENSE::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/\${_tag}/PCL.Frontend.Avalonia/LICENSE"
+            "FRONTEND-LICENSE::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/\${_tag}/src/PCL.Frontend.Avalonia/LICENSE"
           )
           source_x86_64=("PCL-ME-linux-x64-\${_tag}.tar.gz::https://github.com/TheUnknownThing/PCL-ME/releases/download/\${_tag}/PCL-ME-linux-x64.tar.gz")
           source_aarch64=("PCL-ME-linux-arm64-\${_tag}.tar.gz::https://github.com/TheUnknownThing/PCL-ME/releases/download/\${_tag}/PCL-ME-linux-arm64.tar.gz")
@@ -263,9 +263,9 @@ jobs:
           	conflicts = pcl-me
           	options = !strip
           	source = pcl-me.desktop
-          	source = pcl-me.png::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/${RELEASE_TAG}/PCL.Frontend.Avalonia/Assets/icon.png
+              source = pcl-me.png::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/${RELEASE_TAG}/src/PCL.Frontend.Avalonia/Assets/icon.png
           	source = LICENSE::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/${RELEASE_TAG}/LICENSE
-          	source = FRONTEND-LICENSE::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/${RELEASE_TAG}/PCL.Frontend.Avalonia/LICENSE
+              source = FRONTEND-LICENSE::https://raw.githubusercontent.com/TheUnknownThing/PCL-ME/${RELEASE_TAG}/src/PCL.Frontend.Avalonia/LICENSE
           	sha256sums = ${desktop_sha}
           	sha256sums = ${icon_sha}
           	sha256sums = ${license_sha}

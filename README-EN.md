@@ -1,7 +1,7 @@
 **English** · [简体中文](README-ZH_CN.md) · [繁體中文](README-ZH_TW.md)
 
 <p align="center">
-  <img src="PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME logo" width="112" height="112">
+  <img src="src/PCL.Frontend.Avalonia/Assets/icon.png" alt="PCL-ME logo" width="112" height="112">
 </p>
 
 <h1 align="center">PCL Multiplatform Edition</h1>
@@ -27,6 +27,7 @@ PCL-ME is a Minecraft launcher that brings Plain Craft Launcher's familiar workf
 - **Launch** — manage game instances and launch Minecraft from one place.
 - **Explore** — browse mods, modpacks, resource packs, and shaders for your next playthrough.
 - **Personalize** — adjust themes, color palettes, language, and interface scale to suit your desktop.
+- **Extend** — install `.pclext` packages in Tools → Extensions to add native pages, resource sources, instance workflows and launch hooks. See the [extension SDK and examples](docs/extension-system.md).
 
 ## A look inside
 
@@ -76,15 +77,15 @@ Install the **.NET 10 SDK**, then run these commands from the repository root:
 ```sh
 dotnet restore
 dotnet build
-dotnet run --project PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
+dotnet run --project src/PCL.Frontend.Avalonia/PCL.Frontend.Avalonia.csproj -- app
 ```
 
 The codebase separates the desktop interface from the shared launcher services:
 
 | Project | Responsibility |
 | --- | --- |
-| [PCL.Frontend.Avalonia](PCL.Frontend.Avalonia/README.md) | Desktop UI, themes, assets, and application packaging. |
-| [PCL.Core.Backend](PCL.Core.Backend/README.md) | Shared launcher services, Minecraft launch workflows, downloads, and platform utilities. |
+| [PCL.Frontend.Avalonia](src/PCL.Frontend.Avalonia/README.md) | Desktop UI, themes, assets, and application packaging. |
+| [PCL.Core.Backend](src/PCL.Core.Backend/README.md) | Shared launcher services, Minecraft launch workflows, downloads, and platform utilities. |
 
 Run `dotnet test` before submitting code changes. The project documentation above covers more specific build, test, packaging, and troubleshooting workflows.
 
@@ -98,7 +99,7 @@ When reporting a bug, include your operating system, launcher and game versions,
 
 Licensing depends on the directory:
 
-- UI-related content under `PCL.Frontend.Avalonia/` is covered by the frontend's [custom license](PCL.Frontend.Avalonia/LICENSE).
+- UI-related content under `src/PCL.Frontend.Avalonia/` is covered by the frontend's [custom license](src/PCL.Frontend.Avalonia/LICENSE).
 - The rest of the repository is covered by [Apache License 2.0](LICENSE), unless a file states otherwise.
 
 Check the license notice in a file's directory or parent directories for the applicable terms.

@@ -1,0 +1,51 @@
+using PCL.Frontend.Avalonia.Cli;
+using PCL.Frontend.Avalonia.Desktop;
+using PCL.Frontend.Avalonia.Workflows;
+
+public partial class Program
+{
+    [STAThread]
+    public static void Main(string[] args)
+    {
+        if (args.Length == 3 && args[0] == "extension-worker")
+        {
+            try { PCL.Extensions.Runtime.ExtensionWorkerServer.RunAsync(args[1], args[2]).GetAwaiter().GetResult(); }
+            catch (Exception ex) { Console.Error.WriteLine(ex.Message); Environment.ExitCode = 1; }
+            return;
+        }
+        if (args.Length == 0)
+        {
+            AvaloniaDesktopHost.Run(CreateDefaultAppOptions());
+            return;
+        }
+
+        var parseResult = AvaloniaCommandParser.Parse(args);
+        if (parseResult.ShowHelp)
+        {
+            Console.WriteLine(AvaloniaCommandParser.GetUsageText());
+            return;
+        }
+
+        if (parseResult.ErrorMessage is not null || parseResult.Options is null)
+        {
+            Console.Error.WriteLine(parseResult.ErrorMessage ?? "Unknown error.");
+            Console.WriteLine();
+            Console.WriteLine(AvaloniaCommandParser.GetUsageText());
+            Environment.ExitCode = 1;
+            return;
+        }
+
+        if (parseResult.Options.Command != AvaloniaCommandKind.App)
+        {
+            Environment.ExitCode = FrontendCliExecutionService.Run(parseResult.Options);
+            return;
+        }
+
+        AvaloniaDesktopHost.Run(parseResult.Options);
+    }
+
+    private static AvaloniaCommandOptions CreateDefaultAppOptions()
+    {
+        return AvaloniaCommandParser.CreateDefaultOptions();
+    }
+}

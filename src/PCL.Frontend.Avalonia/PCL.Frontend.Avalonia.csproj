@@ -1,0 +1,119 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>PCL.Frontend.Avalonia</AssemblyName>
+    <RootNamespace>PCL.Frontend.Avalonia</RootNamespace>
+    <AssemblyTitle>PCL-ME</AssemblyTitle>
+    <Company>PCL Community</Company>
+    <Product>PCL-ME</Product>
+    <Description>Cross-platform Avalonia frontend for PCL-ME.</Description>
+    <Version>1.0.0-beta.8</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0-beta.8</InformationalVersion>
+    <ApplicationIcon>Assets/icon.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <BuildInParallel>false</BuildInParallel>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableThemeColorSwitch>false</EnableThemeColorSwitch>
+    <EnableThemeColorSwitch Condition="'$(RuntimeIdentifier)' != '' and !$([System.String]::Copy('$(RuntimeIdentifier)').ToLowerInvariant().StartsWith('win'))">true</EnableThemeColorSwitch>
+    <EnableThemeColorSwitch Condition="'$(RuntimeIdentifier)' == '' and !$([MSBuild]::IsOSPlatform('Windows'))">true</EnableThemeColorSwitch>
+    <DefineConstants Condition="'$(EnableThemeColorSwitch)' == 'true'">$(DefineConstants);PCL_ENABLE_THEME_COLOR_SWITCH</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="
+      $([MSBuild]::IsOSPlatform('Windows'))
+      or ('$(RuntimeIdentifier)' != '' and $([System.String]::Copy('$(RuntimeIdentifier)').ToLowerInvariant().StartsWith('win')))
+    ">
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EmbeddedMicrosoftClientId>$([System.Environment]::GetEnvironmentVariable('PCL_MS_CLIENT_ID'))</EmbeddedMicrosoftClientId>
+    <EmbeddedMicrosoftClientId Condition="'$(EmbeddedMicrosoftClientId)' == ''">$([System.Environment]::GetEnvironmentVariable('MS_CLIENT_ID'))</EmbeddedMicrosoftClientId>
+    <EmbeddedCurseForgeApiKey>$([System.Environment]::GetEnvironmentVariable('PCL_CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
+    <EmbeddedCurseForgeApiKey Condition="'$(EmbeddedCurseForgeApiKey)' == ''">$([System.Environment]::GetEnvironmentVariable('CURSEFORGE_API_KEY'))</EmbeddedCurseForgeApiKey>
+    <I18nToolProjectPath>$(MSBuildProjectDirectory)/../../tools/PCL.Tools.I18n/PCL.Tools.I18n.csproj</I18nToolProjectPath>
+    <I18nToolDllPath>$(MSBuildProjectDirectory)/../../tools/PCL.Tools.I18n/bin/$(Configuration)/$(TargetFramework)/PCL.Tools.I18n.dll</I18nToolDllPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ae.Dns.Client" Version="3.1.0" />
+    <PackageReference Include="Avalonia" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
+    <PackageReference Include="fNbt" Version="1.0.0" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PCL.Core.Backend/PCL.Core.Backend.csproj" />
+    <ProjectReference Include="../PCL.Extensions.Runtime/PCL.Extensions.Runtime.csproj" />
+    <ProjectReference Include="../PCL.Extensions.Avalonia/PCL.Extensions.Avalonia.csproj" />
+    <ProjectReference Include="../../extensions/PCL.Extensions.DesktopPet/PCL.Extensions.DesktopPet.csproj" />
+    <ProjectReference Include="../../extensions/PCL.Extensions.GlobalSearch/PCL.Extensions.GlobalSearch.csproj" />
+    <ProjectReference Include="../../tools/PCL.Tools.I18n/PCL.Tools.I18n.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PCL.Core.Backend.Test</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PCL.Frontend.Avalonia.Test</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute"><_Parameter1>PCL.Frontend.Avalonia.E2E</_Parameter1></AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>PCL_SECRET_MS_CLIENT_ID</_Parameter1>
+      <_Parameter2>$(EmbeddedMicrosoftClientId)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>PCL_SECRET_CURSEFORGE_API_KEY</_Parameter1>
+      <_Parameter2>$(EmbeddedCurseForgeApiKey)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/icon.ico" />
+    <AvaloniaResource Include="Assets/icon.png" />
+    <EmbeddedResource Include="Assets/icon.png" LogicalName="PCL.Frontend.Avalonia.Assets.icon.png" />
+    <Content Include="Assets/LauncherAssets/**" Link="LauncherAssets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Locales/**" Link="Locales/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="ValidateI18nResources"
+          AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipI18nBuildValidation)' != 'true'">
+    <!-- Build a host-compatible copy of the validator so cross-RID publish can still run it locally. -->
+    <MSBuild Projects="$(I18nToolProjectPath)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)"
+             RemoveProperties="RuntimeIdentifier;SelfContained;PublishSingleFile;PublishReadyToRun" />
+    <Error Text="ERROR|I18N validation tool was not built at $(I18nToolDllPath)."
+           Condition="!Exists('$(I18nToolDllPath)')" />
+    <Exec Command='dotnet "$(I18nToolDllPath)" validate --format msbuild --locales-dir "$(MSBuildProjectDirectory)/Locales"'
+          IgnoreExitCode="true"
+          ConsoleToMsBuild="true">
+      <Output TaskParameter="ConsoleOutput" ItemName="_I18nValidationOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_I18nValidationExitCode" />
+    </Exec>
+    <Message Text="%(_I18nValidationOutput.Identity)"
+             Importance="Low"
+             Condition="$([System.String]::Copy('%(_I18nValidationOutput.Identity)').StartsWith('MESSAGE|'))" />
+    <Warning Text="%(_I18nValidationOutput.Identity)"
+             Condition="$([System.String]::Copy('%(_I18nValidationOutput.Identity)').StartsWith('WARNING|'))" />
+    <Error Text="%(_I18nValidationOutput.Identity)"
+           Condition="$([System.String]::Copy('%(_I18nValidationOutput.Identity)').StartsWith('ERROR|'))" />
+    <Error Text="ERROR|I18N validation command failed with exit code $(_I18nValidationExitCode)."
+           Condition="'$(_I18nValidationExitCode)' != '0'" />
+  </Target>
+</Project>

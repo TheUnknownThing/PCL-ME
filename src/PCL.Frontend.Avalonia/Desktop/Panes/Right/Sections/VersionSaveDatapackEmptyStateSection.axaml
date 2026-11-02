@@ -1,0 +1,45 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.Sections.VersionSaveDatapackEmptyStateSection"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <ui:PclCard IsVisible="{Binding HasNoVersionSaveDatapackEntries}" ContentMargin="20,17,20,17">
+    <ui:PclCard.CardContent>
+      <StackPanel Spacing="10">
+        <TextBlock
+            HorizontalAlignment="Center"
+            Foreground="{DynamicResource ColorBrush1}"
+            FontSize="19"
+            Text="{Binding VersionSaveDatapackEmptyTitle}" />
+        <Border Height="2" Background="{DynamicResource ColorBrush6}" />
+        <TextBlock
+            Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+            FontSize="12.5"
+            Text="{Binding VersionSaveDatapackEmptyDescription}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+        <WrapPanel HorizontalAlignment="Center">
+          <ui:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding InstallVersionSaveDatapackFromFileCommand}"
+              ColorType="Highlight"
+              Text="{Binding VersionSaveDatapackInstallFromFileText}" />
+          <ui:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding DownloadVersionSaveDatapackCommand}"
+              Text="{Binding VersionSaveDatapackDownloadNewText}" />
+          <ui:PclButton
+              MinWidth="130"
+              Margin="5,0"
+              Command="{Binding OpenVersionSaveDatapackFolderCommand}"
+              Text="{Binding VersionSaveDatapackOpenFolderText}" />
+        </WrapPanel>
+      </StackPanel>
+    </ui:PclCard.CardContent>
+  </ui:PclCard>
+</UserControl>

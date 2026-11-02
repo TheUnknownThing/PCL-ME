@@ -1,0 +1,638 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Controls.PclLaunchLeftPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    xmlns:animation="clr-namespace:PCL.UI.Animation;assembly=PCL.UI"
+    x:DataType="vm:LauncherViewModel"
+    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+  <UserControl.Styles>
+    <Style Selector="StackPanel.account-summary > Border.account-actions">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <Style Selector="StackPanel.account-summary:pointerover > Border.account-actions">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="IsHitTestVisible" Value="True" />
+    </Style>
+    <Style Selector="StackPanel.account-summary:focus-within > Border.account-actions">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="IsHitTestVisible" Value="True" />
+    </Style>
+  </UserControl.Styles>
+  <Grid Width="300">
+    <Grid
+        x:Name="PanInput"
+        RenderTransformOrigin="0.5,0.5">
+      <Grid.RenderTransform>
+        <ScaleTransform
+            ScaleX="1"
+            ScaleY="1" />
+      </Grid.RenderTransform>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="20" />
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="20" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="10" />
+      </Grid.ColumnDefinitions>
+
+      <Grid
+          Grid.Row="1"
+          Grid.ColumnSpan="5"
+          Margin="20,0"
+          VerticalAlignment="Center">
+        <Grid Margin="18,16,18,14">
+          <StackPanel
+              x:Name="AccountSummary"
+              Classes="account-summary"
+              Background="Transparent"
+              HorizontalAlignment="Stretch"
+              IsVisible="{Binding ShowLaunchProfileSummaryCard}"
+              Spacing="8">
+            <Image
+                x:Name="AccountAvatar"
+                Width="72"
+                Height="72"
+                Source="{Binding LaunchAvatarImage}"
+                Stretch="Uniform"
+                RenderOptions.BitmapInterpolationMode="None" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="16"
+                Foreground="{DynamicResource ColorBrush1}"
+                Text="{Binding LaunchUserName}" />
+            <Border
+                Padding="10,4"
+                HorizontalAlignment="Center"
+                Background="{DynamicResource ColorBrushGray7}"
+                CornerRadius="999">
+              <TextBlock
+                  FontSize="12"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                  Text="{Binding LaunchProfileDescription}" />
+            </Border>
+            <Border
+                x:Name="AccountActions"
+                Classes="account-actions"
+                Margin="0,4,0,0"
+                Padding="6,2"
+                HorizontalAlignment="Center"
+                Background="{DynamicResource ColorBrushBackground}"
+                BorderBrush="{DynamicResource ColorBrushLaunchProfileTagBorder}"
+                BorderThickness="1"
+                CornerRadius="6">
+              <Border.Transitions>
+                <Transitions>
+                  <DoubleTransition Property="Opacity" Duration="{Binding QuickState, Source={x:Static animation:MotionDurations.Source}}" />
+                </Transitions>
+              </Border.Transitions>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ui:PclIconButton
+                    x:Name="AddAccountButton"
+                    AutomationProperties.Name="{Binding LaunchProfileAddTooltip}"
+                    Command="{Binding AddLaunchProfileCommand}"
+                    IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
+                    IconBrush="{DynamicResource ColorBrush1}"
+                    ToolTip.Tip="{Binding LaunchProfileAddTooltip}" />
+                <ui:PclIconButton
+                    x:Name="SelectAccountButton"
+                    AutomationProperties.Name="{Binding LaunchProfileSelectTooltip}"
+                    Command="{Binding SelectLaunchProfileCommand}"
+                    IconData="M512 0A512 512 0 1 0 1024 512 512 512 0 0 0 512 0z m0 941.407086A429.407086 429.407086 0 1 1 941.407086 512 429.407086 429.407086 0 0 1 512 941.407086z m235.139657-368.64H264.045714a43.505371 43.505371 0 0 0-31.246628 72.060343l159.305143 166.765714a41.281829 41.281829 0 1 0 59.626057-56.788114l-94.997943-99.474286H747.227429a41.311086 41.311086 0 1 0 0-82.622172zM262.670629 450.940343H745.764571a43.505371 43.505371 0 0 0 31.246629-72.352914l-159.305143-166.765715a41.281829 41.281829 0 1 0-59.713828 57.022172l94.968685 99.474285H262.670629a41.281829 41.281829 0 0 0 0 82.563658z"
+                    IconBrush="{DynamicResource ColorBrush1}"
+                    ToolTip.Tip="{Binding LaunchProfileSelectTooltip}" />
+                <ui:PclIconButton
+                    x:Name="EditAccountButton"
+                    AutomationProperties.Name="{Binding LaunchProfileEditText}"
+                    Command="{Binding EditLaunchProfileCommand}"
+                    IconData="M 121.691 929.908 A 24 24 0 0 1 94.092 902.309 L 126.796 704.871 L 725.008 106.659 A 44 44 0 0 1 787.234 106.659 L 917.341 236.766 A 44 44 0 0 1 917.341 298.992 L 319.129 897.204 Z M 828.246 257.979 L 766.021 195.754 A 14 14 0 0 0 746.222 195.754 L 191.85 750.126 A 14 14 0 0 0 191.85 769.925 L 254.075 832.15 A 14 14 0 0 0 273.874 832.15 L 828.246 277.778 A 14 14 0 0 0 828.246 257.979 Z"
+                    IconBrush="{DynamicResource ColorBrush1}"
+                    ToolTip.Tip="{Binding LaunchProfileEditText}" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <StackPanel
+              HorizontalAlignment="Stretch"
+              IsVisible="{Binding ShowLaunchProfileChooser}"
+              Spacing="10">
+            <ui:PclButton
+                Height="34"
+                ColorType="Highlight"
+                Command="{Binding LoginMicrosoftLaunchProfileCommand}"
+                Text="{Binding LaunchProfileChooserMicrosoftText}" />
+            <ui:PclButton
+                Height="34"
+                Command="{Binding CreateOfflineLaunchProfileCommand}"
+                Text="{Binding LaunchProfileChooserOfflineText}" />
+            <ui:PclButton
+                Height="34"
+                Command="{Binding LoginAuthlibLaunchProfileCommand}"
+                Text="{Binding LaunchProfileChooserAuthlibText}" />
+            <ui:PclButton
+                Height="32"
+                Command="{Binding BackLaunchProfileCommand}"
+                IsVisible="{Binding ShowLaunchProfileBackButton}"
+                Text="{Binding LaunchProfileBackText}" />
+          </StackPanel>
+
+          <StackPanel
+              HorizontalAlignment="Stretch"
+              IsVisible="{Binding ShowLaunchProfileSelection}"
+              Spacing="10">
+            <Border
+                Margin="0,2,0,0"
+                Padding="10,6"
+                Background="{DynamicResource ColorBrush8}"
+                BorderBrush="{DynamicResource ColorBrush6}"
+                BorderThickness="1"
+                CornerRadius="5">
+              <TextBlock
+                  HorizontalAlignment="Center"
+                  FontSize="12.5"
+                  Foreground="{DynamicResource ColorBrush2}"
+                  Text="{Binding LaunchProfileSelectionHint}"
+                  TextAlignment="Center"
+                  TextWrapping="Wrap" />
+            </Border>
+            <ScrollViewer
+                MaxHeight="300"
+                VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding LaunchProfileEntries}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <ui:PclListItem
+                        AccessoryCommand="{Binding AccessoryCommand}"
+                        AccessoryIconData="{Binding AccessoryIconData}"
+                        AccessoryIsSpinning="{Binding AccessoryIsSpinning}"
+                        AccessoryToolTip="{Binding AccessoryToolTip}"
+                        Margin="8,2,10,2"
+                        Command="{Binding Command}"
+                        Info="{Binding Info}"
+                        IsSelected="{Binding IsSelected}"
+                        SecondaryAccessoryCommand="{Binding SecondaryAccessoryCommand}"
+                        SecondaryAccessoryIconData="{Binding SecondaryAccessoryIconData}"
+                        SecondaryAccessoryToolTip="{Binding SecondaryAccessoryToolTip}"
+                        Title="{Binding Title}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="12.5"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                IsVisible="{Binding HasNoLaunchProfileEntries}"
+                Text="{Binding LaunchProfileNoEntriesText}"
+                TextAlignment="Center" />
+            <Border
+                Padding="10,4"
+                HorizontalAlignment="Center"
+                Background="{DynamicResource ColorBrushBackground}"
+                BorderBrush="{DynamicResource ColorBrushLaunchProfileTagBorder}"
+                BorderThickness="1"
+                CornerRadius="6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ui:PclIconButton
+                    Command="{Binding AddLaunchProfileCommand}"
+                    IconData="M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"
+                    IconBrush="{DynamicResource ColorBrush1}"
+                    ToolTip.Tip="{Binding LaunchProfileAddTooltip}" />
+              </StackPanel>
+            </Border>
+            <ui:PclButton
+                Width="72"
+                Height="32"
+                HorizontalAlignment="Center"
+                Command="{Binding BackLaunchProfileCommand}"
+                IsVisible="{Binding ShowLaunchProfileBackButton}"
+                Text="{Binding LaunchProfileBackText}" />
+          </StackPanel>
+
+          <Grid
+              IsVisible="{Binding ShowLaunchOfflineEditor}"
+              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="17"
+                Foreground="{DynamicResource ColorBrush1}"
+                Text="{Binding LaunchOfflineEditorTitle}" />
+            <TextBox
+                Grid.Row="1"
+                Margin="0,8,0,0"
+                Text="{Binding LaunchOfflineUserName}"
+                Watermark="{Binding LaunchOfflineUserNameWatermark}" />
+            <ComboBox
+                Grid.Row="2"
+                Margin="0,8,0,0"
+                ItemsSource="{Binding LaunchOfflineUuidModeOptions}"
+                SelectedIndex="{Binding SelectedLaunchOfflineUuidModeIndex}" />
+            <TextBox
+                Grid.Row="3"
+                Margin="0,8,0,0"
+                IsVisible="{Binding IsLaunchOfflineCustomUuidVisible}"
+                Text="{Binding LaunchOfflineCustomUuid}"
+                Watermark="{Binding LaunchOfflineCustomUuidWatermark}" />
+            <StackPanel
+                Grid.Row="4"
+                Margin="0,8,0,0"
+                Spacing="5">
+              <TextBlock Text="{Binding LaunchOfflineSkinLabel}" />
+              <ComboBox
+                  ItemsSource="{Binding LaunchOfflineSkinOptions}"
+                  SelectedIndex="{Binding SelectedLaunchOfflineSkinIndex}" />
+              <TextBlock
+                  FontSize="12"
+                  Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                  Text="{Binding LaunchOfflineSkinHint}"
+                  TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel
+                Grid.Row="5"
+                Margin="0,8,0,0"
+                Spacing="8">
+              <TextBlock
+                  FontSize="12.5"
+                  Foreground="{DynamicResource ColorBrushLaunchStatusError}"
+                  IsVisible="{Binding HasLaunchOfflineStatus}"
+                  Text="{Binding LaunchOfflineStatusText}"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="*,10,*">
+                <ui:PclButton
+                    Grid.Column="0"
+                    Height="34"
+                    Command="{Binding BackLaunchProfileCommand}"
+                    Text="{Binding LaunchProfileBackText}" />
+                <ui:PclButton
+                    Grid.Column="2"
+                    Height="34"
+                    ColorType="Highlight"
+                    Command="{Binding SubmitOfflineLaunchProfileCommand}"
+                    Text="{Binding LaunchOfflineCreateText}" />
+              </Grid>
+            </StackPanel>
+          </Grid>
+
+          <StackPanel
+              HorizontalAlignment="Stretch"
+              IsVisible="{Binding ShowLaunchMicrosoftEditor}"
+              Spacing="9">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="17"
+                Foreground="{DynamicResource ColorBrush1}"
+                Text="{Binding LaunchMicrosoftEditorTitle}" />
+            <TextBlock
+                FontSize="12.5"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                Text="{Binding LaunchMicrosoftStatusText}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+            <Border
+                Padding="12,10"
+                Background="{DynamicResource ColorBrush8}"
+                CornerRadius="10"
+                IsVisible="{Binding HasLaunchMicrosoftDeviceCode}">
+              <StackPanel Spacing="4">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    Text="{Binding LaunchMicrosoftDeviceCodeLabel}" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontFamily="Menlo, Monaco, Consolas"
+                    FontSize="20"
+                    Foreground="{DynamicResource ColorBrush2}"
+                    Text="{Binding LaunchMicrosoftDeviceCode}" />
+              </StackPanel>
+            </Border>
+            <ui:PclButton
+                Height="32"
+                Command="{Binding OpenMicrosoftDeviceLinkCommand}"
+                IsVisible="{Binding HasLaunchMicrosoftVerificationUrl}"
+                Text="{Binding LaunchMicrosoftReopenBrowserText}" />
+            <Grid ColumnDefinitions="*,10,*">
+              <ui:PclButton
+                  Grid.Column="0"
+                  Height="34"
+                  Command="{Binding BackLaunchProfileCommand}"
+                  Text="{Binding LaunchProfileBackText}" />
+              <ui:PclButton
+                  Grid.Column="2"
+                  Height="34"
+                  ColorType="Highlight"
+                  Command="{Binding SubmitMicrosoftLaunchProfileCommand}"
+                  Text="{Binding LaunchMicrosoftPrimaryButtonText}" />
+            </Grid>
+          </StackPanel>
+
+          <Grid
+              IsVisible="{Binding ShowLaunchAuthlibEditor}"
+              RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="17"
+                Foreground="{DynamicResource ColorBrush1}"
+                Text="{Binding LaunchAuthlibEditorTitle}" />
+            <TextBox
+                Grid.Row="1"
+                Margin="0,8,0,0"
+                Text="{Binding LaunchAuthlibServer}"
+                Watermark="{Binding LaunchAuthlibServerWatermark}" />
+            <Grid
+                Grid.Row="2"
+                Margin="0,8,0,0"
+                ColumnDefinitions="*,10,Auto">
+              <TextBox
+                  Grid.Column="0"
+                  Text="{Binding LaunchAuthlibLoginName}"
+                  Watermark="{Binding LaunchAuthlibUserNameWatermark}" />
+              <ui:PclButton
+                  Grid.Column="2"
+                  Width="88"
+                  Height="32"
+                  Command="{Binding UseLittleSkinLaunchProfileCommand}"
+                  Text="{Binding LaunchAuthlibLittleSkinText}" />
+            </Grid>
+            <TextBox
+                Grid.Row="3"
+                Margin="0,8,0,0"
+                PasswordChar="●"
+                Text="{Binding LaunchAuthlibPassword}"
+                Watermark="{Binding LaunchAuthlibPasswordWatermark}" />
+            <StackPanel
+                Grid.Row="4"
+                Margin="0,8,0,0"
+                Spacing="8">
+              <TextBlock
+                  FontSize="12.5"
+                  Foreground="{DynamicResource ColorBrushLaunchStatusError}"
+                  IsVisible="{Binding HasLaunchAuthlibStatus}"
+                  Text="{Binding LaunchAuthlibStatusText}"
+                  TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="*,10,*">
+                <ui:PclButton
+                    Grid.Column="0"
+                    Height="34"
+                    Command="{Binding BackLaunchProfileCommand}"
+                    Text="{Binding LaunchProfileBackText}" />
+                <ui:PclButton
+                    Grid.Column="2"
+                    Height="34"
+                    ColorType="Highlight"
+                    Command="{Binding SubmitAuthlibLaunchProfileCommand}"
+                    Text="{Binding LaunchAuthlibLoginText}" />
+              </Grid>
+            </StackPanel>
+          </Grid>
+        </Grid>
+      </Grid>
+
+      <Grid Grid.Row="2" Grid.ColumnSpan="5">
+        <controls:PclLaunchButton
+            Height="54"
+            Margin="20,0"
+            Command="{Binding LaunchCommand}"
+            Subtitle="{Binding LaunchVersionSubtitle}"
+            Title="{Binding LaunchButtonTitle}" />
+      </Grid>
+
+      <Grid
+          Grid.Row="3"
+          Grid.Column="2"
+          Grid.ColumnSpan="2"
+          Margin="0,10,10,0"
+          ColumnDefinitions="*,10,*"
+          IsVisible="{Binding ShowLaunchInstanceManagementButtons}">
+        <ui:PclButton
+            Grid.Column="0"
+            Grid.ColumnSpan="{Binding LaunchVersionSelectButtonColumnSpan}"
+            Height="35"
+            Command="{Binding VersionSelectCommand}"
+            Text="{Binding LaunchVersionSelectButtonText}" />
+
+        <ui:PclButton
+            Grid.Column="2"
+            Height="35"
+            Command="{Binding VersionSetupCommand}"
+            IsVisible="{Binding ShowLaunchVersionSetupButton}"
+            Text="{Binding LaunchVersionSetupButtonText}" />
+      </Grid>
+    </Grid>
+
+    <Grid
+        x:Name="PanLaunching"
+        IsVisible="False"
+        Opacity="0"
+        RenderTransformOrigin="0.5,0.5">
+      <Grid.RenderTransform>
+        <ScaleTransform
+            ScaleX="0.8"
+            ScaleY="0.8" />
+      </Grid.RenderTransform>
+      <Grid.RowDefinitions>
+        <RowDefinition />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <StackPanel Grid.Row="1" Margin="0,-7,0,0">
+        <controls:PclLoading
+            Height="50"
+            Margin="0,10,0,5"
+            HorizontalAlignment="Center"
+            IndicatorBrush="{DynamicResource ColorBrush2}"
+            IsError="{Binding IsLaunchDialogError}"
+            IsRunning="{Binding IsLaunchDialogBusy}"
+            ShowText="False" />
+
+        <TextBlock
+            Margin="15,10,15,0"
+            HorizontalAlignment="Center"
+            FontSize="20"
+            Foreground="{DynamicResource ColorBrush1}"
+            Text="{Binding LaunchDialogTitle}" />
+
+        <TextBlock
+            Margin="40,5,40,0"
+            HorizontalAlignment="Center"
+            FontSize="13.5"
+            Foreground="{DynamicResource ColorBrush1}"
+            Text="{Binding LaunchDialogInstanceName}"
+            TextTrimming="CharacterEllipsis" />
+
+        <Grid
+            Height="4"
+            Margin="30,12,30,27"
+            IsVisible="{Binding ShowLaunchDialogProgress}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding LaunchDialogProgressFinishedWidth}" />
+            <ColumnDefinition Width="{Binding LaunchDialogProgressRemainingWidth}" />
+          </Grid.ColumnDefinitions>
+          <Rectangle Grid.Column="0">
+            <Rectangle.Fill>
+              <LinearGradientBrush EndPoint="1,0" StartPoint="0,0">
+                <GradientStop Color="{DynamicResource ColorObject3}" Offset="0" />
+                <GradientStop Color="{DynamicResource ColorObject2}" Offset="0.6" />
+              </LinearGradientBrush>
+            </Rectangle.Fill>
+          </Rectangle>
+          <Rectangle Grid.Column="1" Fill="{DynamicResource ColorBrush6}" Opacity="0.6" />
+        </Grid>
+
+        <Grid
+            x:Name="PanLaunchingInfo"
+            HorizontalAlignment="Center">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="15" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <TextBlock
+              Grid.Row="0"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+              Opacity="0.5"
+              Text="{Binding LaunchDialogStepLabel}" />
+          <TextBlock
+              Grid.Row="0"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              MaxWidth="160"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrush1}"
+              Text="{Binding LaunchDialogStage}"
+              TextWrapping="Wrap" />
+
+          <TextBlock
+              Grid.Row="1"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+              Opacity="0.5"
+              Text="{Binding LaunchDialogMethodLabel}" />
+          <TextBlock
+              Grid.Row="1"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              MaxWidth="160"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrush1}"
+              Text="{Binding LaunchDialogMethod}"
+              TextWrapping="Wrap" />
+
+          <TextBlock
+              Grid.Row="2"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+              IsVisible="{Binding ShowLaunchDialogProgress}"
+              Opacity="0.5"
+              Text="{Binding LaunchDialogProgressLabel}" />
+          <TextBlock
+              Grid.Row="2"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrush1}"
+              IsVisible="{Binding ShowLaunchDialogProgress}"
+              Text="{Binding LaunchDialogProgressText}" />
+
+          <TextBlock
+              Grid.Row="3"
+              Grid.Column="1"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Right"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+              IsVisible="{Binding ShowLaunchDialogDownload}"
+              Opacity="0.5"
+              Text="{Binding LaunchDialogDownloadSpeedLabel}" />
+          <TextBlock
+              Grid.Row="3"
+              Grid.Column="3"
+              Margin="0,0,0,5"
+              HorizontalAlignment="Left"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrush1}"
+              IsVisible="{Binding ShowLaunchDialogDownload}"
+              Text="{Binding LaunchDialogDownloadText}" />
+        </Grid>
+
+        <Grid
+            Width="260"
+            Margin="0,16,0,2"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding ShowLaunchDialogHint}">
+          <Border
+              Margin="0,8,0,0"
+              Padding="11,21,11,10"
+              BorderBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
+              BorderThickness="1"
+              CornerRadius="3"
+              Opacity="0.3" />
+          <Border
+              Padding="8,0"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Top"
+              Background="{DynamicResource ColorBrushBackground}">
+            <TextBlock
+                FontSize="12.5"
+                Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                Opacity="0.6"
+                Text="{Binding LaunchDialogHintTitle}" />
+          </Border>
+          <TextBlock
+              Margin="11,29,11,10"
+              HorizontalAlignment="Center"
+              FontSize="12.5"
+              Foreground="{DynamicResource ColorBrush1}"
+              MaxHeight="54"
+              Text="{Binding LaunchDialogHint}"
+              TextAlignment="Center"
+              TextTrimming="CharacterEllipsis"
+              TextWrapping="Wrap" />
+        </Grid>
+      </StackPanel>
+
+      <ui:PclButton
+          Grid.Row="4"
+          Height="35"
+          Margin="20,0,20,20"
+          VerticalAlignment="Bottom"
+          Command="{Binding CancelLaunchCommand}"
+          Text="{Binding LaunchDialogActionText}" />
+    </Grid>
+  </Grid>
+</UserControl>

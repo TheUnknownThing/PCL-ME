@@ -9,7 +9,7 @@ It is intended for two use cases:
 
 ## What It Understands
 
-The utility treats `PCL.Frontend.Avalonia/Locales` as the source of truth and reads:
+The utility treats `src/PCL.Frontend.Avalonia/Locales` as the source of truth and reads:
 
 - `Meta/manifest.yaml` for the declared locale list.
 - `Meta/schema.yaml` for the canonical key set and expected placeholders.
@@ -43,7 +43,7 @@ mise run i18n -- schema remove --key shell.navigation.legacy.unused
 Raw `dotnet` fallback:
 
 ```bash
-dotnet run --project PCL.Tools.I18n/PCL.Tools.I18n.csproj -- validate
+dotnet run --project tools/PCL.Tools.I18n/PCL.Tools.I18n.csproj -- validate
 ```
 
 Supported subcommands:
@@ -75,7 +75,7 @@ Behavior:
 
 If `--locales-dir` is not provided, the command resolves the locale directory in this order:
 
-1. `./PCL.Frontend.Avalonia/Locales`
+1. `./src/PCL.Frontend.Avalonia/Locales`
 2. `./Locales`
 3. `<app-base>/Locales`
 
@@ -86,7 +86,7 @@ If `--locales-dir` is not provided, the command resolves the locale directory in
 ```csharp
 using PCL.Tools.I18n;
 
-var editor = new I18nYamlEditor("PCL.Frontend.Avalonia/Locales");
+var editor = new I18nYamlEditor("src/PCL.Frontend.Avalonia/Locales");
 
 if (editor.TryReadLocaleValue("en-US", "shell.navigation.pages.launch.title", out var title))
 {
