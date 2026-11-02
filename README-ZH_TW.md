@@ -13,7 +13,7 @@
 <p align="center">
   <a href="#開始使用"><img src="https://img.shields.io/badge/Platforms-Windows_%C2%B7_macOS_%C2%B7_Linux-3D948B?style=flat-square" alt="支援 Windows、macOS 與 Linux"></a>
   <a href="https://github.com/TheUnknownThing/PCL-ME/actions/workflows/build-test.yml"><img src="https://img.shields.io/github/actions/workflow/status/TheUnknownThing/PCL-ME/build-test.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="CI 狀態"></a>
-  <a href="https://github.com/TheUnknownThing/PCL-ME/releases"><img src="https://img.shields.io/github/v/release/TheUnknownThing/PCL-ME?include_prereleases&amp;style=flat-square&amp;label=Release" alt="最新發佈版本，包含預先發佈版本"></a>
+  <a href="https://github.com/TheUnknownThing/PCL-ME/releases"><img src="https://img.shields.io/github/v/release/TheUnknownThing/PCL-ME?style=flat-square&amp;label=Release" alt="最新正式版本"></a>
 </p>
 
 <p align="center">
@@ -67,6 +67,12 @@ Arch Linux 使用者也可以使用 `yay` 等 AUR 輔助工具安裝：
 ```sh
 yay -S pcl-me-bin
 ```
+
+## 擴充功能
+
+PCL-ME 支援透過擴充功能加入新功能與原生介面。安裝與開發指南請參閱[擴充功能系統文件](docs/extension-system.md)。
+
+社群也維護了 [PCL-ME-Extension-Template](https://github.com/sclass53/PCL-ME-Extension-Template)，一個可直接 Fork 的擴充功能專案範本，以及 [Screenshot Manager](https://github.com/sclass53/PCL-ME-ScreenshotManager)，一個完整、可安裝的擴充功能，展示了同一套 SDK 的實際用法。
 
 ## 從原始碼建置
 

@@ -13,7 +13,7 @@
 <p align="center">
   <a href="#get-started"><img src="https://img.shields.io/badge/Platforms-Windows_%C2%B7_macOS_%C2%B7_Linux-3D948B?style=flat-square" alt="Available for Windows, macOS, and Linux"></a>
   <a href="https://github.com/TheUnknownThing/PCL-ME/actions/workflows/build-test.yml"><img src="https://img.shields.io/github/actions/workflow/status/TheUnknownThing/PCL-ME/build-test.yml?branch=main&amp;style=flat-square&amp;label=CI" alt="CI status"></a>
-  <a href="https://github.com/TheUnknownThing/PCL-ME/releases"><img src="https://img.shields.io/github/v/release/TheUnknownThing/PCL-ME?include_prereleases&amp;style=flat-square&amp;label=Release" alt="Latest release version, including prereleases"></a>
+  <a href="https://github.com/TheUnknownThing/PCL-ME/releases"><img src="https://img.shields.io/github/v/release/TheUnknownThing/PCL-ME?style=flat-square&amp;label=Release" alt="Latest stable release"></a>
 </p>
 
 <p align="center">
@@ -69,6 +69,12 @@ On Arch Linux, install the AUR package with an AUR helper such as `yay`:
 ```sh
 yay -S pcl-me-bin
 ```
+
+## Extensions
+
+PCL-ME supports extensions for adding new features and native UI contributions. See the [extension documentation](docs/extension-system.md) to get started.
+
+The community maintains [PCL-ME-Extension-Template](https://github.com/sclass53/PCL-ME-Extension-Template), a ready-to-fork project template for new extensions, and [Screenshot Manager](https://github.com/sclass53/PCL-ME-ScreenshotManager), a complete installable extension demonstrating the same SDK.
 
 ## Build from source
 
