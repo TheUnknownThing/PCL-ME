@@ -53,6 +53,8 @@ Pending/<id>/           Updates to apply before discovery on next startup
 
 [`examples/HelloExtension`](../examples/HelloExtension) is a buildable example with a full native page, an instance tab, automatic page menu navigation, an instance context-menu action, a command, settings, localization, a search provider and a worker handler. Its only project dependency is the public Avalonia SDK.
 
+Beyond the repository, the community maintains [PCL-ME-Extension-Template](https://github.com/sclass53/PCL-ME-Extension-Template), a ready-to-fork project template for new extensions, and [Screenshot Manager](https://github.com/sclass53/PCL-ME-ScreenshotManager), a complete installable extension demonstrating the same SDK. Both are maintained outside this repository.
+
 An entry type must be public, have a public parameterless constructor, and implement `IExtension`:
 
 ```csharp
