@@ -265,6 +265,7 @@ public sealed class FrontendProfileEditingTest
     {
         private readonly HttpListener _listener = new();
         private readonly Task _worker;
+        private volatile bool _disposing;
 
         public string Url { get; }
 
@@ -336,13 +337,14 @@ public sealed class FrontendProfileEditingTest
                         context.Response.Close();
                     }
                 }
-                catch (HttpListenerException) when (!_listener.IsListening) { }
+                catch (HttpListenerException) when (_disposing || !_listener.IsListening) { }
                 catch (ObjectDisposedException) { }
             });
         }
 
         public void Dispose()
         {
+            _disposing = true;
             _listener.Close();
             _worker.GetAwaiter().GetResult();
         }
