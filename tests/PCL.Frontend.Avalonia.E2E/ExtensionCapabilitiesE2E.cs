@@ -28,6 +28,45 @@ namespace PCL.Frontend.Avalonia.E2E;
 public sealed partial class ExtensionCapabilitiesE2E
 {
     [TestMethod]
+    [DataRow("Launch", "Launch")]
+    [DataRow("Launch", "Download")]
+    [DataRow("Download", "Download")]
+    [DataRow("Setup", "Settings")]
+    [DataRow("Setup", "Tools")]
+    [DataRow("Tools", "Tools")]
+    public Task NativePage_TitleBarNavigation_ClosesAndDisposesWorkspace(string startRoute, string tabTitle) => Run(async () =>
+    {
+        await using var app = new DesktopFixture();
+        await app.Start();
+        var view = new TrackedView("Native page", new());
+        var context = await Activate(app, context =>
+        {
+            context.GetService<IExtensionUi>().RegisterView(new()
+            {
+                Id = "test.capabilities.page", Title = "Native page", Location = ExtensionViewLocation.Page
+            }, _ => view);
+            return ValueTask.CompletedTask;
+        });
+        await app.Session.NavigateAsync(startRoute);
+        await context.GetService<IExtensionUi>().ShowViewAsync("test.capabilities.page");
+        await Settle();
+        var workspace = app.Window.Find<ContentControl>("ExtensionWorkspace")!;
+        Assert.IsTrue(workspace.IsVisible);
+        Assert.IsTrue(view.IsEffectivelyVisible);
+        Assert.IsFalse(view.Disposed);
+
+        await Click(app.Window, app.Window.GetVisualDescendants().OfType<PclTabButton>()
+            .Single(tab => tab.IsEffectivelyVisible && tab.Text == tabTitle));
+
+        Assert.IsFalse(workspace.IsVisible, "Title-bar navigation must dismiss the extension page even when the current tab is clicked.");
+        Assert.IsNull(workspace.Content);
+        Assert.IsTrue(view.Disposed, "Leaving an extension page must release its view.");
+        Assert.IsTrue(app.Window.GetVisualDescendants().OfType<PclTabButton>()
+            .Single(tab => tab.IsEffectivelyVisible && tab.Text == tabTitle).IsSelected);
+        Assert.AreEqual(ExtensionStatus.Active, app.Session.Host.Get(context.Manifest.Id).Status);
+    });
+
+    [TestMethod]
     public Task ContextualPages_AllRegions_Selection_Locale_AndDisableReleaseMountedViews() => Run(async () =>
     {
         await using var app = new DesktopFixture();

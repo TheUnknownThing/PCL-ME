@@ -599,6 +599,7 @@ internal sealed partial class LauncherViewModel
         RouteNavigationBehavior behavior = RouteNavigationBehavior.Automatic,
         string? extensionPageId = null)
     {
+        ExtensionSession?.CloseWorkspace();
         route = NormalizeRoute(route);
         if (route == _currentRoute)
         {
