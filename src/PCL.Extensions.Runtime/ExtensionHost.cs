@@ -232,7 +232,8 @@ public sealed partial class ExtensionHost : IAsyncDisposable
     {
         var path = ExtensionPackage.ResolvePackagePath(info.Directory, info.Manifest.EntryAssembly!);
         info.LoadContext ??= new PluginLoadContext(path);
-        var assembly = info.LoadContext.LoadFromAssemblyPath(path);
+        using var assemblyStream = File.OpenRead(path);
+        var assembly = info.LoadContext.LoadFromStream(assemblyStream);
         var type = assembly.GetType(info.Manifest.EntryType!, throwOnError: true)!;
         if (!typeof(IExtension).IsAssignableFrom(type)) throw new InvalidDataException("The entry type must implement IExtension.");
         return (IExtension)(Activator.CreateInstance(type) ?? throw new InvalidDataException("The entry type needs a public parameterless constructor."));
@@ -369,7 +370,9 @@ internal sealed class PluginLoadContext(string entryPath) : AssemblyLoadContext(
         if (name.Name is "PCL.Frontend.Avalonia" or "PCL.Core.Backend")
             throw new InvalidOperationException("Extensions must reference the public SDK, not launcher implementation assemblies.");
         var path = _resolver.ResolveAssemblyToPath(name);
-        return path is null ? null : LoadFromAssemblyPath(path);
+        if (path is null) return null;
+        using var stream = File.OpenRead(path);
+        return LoadFromStream(stream);
     }
     protected override nint LoadUnmanagedDll(string name)
     {

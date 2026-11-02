@@ -243,6 +243,12 @@ public sealed class FrontendProfileEditingTest
 
         public ProfileFixture(MinecraftLaunchProfileDocument? document = null)
         {
+            if (OperatingSystem.IsLinux()
+                && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PCL_ENCRYPTION_KEY")))
+            {
+                Environment.SetEnvironmentVariable("PCL_ENCRYPTION_KEY", "pcl-frontend-profile-tests");
+            }
+
             Paths = new FrontendRuntimePaths(_root, _root + "/temp", _root + "/data", _root + "/shared",
                 _root + "/shared/config.json", _root + "/data/config.yml", _root + "/appdata", []);
             if (document is not null) FrontendProfileStorageService.Save(Paths, document);
@@ -265,6 +271,7 @@ public sealed class FrontendProfileEditingTest
     {
         private readonly HttpListener _listener = new();
         private readonly Task _worker;
+        private volatile bool _disposing;
 
         public string Url { get; }
 
@@ -336,13 +343,14 @@ public sealed class FrontendProfileEditingTest
                         context.Response.Close();
                     }
                 }
-                catch (HttpListenerException) when (!_listener.IsListening) { }
+                catch (HttpListenerException) when (_disposing || !_listener.IsListening) { }
                 catch (ObjectDisposedException) { }
             });
         }
 
         public void Dispose()
         {
+            _disposing = true;
             _listener.Close();
             _worker.GetAwaiter().GetResult();
         }
