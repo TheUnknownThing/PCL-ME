@@ -50,6 +50,20 @@ PCL-ME 是一款 Minecraft 啟動器，將 Plain Craft Launcher 熟悉的使用�
       自由選擇主題、配色、語言與介面縮放。</p>
     </td>
   </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/extension.png"><img src="docs/screenshots/extension.png" alt="擴充功能設定/安裝介面，可新增自訂擴充功能" width="340"></a>
+      <p><strong>強大的擴充能力</strong><br>
+      快速安裝更多擴充功能，<br>
+      以 .pclext 結尾。</p>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/ext_example.png"><img src="docs/screenshots/ext_example.png" alt="展示擴充功能能力" width="340"></a>
+      <p><strong>個人化改造啟動器</strong><br>
+      與 AI 一起，幾分鐘<br>
+      輕鬆開發新擴充功能。</p>
+    </td>
+  </tr>
 </table>
 
 ## 開始使用

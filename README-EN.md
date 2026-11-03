@@ -52,6 +52,20 @@ PCL-ME is a Minecraft launcher that brings Plain Craft Launcher's familiar workf
       language, and interface scale.</p>
     </td>
   </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/extension.png"><img src="docs/screenshots/extension.png" alt="Extension settings and installation page for adding custom extensions" width="340"></a>
+      <p><strong>Powerful extension support</strong><br>
+      Install more extensions quickly.<br>
+      They are packaged as .pclext files.</p>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/ext_example.png"><img src="docs/screenshots/ext_example.png" alt="Showcase of extension capabilities" width="340"></a>
+      <p><strong>Make the launcher your own</strong><br>
+      Build new extensions with AI<br>
+      in just a few minutes.</p>
+    </td>
+  </tr>
 </table>
 
 ## Get started
