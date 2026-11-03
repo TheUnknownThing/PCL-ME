@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using PCL.Core.Utils.OS;
 
 namespace PCL.Frontend.Avalonia.Workflows;
 
@@ -11,6 +12,10 @@ internal static class FrontendSystemMemoryService
     private static readonly object MemoryStateCacheLock = new();
     private static DateTimeOffset _cachedMemoryStateTime;
     private static (double TotalGb, double AvailableGb) _cachedMemoryState;
+
+    // Replaces the platform reader in tests so the GB conversion and the preference for a
+    // real platform source over the GC fallback can be verified on any OS.
+    internal static Func<(long TotalBytes, long AvailableBytes)>? PhysicalMemoryBytesOverride { get; set; }
 
     public static bool TryGetCachedPhysicalMemoryState(out (double TotalGb, double AvailableGb) memoryState)
     {
@@ -37,6 +42,15 @@ internal static class FrontendSystemMemoryService
             : FallbackTotalMemoryBytes;
         var availableBytes = Math.Max(totalBytes - GC.GetTotalMemory(forceFullCollection: false), 0L);
         return ToGigabytes(totalBytes, availableBytes);
+    }
+
+    internal static void InvalidateMemoryStateCache()
+    {
+        lock (MemoryStateCacheLock)
+        {
+            _cachedMemoryState = default;
+            _cachedMemoryStateTime = default;
+        }
     }
 
     public static (double TotalGb, double AvailableGb) GetPhysicalMemoryState()
@@ -168,6 +182,19 @@ internal static class FrontendSystemMemoryService
     {
         try
         {
+            if (PhysicalMemoryBytesOverride is { } overrideSource)
+            {
+                return overrideSource();
+            }
+
+            if (OperatingSystem.IsWindows())
+            {
+                // GlobalMemoryStatusEx reports real system-wide usage; the GC fallback
+                // below only knows about this process's managed heap.
+                var memory = KernelInterop.GetPhysicalMemoryBytes();
+                return ((long)memory.Total, (long)memory.Available);
+            }
+
             if (OperatingSystem.IsLinux())
             {
                 return TryReadLinuxPhysicalMemoryBytes();

@@ -84,25 +84,31 @@
             Text="{Binding FilteredEmptyStateText}"
             TextWrapping="Wrap" />
 
-        <ItemsControl ItemsSource="{Binding VisibleChoices}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <VirtualizingStackPanel CacheLength="0.5" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <ui:PclListItem
-                  HorizontalAlignment="Stretch"
-                  Margin="0"
-                  Command="{Binding SelectCommand}"
-                  IconSource="{Binding Icon}"
-                  Info="{Binding Summary}"
-                  IsSelected="{Binding IsSelected}"
-                  Title="{Binding Title}" />
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <ScrollViewer
+            x:Name="OptionChoicesScroll"
+            MaxHeight="420"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding VisibleChoices}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <VirtualizingStackPanel CacheLength="0.5" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <ui:PclListItem
+                    HorizontalAlignment="Stretch"
+                    Margin="0"
+                    Command="{Binding SelectCommand}"
+                    IconSource="{Binding Icon}"
+                    Info="{Binding Summary}"
+                    IsSelected="{Binding IsSelected}"
+                    Title="{Binding Title}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
       </StackPanel>
     </ui:PclCard.CardContent>
   </ui:PclCard>
