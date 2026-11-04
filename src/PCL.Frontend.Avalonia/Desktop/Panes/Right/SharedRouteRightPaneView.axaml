@@ -119,26 +119,26 @@
         <StackPanel IsVisible="{Binding ShowGameLogSurface}" Spacing="14">
           <WrapPanel>
             <ui:PclButton
-                Width="92"
+                MinWidth="92"
                 Height="35"
                 Margin="0,0,10,0"
                 ColorType="Highlight"
                 Command="{Binding RefreshGameLogCommand}"
                 Text="{Binding GameLogRefreshButtonText}" />
             <ui:PclButton
-                Width="92"
+                MinWidth="92"
                 Height="35"
                 Margin="0,0,10,0"
                 Command="{Binding ExportLogCommand}"
                 Text="{Binding GameLogExportButtonText}" />
             <ui:PclButton
-                Width="120"
+                MinWidth="120"
                 Height="35"
                 Margin="0,0,10,0"
                 Command="{Binding OpenLogDirectoryCommand}"
                 Text="{Binding GameLogOpenDirectoryButtonText}" />
             <ui:PclButton
-                Width="108"
+                MinWidth="108"
                 Height="35"
                 Command="{Binding ClearGameLogCommand}"
                 ColorType="Red"

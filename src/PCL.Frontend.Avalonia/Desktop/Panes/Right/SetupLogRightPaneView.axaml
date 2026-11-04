@@ -49,26 +49,26 @@
         <ui:PclCard.CardContent>
           <WrapPanel>
             <ui:PclButton
-                Width="100"
+                MinWidth="100"
                 Height="35"
                 Margin="0,0,15,0"
                 Command="{Binding ExportLogCommand}"
                 ColorType="Highlight"
                 Text="{Binding SetupText.Log.ExportLogButton}" />
             <ui:PclButton
-                Width="120"
+                MinWidth="120"
                 Height="35"
                 Margin="0,0,15,0"
                 Command="{Binding ExportAllLogsCommand}"
                 Text="{Binding SetupText.Log.ExportAllLogsButton}" />
             <ui:PclButton
-                Width="120"
+                MinWidth="120"
                 Height="35"
                 Margin="0,0,15,0"
                 Command="{Binding OpenLogDirectoryCommand}"
                 Text="{Binding SetupText.Log.OpenDirectoryButton}" />
             <ui:PclButton
-                Width="120"
+                MinWidth="120"
                 Height="35"
                 Command="{Binding CleanLogsCommand}"
                 ColorType="Red"
