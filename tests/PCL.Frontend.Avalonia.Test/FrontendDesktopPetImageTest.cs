@@ -1,9 +1,9 @@
 using PCL.Extensions.DesktopPet;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Headless;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.Models;
@@ -16,10 +16,43 @@ namespace PCL.Frontend.Avalonia.Test;
 [DoNotParallelize]
 public sealed class PetImageTest
 {
-    // Use real offscreen drawing to verify decoded colors and transparency as well
-    // as timing. Keep the worker alive, like the shared frontend test session.
-    private static readonly Lazy<HeadlessUnitTestSession> Session = new(() =>
-        HeadlessUnitTestSession.StartNew(typeof(ImageTestApplication)));
+    [TestMethod]
+    public async Task HeadlessSession_ImageAndControlTestsShareWorkerAndIsolateApplications()
+    {
+        Application? imageApplication = null;
+        Dispatcher? imageDispatcher = null;
+        var imageThread = 0;
+        await Run(async () =>
+        {
+            imageApplication = Application.Current;
+            imageDispatcher = Dispatcher.UIThread;
+            imageThread = Environment.CurrentManagedThreadId;
+            Assert.IsNotNull(imageApplication);
+            await Task.Yield();
+        });
+
+        Application? controlApplication = null;
+        await FrontendMotionTest.RunAsync(async () =>
+        {
+            controlApplication = Application.Current;
+            Assert.IsNotNull(controlApplication);
+            Assert.AreNotSame(imageApplication, controlApplication);
+            Assert.AreNotSame(imageDispatcher, Dispatcher.UIThread);
+            Assert.AreEqual(imageThread, Environment.CurrentManagedThreadId,
+                "Image and control tests must use one worker so application teardown cannot overlap.");
+            Assert.IsTrue(Dispatcher.UIThread.SupportsRunLoops);
+            await Task.Yield();
+        });
+
+        await Run(async () =>
+        {
+            Assert.IsNotNull(Application.Current);
+            Assert.AreNotSame(controlApplication, Application.Current);
+            Assert.AreEqual(imageThread, Environment.CurrentManagedThreadId);
+            Assert.IsTrue(Dispatcher.UIThread.SupportsRunLoops);
+            await Task.Yield();
+        });
+    }
 
     [TestMethod]
     public async Task GifImport_PreservesFramesTimingTransparencyAndDisposal()
@@ -250,17 +283,7 @@ public sealed class PetImageTest
         });
     }
 
-    private static async Task Run(Func<Task> action) => await Session.Value.Dispatch(async () =>
-    {
-        await action();
-        return true;
-    }, CancellationToken.None);
-
-    public sealed class ImageTestApplication : Application
-    {
-        public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<ImageTestApplication>()
-            .UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
-    }
+    private static Task Run(Func<Task> action) => FrontendMotionTest.RunAsync(action);
 
     private sealed record GifFrame(int Left, byte[] Pixels, int Delay, int Disposal);
 
