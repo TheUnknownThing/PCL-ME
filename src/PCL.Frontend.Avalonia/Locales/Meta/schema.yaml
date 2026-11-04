@@ -4226,6 +4226,10 @@ extensions:
   install: []
   native_code: []
   safe_mode: []
+  trust_warning:
+    title: []
+    message: []
+    acknowledge: []
   enabled: []
   retry: []
   uninstall: []

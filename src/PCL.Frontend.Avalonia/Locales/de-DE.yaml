@@ -3688,6 +3688,10 @@ extensions:
   install: "Paket installieren oder aktualisieren…"
   native_code: "Native Erweiterungen haben dieselben Rechte wie der Launcher. Installiere Pakete von vertrauenswürdigen Autoren."
   safe_mode: "Erweiterungen sind für diese Sitzung deaktiviert. Starte normal neu, um sie zu aktivieren."
+  trust_warning:
+    title: "Sicherheitshinweis zu Erweiterungen"
+    message: "Erweiterungen von Drittanbietern haben dieselben Rechte wie der Launcher und können auf deine Dateien und Konten zugreifen. Installiere nur Erweiterungen von Autoren und aus Quellen, denen du vertraust."
+    acknowledge: "Verstanden"
   enabled: "Aktiviert"
   retry: "Aktivierung wiederholen"
   uninstall: "Deinstallieren"

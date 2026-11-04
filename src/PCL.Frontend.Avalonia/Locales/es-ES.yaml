@@ -3712,6 +3712,10 @@ extensions:
   install: "Instalar o actualizar paquete…"
   native_code: "Las extensiones nativas tienen los permisos del lanzador. Instala paquetes de autores de confianza."
   safe_mode: "Las extensiones están desactivadas en esta sesión. Reinicia normalmente para activarlas."
+  trust_warning:
+    title: "Seguridad de las extensiones"
+    message: "Las extensiones de terceros tienen los mismos permisos que el lanzador y pueden acceder a tus archivos y cuentas. Instala solo extensiones de autores y fuentes de confianza."
+    acknowledge: "Entendido"
   enabled: "Activada"
   retry: "Reintentar activación"
   uninstall: "Desinstalar"

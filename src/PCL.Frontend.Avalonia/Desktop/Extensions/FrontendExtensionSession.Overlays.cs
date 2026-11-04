@@ -22,10 +22,10 @@ internal sealed partial class FrontendExtensionSession
         return ShowOverlayCore(context, content, options);
     }
 
-    internal IExtensionOverlay ShowOverlay(Control content, ExtensionOverlayOptions options)
-        => ShowOverlayCore(null, content, options);
+    internal IExtensionOverlay ShowOverlay(Control content, ExtensionOverlayOptions options, bool isWarning = false)
+        => ShowOverlayCore(null, content, options, isWarning);
 
-    private IExtensionOverlay ShowOverlayCore(IExtensionContext? context, Control content, ExtensionOverlayOptions options)
+    private IExtensionOverlay ShowOverlayCore(IExtensionContext? context, Control content, ExtensionOverlayOptions options, bool isWarning = false)
     {
         Dispatcher.UIThread.VerifyAccess();
         ArgumentNullException.ThrowIfNull(content);
@@ -34,7 +34,7 @@ internal sealed partial class FrontendExtensionSession
         _overlay?.Dispose();
         _shell.ShowLauncher();
         var host = _window.FindControl<Grid>("ExtensionOverlayHost") ?? throw new InvalidOperationException("The launcher overlay host is unavailable.");
-        var overlay = new OverlaySession(this, context, host, content, options);
+        var overlay = new OverlaySession(this, context, host, content, options, isWarning);
         _overlay = overlay;
         return overlay;
     }
@@ -54,12 +54,12 @@ internal sealed partial class FrontendExtensionSession
         public bool IsOpen { get; private set; } = true;
         public event Action? Closed;
 
-        public OverlaySession(FrontendExtensionSession session, IExtensionContext? context, Grid host, Control content, ExtensionOverlayOptions options)
+        public OverlaySession(FrontendExtensionSession session, IExtensionContext? context, Grid host, Control content, ExtensionOverlayOptions options, bool isWarning)
         {
             _session = session; _context = context; _host = host; Content = content; _options = options;
             _previousFocus = session._window.FocusManager?.GetFocusedElement();
             _backdrop = new Border { Classes = { "pcl-dialog-overlay" } };
-            _backdrop.Bind(Border.BackgroundProperty, new DynamicResourceExtension("Pcl.Overlay"));
+            _backdrop.Bind(Border.BackgroundProperty, new DynamicResourceExtension(isWarning ? "ColorBrushPromptOverlayWarningBackdrop" : "Pcl.Overlay"));
             _backdrop.PointerPressed += (_, e) => { e.Handled = true; if (options.DismissOnOutsideClick) Dispose(); };
             var surface = new ContentControl
             {

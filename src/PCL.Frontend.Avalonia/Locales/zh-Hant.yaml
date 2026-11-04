@@ -3698,6 +3698,10 @@ extensions:
   install: "安裝或更新擴充套件…"
   native_code: "原生擴充功能擁有與啟動器相同的權限，請安裝來自可信作者的套件。"
   safe_mode: "本次工作階段已停用擴充功能，正常重新啟動後可啟用。"
+  trust_warning:
+    title: "擴充功能安全警告"
+    message: "第三方擴充功能擁有與啟動器相同的權限，可以存取你的檔案和帳號。請僅安裝來自可信作者和來源的擴充功能。"
+    acknowledge: "我已了解"
   enabled: "啟用"
   retry: "重試啟用"
   uninstall: "解除安裝"

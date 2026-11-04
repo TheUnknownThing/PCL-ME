@@ -246,6 +246,72 @@ public sealed class ExtensionManagementE2E
     });
 
     [TestMethod]
+    public Task TrustWarning_ShowsOnFirstVisit_IsInWindow_AndAcknowledgesOnce() => Run(async () =>
+    {
+        await using var app = new DesktopFixture();
+        await app.Start();
+        var lifetime = (IClassicDesktopStyleApplicationLifetime)global::Avalonia.Application.Current!.ApplicationLifetime!;
+        var windowCount = lifetime.Windows.Count;
+        await app.OpenExtensions(dismissTrustWarning: false);
+        var warning = (ExtensionTrustWarningView)app.Session.OverlayContent!;
+        Assert.AreSame(app.Window, TopLevel.GetTopLevel(warning));
+        Assert.IsTrue(warning.GetVisualAncestors().Any(visual => visual is Grid { Name: "ExtensionOverlayHost" }));
+        Assert.AreEqual(windowCount, lifetime.Windows.Count, "The trust warning must not create another window.");
+        Assert.AreEqual(app.Text.T("extensions.trust_warning.title"), warning.Find<TextBlock>("WarningTitle")!.Text);
+        Assert.AreEqual(app.Text.T("extensions.trust_warning.message"), warning.Find<TextBlock>("WarningText")!.Text);
+        Assert.AreEqual(app.Text.T("extensions.trust_warning.acknowledge"), warning.Find<PclButton>("AcknowledgeButton")!.Text);
+        // Outside clicks and Escape must not dismiss the warning or interact with the page behind it.
+        var background = app.Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == "Tests");
+        var point = background.TranslatePoint(new Point(background.Bounds.Width / 2, background.Bounds.Height / 2), app.Window)!.Value;
+        app.Window.MouseDown(point, MouseButton.Left, RawInputModifiers.None);
+        app.Window.MouseUp(point, MouseButton.Left, RawInputModifiers.None);
+        app.Window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        app.Window.KeyReleaseQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        await Settle();
+        Assert.AreSame(warning, app.Session.OverlayContent, "The trust warning must only close through its acknowledge button.");
+        Assert.AreEqual("Tools/ToolsExtensions", app.Launcher.ExtensionRoute, "The warning must block interactions with the page behind it.");
+        // The warning restyles and fits the minimum window in every locale.
+        app.Window.Width = 810; app.Window.Height = 470;
+        foreach (var darkMode in new[] { 0, 1 })
+        {
+            app.Actions.PersistSharedValue("UiDarkMode", darkMode);
+            FrontendAppearanceService.ApplyStoredAppearance(global::Avalonia.Application.Current!, app.Paths);
+            foreach (var locale in new[] { "en-US", "zh-Hans", "zh-Hant", "lzh", "de-DE", "fr-FR", "es-ES", "ko-KR" })
+            {
+                app.Text.SetLocale(locale); await Settle();
+                foreach (var (name, key) in new[] { ("WarningTitle", "title"), ("WarningText", "message") })
+                {
+                    var text = warning.Find<TextBlock>(name)!;
+                    Assert.AreEqual(app.Text.T("extensions.trust_warning." + key), text.Text,
+                        "The trust warning must follow the active locale.");
+                    Assert.IsTrue(text.TextLayout.Height <= text.Bounds.Height + 1, $"{name} must not be clipped in {locale}.");
+                }
+                var surface = warning.Find<Border>("WarningSurface")!;
+                var start = surface.TranslatePoint(default, app.Window)!.Value;
+                Assert.IsTrue(start.X >= 0 && start.Y >= 0 && start.X + surface.Bounds.Width <= app.Window.Bounds.Width
+                    && start.Y + surface.Bounds.Height <= app.Window.Bounds.Height, "The trust warning must fit the minimum window in " + locale);
+                var scroll = warning.GetVisualDescendants().OfType<ScrollViewer>().Single();
+                Assert.IsTrue(scroll.Extent.Height <= scroll.Viewport.Height + 1, "The warning must be readable without scrolling in " + locale);
+            }
+            app.Text.SetLocale("en-US"); await Settle();
+            app.Screenshot("extensions-trust-warning-" + (darkMode == 0 ? "light" : "dark"));
+            app.Text.SetLocale("zh-Hans"); await Settle();
+            app.Screenshot("extensions-trust-warning-zh-Hans-" + (darkMode == 0 ? "light" : "dark"));
+            app.Text.SetLocale("en-US"); await Settle();
+        }
+        await Click(app.Window, warning.Find<PclButton>("AcknowledgeButton")!);
+        await Wait(() => app.Session.OverlayContent is null, "The trust warning did not close after acknowledging it.");
+        Assert.IsTrue(app.Actions.HasAcknowledgedExtensionTrustWarning(), "Acknowledging must persist the dismissal.");
+        // Re-entering the page must not show the warning again.
+        await Click(app.Window, app.Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == "Tests"));
+        await Wait(() => !app.Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any(), "Leaving the Extensions tool did not release its view.");
+        await app.OpenExtensions();
+        Assert.IsNull(app.Session.OverlayContent, "The trust warning must only appear on the first visit.");
+        await app.Restart(); await app.OpenExtensions();
+        Assert.IsNull(app.Session.OverlayContent, "The acknowledgment must survive a restart.");
+    });
+
+    [TestMethod]
     public Task Search_FiltersLocalizedNamesAndIds_PreservesEditors_AndHandlesEmptyResults() => Run(async () =>
     {
         await using var app = new DesktopFixture();

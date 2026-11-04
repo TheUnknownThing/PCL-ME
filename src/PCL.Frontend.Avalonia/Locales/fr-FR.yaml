@@ -3688,6 +3688,10 @@ extensions:
   install: "Installer ou mettre à jour…"
   native_code: "Les extensions natives disposent des mêmes permissions que le lanceur. Installez des paquets de confiance."
   safe_mode: "Les extensions sont désactivées pour cette session. Redémarrez normalement pour les activer."
+  trust_warning:
+    title: "Sécurité des extensions"
+    message: "Les extensions tierces ont les mêmes permissions que le lanceur et peuvent accéder à vos fichiers et comptes. Installez uniquement des extensions provenant d’auteurs et de sources de confiance."
+    acknowledge: "J'ai compris"
   enabled: "Activée"
   retry: "Réessayer l’activation"
   uninstall: "Désinstaller"

@@ -12,6 +12,7 @@ internal sealed partial class ExtensionManagerView : UserControl, IDisposable
     private bool _disposed;
     private bool _installing;
     private ExtensionUrlInstallView? _urlInstaller;
+    private ExtensionTrustWarningView? _trustWarning;
 
     public ExtensionManagerView(FrontendExtensionSession session)
     {
@@ -31,6 +32,14 @@ internal sealed partial class ExtensionManagerView : UserControl, IDisposable
         ActionsButton.Command = new ActionCommand(() => ActionsButton.ContextFlyout?.ShowAt(ActionsButton));
         session.AttachManager(this);
         Refresh();
+        if (!session.HasAcknowledgedTrustWarning) ShowTrustWarning();
+    }
+
+    private void ShowTrustWarning()
+    {
+        var warning = _trustWarning = new ExtensionTrustWarningView();
+        warning.Acknowledged += () => { if (ReferenceEquals(_trustWarning, warning)) _trustWarning = null; };
+        warning.Open(_session);
     }
 
     internal void Refresh()
@@ -42,6 +51,7 @@ internal sealed partial class ExtensionManagerView : UserControl, IDisposable
         InstallButton.Text = _session.T("install_file");
         InstallUrlButton.Text = _session.T("install_url");
         _urlInstaller?.RefreshText();
+        _trustWarning?.RefreshText();
         ExtensionSearch.Watermark = _session.T("search_hint");
         global::Avalonia.Automation.AutomationProperties.SetName(ExtensionSearch, _session.T("search_hint"));
         EmptyText.Text = _session.T("search_empty");
@@ -145,6 +155,8 @@ internal sealed partial class ExtensionManagerView : UserControl, IDisposable
         ActionsButton.ContextFlyout = null;
         _session.DetachManager(this);
         _urlInstaller?.Close();
+        _trustWarning?.Close();
+        _trustWarning = null;
         foreach (var card in _cards.Values) card.Dispose();
         _cards.Clear();
     }

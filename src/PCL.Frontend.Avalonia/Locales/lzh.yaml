@@ -3688,6 +3688,10 @@ extensions:
   install: "安裝或更新擴充…"
   native_code: "原生擴充權同啟動器，請取自可信之作者。"
   safe_mode: "此次已停擴充，常式重啟可用。"
+  trust_warning:
+    title: "擴充之誡"
+    message: "第三方擴充，權同啟動器，可取檔案、帳號。作者與出處皆可信，方可安裝。"
+    acknowledge: "已知之"
   enabled: "啟用"
   retry: "重試啟用"
   uninstall: "卸除"

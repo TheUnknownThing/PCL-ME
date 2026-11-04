@@ -65,6 +65,8 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
     public ExtensionHost Host { get; }
     internal string T(string key) => _text.T("extensions." + key);
     internal string T(string key, IReadOnlyDictionary<string, object?> arguments) => _text.T("extensions." + key, arguments);
+    internal bool HasAcknowledgedTrustWarning => _actions.HasAcknowledgedExtensionTrustWarning();
+    internal void AcknowledgeTrustWarning() => _actions.AcknowledgeExtensionTrustWarning();
     internal bool CanInteract => !_disposed && _launcher.IsTopLevelNavigationInteractive;
     private readonly HashSet<Window> _windows = [];
     internal IReadOnlyList<Window> Windows => _windows.ToArray();
@@ -240,7 +242,7 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
 
     internal bool TryHandleShortcut(KeyEventArgs e)
     {
-        if (!CanInteract || e.Handled || OverlayContent is ExtensionUrlInstallView or ExtensionDetailsView) return false;
+        if (!CanInteract || e.Handled || OverlayContent is ExtensionUrlInstallView or ExtensionDetailsView or ExtensionTrustWarningView) return false;
         foreach (var command in Host.Commands.Where(command => command.CanExecute && command.Definition.Shortcut is not null))
         {
             var text = command.Definition.Shortcut!.Replace("Primary", OperatingSystem.IsMacOS() ? "Meta" : "Ctrl", StringComparison.Ordinal);

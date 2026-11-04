@@ -3698,6 +3698,10 @@ extensions:
   install: "安装或更新扩展包…"
   native_code: "原生扩展拥有与启动器相同的权限，请安装来自可信作者的扩展包。"
   safe_mode: "本次会话已禁用扩展，正常重启后可启用。"
+  trust_warning:
+    title: "扩展安全警告"
+    message: "第三方扩展拥有与启动器相同的权限，可以访问你的文件和账号。请仅安装来自可信作者和来源的扩展。"
+    acknowledge: "我已了解"
   enabled: "启用"
   retry: "重试启用"
   uninstall: "卸载"

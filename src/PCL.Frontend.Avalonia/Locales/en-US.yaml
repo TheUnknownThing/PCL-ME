@@ -3698,6 +3698,10 @@ extensions:
   install: "Install or update package…"
   native_code: "Native extensions run with the launcher’s permissions. Install packages from authors you trust."
   safe_mode: "Extensions are disabled for this session. Restart normally to enable them."
+  trust_warning:
+    title: "Extension safety warning"
+    message: "Third-party extensions run with the launcher’s permissions and can access your files and accounts. Only install extensions from authors and sources you trust."
+    acknowledge: "I understand"
   enabled: "Enabled"
   retry: "Retry activation"
   uninstall: "Uninstall"
