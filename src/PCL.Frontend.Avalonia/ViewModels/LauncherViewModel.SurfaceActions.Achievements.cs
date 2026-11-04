@@ -1,6 +1,8 @@
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -16,10 +18,8 @@ internal sealed partial class LauncherViewModel
 
     private async Task PreviewAchievementAsync()
     {
-        var url = GetAchievementUrl();
-        if (string.IsNullOrWhiteSpace(url))
+        if (!TryGetAchievementUrl(LT("shell.tools.test.achievement.preview_failure"), out var url))
         {
-            AddFailureActivity("Achievement preview failed", "Enter valid achievement text first.");
             return;
         }
 
@@ -30,13 +30,17 @@ internal sealed partial class LauncherViewModel
             using var stream = new MemoryStream(bytes);
             AchievementPreviewImage = new Bitmap(stream);
             ShowAchievementPreview = true;
-            AddActivity("Achievement preview", $"Loaded the achievement image for {AchievementTitle.Trim()}.\n{url}");
+            AddActivity(
+                LT("shell.tools.test.achievement.preview_activity"),
+                $"{AchievementTitle.Trim()}\n{url}");
         }
         catch (Exception ex)
         {
             ShowAchievementPreview = false;
             AchievementPreviewImage = null;
-            AddFailureActivity("Achievement preview failed", ex.Message);
+            AddFailureActivity(
+                LT("shell.tools.test.achievement.preview_failure"),
+                DescribeAchievementFetchFailure(ex));
         }
     }
 
@@ -254,12 +258,8 @@ internal sealed partial class LauncherViewModel
 
     private async Task SaveAchievementAsync()
     {
-        var url = GetAchievementUrl();
-        if (string.IsNullOrWhiteSpace(url))
+        if (!TryGetAchievementUrl(LT("shell.tools.test.achievement.save_failure"), out var url))
         {
-            AddFailureActivity(
-                LT("shell.tools.test.achievement.save_failure"),
-                LT("shell.tools.test.achievement.invalid_content"));
             return;
         }
 
@@ -278,11 +278,15 @@ internal sealed partial class LauncherViewModel
         }
         catch (Exception ex)
         {
-            AddFailureActivity(LT("shell.tools.test.achievement.save_failure"), ex.Message);
+            AddFailureActivity(
+                LT("shell.tools.test.achievement.save_failure"),
+                DescribeAchievementFetchFailure(ex));
         }
     }
 
-    private string GetAchievementUrl()
+    private static readonly Regex AchievementBlockIdRegex = new("^[a-z0-9_]+$", RegexOptions.Compiled);
+
+    private bool TryGetAchievementUrl(string failureTitle, out string? url)
     {
         var block = AchievementBlockId.Trim();
         var title = AchievementTitle.Trim().Replace(" ", "..", StringComparison.Ordinal);
@@ -290,15 +294,34 @@ internal sealed partial class LauncherViewModel
         var secondLine = AchievementSecondLine.Trim().Replace(" ", "..", StringComparison.Ordinal);
         if (string.IsNullOrWhiteSpace(block) || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(firstLine))
         {
-            return string.Empty;
+            AddFailureActivity(failureTitle, LT("shell.tools.test.achievement.invalid_content"));
+            url = null;
+            return false;
         }
 
-        var url = $"https://minecraft-api.com/api/achivements/{Uri.EscapeDataString(block)}/{Uri.EscapeDataString(title)}/{Uri.EscapeDataString(firstLine)}";
+        if (!AchievementBlockIdRegex.IsMatch(block))
+        {
+            AddFailureActivity(failureTitle, LT("shell.tools.test.achievement.invalid_block_id"));
+            url = null;
+            return false;
+        }
+
+        url = $"https://minecraft-api.com/api/achivements/{Uri.EscapeDataString(block)}/{Uri.EscapeDataString(title)}/{Uri.EscapeDataString(firstLine)}";
         if (!string.IsNullOrWhiteSpace(secondLine))
         {
             url += $"/{Uri.EscapeDataString(secondLine)}";
         }
 
-        return url;
+        return true;
+    }
+
+    private string DescribeAchievementFetchFailure(Exception ex)
+    {
+        if (ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound or HttpStatusCode.InternalServerError } httpEx)
+        {
+            return $"{LT("shell.tools.test.achievement.fetch_invalid_text")} (HTTP {(int)httpEx.StatusCode.Value})";
+        }
+
+        return ex.Message;
     }
 }

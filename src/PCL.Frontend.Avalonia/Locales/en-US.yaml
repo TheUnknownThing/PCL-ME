@@ -724,11 +724,14 @@ shell:
     test:
       achievement:
         block_id: Item ID
+        fetch_invalid_text: The achievement image service rejected the request. Check that the item ID is correct and the text only contains English characters without special symbols.
         first_line: Line 1
+        invalid_block_id: The item ID can only contain lowercase letters, numbers, and underscores.
         invalid_content: Achievement content is incomplete.
         output_missing: The achievement image was not generated.
         preview: Preview Achievement Image
         preview_activity: Preview Achievement Image
+        preview_failure: Achievement Preview Failed
         preview_hidden: Preview is hidden.
         save: Save Image
         save_activity: Save Achievement Image

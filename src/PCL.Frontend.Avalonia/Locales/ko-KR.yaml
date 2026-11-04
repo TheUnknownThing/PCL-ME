@@ -724,11 +724,14 @@ shell:
     test:
       achievement:
         block_id: 아이템 ID
+        fetch_invalid_text: 업적 이미지 서비스가 요청을 거부했습니다. 아이템 ID가 올바른지, 텍스트에 특수 문자나 영어 이외의 문자가 없는지 확인하세요.
         first_line: 1호선
+        invalid_block_id: 아이템 ID는 소문자, 숫자, 밑줄만 포함할 수 있습니다.
         invalid_content: 업적 콘텐츠가 불완전합니다.
         output_missing: 업적 이미지가 생성되지 않았습니다.
         preview: 업적 이미지 미리보기
         preview_activity: 업적 이미지 미리보기
+        preview_failure: 업적 이미지 미리보기 실패
         preview_hidden: 미리보기가 숨겨져 있습니다.
         save: 이미지 저장
         save_activity: 업적 이미지 저장

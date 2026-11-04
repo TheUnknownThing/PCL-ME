@@ -838,11 +838,14 @@ shell:
     test:
       achievement:
         block_id: []
+        fetch_invalid_text: []
         first_line: []
+        invalid_block_id: []
         invalid_content: []
         output_missing: []
         preview: []
         preview_activity: []
+        preview_failure: []
         preview_hidden: []
         save: []
         save_activity: []

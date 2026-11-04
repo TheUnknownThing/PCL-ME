@@ -724,11 +724,14 @@ shell:
     test:
       achievement:
         block_id: 物名（ID）
+        fetch_invalid_text: 取成就圖像敗，請察物名（ID）正誤，與文中有無殊字！
         first_line: 第一行
+        invalid_block_id: 物名（ID）惟許小寫字母、數字、底線！
         invalid_content: 成就圖像之文不具。
         output_missing: 未生成成就圖像。
         preview: 預覽成就圖像
         preview_activity: 預覽成就圖像
+        preview_failure: 成就圖像預覽敗
         preview_hidden: 預覽既隱。
         save: 儲存圖片
         save_activity: 儲存成就圖像
