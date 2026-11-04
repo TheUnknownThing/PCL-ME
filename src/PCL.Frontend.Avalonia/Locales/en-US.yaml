@@ -1835,12 +1835,17 @@ setup:
         text: Text
   java:
     actions:
+      download: "Download"
+      install: "Install"
       add: Add
       details: Details
       disable: Disable
       enable: Enable
       open: Open
     activities:
+      download_failed: "Failed to download Java"
+      install_pick_title: "Select a Java installation directory"
+      install_invalid: "The selected folder does not contain a usable Java runtime. Choose a JDK, JRE, or bin directory."
       add: Add Java
       add_cancelled: Java selection cancelled.
       add_failed: Failed to add Java
@@ -1871,6 +1876,9 @@ setup:
     auto_select:
       description: Use automatic Java selection to choose a suitable runtime based on the game's needs.
       label: Automatic selection
+    card_header: Java runtimes
+    download:
+      description: "Choose a Java version to download and install. The launcher will select it when installation finishes."
     details:
       available: Available
       metadata_unavailable: Detailed metadata for this Java runtime could not be parsed. Make sure the executable still works.

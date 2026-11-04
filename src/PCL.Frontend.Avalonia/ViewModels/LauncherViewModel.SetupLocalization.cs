@@ -270,6 +270,9 @@ internal sealed partial class LauncherViewModel
             },
             Java = new SetupJavaLocalization
             {
+                RuntimesCardHeader = _i18n.T("setup.java.card_header"),
+                DownloadButton = _i18n.T("setup.java.actions.download"),
+                InstallButton = _i18n.T("setup.java.actions.install"),
                 AddButton = _i18n.T("setup.java.actions.add"),
                 AutoSelectLabel = _i18n.T("setup.java.auto_select.label"),
                 AutoSelectDescription = _i18n.T("setup.java.auto_select.description"),
@@ -554,6 +557,9 @@ internal sealed class SetupUpdateLocalization
 
 internal sealed class SetupJavaLocalization
 {
+    public required string RuntimesCardHeader { get; init; }
+    public required string DownloadButton { get; init; }
+    public required string InstallButton { get; init; }
     public required string AddButton { get; init; }
     public required string AutoSelectLabel { get; init; }
     public required string AutoSelectDescription { get; init; }

@@ -1831,12 +1831,17 @@ setup:
         text: Texte
   java:
     actions:
+      download: "Télécharger"
+      install: "Installer"
       add: Ajouter
       details: Détails
       disable: Désactiver
       enable: Activer
       open: Ouvert
     activities:
+      download_failed: "Échec du téléchargement de Java"
+      install_pick_title: "Sélectionner un dossier d’installation de Java"
+      install_invalid: "Le dossier sélectionné ne contient pas d’environnement Java utilisable. Choisissez un dossier JDK, JRE ou bin."
       add: Ajouter Java
       add_cancelled: Sélection Java annulée.
       add_failed: Échec de l'ajout de Java
@@ -1867,6 +1872,9 @@ setup:
     auto_select:
       description: Utilisez la sélection Java automatique pour choisir un environnement d'exécution approprié en fonction des besoins du jeu.
       label: Sélection automatique
+    card_header: Environnements Java
+    download:
+      description: "Choisissez une version de Java à télécharger et à installer. Le lanceur la sélectionnera à la fin de l’installation."
     details:
       available: Disponible
       metadata_unavailable: Les métadonnées détaillées de cet environnement d'exécution Java n'ont pas pu être analysées. Assurez-vous que l'exécutable fonctionne toujours.

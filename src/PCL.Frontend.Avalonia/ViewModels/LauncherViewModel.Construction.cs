@@ -84,6 +84,7 @@ internal sealed partial class LauncherViewModel
     private readonly ActionCommand _applyProxySettingsCommand;
     private readonly ActionCommand _testProxyConnectionCommand;
     private readonly ActionCommand _addJavaRuntimeCommand;
+    private readonly ActionCommand _downloadJavaRuntimeCommand;
     private readonly ActionCommand _selectAutoJavaCommand;
     private readonly ActionCommand _resetUiSettingsCommand;
     private readonly ActionCommand _openSnapshotBuildCommand;
@@ -409,6 +410,7 @@ internal sealed partial class LauncherViewModel
         _applyProxySettingsCommand = new ActionCommand(ApplyProxySettings);
         _testProxyConnectionCommand = new ActionCommand(() => _ = TestProxyConnectionAsync(), () => !_isTestingProxyConnection);
         _addJavaRuntimeCommand = new ActionCommand(() => _ = AddJavaRuntimeAsync());
+        _downloadJavaRuntimeCommand = new ActionCommand(() => _ = DownloadJavaRuntimeAsync(), () => !_isJavaRuntimeDownloadInProgress);
         _selectAutoJavaCommand = new ActionCommand(() => SelectJavaRuntime("auto"));
         _resetUiSettingsCommand = new ActionCommand(ResetUiSurface);
         _openSnapshotBuildCommand = CreateLinkCommand("Get official snapshot build", "https://afdian.com/a/LTCat");

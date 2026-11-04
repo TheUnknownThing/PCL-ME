@@ -118,9 +118,11 @@ public sealed partial class PclCard : UserControl
         }
 
         MotionDurations.Changed += OnMotionDurationsChanged;
+        PclTheme.Changed += OnAppearanceChanged;
         _isMotionDurationSubscribed = true;
         ConfigureChevronTransitions();
         RefreshContentState(animate: false);
+        RefreshState();
     }
 
     private void OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
@@ -132,12 +134,18 @@ public sealed partial class PclCard : UserControl
         }
 
         MotionDurations.Changed -= OnMotionDurationsChanged;
+        PclTheme.Changed -= OnAppearanceChanged;
         _isMotionDurationSubscribed = false;
     }
 
     private void OnMotionDurationsChanged(object? sender, PropertyChangedEventArgs e)
     {
         Dispatcher.UIThread.Post(ConfigureChevronTransitions);
+    }
+
+    private void OnAppearanceChanged()
+    {
+        Dispatcher.UIThread.Post(RefreshState, DispatcherPriority.Render);
     }
 
     private void ConfigureChevronTransitions()

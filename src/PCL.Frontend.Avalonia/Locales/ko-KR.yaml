@@ -1831,12 +1831,17 @@ setup:
         text: 텍스트
   java:
     actions:
+      download: "다운로드"
+      install: "설치"
       add: 추가하다
       details: 세부
       disable: 장애를 입히다
       enable: 할 수 있게 하다
       open: 열려 있는
     activities:
+      download_failed: "Java 다운로드 실패"
+      install_pick_title: "Java 설치 폴더 선택"
+      install_invalid: "선택한 폴더에 사용할 수 있는 Java 런타임이 없습니다. JDK, JRE 또는 bin 폴더를 선택하세요."
       add: Java 추가
       add_cancelled: Java 선택이 취소되었습니다.
       add_failed: Java를 추가하지 못했습니다.
@@ -1867,6 +1872,9 @@ setup:
     auto_select:
       description: 자동 Java 선택을 사용하여 게임 요구 사항에 따라 적합한 런타임을 선택합니다.
       label: 자동 선택
+    card_header: Java 런타임
+    download:
+      description: "다운로드하고 설치할 Java 버전을 선택하세요. 설치가 끝나면 런처가 해당 런타임을 선택합니다."
     details:
       available: 사용 가능
       metadata_unavailable: 이 Java 런타임의 상세 메타데이터를 해석할 수 없습니다. 실행 파일이 계속 정상적으로 동작하는지 확인하세요.

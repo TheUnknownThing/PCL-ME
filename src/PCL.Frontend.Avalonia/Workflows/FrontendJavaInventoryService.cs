@@ -10,6 +10,24 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal static class FrontendJavaInventoryService
 {
+    public static string? FindJavaExecutableInDirectory(string directory)
+    {
+        if (!Directory.Exists(directory))
+        {
+            return null;
+        }
+
+        var platform = new FrontendPlatformAdapter();
+        var runtimeExecutable = platform.GetJavaExecutablePath(directory);
+        if (File.Exists(runtimeExecutable))
+        {
+            return runtimeExecutable;
+        }
+
+        var directExecutable = Path.Combine(directory, platform.GetJavaExecutableFileName());
+        return File.Exists(directExecutable) ? directExecutable : null;
+    }
+
     private static readonly IJavaParser JavaParser = BuildJavaParser();
     private static readonly object PortableJavaScanLock = new();
     private static IReadOnlyList<FrontendStoredJavaRuntime>? CachedPortableJavaRuntimes;

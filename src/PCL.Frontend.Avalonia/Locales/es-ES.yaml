@@ -1838,12 +1838,17 @@ setup:
         text: Texto
   java:
     actions:
+      download: "Descargar"
+      install: "Instalar"
       add: Agregar
       details: Detalles
       disable: Desactivar
       enable: Habilitar
       open: Abierto
     activities:
+      download_failed: "Error al descargar Java"
+      install_pick_title: "Seleccionar una carpeta de instalación de Java"
+      install_invalid: "La carpeta seleccionada no contiene un entorno Java utilizable. Elige una carpeta JDK, JRE o bin."
       add: Agregar Java
       add_cancelled: Selección de Java cancelada.
       add_failed: No se pudo agregar Java
@@ -1874,6 +1879,9 @@ setup:
     auto_select:
       description: Utilice la selección automática de Java para elegir un tiempo de ejecución adecuado según las necesidades del juego.
       label: Selección automática
+    card_header: Entornos de ejecución de Java
+    download:
+      description: "Elige una versión de Java para descargar e instalar. El lanzador la seleccionará al finalizar la instalación."
     details:
       available: Disponible
       metadata_unavailable: No se pudieron analizar los metadatos detallados para este tiempo de ejecución de Java. Asegúrese de que el ejecutable aún funcione.

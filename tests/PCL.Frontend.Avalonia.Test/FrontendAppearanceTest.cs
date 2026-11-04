@@ -9,6 +9,7 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PCL.Core.App.Essentials;
@@ -425,6 +426,235 @@ public sealed class FrontendAppearanceTest
             Tick();
             Assert.IsTrue(((PclCard)sections[5].Content!).IsEffectivelyVisible);
             window.Close();
+        });
+    }
+
+    [TestMethod]
+    public async Task JavaSettings_RowsAndFooterFitWhenResizingWithLongPaths()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            var command = new ActionCommand(() => { });
+            var entry = new JavaRuntimeEntryViewModel("java", "25.0.2",
+                "/home/player/Java installations/" + new string('x', 180) + "/jdk-25",
+                ["Enabled", "Automatically installed Java runtime"], true, command, command, command, command);
+            fixture.Launcher.JavaRuntimeEntries.Clear();
+            fixture.Launcher.JavaRuntimeEntries.Add(entry);
+            var view = new SetupJavaRightPaneView { DataContext = fixture.Launcher };
+            var window = new Window { Width = 800, Height = 600, Content = view };
+            try
+            {
+                window.Show();
+                Tick();
+                Assert.IsFalse(view.GetVisualDescendants().OfType<TextBlock>().Any(text => entry.Tags.Contains(text.Text ?? "")),
+                    "Runtime tags must not appear on this page.");
+                var download = view.FindControl<PclButton>("DownloadJavaButton")!;
+                var install = view.FindControl<PclButton>("InstallJavaButton")!;
+                Assert.AreSame(fixture.Launcher.DownloadJavaRuntimeCommand, download.Command);
+                Assert.AreSame(fixture.Launcher.AddJavaRuntimeCommand, install.Command);
+                foreach (var width in new[] { 800d, 480d, 320d, 600d })
+                {
+                    window.Width = width;
+                    Tick();
+                    var row = view.GetVisualDescendants().OfType<Border>()
+                        .Single(control => control.Classes.Contains("java-row") && ReferenceEquals(control.DataContext, entry));
+                    var choice = row.GetVisualDescendants().OfType<RadioButton>().Single();
+                    var actions = row.GetVisualDescendants().OfType<StackPanel>()
+                        .Single(control => control.Classes.Contains("java-actions"));
+                    var choiceBounds = new Rect(choice.Bounds.Size).TransformToAABB(choice.TransformToVisual(row)!.Value);
+                    var actionBounds = new Rect(actions.Bounds.Size).TransformToAABB(actions.TransformToVisual(row)!.Value);
+                    Assert.IsTrue(actionBounds.Right <= row.Bounds.Width + .1, $"Actions overflow at {width} px.");
+                    Assert.IsTrue(choiceBounds.Right <= row.Bounds.Width + .1, $"Selection overflows at {width} px.");
+                    if (width < 520)
+                        Assert.IsTrue(actionBounds.Top >= choiceBounds.Bottom - .1, "Narrow rows must put actions below the runtime.");
+                    else
+                        Assert.IsTrue(actionBounds.Left >= choiceBounds.Right - .1, "Wide rows must put actions beside the runtime.");
+                    var scroll = view.GetVisualDescendants().OfType<ScrollViewer>().Single();
+                    Assert.IsTrue(scroll.Extent.Width <= scroll.Viewport.Width + .1, "The page must not require horizontal scrolling.");
+                    var path = row.GetVisualDescendants().OfType<TextBlock>().Single(text => text.Text == entry.Info);
+                    Assert.AreEqual(TextTrimming.CharacterEllipsis, path.TextTrimming);
+                    Assert.AreEqual(entry.Info, ToolTip.GetTip(path));
+                    foreach (var button in new[] { download, install })
+                    {
+                        var bounds = new Rect(button.Bounds.Size).TransformToAABB(button.TransformToVisual(view)!.Value);
+                        Assert.IsTrue(bounds.Left >= 0 && bounds.Right <= width, $"Footer button overflows at {width} px.");
+                    }
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [TestMethod]
+    public async Task JavaSettings_SelectionSupportsRowClicksAndKeyboardWhileDisabledActionsRemainUsable()
+    {
+        await RunOnUiThread(() =>
+        {
+            using var fixture = new AppearanceFixture();
+            var selections = 0;
+            var opens = 0;
+            var details = 0;
+            var toggles = 0;
+            var entry = new JavaRuntimeEntryViewModel("java", "25.0.2", "/usr/lib/jvm/java-25",
+                ["Enabled", "Auto scanned"], true, new ActionCommand(() => selections++),
+                new ActionCommand(() => opens++), new ActionCommand(() => details++), new ActionCommand(() => toggles++));
+            fixture.Launcher.JavaRuntimeEntries.Clear();
+            fixture.Launcher.JavaRuntimeEntries.Add(entry);
+            var view = new SetupJavaRightPaneView { DataContext = fixture.Launcher };
+            var window = new Window { Width = 700, Height = 500, Content = view };
+            try
+            {
+                window.Show();
+                Tick();
+                var choice = view.GetVisualDescendants().OfType<RadioButton>()
+                    .Single(control => ReferenceEquals(control.DataContext, entry));
+                var title = choice.GetVisualDescendants().OfType<TextBlock>().Single(text => text.Text == entry.Title);
+                Click(title);
+                Assert.AreEqual(1, selections, "Clicking runtime text must select the runtime.");
+                Assert.IsTrue(choice.Focus());
+                window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.None);
+                window.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
+                Assert.AreEqual(2, selections, "Keyboard activation must use the same selection command.");
+
+                entry.IsEnabled = false;
+                Tick();
+                Assert.IsTrue(title.TextDecorations?.Any(decoration => decoration.Location == TextDecorationLocation.Strikethrough) == true);
+                Assert.AreEqual(1d, choice.Opacity, "Disabled runtime information must remain readable.");
+                Assert.IsTrue(choice.GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>()
+                    .Single(path => path.Name == "DisabledMark").IsVisible);
+                Click(title);
+                Assert.AreEqual(2, selections, "Disabled runtimes must not be selectable.");
+                var actions = view.GetVisualDescendants().OfType<PclIconButton>()
+                    .Where(control => ReferenceEquals(control.DataContext, entry)).ToArray();
+                Assert.AreEqual(3, actions.Length);
+                foreach (var action in actions)
+                {
+                    Assert.IsTrue(action.IsEffectivelyEnabled);
+                    Click(action);
+                }
+                Assert.AreEqual(1, opens);
+                Assert.AreEqual(1, details);
+                Assert.AreEqual(1, toggles, "A disabled runtime must still offer its enable action.");
+                Assert.AreEqual(2, selections, "Action buttons must not select the runtime.");
+                Assert.AreEqual(entry.ToggleIconData, actions[2].IconData);
+                Assert.AreEqual(entry.EnableText, ToolTip.GetTip(actions[2]));
+            }
+            finally
+            {
+                window.Close();
+            }
+
+            void Click(Control control)
+            {
+                var point = control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
+                window.MouseDown(point, MouseButton.Left, RawInputModifiers.None);
+                window.MouseUp(point, MouseButton.Left, RawInputModifiers.None);
+                Tick();
+            }
+        });
+    }
+
+    [TestMethod]
+    public async Task JavaSettings_HoverFadesTheAccentWithoutInterpolatingThroughWhite()
+    {
+        await FrontendMotionTest.RunAsync(async () =>
+        {
+            using var fixture = new AppearanceFixture();
+            var accent = Color.Parse("#245775");
+            Application.Current!.Resources["ColorBrushEntryHoverBackground"] = new SolidColorBrush(accent);
+            var command = new ActionCommand(() => { });
+            var entry = new JavaRuntimeEntryViewModel("java", "21", "/java", [], true, command, command, command, command);
+            fixture.Launcher.JavaRuntimeEntries.Clear();
+            fixture.Launcher.JavaRuntimeEntries.Add(entry);
+            var view = new SetupJavaRightPaneView { DataContext = fixture.Launcher };
+            var window = new Window { Width = 700, Height = 500, Content = view };
+            try
+            {
+                window.Show();
+                Tick();
+                var row = view.GetVisualDescendants().OfType<Border>()
+                    .Single(control => control.Classes.Contains("java-row") && ReferenceEquals(control.DataContext, entry));
+                var highlight = row.GetVisualDescendants().OfType<Border>()
+                    .Single(control => control.Classes.Contains("java-highlight"));
+                Assert.AreEqual(0d, highlight.Opacity);
+                window.MouseMove(row.TranslatePoint(new Point(70, 15), window)!.Value);
+                foreach (var delay in new[] { 30, 60, 160 })
+                {
+                    await FrontendMotionTest.Advance(delay);
+                    Assert.AreEqual(accent, ((ISolidColorBrush)highlight.Background!).Color,
+                        "Every hover frame must retain the accent color while its opacity changes.");
+                    Assert.IsTrue(highlight.Opacity > 0);
+                }
+                Assert.AreEqual(1d, highlight.Opacity);
+                window.MouseMove(new Point(2, 2));
+                await FrontendMotionTest.Advance(160);
+                Assert.AreEqual(0d, highlight.Opacity);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [TestMethod]
+    public async Task JavaSettings_DownloadOffersVersionsAndCancellationRestoresTheButton()
+    {
+        await FrontendMotionTest.RunAsync(async () =>
+        {
+            using var fixture = new AppearanceFixture();
+            var selection = new TaskCompletionSource<string?>();
+            var prompts = 0;
+            fixture.Actions.ChoicePresenter = (_, _, options, selectedId, _) =>
+            {
+                prompts++;
+                Assert.IsTrue(options.Any(option => option.Id == "8"));
+                Assert.IsTrue(options.Any(option => option.Id == "21"));
+                Assert.IsTrue(options.Any(option => option.Id == selectedId));
+                return selection.Task;
+            };
+            var download = fixture.Launcher.DownloadJavaRuntimeCommand;
+            var entries = fixture.Launcher.JavaRuntimeEntries.ToArray();
+            download.Execute(null);
+            Assert.IsFalse(download.CanExecute(null), "A second download must not start while the chooser is open.");
+            download.Execute(null);
+            Assert.AreEqual(1, prompts);
+            selection.SetResult(null);
+            await FrontendMotionTest.Advance(30);
+            Assert.IsTrue(download.CanExecute(null));
+            CollectionAssert.AreEqual(entries, fixture.Launcher.JavaRuntimeEntries.ToArray());
+        });
+    }
+
+    [TestMethod]
+    public async Task SettingsCard_RefreshesItsSurfaceAfterAThemeChangeWithoutHovering()
+    {
+        await FrontendMotionTest.RunAsync(async () =>
+        {
+            using var fixture = new AppearanceFixture();
+            var card = new PclCard { Header = "Settings", CardContent = new TextBlock { Text = "Content" } };
+            var window = new Window { Width = 500, Height = 300, Content = card };
+            try
+            {
+                window.Show();
+                Tick();
+                foreach (var darkMode in new[] { 1, 0, 1 })
+                {
+                    FrontendAppearanceService.ApplyAppearance(Application.Current, new(darkMode, 0, 0, null, null, null, null));
+                    await FrontendMotionTest.Advance(300);
+                    var expected = PclTheme.GetBrush("ColorBrushMyCard");
+                    var actual = card.FindControl<Border>("CardBorder")!.Background;
+                    Assert.AreEqual(((ISolidColorBrush)expected).Color, ((ISolidColorBrush)actual!).Color);
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
         });
     }
 
