@@ -12,6 +12,43 @@ namespace PCL.Core.Test.App;
 public sealed class FrontendJavaInventoryServiceTest
 {
     [TestMethod]
+    [DataRow("bin")]
+    [DataRow("")]
+    public void FindJavaExecutableInDirectory_AcceptsRuntimeRootsAndBinDirectories(string executableFolder)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-java-directory-test", System.Guid.NewGuid().ToString("N"));
+        var folder = Path.Combine(root, executableFolder);
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var executable = Path.Combine(folder, new FrontendPlatformAdapter().GetJavaExecutableFileName());
+            File.WriteAllText(executable, "test fixture");
+            Assert.AreEqual(executable, FrontendJavaInventoryService.FindJavaExecutableInDirectory(root));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void FindJavaExecutableInDirectory_RejectsMissingAndUnrelatedDirectories()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pcl-java-directory-test", System.Guid.NewGuid().ToString("N"));
+        Assert.IsNull(FrontendJavaInventoryService.FindJavaExecutableInDirectory(root));
+        Directory.CreateDirectory(root);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "unrelated.txt"), "test fixture");
+            Assert.IsNull(FrontendJavaInventoryService.FindJavaExecutableInDirectory(root));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void ParseStorageItemsPreservesAutoInstalledSource()
     {
         const string executablePath = "/tmp/runtime/jre-21/bin/java";

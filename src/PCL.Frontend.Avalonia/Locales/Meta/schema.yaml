@@ -2042,12 +2042,17 @@ setup:
         text: []
   java:
     actions:
+      download: []
+      install: []
       add: []
       details: []
       disable: []
       enable: []
       open: []
     activities:
+      download_failed: []
+      install_pick_title: []
+      install_invalid: []
       add: []
       add_cancelled: []
       add_failed: []
@@ -2085,6 +2090,9 @@ setup:
     auto_select:
       description: []
       label: []
+    card_header: []
+    download:
+      description: []
     details:
       available: []
       metadata_unavailable: []

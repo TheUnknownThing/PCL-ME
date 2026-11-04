@@ -1,138 +1,221 @@
 <UserControl
     x:Class="PCL.Frontend.Avalonia.Desktop.Panes.Right.SetupJavaRightPaneView"
     xmlns="https://github.com/avaloniaui"
-    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:PCL.Frontend.Avalonia.ViewModels"
+    xmlns:motion="clr-namespace:PCL.UI.Animation;assembly=PCL.UI"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
     x:DataType="vm:LauncherViewModel"
-    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls"
     x:Name="Root"
     DataContext="{ReflectionBinding Launcher}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="25,25,25,10" Spacing="15">
-      <ui:PclCard ContentMargin="12">
-        <ui:PclCard.CardContent>
-          <StackPanel Orientation="Horizontal">
-            <ui:PclButton
-                Width="110"
-                Height="35"
-                Command="{Binding AddJavaRuntimeCommand}"
-                ColorType="Highlight"
-                Text="{Binding SetupText.Java.AddButton}" />
-          </StackPanel>
-        </ui:PclCard.CardContent>
-      </ui:PclCard>
+  <UserControl.Styles>
+    <Style Selector="RadioButton.java-choice">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+            <Grid ColumnDefinitions="18,*">
+              <Grid Width="16" Height="16" VerticalAlignment="Center">
+                <Path x:Name="DisabledMark" Data="M4,8 L12,8" Stroke="{DynamicResource ColorBrushEntrySecondaryIdle}" StrokeThickness="1.5" IsVisible="False" />
+                <Ellipse
+                    x:Name="ChoiceRing"
+                    Stroke="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                    StrokeThickness="1.5" />
+                <Ellipse
+                    x:Name="ChoiceDot"
+                    Width="8"
+                    Height="8"
+                    Fill="{DynamicResource ColorBrush3}"
+                    IsVisible="False" />
+              </Grid>
+              <ContentPresenter
+                  Grid.Column="1"
+                  Margin="10,0,0,0"
+                  Content="{TemplateBinding Content}"
+                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                  HorizontalContentAlignment="Stretch" />
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="RadioButton.java-choice:checked /template/ Ellipse#ChoiceRing">
+      <Setter Property="Stroke" Value="{DynamicResource ColorBrush3}" />
+    </Style>
+    <Style Selector="RadioButton.java-choice:checked /template/ Ellipse#ChoiceDot">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="RadioButton.java-choice:disabled /template/ Path#DisabledMark">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="TextBlock.java-title">
+      <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
+    </Style>
+    <Style Selector="RadioButton.java-choice:disabled TextBlock.java-title">
+      <Setter Property="Foreground" Value="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+      <Setter Property="TextDecorations" Value="Strikethrough" />
+    </Style>
+    <Style Selector="Border.java-row">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Border.java-highlight">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntryHoverBackground}" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{Binding InteractiveState, Source={x:Static motion:MotionDurations.Source}}" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.java-row:pointerover Border.java-highlight">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="Border.java-row.selected Border.java-highlight">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushEntrySelectedBackground}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="Border.java-row.disabled Border.java-highlight">
+      <Setter Property="Background" Value="{DynamicResource ColorBrushBg1}" />
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+    <Style Selector="Border.java-row:focus-within">
+      <Setter Property="BorderBrush" Value="{DynamicResource ColorBrush3}" />
+    </Style>
+    <Style Selector=".compact RadioButton.java-choice">
+      <Setter Property="Grid.ColumnSpan" Value="2" />
+    </Style>
+    <Style Selector="StackPanel.java-actions">
+      <Setter Property="Grid.Column" Value="1" />
+      <Setter Property="Margin" Value="4,0,10,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector=".compact StackPanel.java-actions">
+      <Setter Property="Grid.Column" Value="0" />
+      <Setter Property="Grid.Row" Value="1" />
+      <Setter Property="Grid.ColumnSpan" Value="2" />
+      <Setter Property="Margin" Value="40,0,10,8" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+  </UserControl.Styles>
 
-      <ui:PclCard ContentMargin="15">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="25,25,25,10">
+      <ui:PclCard Header="{Binding SetupText.Java.RuntimesCardHeader}" ContentMargin="12,36,12,12">
         <ui:PclCard.CardContent>
-          <StackPanel Spacing="12">
-            <Border
-                Padding="14,12"
-                Background="{DynamicResource ColorBrush8}"
-                BorderBrush="{DynamicResource ColorBrush6}"
-                BorderThickness="1"
-                CornerRadius="5">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+          <StackPanel Spacing="4">
+            <Border Classes="java-row" Classes.selected="{Binding IsAutoJavaSelected}">
+              <Grid>
+                <Border Classes="java-highlight" />
                 <RadioButton
-                    Margin="0,3,12,0"
-                    VerticalAlignment="Top"
-                    IsChecked="{Binding IsAutoJavaSelected}"
-                    Command="{Binding SelectAutoJavaCommand}" />
-                <TextBlock
-                    Grid.Column="1"
-                    Foreground="{DynamicResource ColorBrush1}"
-                    FontSize="14"
-                    Text="{Binding SetupText.Java.AutoSelectLabel}" />
-                <TextBlock
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    Margin="0,3,0,0"
-                    Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                    FontSize="12"
-                    Text="{Binding SetupText.Java.AutoSelectDescription}"
-                    TextWrapping="Wrap" />
+                    x:Name="AutoJavaChoice"
+                    Classes="java-choice"
+                    GroupName="SetupJavaRuntime"
+                    IsChecked="{Binding IsAutoJavaSelected, Mode=OneWay}"
+                    Command="{Binding SelectAutoJavaCommand}"
+                    AutomationProperties.Name="{Binding SetupText.Java.AutoSelectLabel}">
+                  <StackPanel Spacing="3">
+                    <TextBlock
+                        Foreground="{DynamicResource ColorBrush1}"
+                        FontSize="13.5"
+                        Text="{Binding SetupText.Java.AutoSelectLabel}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                        FontSize="12"
+                        Text="{Binding SetupText.Java.AutoSelectDescription}"
+                        TextWrapping="Wrap" />
+                  </StackPanel>
+                </RadioButton>
               </Grid>
             </Border>
 
-            <ItemsControl ItemsSource="{Binding JavaRuntimeEntries}" IsVisible="{Binding HasJavaRuntimeEntries}">
+            <Border
+                Height="1"
+                Margin="12,6"
+                Background="{DynamicResource ColorBrushMyCardEdge}"
+                IsVisible="{Binding HasJavaRuntimeEntries}" />
+
+            <ItemsControl ItemsSource="{Binding JavaRuntimeEntries}">
               <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Border
-                      Margin="0,0,0,10"
-                      Padding="14,12"
-                      Background="{DynamicResource ColorBrushBackground}"
-                      BorderBrush="{DynamicResource ColorBrush6}"
-                      BorderThickness="1"
-                      CornerRadius="5">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+                <DataTemplate x:DataType="vm:JavaRuntimeEntryViewModel">
+                  <Border Classes="java-row" Classes.selected="{Binding IsSelected}" Classes.disabled="{Binding !IsEnabled}" Margin="0,0,0,2">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                      <Border Classes="java-highlight" Grid.ColumnSpan="2" Grid.RowSpan="2" />
                       <RadioButton
-                          Grid.RowSpan="3"
-                          Margin="0,3,12,0"
-                          VerticalAlignment="Top"
+                          Classes="java-choice"
+                          GroupName="SetupJavaRuntime"
                           IsEnabled="{Binding IsEnabled}"
-                          IsChecked="{Binding IsSelected}"
-                          Command="{Binding SelectCommand}" />
-                      <TextBlock
-                          Grid.Column="1"
-                          Foreground="{Binding TitleForeground}"
-                          FontSize="14"
-                          Opacity="{Binding TitleOpacity}"
-                          Text="{Binding Title}" />
-                      <StackPanel
-                          Grid.Column="2"
-                          Grid.RowSpan="3"
-                          Orientation="Horizontal"
-                          VerticalAlignment="Top"
-                          Spacing="10">
-                        <ui:PclOutlineButton
-                            Width="72"
+                          IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding SelectCommand}"
+                          AutomationProperties.Name="{Binding Title}"
+                          AutomationProperties.HelpText="{Binding Info}">
+                        <StackPanel Spacing="3">
+                          <TextBlock
+                              Classes="java-title"
+                              FontSize="13.5"
+                              Text="{Binding Title}"
+                              TextTrimming="CharacterEllipsis" />
+                          <TextBlock
+                              Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                              FontSize="12"
+                              Text="{Binding Info}"
+                              TextTrimming="CharacterEllipsis"
+                              ToolTip.Tip="{Binding Info}" />
+                        </StackPanel>
+                      </RadioButton>
+                      <StackPanel Classes="java-actions" Orientation="Horizontal" Spacing="2">
+                        <ui:PclIconButton
                             Command="{Binding OpenCommand}"
-                            Text="{Binding DataContext.SetupText.Java.OpenButton, ElementName=Root}" />
-                        <ui:PclOutlineButton
-                            Width="92"
+                            IconData="{Binding OpenIconData}"
+                            IconBrush="{DynamicResource ColorBrush3}"
+                            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                            ToolTip.Tip="{Binding DataContext.SetupText.Java.OpenButton, ElementName=Root}"
+                            AutomationProperties.Name="{Binding DataContext.SetupText.Java.OpenButton, ElementName=Root}" />
+                        <ui:PclIconButton
                             Command="{Binding InfoCommand}"
-                            Text="{Binding DataContext.SetupText.Java.DetailsButton, ElementName=Root}" />
-                        <ui:PclOutlineButton
-                            Width="72"
+                            IconData="{Binding InfoIconData}"
+                            IconBrush="{DynamicResource ColorBrush3}"
+                            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                            ToolTip.Tip="{Binding DataContext.SetupText.Java.DetailsButton, ElementName=Root}"
+                            AutomationProperties.Name="{Binding DataContext.SetupText.Java.DetailsButton, ElementName=Root}" />
+                        <ui:PclIconButton
                             Command="{Binding ToggleEnabledCommand}"
-                            Text="{Binding ToggleButtonText}" />
+                            IconData="{Binding ToggleIconData}"
+                            IconBrush="{DynamicResource ColorBrush3}"
+                            HoverBackgroundBrush="{DynamicResource ColorBrushBg1}"
+                            ToolTip.Tip="{Binding ToggleButtonText}"
+                            AutomationProperties.Name="{Binding ToggleButtonText}" />
                       </StackPanel>
-                      <TextBlock
-                          Grid.Row="1"
-                          Grid.Column="1"
-                          Margin="0,3,0,0"
-                          Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
-                          FontSize="12"
-                          Text="{Binding Info}"
-                          TextWrapping="Wrap" />
-                      <ItemsControl Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" ItemsSource="{Binding Tags}">
-                        <ItemsControl.ItemsPanel>
-                          <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                          </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <Border
-                                Margin="0,0,8,0"
-                                Padding="8,3"
-                                Background="{DynamicResource ColorBrush8}"
-                                BorderBrush="{DynamicResource ColorBrush6}"
-                                BorderThickness="1"
-                                CornerRadius="10">
-                              <TextBlock
-                                  Foreground="{DynamicResource ColorBrushEntrySecondarySelected}"
-                                  FontSize="11"
-                                  Text="{Binding .}" />
-                            </Border>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
                     </Grid>
                   </Border>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
+
+            <Border Height="1" Margin="12,8" Background="{DynamicResource ColorBrushMyCardEdge}" />
+            <WrapPanel Margin="12,0,4,0">
+              <ui:PclButton
+                  x:Name="DownloadJavaButton"
+                  MinWidth="110"
+                  Margin="0,0,8,8"
+                  ColorType="Highlight"
+                  Command="{Binding DownloadJavaRuntimeCommand}"
+                  Text="{Binding SetupText.Java.DownloadButton}" />
+              <ui:PclButton
+                  x:Name="InstallJavaButton"
+                  MinWidth="110"
+                  Margin="0,0,8,8"
+                  Command="{Binding AddJavaRuntimeCommand}"
+                  Text="{Binding SetupText.Java.InstallButton}" />
+            </WrapPanel>
           </StackPanel>
         </ui:PclCard.CardContent>
       </ui:PclCard>

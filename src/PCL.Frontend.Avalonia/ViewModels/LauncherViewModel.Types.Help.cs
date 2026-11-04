@@ -66,6 +66,10 @@ internal sealed class JavaRuntimeEntryViewModel(
 
     public ActionCommand ToggleEnabledCommand { get; } = toggleEnabledCommand;
 
+    public string OpenIconData => PclIcons.FolderOutline.Data;
+
+    public string InfoIconData => PclIcons.InfoCircle.Data;
+
     public string EnableText { get; } = enableText;
 
     public string DisableText { get; } = disableText;
@@ -84,6 +88,7 @@ internal sealed class JavaRuntimeEntryViewModel(
             if (SetProperty(ref _isEnabled, value))
             {
                 RaisePropertyChanged(nameof(ToggleButtonText));
+                RaisePropertyChanged(nameof(ToggleIconData));
                 RaisePropertyChanged(nameof(TitleOpacity));
                 RaisePropertyChanged(nameof(TitleForeground));
             }
@@ -91,6 +96,8 @@ internal sealed class JavaRuntimeEntryViewModel(
     }
 
     public string ToggleButtonText => IsEnabled ? DisableText : EnableText;
+
+    public string ToggleIconData => (IsEnabled ? PclIcons.DisableCircle : PclIcons.EnableCircle).Data;
 
     public double TitleOpacity => IsEnabled ? 1.0 : 0.48;
 

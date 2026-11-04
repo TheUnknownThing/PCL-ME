@@ -88,6 +88,8 @@ internal sealed partial class LauncherViewModel
 
     public ActionCommand AddJavaRuntimeCommand => _addJavaRuntimeCommand;
 
+    public ActionCommand DownloadJavaRuntimeCommand => _downloadJavaRuntimeCommand;
+
     public ActionCommand SelectAutoJavaCommand => _selectAutoJavaCommand;
 
     public ActionCommand ResetUiSettingsCommand => _resetUiSettingsCommand;

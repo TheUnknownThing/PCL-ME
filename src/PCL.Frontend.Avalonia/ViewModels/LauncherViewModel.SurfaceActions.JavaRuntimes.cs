@@ -7,6 +7,7 @@ using PCL.Core.Logging;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Java.Parser;
 using PCL.Core.Minecraft.Java.Runtime;
+using PCL.Frontend.Avalonia.Desktop.Dialogs;
 using PCL.Frontend.Avalonia.ViewModels.Panes;
 using PCL.Frontend.Avalonia.Workflows;
 
@@ -15,6 +16,62 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class LauncherViewModel
 {
     private const string SetupJavaLogModule = "SetupJava";
+    private bool _isJavaRuntimeDownloadInProgress;
+
+    private async Task DownloadJavaRuntimeAsync()
+    {
+        if (_isJavaRuntimeDownloadInProgress)
+        {
+            return;
+        }
+
+        _isJavaRuntimeDownloadInProgress = true;
+        _downloadJavaRuntimeCommand.NotifyCanExecuteChanged();
+        try
+        {
+            var recommendedVersion = _launchComposition.JavaWorkflow.RecommendedMajorVersion;
+            var versions = new[] { 8, 17, 21, 25, recommendedVersion }
+                .Where(version => version > 0).Distinct().OrderDescending().ToArray();
+            var choice = await _launcherActionService.PromptForChoiceAsync(
+                SetupText.Java.DownloadButton,
+                LT("setup.java.download.description"),
+                versions.Select(version => new PclChoiceDialogOption(version.ToString(), $"Java {version}", "Eclipse Temurin")).ToArray(),
+                recommendedVersion.ToString(),
+                SetupText.Java.DownloadButton);
+            if (!int.TryParse(choice, out var majorVersion) || !versions.Contains(majorVersion))
+            {
+                return;
+            }
+
+            AddActivity(T("shell.prompts.activities.java_runtime_preparing.title"), T("shell.prompts.activities.java_runtime_preparing.body"));
+            var installPlan = await _launcherActionService.PrepareJavaRuntimeDownloadAsync(majorVersion);
+            var result = await ExecuteManagedJavaRuntimeDownloadAsync($"{SetupText.Java.DownloadButton} — {installPlan.DisplayName}", installPlan);
+            var executablePath = _launcherActionService.GetJavaExecutablePath(result.RuntimeDirectory);
+            var runtime = await Task.Run(() => FrontendJavaInventoryService.TryResolveRuntime(
+                executablePath, isEnabled: true, fallbackDisplayName: installPlan.DisplayName));
+            runtime ??= FrontendJavaInventoryService.CreateStoredRuntime(
+                executablePath, installPlan.DisplayName, installPlan.VersionName, isEnabled: true,
+                is64Bit: Is64BitMachineType(installPlan.RuntimeArchitecture), isJre: installPlan.IsJre,
+                brand: installPlan.Brand, architecture: installPlan.RuntimeArchitecture);
+            RegisterMaterializedJavaRuntime(runtime);
+            AddActivity(T("shell.prompts.activities.java_runtime_ready.title"),
+                T("shell.prompts.activities.java_runtime_ready.body", ("path", result.RuntimeDirectory),
+                    ("downloaded_count", result.DownloadedFileCount), ("reused_count", result.ReusedFileCount)));
+        }
+        catch (OperationCanceledException)
+        {
+            // The task manager owns cancellation feedback; leave the inventory unchanged.
+        }
+        catch (Exception ex)
+        {
+            AddFailureActivity(LT("setup.java.activities.download_failed"), ex.Message);
+        }
+        finally
+        {
+            _isJavaRuntimeDownloadInProgress = false;
+            _downloadJavaRuntimeCommand.NotifyCanExecuteChanged();
+        }
+    }
 
     private void RefreshJavaSurface()
     {
@@ -54,14 +111,7 @@ internal sealed partial class LauncherViewModel
         string? selectedPath;
         try
         {
-            selectedPath = await _launcherActionService.PickOpenFileAsync(
-                LT("setup.java.activities.add_pick_title"),
-                LT(OperatingSystem.IsWindows()
-                    ? "setup.java.activities.add_pick_filter_windows"
-                    : "setup.java.activities.add_pick_filter_unix"),
-                OperatingSystem.IsWindows() ? "*.exe" : "java",
-                OperatingSystem.IsWindows() ? "java.exe" : "java.exe",
-                OperatingSystem.IsWindows() ? "javaw.exe" : "javaw");
+            selectedPath = await _launcherActionService.PickFolderAsync(LT("setup.java.activities.install_pick_title"));
         }
         catch (Exception ex)
         {
@@ -75,35 +125,54 @@ internal sealed partial class LauncherViewModel
             return;
         }
 
-        var installation = ParseJavaInstallation(selectedPath);
-        if (installation is null)
+        try
         {
-            AddFailureActivity(
-                LT("setup.java.activities.add_failed"),
-                LT("setup.java.activities.add_unrecognized", ("path", selectedPath)));
-            return;
-        }
+            var executablePath = FrontendJavaInventoryService.FindJavaExecutableInDirectory(selectedPath);
+            var installation = executablePath is null ? null : await Task.Run(() => ParseJavaInstallation(executablePath));
+            if (installation is null)
+            {
+                AddFailureActivity(
+                    LT("setup.java.activities.add_failed"),
+                    LT("setup.java.activities.install_invalid"));
+                return;
+            }
 
-        var javaPath = Path.GetFullPath(installation.JavaExePath);
-        var items = LoadStoredJavaItems();
-        if (items.Any(item => string.Equals(item.Path, javaPath, StringComparison.OrdinalIgnoreCase)))
-        {
-            AddActivity(LT("setup.java.activities.add"), LT("setup.java.activities.add_exists", ("path", javaPath)));
+            var javaPath = Path.GetFullPath(installation.JavaExePath);
+            var items = LoadStoredJavaItems();
+            var existingIndex = items.FindIndex(item => string.Equals(item.Path, javaPath, StringComparison.OrdinalIgnoreCase));
+            if (existingIndex >= 0)
+            {
+                var existing = items[existingIndex];
+                items[existingIndex] = new JavaStorageItem
+                {
+                    Path = javaPath,
+                    IsEnable = true,
+                    Source = existing.Source,
+                    Installation = existing.Installation
+                };
+                SaveStoredJavaItems(items);
+                ReloadActiveSetupSurface();
+                AddActivity(LT("setup.java.activities.add"), LT("setup.java.activities.add_exists", ("path", javaPath)));
+                SelectJavaRuntime(javaPath);
+                ReloadSetupComposition();
+                return;
+            }
+
+            items.Add(new JavaStorageItem
+            {
+                Path = javaPath,
+                IsEnable = true,
+                Source = JavaSource.ManualAdded
+            });
+            SaveStoredJavaItems(items);
             SelectJavaRuntime(javaPath);
             ReloadSetupComposition();
-            return;
+            AddActivity(LT("setup.java.activities.add"), LT("setup.java.activities.add_completed", ("path", javaPath)));
         }
-
-        items.Add(new JavaStorageItem
+        catch (Exception ex)
         {
-            Path = javaPath,
-            IsEnable = true,
-            Source = JavaSource.ManualAdded
-        });
-        SaveStoredJavaItems(items);
-        SelectJavaRuntime(javaPath);
-        ReloadSetupComposition();
-        AddActivity(LT("setup.java.activities.add"), LT("setup.java.activities.add_completed", ("path", javaPath)));
+            AddFailureActivity(LT("setup.java.activities.add_failed"), ex.Message);
+        }
     }
 
     private JavaRuntimeEntryViewModel CreateJavaRuntimeEntry(

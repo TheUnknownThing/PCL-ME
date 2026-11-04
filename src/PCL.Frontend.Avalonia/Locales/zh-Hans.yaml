@@ -1835,12 +1835,17 @@ setup:
         text: 文本
   java:
     actions:
+      download: "下载"
+      install: "安装"
       add: 添加
       details: 详细信息
       disable: 禁用
       enable: 启用
       open: 打开
     activities:
+      download_failed: "下载 Java 失败"
+      install_pick_title: "选择 Java 安装目录"
+      install_invalid: "所选文件夹不包含可用的 Java 运行环境。请选择 JDK、JRE 或 bin 目录。"
       add: 添加 Java
       add_cancelled: 已取消选择 Java 程序。
       add_failed: 添加 Java 失败
@@ -1871,6 +1876,9 @@ setup:
     auto_select:
       description: Java 选择自动挡，依据游戏需要自动选择合适的 Java。
       label: 自动选择
+    card_header: Java 运行环境
+    download:
+      description: "选择要下载并安装的 Java 版本。安装完成后，启动器将选用该运行环境。"
     details:
       available: 可用
       metadata_unavailable: 无法进一步解析该 Java 的详细元数据，请确认文件仍然可执行。

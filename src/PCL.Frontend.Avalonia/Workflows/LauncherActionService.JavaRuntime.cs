@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using Avalonia;
@@ -16,6 +17,7 @@ using PCL.Core.App.Essentials;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Java;
 using PCL.Core.Minecraft.Launch;
+using PCL.Core.Utils;
 using PCL.Core.Utils.Processes;
 using PCL.UI.Animation;
 using PCL.Frontend.Avalonia.Desktop.Dialogs;
@@ -25,6 +27,58 @@ namespace PCL.Frontend.Avalonia.Workflows;
 
 internal sealed partial class LauncherActionService
 {
+    public async Task<FrontendJavaRuntimeInstallPlan> PrepareJavaRuntimeDownloadAsync(
+        int majorVersion,
+        CancellationToken cancellationToken = default)
+    {
+        var platformKind = PlatformAdapter.GetDesktopPlatformKind();
+        var architecture = RuntimeInformation.OSArchitecture switch
+        {
+            Architecture.X64 => MachineType.AMD64,
+            Architecture.X86 => MachineType.I386,
+            Architecture.Arm64 => MachineType.ARM64,
+            _ => MachineType.Unknown
+        };
+        var architectureToken = FrontendLaunchCompositionService.ResolveAdoptiumArchitectureToken(architecture);
+        if (platformKind == FrontendDesktopPlatformKind.Other || architectureToken is null)
+        {
+            throw new PlatformNotSupportedException("No Java download is available for this operating system or architecture.");
+        }
+
+        var osToken = FrontendLaunchCompositionService.ResolveAdoptiumOperatingSystemToken(platformKind);
+        var localConfig = RuntimePaths.OpenLocalConfigProvider();
+        var launcherFolder = FrontendLauncherPathService.ResolveLauncherFolder(
+            localConfig.Exists("LaunchFolderSelect") ? localConfig.Get<string>("LaunchFolderSelect") : null,
+            RuntimePaths);
+        Exception? lastError = null;
+        foreach (var imageType in new[] { "jre", "jdk" })
+        {
+            try
+            {
+                var url = FrontendLaunchCompositionService.BuildAdoptiumMetadataUrl(
+                    majorVersion, osToken, architectureToken, imageType);
+                var metadata = await JavaRuntimeHttpClient.GetStringAsync(url, cancellationToken).ConfigureAwait(false);
+                var plan = FrontendLaunchCompositionService.BuildAdoptiumJavaRuntimeInstallPlanFromMetadata(
+                    metadata, launcherFolder, $"java-{majorVersion}", majorVersion,
+                    platformKind, architecture, imageType);
+                if (plan is not null)
+                {
+                    return plan;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw new InvalidOperationException($"No Java {majorVersion} runtime could be downloaded for {osToken}/{architectureToken}.", lastError);
+    }
+
     public FrontendJavaRuntimeInstallResult MaterializeJavaRuntime(
         FrontendJavaRuntimeInstallPlan installPlan,
         Action<FrontendJavaRuntimeInstallProgressSnapshot>? onProgress = null,

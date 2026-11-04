@@ -1831,12 +1831,17 @@ setup:
         text: 文字
   java:
     actions:
+      download: "下載"
+      install: "安裝"
       add: 增
       details: 詳訊
       disable: 禁
       enable: 啓用
       open: 啟
     activities:
+      download_failed: "下載 Java 敗"
+      install_pick_title: "擇 Java 安裝目錄"
+      install_invalid: "此夾無可用之 Java，請擇 JDK、JRE 或 bin 目錄。"
       add: 增 Java
       add_cancelled: 已取消擇 Java 程序。
       add_failed: 增 Java 敗
@@ -1867,6 +1872,9 @@ setup:
     auto_select:
       description: 依遊戲所需，自擇其宜之 Java。
       label: 自動擇
+    card_header: Java 運行時
+    download:
+      description: "擇 Java 版本以下載安裝，成則自擇之。"
     details:
       available: 可用
       metadata_unavailable: 不能更析此 Java 之詳元數，請驗其檔仍可行。

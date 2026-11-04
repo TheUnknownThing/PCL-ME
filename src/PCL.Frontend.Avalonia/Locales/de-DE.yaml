@@ -1831,12 +1831,17 @@ setup:
         text: Text
   java:
     actions:
+      download: "Herunterladen"
+      install: "Installieren"
       add: Hinzufügen
       details: Details
       disable: Deaktivieren
       enable: Aktivieren
       open: Öffnen
     activities:
+      download_failed: "Java konnte nicht heruntergeladen werden"
+      install_pick_title: "Java-Installationsverzeichnis auswählen"
+      install_invalid: "Der ausgewählte Ordner enthält keine verwendbare Java-Laufzeitumgebung. Wähle ein JDK-, JRE- oder bin-Verzeichnis."
       add: Java hinzufügen
       add_cancelled: Java-Auswahl abgebrochen.
       add_failed: Java hinzufügen fehlgeschlagen
@@ -1867,6 +1872,9 @@ setup:
     auto_select:
       description: "Die automatische Java-Auswahl verwenden, um anhand der Spielanforderungen eine geeignete Laufzeit zu wählen."
       label: Automatische Auswahl
+    card_header: Java-Laufzeitumgebungen
+    download:
+      description: "Wähle eine Java-Version zum Herunterladen und Installieren. Nach der Installation wählt der Launcher sie aus."
     details:
       available: Verfügbar
       metadata_unavailable: Detaillierte Metadaten für diese Java-Laufzeit konnten nicht ausgewertet werden. Stelle sicher, dass die Ausführungsdatei noch funktioniert.

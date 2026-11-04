@@ -8,4 +8,10 @@ internal sealed partial class SetupJavaRightPaneView : UserControl
     {
         InitializeComponent();
     }
+
+    protected override void OnSizeChanged(SizeChangedEventArgs e)
+    {
+        base.OnSizeChanged(e);
+        Classes.Set("compact", e.NewSize.Width < 520);
+    }
 }
