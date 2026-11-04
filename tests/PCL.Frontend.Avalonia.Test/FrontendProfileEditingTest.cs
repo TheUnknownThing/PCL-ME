@@ -24,13 +24,43 @@ public sealed class FrontendProfileEditingTest
     private const string ProfileId = "0123456789abcdef0123456789abcdef";
 
     [TestMethod]
+    public async Task ProfileFixture_WaitsForAvatarWritesBeforeDeletingItsFiles()
+    {
+        await FrontendMotionTest.RunAsync(async () =>
+        {
+            var fixture = new ProfileFixture(CreateDocument());
+            await (Task)GetField(fixture.Launcher, "_launchAvatarRefreshTask")!;
+            var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            typeof(LauncherViewModel).GetField("_launchAvatarRefreshTask", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .SetValue(fixture.Launcher, pending.Task);
+            // A newer refresh must retain the older write as part of cleanup.
+            typeof(LauncherViewModel).GetMethod("ScheduleLaunchAvatarRefresh", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(fixture.Launcher, null);
+            var cleanup = fixture.DisposeAsync().AsTask();
+            var cacheDirectory = Path.Combine(fixture.Paths.TempDirectory, "Cache", "Skin", "Head");
+            try
+            {
+                Assert.IsFalse(cleanup.IsCompleted, "Cleanup must wait for all pending avatar writes.");
+                Directory.CreateDirectory(cacheDirectory);
+                await File.WriteAllTextAsync(Path.Combine(cacheDirectory, "pending.png"), "pending avatar");
+            }
+            finally
+            {
+                pending.TrySetResult();
+                await cleanup;
+            }
+            Assert.IsFalse(Directory.Exists(fixture.Paths.TempDirectory));
+        });
+    }
+
+    [TestMethod]
     public async Task OfflineSkinPicker_PreservesTheSavedSelectionAndSavesTheUsersChoice()
     {
         await FrontendMotionTest.RunAsync(async () =>
         {
             var document = CreateDocument();
             document = document with { Profiles = [document.Profiles[0], document.Profiles[1] with { SkinHeadId = "Alex" }] };
-            using var fixture = new ProfileFixture(document);
+            await using var fixture = new ProfileFixture(document);
             var view = new PclLaunchLeftPanel { DataContext = fixture.Launcher };
             var window = new Window { Width = 320, Height = 800, Content = view };
             try
@@ -62,7 +92,7 @@ public sealed class FrontendProfileEditingTest
         await FrontendMotionTest.RunAsync(async () =>
         {
             var document = CreateDocument();
-            using var fixture = new ProfileFixture(document);
+            await using var fixture = new ProfileFixture(document);
             var launcher = fixture.Launcher;
             launcher.EditLaunchProfileCommand.Execute(null);
             Assert.IsTrue(launcher.ShowLaunchOfflineEditor);
@@ -106,7 +136,7 @@ public sealed class FrontendProfileEditingTest
     {
         await FrontendMotionTest.RunAsync(async () =>
         {
-            using var fixture = new ProfileFixture(CreateDocument());
+            await using var fixture = new ProfileFixture(CreateDocument());
             fixture.Launcher.EditLaunchProfileCommand.Execute(null);
             var expected = fixture.Load();
             if (changeSavedEntry)
@@ -149,7 +179,7 @@ public sealed class FrontendProfileEditingTest
                     ClientToken = "old-client-token"
                 }]
             };
-            using var fixture = new ProfileFixture(document);
+            await using var fixture = new ProfileFixture(document);
             document = fixture.Load();
             if (outcome is "target-changed" or "unrelated-change")
             {
@@ -200,7 +230,7 @@ public sealed class FrontendProfileEditingTest
         await FrontendMotionTest.RunAsync(async () =>
         {
             using var server = new AuthlibServer("success");
-            using var fixture = new ProfileFixture(CreateDocument());
+            await using var fixture = new ProfileFixture(CreateDocument());
             var original = fixture.Load();
             fixture.Launcher.EditLaunchProfileCommand.Execute(null);
             fixture.Launcher.BackLaunchProfileCommand.Execute(null);
@@ -231,7 +261,7 @@ public sealed class FrontendProfileEditingTest
     internal static Task InvokeAsync(object instance, string name) =>
         (Task)instance.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(instance, null)!;
 
-    internal sealed class ProfileFixture : IDisposable
+    internal sealed class ProfileFixture : IAsyncDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "pcl-profile-test", Guid.NewGuid().ToString("N"));
         private readonly I18nService _i18n;
@@ -259,8 +289,14 @@ public sealed class FrontendProfileEditingTest
 
         public MinecraftLaunchProfileDocument Load() => FrontendProfileStorageService.Load(Paths).Document;
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
+            while (true)
+            {
+                var refresh = (Task)GetField(Launcher, "_launchAvatarRefreshTask")!;
+                await refresh;
+                if (ReferenceEquals(refresh, GetField(Launcher, "_launchAvatarRefreshTask"))) break;
+            }
             _actions.FlushPendingSettings();
             _i18n.Dispose();
             if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);

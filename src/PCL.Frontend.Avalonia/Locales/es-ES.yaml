@@ -724,11 +724,15 @@ shell:
     test:
       achievement:
         block_id: ID del artículo
+        description: La imagen la genera un servicio de terceros. El ID del artículo solo puede contener letras minúsculas, números y guiones bajos, y el texto debe ser inglés sencillo sin caracteres especiales; cualquier otra entrada será rechazada.
+        fetch_invalid_text: El servicio de imágenes de logros rechazó la solicitud. Compruebe que el ID del artículo sea correcto y que el texto solo contenga caracteres ingleses sin símbolos especiales.
         first_line: Línea 1
+        invalid_block_id: El ID del artículo solo puede contener letras minúsculas, números y guiones bajos.
         invalid_content: El contenido del logro está incompleto.
         output_missing: No se generó la imagen del logro.
         preview: Vista previa de imagen de logro
         preview_activity: Vista previa de imagen de logro
+        preview_failure: Error en la vista previa de la imagen de logro
         preview_hidden: La vista previa está oculta.
         save: Guardar imagen
         save_activity: Guardar imagen de logro

@@ -20,17 +20,21 @@ internal sealed partial class LauncherViewModel
     private static readonly HttpClient LaunchAvatarHttpClient = FrontendHttpProxyService.CreateLauncherHttpClient(TimeSpan.FromSeconds(15));
     private string _launchAvatarImagePath = LaunchAvatarFallbackImagePath;
     private int _launchAvatarRefreshVersion;
+    private Task _launchAvatarRefreshTask = Task.CompletedTask;
 
     private void ScheduleLaunchAvatarRefresh()
     {
         var profile = _launchComposition.SelectedProfile;
         var version = Interlocked.Increment(ref _launchAvatarRefreshVersion);
+        var dispatcher = Dispatcher.UIThread;
         SetLaunchAvatarImagePath(TryGetCachedLaunchAvatarImagePath(profile) ?? LaunchAvatarFallbackImagePath);
         // Avatar cache generation can complete synchronously from local files, so keep it off the UI thread.
-        _ = Task.Run(() => RefreshLaunchAvatarAsync(version, profile));
+        // Retain completion of earlier cache writes when another profile refresh supersedes them.
+        _launchAvatarRefreshTask = Task.WhenAll(_launchAvatarRefreshTask,
+            Task.Run(() => RefreshLaunchAvatarAsync(version, profile, dispatcher)));
     }
 
-    private async Task RefreshLaunchAvatarAsync(int version, FrontendLaunchProfileSummary profile)
+    private async Task RefreshLaunchAvatarAsync(int version, FrontendLaunchProfileSummary profile, Dispatcher dispatcher)
     {
         string resolvedPath;
         try
@@ -42,7 +46,7 @@ internal sealed partial class LauncherViewModel
             resolvedPath = LaunchAvatarFallbackImagePath;
         }
 
-        Dispatcher.UIThread.Post(() =>
+        dispatcher.Post(() =>
         {
             if (version != _launchAvatarRefreshVersion)
             {

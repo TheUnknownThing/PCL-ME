@@ -724,11 +724,15 @@ shell:
     test:
       achievement:
         block_id: Identifiant de l'article
+        description: L'image est générée par un service tiers. L'identifiant de l'article ne peut contenir que des lettres minuscules, des chiffres et des tirets bas, et le texte doit être en anglais simple sans caractères spéciaux ; toute autre saisie sera refusée.
+        fetch_invalid_text: Le service d'images de réussite a refusé la requête. Vérifiez que l'identifiant de l'article est correct et que le texte ne contient que des caractères anglais sans symboles spéciaux.
         first_line: Ligne 1
+        invalid_block_id: L'identifiant de l'article ne peut contenir que des lettres minuscules, des chiffres et des tirets bas.
         invalid_content: Le contenu des succès est incomplet.
         output_missing: L'image de réussite n'a pas été générée.
         preview: Aperçu de l'image de la réussite
         preview_activity: Aperçu de l'image de la réussite
+        preview_failure: Échec de l'aperçu de l'image de réussite
         preview_hidden: L'aperçu est masqué.
         save: Enregistrer l'image
         save_activity: Enregistrer l'image de la réussite

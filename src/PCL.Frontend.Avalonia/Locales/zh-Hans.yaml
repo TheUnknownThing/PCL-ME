@@ -724,11 +724,15 @@ shell:
     test:
       achievement:
         block_id: 物品名（ID）
+        description: 图片由第三方服务生成。物品 ID 只能包含小写字母、数字与下划线，文字仅支持英文且不能包含特殊字符，否则会被拒绝。
+        fetch_invalid_text: 获取成就图片失败，请检查物品 ID 是否正确，文字是否包含特殊字符！
         first_line: 第一行
+        invalid_block_id: 物品 ID 只能包含小写字母、数字与下划线！
         invalid_content: 成就图像内容不完整。
         output_missing: 未生成成就图像。
         preview: 预览成就图像
         preview_activity: 预览成就图像
+        preview_failure: 成就图片预览失败
         preview_hidden: 预览已隐藏。
         save: 保存图片
         save_activity: 保存成就图像

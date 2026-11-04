@@ -42,6 +42,8 @@ internal sealed partial class LauncherViewModel
 
     public string ToolsTestAchievementCardHeader => LT("shell.tools.test.cards.achievement");
 
+    public string ToolsTestAchievementDescription => LT("shell.tools.test.achievement.description");
+
     public string ToolsTestAchievementBlockIdLabel => LT("shell.tools.test.achievement.block_id");
 
     public string ToolsTestAchievementTitleLabel => LT("shell.tools.test.achievement.title");
@@ -229,6 +231,7 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(MinecraftServerQueryAddressWatermark));
         RaisePropertyChanged(nameof(MinecraftServerQueryQueryButtonText));
         RaisePropertyChanged(nameof(ToolsTestAchievementCardHeader));
+        RaisePropertyChanged(nameof(ToolsTestAchievementDescription));
         RaisePropertyChanged(nameof(ToolsTestAchievementBlockIdLabel));
         RaisePropertyChanged(nameof(ToolsTestAchievementTitleLabel));
         RaisePropertyChanged(nameof(ToolsTestAchievementFirstLineLabel));

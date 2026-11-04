@@ -251,7 +251,9 @@ public sealed class FrontendAnimationTest
         public static AppBuilder BuildAvaloniaApp()
         {
             return AppBuilder.Configure<AnimationTestApplication>()
-                .UseHeadless(new AvaloniaHeadlessPlatformOptions());
+                // Real offscreen drawing lets image tests use this same session.
+                .UseSkia()
+                .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
         }
     }
 }

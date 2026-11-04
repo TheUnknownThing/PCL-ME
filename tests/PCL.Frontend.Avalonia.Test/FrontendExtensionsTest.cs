@@ -246,7 +246,7 @@ public sealed class FrontendExtensionsTest
         public async ValueTask DisposeAsync()
         {
             await DisposeSessionAsync();
-            Shell.Dispose(); Window.Close(); _fixture.Dispose();
+            Shell.Dispose(); Window.Close(); await _fixture.DisposeAsync();
         }
     }
 }

@@ -172,6 +172,7 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(LaunchMigrationLines));
         _refreshLaunchProfileCommand.NotifyCanExecuteChanged();
         _editLaunchProfileCommand.NotifyCanExecuteChanged();
+        _launchCommand?.NotifyCanExecuteChanged();
     }
 
     private LauncherFrontendCrashSurfaceData BuildCrashSurfaceData()
