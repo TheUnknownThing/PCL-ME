@@ -238,9 +238,9 @@ public sealed class FrontendCommunityResourceCatalogTest
     [TestMethod]
     public async Task Loading_DisablesEveryPageCommandAndIgnoresRepeatedNavigation()
     {
-        await FrontendMotionTest.RunAsync(() =>
+        await FrontendMotionTest.RunAsync(async () =>
         {
-            using var fixture = new ProfileFixture();
+            await using var fixture = new ProfileFixture();
             var launcher = fixture.Launcher;
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
             void Set(string name, object value) => typeof(LauncherViewModel).GetField(name, flags)!.SetValue(launcher, value);
@@ -280,7 +280,6 @@ public sealed class FrontendCommunityResourceCatalogTest
             Assert.AreEqual(2, commandNotifications);
             CollectionAssert.Contains(changes, nameof(LauncherViewModel.CanGoToNextDownloadResourcePage));
             Set("_downloadResourceRefreshCts", null!);
-            return Task.CompletedTask;
         });
     }
 

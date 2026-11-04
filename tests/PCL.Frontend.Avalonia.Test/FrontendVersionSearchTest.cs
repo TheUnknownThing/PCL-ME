@@ -20,9 +20,9 @@ public sealed class FrontendVersionSearchTest
     [TestMethod]
     public async Task AutomaticCatalog_SearchesAllGroupsAndClearsWithoutChangingTheSelection()
     {
-        await FrontendMotionTest.RunAsync(() =>
+        await FrontendMotionTest.RunAsync(async () =>
         {
-            using var fixture = new ProfileFixture();
+            await using var fixture = new ProfileFixture();
             var launcher = fixture.Launcher;
             var flags = BindingFlags.Instance | BindingFlags.NonPublic;
             void Set(string name, object value) => typeof(LauncherViewModel).GetField(name, flags)!.SetValue(launcher, value);
@@ -55,7 +55,6 @@ public sealed class FrontendVersionSearchTest
             Assert.IsTrue(launcher.DownloadInstallMinecraftSections.Count > 1);
             Assert.IsTrue(launcher.DownloadInstallMinecraftSections.SelectMany(section => section.Choices).Any(choice => choice.Title == "b1.8.1"));
             Assert.AreSame(selection, GetField(launcher, "_downloadInstallMinecraftChoice"));
-            return Task.CompletedTask;
         });
     }
 
@@ -116,7 +115,7 @@ public sealed class FrontendVersionSearchTest
     {
         await FrontendMotionTest.RunAsync(async () =>
         {
-            using var fixture = new ProfileFixture();
+            await using var fixture = new ProfileFixture();
             var loads = 0;
             var section = new DownloadCatalogSectionViewModel("1.8.9", [], isCollapsible: true, isExpanded: false,
                 loadEntriesAsync: _ =>
