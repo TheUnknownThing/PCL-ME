@@ -838,6 +838,7 @@ shell:
     test:
       achievement:
         block_id: []
+        description: []
         fetch_invalid_text: []
         first_line: []
         invalid_block_id: []

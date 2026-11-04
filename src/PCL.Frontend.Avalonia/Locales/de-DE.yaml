@@ -724,6 +724,7 @@ shell:
     test:
       achievement:
         block_id: Gegenstands-ID
+        description: "Das Bild wird von einem Drittanbieter-Dienst erzeugt. Die Gegenstands-ID darf nur Kleinbuchstaben, Zahlen und Unterstriche enthalten, und der Text muss reines Englisch ohne Sonderzeichen sein; andere Eingaben werden abgelehnt."
         fetch_invalid_text: "Der Erfolgsbild-Dienst hat die Anfrage abgelehnt. Prüfen Sie, ob die Gegenstands-ID korrekt ist und der Text nur englische Zeichen ohne Sonderzeichen enthält."
         first_line: Zeile 1
         invalid_block_id: Die Gegenstands-ID darf nur Kleinbuchstaben, Zahlen und Unterstriche enthalten.

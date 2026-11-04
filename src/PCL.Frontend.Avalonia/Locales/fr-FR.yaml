@@ -724,6 +724,7 @@ shell:
     test:
       achievement:
         block_id: Identifiant de l'article
+        description: L'image est générée par un service tiers. L'identifiant de l'article ne peut contenir que des lettres minuscules, des chiffres et des tirets bas, et le texte doit être en anglais simple sans caractères spéciaux ; toute autre saisie sera refusée.
         fetch_invalid_text: Le service d'images de réussite a refusé la requête. Vérifiez que l'identifiant de l'article est correct et que le texte ne contient que des caractères anglais sans symboles spéciaux.
         first_line: Ligne 1
         invalid_block_id: L'identifiant de l'article ne peut contenir que des lettres minuscules, des chiffres et des tirets bas.

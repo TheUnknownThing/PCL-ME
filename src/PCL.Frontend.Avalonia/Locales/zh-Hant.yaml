@@ -724,6 +724,7 @@ shell:
     test:
       achievement:
         block_id: 物品名稱（ID）
+        description: 圖片由第三方服務產生。物品 ID 只能包含小寫字母、數字與底線，文字僅支援英文且不能包含特殊字元，否則會被拒絕。
         fetch_invalid_text: 取得成就圖片失敗，請檢查物品 ID 是否正確，文字是否包含特殊字元！
         first_line: 第一行
         invalid_block_id: 物品 ID 只能包含小寫字母、數字與底線！

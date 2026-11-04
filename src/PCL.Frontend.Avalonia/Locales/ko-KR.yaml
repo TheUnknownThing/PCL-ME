@@ -724,6 +724,7 @@ shell:
     test:
       achievement:
         block_id: 아이템 ID
+        description: 이미지는 타사 서비스에서 생성됩니다. 아이템 ID는 소문자, 숫자, 밑줄만 포함할 수 있으며, 텍스트는 특수 문자 없이 영어만 사용할 수 있습니다. 다른 입력은 거부됩니다.
         fetch_invalid_text: 업적 이미지 서비스가 요청을 거부했습니다. 아이템 ID가 올바른지, 텍스트에 특수 문자나 영어 이외의 문자가 없는지 확인하세요.
         first_line: 1호선
         invalid_block_id: 아이템 ID는 소문자, 숫자, 밑줄만 포함할 수 있습니다.

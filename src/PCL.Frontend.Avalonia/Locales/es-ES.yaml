@@ -724,6 +724,7 @@ shell:
     test:
       achievement:
         block_id: ID del artículo
+        description: La imagen la genera un servicio de terceros. El ID del artículo solo puede contener letras minúsculas, números y guiones bajos, y el texto debe ser inglés sencillo sin caracteres especiales; cualquier otra entrada será rechazada.
         fetch_invalid_text: El servicio de imágenes de logros rechazó la solicitud. Compruebe que el ID del artículo sea correcto y que el texto solo contenga caracteres ingleses sin símbolos especiales.
         first_line: Línea 1
         invalid_block_id: El ID del artículo solo puede contener letras minúsculas, números y guiones bajos.
