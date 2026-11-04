@@ -267,6 +267,8 @@ internal sealed partial class LauncherViewModel
                 var failureMessage = GetLaunchPrecheckFailureMessage();
                 AddFailureActivity(T("shell.prompts.activities.precheck_failed.title"), failureMessage);
                 SetLaunchDialogStoppedState(T("shell.prompts.activities.precheck_failed.title"), failureMessage, isError: true);
+                _isLaunchInProgress = false;
+                RaiseLaunchSessionProperties();
                 return;
             }
 
