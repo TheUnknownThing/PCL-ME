@@ -372,7 +372,7 @@ internal sealed partial class LauncherViewModel
             new LauncherFrontendRoute(LauncherFrontendPageKey.TaskManager),
             "Opened Task Manager from the bottom-right shortcut.",
             RouteNavigationBehavior.Child));
-        _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress);
+        _launchCommand = new ActionCommand(() => _ = HandleLaunchRequestedAsync(), () => !_isLaunchInProgress && HasSelectedInstance);
         _cancelLaunchCommand = new ActionCommand(HandleCancelLaunchRequested, () => IsLaunchDialogVisible);
         _versionSelectCommand = new ActionCommand(() => NavigateTo(new LauncherFrontendRoute(LauncherFrontendPageKey.InstanceSelect), "Opened instance selection from the launch pane."));
         _versionSetupCommand = new ActionCommand(OpenSelectedInstanceSetup);

@@ -23,6 +23,7 @@ internal sealed partial class PclLaunchButton : UserControl
     private bool _isHovered;
     private bool _isPressed;
     private bool _isAppearanceSubscribed;
+    private ICommand? _subscribedCommand;
 
     public PclLaunchButton()
     {
@@ -32,10 +33,15 @@ internal sealed partial class PclLaunchButton : UserControl
         AttachedToVisualTree += (_, _) =>
         {
             SubscribeAppearance();
+            UpdateCommandSubscription();
             RefreshVisualState();
             QueueRefreshVisualState();
         };
-        DetachedFromVisualTree += (_, _) => UnsubscribeAppearance();
+        DetachedFromVisualTree += (_, _) =>
+        {
+            UnsubscribeAppearance();
+            UnsubscribeCommand();
+        };
         DataContextChanged += (_, _) =>
         {
             RefreshVisualState();
@@ -102,10 +108,61 @@ internal sealed partial class PclLaunchButton : UserControl
         {
             SubtitleBlock.Text = change.GetNewValue<string>();
         }
+        else if (change.Property == CommandProperty)
+        {
+            UpdateCommandSubscription();
+            RefreshVisualState();
+        }
+    }
+
+    private void UpdateCommandSubscription()
+    {
+        var command = Command;
+        if (ReferenceEquals(_subscribedCommand, command))
+        {
+            return;
+        }
+
+        if (_subscribedCommand is not null)
+        {
+            _subscribedCommand.CanExecuteChanged -= OnCommandCanExecuteChanged;
+        }
+
+        _subscribedCommand = command;
+        if (_subscribedCommand is not null)
+        {
+            _subscribedCommand.CanExecuteChanged += OnCommandCanExecuteChanged;
+        }
+    }
+
+    private void UnsubscribeCommand()
+    {
+        if (_subscribedCommand is null)
+        {
+            return;
+        }
+
+        _subscribedCommand.CanExecuteChanged -= OnCommandCanExecuteChanged;
+        _subscribedCommand = null;
+    }
+
+    private void OnCommandCanExecuteChanged(object? sender, EventArgs e)
+    {
+        RefreshVisualState();
     }
 
     private void RefreshVisualState()
     {
+        if (Command is { } command && !command.CanExecute(null))
+        {
+            PanFore.BorderBrush = PclTheme.GetBrush("ColorBrushGray4");
+            PanFore.Background = PclTheme.GetBrush("ColorBrushHalfWhite");
+            PanFore.Opacity = 1.0;
+            PanFore.RenderTransform = new ScaleTransform(1, 1);
+            TitleBlock.Foreground = PclTheme.GetBrush("ColorBrushGray4");
+            return;
+        }
+
         PanFore.BorderBrush = _isHovered
             ? PclTheme.GetBrush("ColorBrush3")
             : PclTheme.GetBrush("ColorBrush2");
@@ -116,6 +173,7 @@ internal sealed partial class PclLaunchButton : UserControl
         PanFore.RenderTransform = _isPressed
             ? new ScaleTransform(0.955, 0.955)
             : new ScaleTransform(1, 1);
+        TitleBlock.Foreground = PclTheme.GetBrush("ColorBrush3");
     }
 
     private void QueueRefreshVisualState()

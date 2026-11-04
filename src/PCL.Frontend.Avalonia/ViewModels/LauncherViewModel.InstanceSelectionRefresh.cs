@@ -131,6 +131,7 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(LaunchWelcomeBanner));
         RaisePropertyChanged(nameof(LaunchNewsTitle));
         RaisePropertyChanged(nameof(LaunchNewsBadgeText));
+        _launchCommand?.NotifyCanExecuteChanged();
     }
 
     private async Task RefreshSelectedInstanceStateAsync(
