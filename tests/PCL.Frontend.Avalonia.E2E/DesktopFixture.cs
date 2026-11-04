@@ -90,7 +90,7 @@ internal sealed class DesktopFixture : IAsyncDisposable
         if (!card.IsChevronExpanded) await Click(Window, card.Find<Button>("HeaderButton")!);
         await Settle();
     }
-    public Task Toggle(string id) => Click(Window, Card(id).Find<CheckBox>("EnabledToggle")!);
+    public Task Toggle(string id) => Click(Window, Card(id).Find<PclIconButton>("ToggleEnabledButton")!);
     public async Task Search(string text)
     {
         Window.KeyPressQwerty(PhysicalKey.P, (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control) | RawInputModifiers.Shift);

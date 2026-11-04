@@ -4,6 +4,8 @@ This project continues the well-known Plain Craft Launcher codebase on Windows, 
 
 Agents should strictly follow the architecture and coding style of the existing codebase.
 
+Popup dialogs must be hosted as overlays inside the launcher window. Never create a separate window for a popup: separate popup windows break tiling window managers. Keep popup menus and dropdowns in the window's overlay layer as well.
+
 ## Repository layout
 
 | Directory | Contents |

@@ -240,7 +240,7 @@ internal sealed partial class FrontendExtensionSession : ILauncherServices, IAsy
 
     internal bool TryHandleShortcut(KeyEventArgs e)
     {
-        if (!CanInteract || e.Handled) return false;
+        if (!CanInteract || e.Handled || OverlayContent is ExtensionUrlInstallView or ExtensionDetailsView) return false;
         foreach (var command in Host.Commands.Where(command => command.CanExecute && command.Definition.Shortcut is not null))
         {
             var text = command.Definition.Shortcut!.Replace("Primary", OperatingSystem.IsMacOS() ? "Meta" : "Ctrl", StringComparison.Ordinal);

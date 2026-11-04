@@ -18,9 +18,17 @@ internal sealed partial class FrontendExtensionSession
 
     private IExtensionOverlay ShowOverlay(IExtensionContext context, Control content, ExtensionOverlayOptions options)
     {
+        context.Lifetime.ThrowIfCancellationRequested();
+        return ShowOverlayCore(context, content, options);
+    }
+
+    internal IExtensionOverlay ShowOverlay(Control content, ExtensionOverlayOptions options)
+        => ShowOverlayCore(null, content, options);
+
+    private IExtensionOverlay ShowOverlayCore(IExtensionContext? context, Control content, ExtensionOverlayOptions options)
+    {
         Dispatcher.UIThread.VerifyAccess();
         ArgumentNullException.ThrowIfNull(content);
-        context.Lifetime.ThrowIfCancellationRequested();
         if (!CanInteract) throw new ExtensionOperationException("launcher.busy", T("unavailable"));
         if (double.IsNaN(options.MaxWidth) || options.MaxWidth <= 0) throw new ArgumentOutOfRangeException(nameof(options));
         _overlay?.Dispose();
@@ -34,19 +42,19 @@ internal sealed partial class FrontendExtensionSession
     private sealed class OverlaySession : IExtensionOverlay
     {
         private readonly FrontendExtensionSession _session;
-        private readonly IExtensionContext _context;
+        private readonly IExtensionContext? _context;
         private readonly Grid _host;
         private readonly Grid _layer = new();
         private readonly Border _backdrop;
         private readonly Border _panel;
         private readonly IInputElement? _previousFocus;
         private readonly ExtensionOverlayOptions _options;
-        public IExtensionContext Owner => _context;
+        public IExtensionContext? Owner => _context;
         public Control Content { get; }
         public bool IsOpen { get; private set; } = true;
         public event Action? Closed;
 
-        public OverlaySession(FrontendExtensionSession session, IExtensionContext context, Grid host, Control content, ExtensionOverlayOptions options)
+        public OverlaySession(FrontendExtensionSession session, IExtensionContext? context, Grid host, Control content, ExtensionOverlayOptions options)
         {
             _session = session; _context = context; _host = host; Content = content; _options = options;
             _previousFocus = session._window.FocusManager?.GetFocusedElement();
@@ -81,11 +89,17 @@ internal sealed partial class FrontendExtensionSession
             _layer.RemoveHandler(InputElement.KeyDownEvent, OnKeyDown);
             if (ReferenceEquals(_session._overlay, this)) _session._overlay = null;
             try { if (Content is IDisposable resource) resource.Dispose(); }
-            catch (Exception ex) { _context.Log(ExtensionLogLevel.Error, "Overlay cleanup failed.", ex); }
+            catch (Exception ex) { LogError("Overlay cleanup failed.", ex); }
             if (_previousFocus is Control { IsEffectivelyVisible: true, IsEffectivelyEnabled: true } previous && TopLevel.GetTopLevel(previous) is not null) previous.Focus();
             try { Closed?.Invoke(); }
-            catch (Exception ex) { _context.Log(ExtensionLogLevel.Error, "Overlay close callback failed.", ex); }
+            catch (Exception ex) { LogError("Overlay close callback failed.", ex); }
             _ = CloseVisualAsync();
+        }
+
+        private void LogError(string message, Exception ex)
+        {
+            if (_context is { } context) context.Log(ExtensionLogLevel.Error, message, ex);
+            else _session.Host.LogContributionError("launcher", ex);
         }
 
         private async Task CloseVisualAsync()

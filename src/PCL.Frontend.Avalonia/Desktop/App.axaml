@@ -18,5 +18,8 @@
 
   <Application.Styles>
     <StyleInclude Source="avares://PCL.UI/Themes/PclTheme.axaml" />
+    <Style Selector="Popup">
+      <Setter Property="ShouldUseOverlayLayer" Value="True" />
+    </Style>
   </Application.Styles>
 </Application>

@@ -1,0 +1,36 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Extensions.ExtensionDetailsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI">
+  <Border Padding="22" CornerRadius="7" Background="{DynamicResource ColorBrushMsgBox}"
+          BoxShadow="{DynamicResource ColorShadowPromptPanel}">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+        <TextBlock x:Name="HeadingText" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <ui:PclIconButton x:Name="CloseIcon" Grid.Column="1"
+                          IconBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                          HoverBackgroundBrush="{DynamicResource ColorBrushBg1}" />
+      </Grid>
+      <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12">
+          <TextBlock x:Name="NameText" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <StackPanel x:Name="InfoPanel" Spacing="12">
+            <TextBlock x:Name="DescriptionText" TextWrapping="Wrap" />
+            <SelectableTextBlock x:Name="MetadataText" TextWrapping="Wrap"
+                                 Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+            <TextBlock x:Name="NoticeText" TextWrapping="Wrap" IsVisible="False"
+                       Foreground="{DynamicResource ColorBrushSemanticWarningForeground}" />
+            <TextBlock x:Name="ErrorText" TextWrapping="Wrap" IsVisible="False"
+                       Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
+          </StackPanel>
+          <TextBox x:Name="LogText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                   MinHeight="100" MaxHeight="280" />
+          <TextBlock x:Name="EmptyText" TextWrapping="Wrap" IsVisible="False"
+                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+        </StackPanel>
+      </ScrollViewer>
+      <ui:PclButton x:Name="CloseButton" Grid.Row="2" HorizontalAlignment="Right" />
+    </Grid>
+  </Border>
+</UserControl>

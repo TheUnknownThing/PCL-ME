@@ -79,7 +79,7 @@ public sealed class GlobalSearchE2E
         await app.Session.Host.SetEnabledAsync("pcl.global-search", false);
         await Settle();
         Assert.IsNull(app.Session.OverlayContent, "Disabling an extension must dispose its overlay.");
-        Assert.IsFalse(app.Window.GetVisualDescendants().Any(control => control is PclSearchBox));
+        Assert.IsNull(app.Window.Find<PclSearchBox>("SearchQuery"));
     });
 
     [TestMethod]

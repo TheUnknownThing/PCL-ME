@@ -36,6 +36,9 @@ public sealed partial class PclCard : UserControl
     public static readonly StyledProperty<string> HeaderProperty =
         AvaloniaProperty.Register<PclCard, string>(nameof(Header), string.Empty);
 
+    public static readonly StyledProperty<IBrush?> HeaderForegroundProperty =
+        AvaloniaProperty.Register<PclCard, IBrush?>(nameof(HeaderForeground));
+
     public static readonly StyledProperty<bool> ShowChevronProperty =
         AvaloniaProperty.Register<PclCard, bool>(nameof(ShowChevron));
 
@@ -165,6 +168,12 @@ public sealed partial class PclCard : UserControl
     {
         get => GetValue(HeaderProperty);
         set => SetValue(HeaderProperty, value);
+    }
+
+    public IBrush? HeaderForeground
+    {
+        get => GetValue(HeaderForegroundProperty);
+        set => SetValue(HeaderForegroundProperty, value);
     }
 
     public bool ShowChevron
@@ -304,7 +313,7 @@ public sealed partial class PclCard : UserControl
         {
             RaisePropertyChanged(EffectiveContentMarginProperty, default, EffectiveContentMargin);
         }
-        else if (change.Property == HeaderCommandProperty)
+        else if (change.Property == HeaderCommandProperty || change.Property == HeaderForegroundProperty)
         {
             RefreshState();
         }
@@ -369,9 +378,9 @@ public sealed partial class PclCard : UserControl
         CardBorder.BoxShadow = _isHovered
             ? CreateHoverBoxShadow()
             : CreateIdleBoxShadow();
-        HeaderTextBlock.Foreground = _isHovered
+        HeaderTextBlock.Foreground = HeaderForeground ?? (_isHovered
             ? hoverHeaderBrush
-            : idleHeaderBrush;
+            : idleHeaderBrush);
         ChevronPath.Fill = HeaderTextBlock.Foreground;
         HeaderButton.Cursor = isHeaderInteractive ? new Cursor(StandardCursorType.Hand) : new Cursor(StandardCursorType.Arrow);
         HeaderButton.IsHitTestVisible = isHeaderInteractive;

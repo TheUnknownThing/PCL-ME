@@ -4,7 +4,13 @@ namespace PCL.Extensions.Runtime;
 
 public sealed partial class ExtensionHost
 {
-    public async ValueTask<ExtensionInfo> InstallAsync(string archivePath, CancellationToken cancellationToken = default)
+    public ValueTask<ExtensionInfo> InstallAsync(string archivePath, CancellationToken cancellationToken = default)
+        => InstallPackageAsync(archivePath, null, cancellationToken);
+
+    public ValueTask<ExtensionInfo> UpdateAsync(string id, string archivePath, CancellationToken cancellationToken = default)
+        => InstallPackageAsync(archivePath, id, cancellationToken);
+
+    private async ValueTask<ExtensionInfo> InstallPackageAsync(string archivePath, string? expectedId, CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         await _mutation.WaitAsync(cancellationToken);
@@ -12,7 +18,10 @@ public sealed partial class ExtensionHost
         try
         {
             var manifest = await Task.Run(() => ExtensionPackage.Extract(archivePath, staging), cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateApi(manifest);
+            if (expectedId is not null && (manifest.Id != expectedId || !_extensions.ContainsKey(expectedId)))
+                throw new InvalidOperationException("The package does not match the extension being updated.");
             if (_extensions.TryGetValue(manifest.Id, out var existing))
             {
                 if (existing.IsBuiltIn) throw new InvalidOperationException("Bundled extensions are updated with the launcher.");

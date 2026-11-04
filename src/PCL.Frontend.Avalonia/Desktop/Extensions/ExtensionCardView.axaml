@@ -2,39 +2,41 @@
     x:Class="PCL.Frontend.Avalonia.Desktop.Extensions.ExtensionCardView"
     xmlns="https://github.com/avaloniaui"
     xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:PCL.Frontend.Avalonia.Desktop.Controls">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Styles>
+    <Style Selector="ui|PclIconButton">
+      <Setter Property="HoverBackgroundBrush" Value="{DynamicResource ColorBrushBg1}" />
+      <Setter Property="ToolTip.ShowOnDisabled" Value="True" />
+    </Style>
+    <Style Selector="ui|PclButton.ToolTipOnDisabled">
+      <Setter Property="ToolTip.ShowOnDisabled" Value="True" />
+    </Style>
+  </UserControl.Styles>
   <ui:PclCard x:Name="Card" ShowChevron="True" IsChevronExpanded="False"
                     ContentMargin="20,52,20,15">
     <ui:PclCard.HeaderOverlayContent>
-      <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="12" Margin="0,0,40,0">
-        <TextBlock x:Name="StatusText" VerticalAlignment="Center" FontSize="12" MaxWidth="150" TextTrimming="CharacterEllipsis"
-                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
-        <CheckBox x:Name="EnabledToggle" VerticalAlignment="Center" />
+      <StackPanel x:Name="HeaderActions" HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal" Spacing="2" Margin="0,0,36,0">
+        <ui:PclIconButton x:Name="ToggleEnabledButton" />
+        <ui:PclIconButton x:Name="InfoButton" />
       </StackPanel>
     </ui:PclCard.HeaderOverlayContent>
     <ui:PclCard.CardContent>
       <StackPanel Spacing="12">
         <TextBlock x:Name="DescriptionText" TextWrapping="Wrap" />
-        <TextBlock x:Name="MetadataText" FontSize="12" TextWrapping="Wrap"
-                   Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
         <TextBlock x:Name="ErrorText" IsVisible="False" TextWrapping="Wrap"
                    Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
-        <StackPanel x:Name="ActionsPanel" Orientation="Horizontal" Spacing="10">
-          <ui:PclButton x:Name="RetryButton" />
-          <ui:PclButton x:Name="UninstallButton" ColorType="Red" />
-        </StackPanel>
+        <TextBlock x:Name="NoticeText" IsVisible="False" FontSize="12" TextWrapping="Wrap"
+                   Foreground="{DynamicResource ColorBrushSemanticWarningForeground}" />
+        <ui:PclButton x:Name="RetryButton" HorizontalAlignment="Left" />
         <StackPanel x:Name="SettingsPanel" Spacing="12" />
         <StackPanel x:Name="ShortcutsPanel" Spacing="10" />
         <StackPanel x:Name="NativeSettingsPanel" Spacing="12" />
-        <ui:PclButton x:Name="ResetButton" HorizontalAlignment="Left" />
-        <ui:PclCard x:Name="ExtensionDiagnosticsCard" ShowChevron="True" IsChevronExpanded="False"
-                          ContentMargin="15,50,15,12">
-          <ui:PclCard.CardContent>
-            <TextBox x:Name="ExtensionDiagnosticsText" IsReadOnly="True" AcceptsReturn="True"
-                     TextWrapping="Wrap" MaxHeight="200" />
-          </ui:PclCard.CardContent>
-        </ui:PclCard>
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+          <ui:PclButton x:Name="ResetButton" />
+          <ui:PclButton x:Name="UpdateButton" Classes="ToolTipOnDisabled" />
+          <ui:PclButton x:Name="LogButton" />
+          <ui:PclButton x:Name="UninstallButton" Classes="ToolTipOnDisabled" />
+        </StackPanel>
         <TextBlock x:Name="OperationErrorText" IsVisible="False" TextWrapping="Wrap"
                    Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
       </StackPanel>
