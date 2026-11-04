@@ -12,6 +12,7 @@
     "description": { "type": "string" },
     "author": { "type": "string" },
     "website": { "type": ["string", "null"], "format": "uri" },
+    "authorWebsite": { "type": ["string", "null"], "format": "uri" },
     "apiVersion": { "const": 1 },
     "minimumSdkVersion": { "$ref": "#/$defs/version" },
     "requiredCapabilities": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },

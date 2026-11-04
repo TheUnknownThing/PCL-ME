@@ -120,6 +120,16 @@ Install the resulting archive in the manager and enable it. `validate` accepts a
 
 IDs are lowercase namespaced identifiers, such as `author.feature`. Commands, UI contributions, search providers and published events use the extension ID plus a dot as their prefix. Versions use numeric .NET version syntax, for example `1.2.0`. `dependencies` contains `{ "id": "author.other", "minimumVersion": "1.0.0" }` records. Dependencies must already be installed and enabled; the host activates them first and prevents disabling a dependency while an enabled extension needs it. Cycles and incompatible versions fail activation with diagnostics.
 
+The information popup lets users click the extension ID or its adjacent copy icon to copy it. An optional `website` field adds a website icon beside the extension title; clicking the icon opens the project page. An optional `authorWebsite` field links the `author` name to their website. Use absolute HTTP(S) URLs; a missing or invalid project URL hides the icon, and an author without a valid URL displays as plain text. For example:
+
+```json
+{
+  "website": "https://example.com/hello",
+  "author": "Example author",
+  "authorWebsite": "https://example.com/about"
+}
+```
+
 `platforms` optionally restricts the package to `windows`, `linux` and/or `macos`. `architectures` optionally restricts process architectures, such as `x64` or `arm64`. Empty lists allow all. Include the correct native dependencies when distributing packages for several platforms.
 
 ## Lifecycle and cleanup

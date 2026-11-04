@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Threading;
 using PCL.Extensions.Avalonia;
 using PCL.Extensions.Runtime;
@@ -14,6 +15,7 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
     private readonly ExtensionInfo _info;
     private readonly bool _logs;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly DispatcherTimer _copyFeedbackTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private IExtensionOverlay? _popup;
     private bool _disposed;
     internal event Action? Closed;
@@ -22,9 +24,18 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
     {
         _session = session; _info = info; _logs = logs;
         InitializeComponent();
+        ExtensionIcon.Data = Geometry.Parse(PclIcons.Extensions.Data);
+        ProjectLinkIcon.Data = Geometry.Parse(PclIcons.Link.Data);
+        CopyIdIcon.Data = Geometry.Parse(PclIcons.Copy.Data);
         CloseIcon.IconData = PclIcons.Close.Data;
         CloseIcon.Command = CloseButton.Command = new ActionCommand(Close);
+        CopyIdButton.Command = new ActionCommand(CopyId);
         _timer.Tick += (_, _) => Refresh();
+        _copyFeedbackTimer.Tick += (_, _) =>
+        {
+            _copyFeedbackTimer.Stop();
+            CopyFeedbackText.IsVisible = false;
+        };
         Refresh();
     }
 
@@ -49,37 +60,71 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
         if (_disposed) return;
         HeadingText.Text = _session.T(_logs ? "logs" : "info");
         NameText.Text = _info.Text.Get("extension.name", _info.Text.Get("title", _info.Manifest.Name));
+        SetLink(ExtensionLink, _info.Manifest.Website, _session.T("open_website") + " · " + NameText.Text);
+        ToolTip.SetTip(ExtensionLink, _session.T("open_website"));
         global::Avalonia.Automation.AutomationProperties.SetName(this, NameText.Text + " · " + HeadingText.Text);
         CloseButton.Text = _session.T("close");
         ToolTip.SetTip(CloseIcon, CloseButton.Text);
         global::Avalonia.Automation.AutomationProperties.SetName(CloseIcon, CloseButton.Text);
         InfoPanel.IsVisible = !_logs;
+        IdLabelText.Text = _session.T("metadata.id");
+        IdValueText.Text = _info.Manifest.Id;
+        ToolTip.SetTip(CopyIdButton, _session.T("copy_id"));
+        global::Avalonia.Automation.AutomationProperties.SetName(CopyIdButton, _session.T("copy_id") + " · " + _info.Manifest.Id);
+        CopyFeedbackText.Text = _session.T("id_copied");
+        VersionLabelText.Text = _session.T("metadata.version");
+        VersionValueText.Text = _info.Manifest.Version;
+        AuthorLabelText.Text = _session.T("metadata.author");
+        AuthorValueText.Text = _info.Manifest.Author;
+        AuthorLinkText.Text = AuthorValueText.Text;
+        SetLink(AuthorLink, _info.Manifest.AuthorWebsite, AuthorValueText.Text);
+        AuthorValueText.IsVisible = !AuthorLink.IsVisible;
+        AuthorMetadata.IsVisible = !string.IsNullOrWhiteSpace(_info.Manifest.Author);
+        BuiltInBadge.IsVisible = !_logs && _info.IsBuiltIn;
+        BuiltInText.Text = _session.T("built_in");
         DescriptionText.Text = _info.Text.Get("extension.description", _info.Manifest.Description);
-        var metadata = new List<string>
-        {
-            Field("id", _info.Manifest.Id), Field("version", _info.Manifest.Version),
-            Field("author", _info.Manifest.Author),
-            Field("type", _session.T(_info.IsBuiltIn ? "built_in" : "external")),
-            Field("status", _session.T("states." + _info.Status.ToString().ToLowerInvariant()))
-        };
-        if (!string.IsNullOrWhiteSpace(_info.Manifest.Website)) metadata.Add(Field("website", _info.Manifest.Website));
-        MetadataText.Text = string.Join('\n', metadata);
+        DescriptionText.IsVisible = !string.IsNullOrWhiteSpace(DescriptionText.Text);
         NoticeText.Text = _session.T(_info.RemovalPending ? "pending_removal" : "restart_required");
-        NoticeText.IsVisible = _info.RestartRequired;
+        NoticePanel.IsVisible = _info.RestartRequired;
         ErrorText.Text = _info.Error;
-        ErrorText.IsVisible = !string.IsNullOrWhiteSpace(_info.Error);
+        ErrorPanel.IsVisible = !string.IsNullOrWhiteSpace(_info.Error);
         if (_logs)
         {
             var diagnostics = _session.Host.Diagnostics.Where(item => item.ExtensionId == _info.Manifest.Id).ToArray();
             var text = string.Join('\n', diagnostics.Select(item => $"{item.Time.LocalDateTime:yyyy-MM-dd HH:mm:ss} [{item.Level}] {item.Message}"));
             if (LogText.Text != text) LogText.Text = text;
             LogText.IsVisible = diagnostics.Length > 0;
-            EmptyText.IsVisible = diagnostics.Length == 0;
+            EmptyPanel.IsVisible = diagnostics.Length == 0;
             EmptyText.Text = _session.T("logs_empty");
             global::Avalonia.Automation.AutomationProperties.SetName(LogText, HeadingText.Text);
         }
         else LogText.IsVisible = false;
-        string Field(string key, string? value) => _session.T("metadata." + key) + ": " + value;
+    }
+
+    private static void SetLink(HyperlinkButton link, string? website, string? label)
+    {
+        link.NavigateUri = Uri.TryCreate(website, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https" ? uri : null;
+        link.IsVisible = link.NavigateUri is not null;
+        ToolTip.SetTip(link, link.NavigateUri?.AbsoluteUri);
+        global::Avalonia.Automation.AutomationProperties.SetName(link, label);
+    }
+
+    private async void CopyId()
+    {
+        try
+        {
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard
+                ?? throw new InvalidOperationException(_session.T("unavailable"));
+            await clipboard.SetTextAsync(_info.Manifest.Id);
+            if (_disposed) return;
+            CopyFeedbackText.IsVisible = true;
+            _copyFeedbackTimer.Stop();
+            _copyFeedbackTimer.Start();
+        }
+        catch (Exception ex)
+        {
+            if (!_disposed) _session.Notify(_session.T("operation_failed") + " " + ex.Message, isError: true);
+        }
     }
 
     internal void Close() => _popup?.Dispose();
@@ -88,5 +133,6 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
     {
         _disposed = true;
         _timer.Stop();
+        _copyFeedbackTimer.Stop();
     }
 }

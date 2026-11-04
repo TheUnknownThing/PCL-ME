@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Input.Raw;
 using Avalonia.Media;
 using Avalonia.VisualTree;
@@ -34,8 +35,6 @@ public sealed class ExtensionManagementE2E
         CollectionAssert.AreEqual(new[] { "ToggleEnabledButton", "InfoButton" },
             actions.Children.Select(control => control.Name).ToArray());
         Assert.IsTrue(actions.Children.All(control => control.IsVisible));
-        Assert.IsFalse(view.Find<PclButton>("UpdateButton")!.IsEnabled);
-        Assert.IsFalse(view.Find<PclButton>("UninstallButton")!.IsEnabled);
         var title = card.FindControl<TextBlock>("HeaderTextBlock")!;
         var disabledColor = ((ISolidColorBrush)title.Foreground!).Color;
         Assert.IsTrue(title.Opacity < 1);
@@ -48,12 +47,60 @@ public sealed class ExtensionManagementE2E
         await app.Toggle("pcl.desktop-pet");
         Assert.AreEqual(disabledColor, ((ISolidColorBrush)title.Foreground!).Color);
         await app.Expand("pcl.desktop-pet");
+        Assert.IsFalse(view.Find<PclButton>("UpdateButton")!.IsEnabled);
+        Assert.IsFalse(view.Find<PclButton>("UninstallButton")!.IsEnabled);
         Assert.IsFalse(view.GetVisualDescendants().OfType<TextBlock>().Any(text => text.IsEffectivelyVisible && text.Text is "Disabled" or "Running"));
         await Click(app.Window, view.Find<PclIconButton>("InfoButton")!);
         var info = (ExtensionDetailsView)app.Session.OverlayContent!;
         Assert.AreSame(app.Window, TopLevel.GetTopLevel(info));
-        StringAssert.Contains(info.Find<SelectableTextBlock>("MetadataText")!.Text, "pcl.desktop-pet");
-        StringAssert.Contains(info.Find<SelectableTextBlock>("MetadataText")!.Text, "PCL Community");
+        Assert.AreEqual("pcl.desktop-pet", info.Find<TextBlock>("IdValueText")!.Text);
+        Assert.AreEqual("PCL Community", info.Find<TextBlock>("AuthorValueText")!.Text);
+        Assert.IsTrue(info.Find<Border>("BuiltInBadge")!.IsVisible, "Bundled extensions must show the built-in badge.");
+        Assert.IsFalse(info.Find<HyperlinkButton>("ExtensionLink")!.IsVisible);
+        Assert.IsFalse(info.Find<HyperlinkButton>("AuthorLink")!.IsVisible);
+        await app.Window.Clipboard!.SetTextAsync("previous clipboard text");
+        var copyId = info.Find<Button>("CopyIdButton")!;
+        Assert.IsNull(copyId.FocusAdorner);
+        Assert.AreEqual(new Thickness(0), copyId.BorderThickness);
+        await Click(app.Window, info.Find<TextBlock>("IdValueText")!);
+        Assert.AreEqual("pcl.desktop-pet", await app.Window.Clipboard.TryGetTextAsync());
+        Assert.AreEqual(0, info.Find<TextBlock>("IdValueText")!.TextDecorations?.Count ?? 0, "The ID must remain plain text on hover.");
+        Assert.AreEqual(app.Text.T("extensions.copy_id"), ToolTip.GetTip(copyId));
+        await app.Window.Clipboard.SetTextAsync("previous clipboard text");
+        await Click(app.Window, info.Find<PathIcon>("CopyIdIcon")!);
+        Assert.AreEqual("pcl.desktop-pet", await app.Window.Clipboard.TryGetTextAsync(), "Clicking the copy icon must copy the ID.");
+        Assert.IsTrue(info.Find<TextBlock>("CopyFeedbackText")!.IsVisible);
+        await Wait(() => !info.Find<TextBlock>("CopyFeedbackText")!.IsVisible, "Copy feedback did not clear.");
+        await app.Window.Clipboard.SetTextAsync("previous clipboard text");
+        copyId.Focus();
+        app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        app.Window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        await Settle();
+        Assert.AreEqual("pcl.desktop-pet", await app.Window.Clipboard.TryGetTextAsync(), "Keyboard activation must copy the ID.");
+        await Wait(() => !info.Find<TextBlock>("CopyFeedbackText")!.IsVisible, "Copy feedback did not clear after keyboard activation.");
+        info.Find<PclButton>("CloseButton")!.FindControl<Button>("ButtonHost")!.Focus();
+        app.Window.MouseMove(new Point(10, 10)); await Settle();
+        app.Screenshot("extensions-info-light");
+        app.Actions.PersistSharedValue("UiDarkMode", 1);
+        FrontendAppearanceService.ApplyStoredAppearance(global::Avalonia.Application.Current!, app.Paths);
+        await Settle();
+        app.Screenshot("extensions-info-dark");
+        app.Window.Width = 810; app.Window.Height = 470;
+        foreach (var locale in new[] { "en-US", "zh-Hans", "zh-Hant", "lzh", "de-DE", "fr-FR", "es-ES", "ko-KR" })
+        {
+            app.Text.SetLocale(locale); await Settle();
+            var surface = info.Find<Border>("DetailsSurface")!;
+            var start = surface.TranslatePoint(default, app.Window)!.Value;
+            Assert.IsTrue(start.X >= 0 && start.Y >= 0 && start.X + surface.Bounds.Width <= app.Window.Bounds.Width
+                && start.Y + surface.Bounds.Height <= app.Window.Bounds.Height, "Extension information must fit the minimum window in " + locale);
+            var close = info.Find<PclButton>("CloseButton")!;
+            var corner = close.TranslatePoint(new Point(close.Bounds.Width, close.Bounds.Height), surface)!.Value;
+            Assert.IsTrue(corner.X <= surface.Bounds.Width && corner.Y <= surface.Bounds.Height,
+                "The close action must remain visible in " + locale);
+        }
+        app.Text.SetLocale("en-US"); await Settle();
+        app.Screenshot("extensions-info-dark-compact");
+        app.Window.Width = 1000; app.Window.Height = 700;
         app.Window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
         app.Window.KeyReleaseQwerty(PhysicalKey.Escape, RawInputModifiers.None);
         await Settle();
@@ -78,6 +125,69 @@ public sealed class ExtensionManagementE2E
         app.Screenshot("extensions-card-disabled-actions");
         await Click(app.Window, view.Find<PclButton>("LogButton")!);
         app.Screenshot("extensions-card-logs");
+    });
+
+    [TestMethod]
+    public Task Information_OptionalWebsiteLinks_UseManifestUrls() => Run(async () =>
+    {
+        await using var app = new DesktopFixture();
+        await app.Start(); await app.OpenExtensions();
+        var cases = new (string? Website, string? AuthorWebsite, bool ExtensionLink, bool AuthorLink)[]
+        {
+            ("https://example.com/extension", "https://example.com/author", true, true),
+            ("https://example.com/extension", null, true, false),
+            (null, "http://example.com/author", false, true),
+            ("not a URL", "file:///tmp/author", false, false),
+            (null, null, false, false)
+        };
+        for (var i = 0; i < cases.Length; i++)
+        {
+            var item = cases[i];
+            await Install(app, CreatePackage(app, "1.0." + i, item.Website, item.AuthorWebsite, "Example author"));
+            var installed = app.Session.Host.Get("example.hello").Manifest;
+            Assert.AreEqual(item.AuthorWebsite, installed.AuthorWebsite, "Author links must survive package serialization and installation.");
+            await Click(app.Window, app.Card("example.hello").Find<PclIconButton>("InfoButton")!);
+            var info = (ExtensionDetailsView)app.Session.OverlayContent!;
+            var extension = info.Find<HyperlinkButton>("ExtensionLink")!;
+            var author = info.Find<HyperlinkButton>("AuthorLink")!;
+            Assert.AreEqual(item.ExtensionLink, extension.IsVisible);
+            Assert.AreEqual(item.AuthorLink, author.IsVisible);
+            Assert.IsTrue(info.Find<TextBlock>("NameText")!.IsVisible, "The title must always remain plain text.");
+            Assert.AreEqual(!item.AuthorLink, info.Find<TextBlock>("AuthorValueText")!.IsVisible);
+            if (item.ExtensionLink)
+            {
+                Assert.AreEqual(new Uri(item.Website!), extension.NavigateUri);
+                var activated = false;
+                extension.Click += (_, _) => activated = true;
+                await Click(app.Window, info.Find<TextBlock>("NameText")!);
+                Assert.IsFalse(activated, "Only the website icon should open the project page.");
+                Assert.AreEqual(0, info.Find<TextBlock>("NameText")!.TextDecorations?.Count ?? 0);
+                await Click(app.Window, extension);
+                Assert.IsTrue(activated, "The extension website must be clickable.");
+            }
+            if (item.AuthorLink)
+            {
+                Assert.AreEqual(new Uri(item.AuthorWebsite!), author.NavigateUri);
+                var activated = false;
+                author.Click += (_, _) => activated = true;
+                author.Focus();
+                app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                app.Window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                await Settle();
+                Assert.IsTrue(activated, "Author links must support keyboard activation.");
+            }
+            if (i == 0)
+            {
+                info.Find<PclButton>("CloseButton")!.FindControl<Button>("ButtonHost")!.Focus();
+                app.Window.MouseMove(new Point(10, 10)); await Settle();
+                app.Screenshot("extensions-info-links-light");
+                app.Actions.PersistSharedValue("UiDarkMode", 1);
+                FrontendAppearanceService.ApplyStoredAppearance(global::Avalonia.Application.Current!, app.Paths);
+                await Settle();
+                app.Screenshot("extensions-info-links-dark");
+            }
+            await Click(app.Window, info.Find<PclButton>("CloseButton")!);
+        }
     });
 
     [TestMethod]
@@ -482,12 +592,13 @@ public sealed class ExtensionManagementE2E
         Assert.IsNull(app.Launcher.ExtensionInstanceTabsContent);
     });
 
-    private static string CreatePackage(DesktopFixture app, string version)
+    private static string CreatePackage(DesktopFixture app, string version, string? website = null, string? authorWebsite = null, string author = "")
     {
         var path = Path.Combine(app.Root, "hello-" + version + ".pclext");
         var manifest = new ExtensionManifest
         {
             Id = "example.hello", Name = "Hello extension", Version = version, AvaloniaMajorVersion = 11, StartWithLauncher = true,
+            Website = website, AuthorWebsite = authorWebsite, Author = author,
             EntryAssembly = "HelloExtension.dll", EntryType = "HelloExtension.HelloExtension",
             Commands = [new() { Id = "example.hello.open", Title = "Hello" }]
         };
