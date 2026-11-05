@@ -54,7 +54,7 @@ public sealed class ExtensionManagementE2E
         var info = (ExtensionDetailsView)app.Session.OverlayContent!;
         Assert.AreSame(app.Window, TopLevel.GetTopLevel(info));
         Assert.AreEqual("pcl.desktop-pet", info.Find<TextBlock>("IdValueText")!.Text);
-        Assert.AreEqual("PCL Community", info.Find<TextBlock>("AuthorValueText")!.Text);
+        Assert.AreEqual("PCL-ME Developers", info.Find<TextBlock>("AuthorValueText")!.Text);
         Assert.IsTrue(info.Find<Border>("BuiltInBadge")!.IsVisible, "Bundled extensions must show the built-in badge.");
         Assert.IsFalse(info.Find<HyperlinkButton>("ExtensionLink")!.IsVisible);
         Assert.IsFalse(info.Find<HyperlinkButton>("AuthorLink")!.IsVisible);

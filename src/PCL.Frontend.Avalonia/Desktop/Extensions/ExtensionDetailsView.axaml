@@ -41,47 +41,43 @@
           BorderBrush="{DynamicResource Pcl.Divider}" BorderThickness="1"
           BoxShadow="{DynamicResource ColorShadowPromptPanel}">
     <Grid RowDefinitions="Auto,*,Auto">
-      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12" Margin="24,16,16,0">
-        <TextBlock x:Name="HeadingText" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"
-                   Foreground="{DynamicResource Pcl.MutedForeground}" TextWrapping="Wrap" />
-        <Border x:Name="BuiltInBadge" Grid.Column="1" Padding="9,3" CornerRadius="5"
-                VerticalAlignment="Center" Background="{DynamicResource ColorBrushBg1}">
-          <TextBlock x:Name="BuiltInText" FontSize="11" FontWeight="Medium"
-                     Foreground="{DynamicResource Pcl.Accent}" />
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16" Margin="24,20,16,0">
+        <Border Width="56" Height="56" CornerRadius="12" VerticalAlignment="Top"
+                Background="{DynamicResource ColorBrushBg1}">
+          <PathIcon x:Name="ExtensionIcon" Width="28" Height="28"
+                    Foreground="{DynamicResource Pcl.Accent}" />
         </Border>
-        <ui:PclIconButton x:Name="CloseIcon" Grid.Column="2"
-                          IconBrush="{DynamicResource Pcl.MutedForeground}"
-                          HoverBackgroundBrush="{DynamicResource Pcl.SubtleSurface}" />
+        <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+          <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+            <TextBlock x:Name="NameText" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <HyperlinkButton x:Name="ExtensionLink" Grid.Column="1" Classes="detailAction" IsVisible="False"
+                             Width="24" Height="24" VerticalAlignment="Top" Margin="0,3,0,0"
+                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+              <PathIcon x:Name="ProjectLinkIcon" Classes="actionIcon" Width="14" Height="14" />
+            </HyperlinkButton>
+            <Border x:Name="BuiltInBadge" Grid.Column="2" Padding="9,3" CornerRadius="5"
+                    VerticalAlignment="Top" Margin="0,6,0,0" Background="{DynamicResource ColorBrushBg1}">
+              <TextBlock x:Name="BuiltInText" FontSize="11" FontWeight="Medium"
+                         Foreground="{DynamicResource Pcl.Accent}" />
+            </Border>
+            <ui:PclIconButton x:Name="CloseIcon" Grid.Column="3" VerticalAlignment="Top" Margin="0,1,0,0"
+                              IconBrush="{DynamicResource Pcl.MutedForeground}"
+                              HoverBackgroundBrush="{DynamicResource Pcl.SubtleSurface}" />
+          </Grid>
+          <Button x:Name="CopyIdButton" Classes="detailAction" HorizontalAlignment="Left">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+              <TextBlock x:Name="IdLabelText" Classes="metadataLabel" />
+              <TextBlock x:Name="IdValueText" Grid.Column="1" Classes="metadataLabel" TextWrapping="Wrap" />
+              <PathIcon x:Name="CopyIdIcon" Grid.Column="2" Classes="actionIcon" Width="12" Height="12" />
+              <TextBlock x:Name="CopyFeedbackText" Grid.Column="3" FontSize="12" IsVisible="False"
+                         Foreground="{DynamicResource Pcl.Accent}" />
+            </Grid>
+          </Button>
+        </StackPanel>
       </Grid>
       <ScrollViewer Grid.Row="1" Margin="24,20,24,24"
                     HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="20">
-          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
-            <Border Width="56" Height="56" CornerRadius="12" VerticalAlignment="Top"
-                    Background="{DynamicResource ColorBrushBg1}">
-              <PathIcon x:Name="ExtensionIcon" Width="28" Height="28"
-                        Foreground="{DynamicResource Pcl.Accent}" />
-            </Border>
-            <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" HorizontalAlignment="Left">
-                <TextBlock x:Name="NameText" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" />
-                <HyperlinkButton x:Name="ExtensionLink" Grid.Column="1" Classes="detailAction" IsVisible="False"
-                                 Width="24" Height="24" VerticalAlignment="Top" Margin="0,3,0,0"
-                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                  <PathIcon x:Name="ProjectLinkIcon" Classes="actionIcon" Width="14" Height="14" />
-                </HyperlinkButton>
-              </Grid>
-              <Button x:Name="CopyIdButton" Classes="detailAction" HorizontalAlignment="Left">
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
-                  <TextBlock x:Name="IdLabelText" Classes="metadataLabel" />
-                  <TextBlock x:Name="IdValueText" Grid.Column="1" Classes="metadataLabel" TextWrapping="Wrap" />
-                  <PathIcon x:Name="CopyIdIcon" Grid.Column="2" Classes="actionIcon" Width="12" Height="12" />
-                  <TextBlock x:Name="CopyFeedbackText" Grid.Column="3" FontSize="12" IsVisible="False"
-                             Foreground="{DynamicResource Pcl.Accent}" />
-                </Grid>
-              </Button>
-            </StackPanel>
-          </Grid>
           <StackPanel x:Name="InfoPanel" Spacing="16">
             <TextBlock x:Name="DescriptionText" FontSize="14" LineHeight="23" TextWrapping="Wrap" />
             <WrapPanel x:Name="MetadataPanel" Margin="0,0,0,-6">
@@ -110,6 +106,8 @@
                          Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
             </Border>
           </StackPanel>
+          <TextBlock x:Name="HeadingText" FontSize="12" FontWeight="Medium"
+                     Foreground="{DynamicResource Pcl.MutedForeground}" TextWrapping="Wrap" />
           <TextBox x:Name="LogText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                    MinHeight="160" MaxHeight="280" Padding="14" CornerRadius="8" VerticalContentAlignment="Top"
                    Background="{DynamicResource Pcl.SubtleSurface}"

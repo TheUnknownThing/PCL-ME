@@ -59,6 +59,7 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
     {
         if (_disposed) return;
         HeadingText.Text = _session.T(_logs ? "logs" : "info");
+        HeadingText.IsVisible = _logs;
         NameText.Text = _info.Text.Get("extension.name", _info.Text.Get("title", _info.Manifest.Name));
         SetLink(ExtensionLink, _info.Manifest.Website, _session.T("open_website") + " · " + NameText.Text);
         ToolTip.SetTip(ExtensionLink, _session.T("open_website"));
