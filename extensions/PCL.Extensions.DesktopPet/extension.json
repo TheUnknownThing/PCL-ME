@@ -3,7 +3,7 @@
   "name": "Desktop pet",
   "version": "1.0.0",
   "description": "An animated desktop companion with customizable interactions.",
-  "author": "PCL Community",
+  "author": "PCL-ME Developers",
   "apiVersion": 1,
   "avaloniaMajorVersion": 11,
   "entryAssembly": "PCL.Extensions.DesktopPet.dll",
