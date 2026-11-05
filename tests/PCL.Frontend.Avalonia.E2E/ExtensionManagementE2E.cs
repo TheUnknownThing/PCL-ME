@@ -78,7 +78,7 @@ public sealed class ExtensionManagementE2E
         await Settle();
         Assert.AreEqual("pcl.desktop-pet", await app.Window.Clipboard.TryGetTextAsync(), "Keyboard activation must copy the ID.");
         await Wait(() => !info.Find<TextBlock>("CopyFeedbackText")!.IsVisible, "Copy feedback did not clear after keyboard activation.");
-        info.Find<PclButton>("CloseButton")!.FindControl<Button>("ButtonHost")!.Focus();
+        info.Find<PclIconButton>("CloseIcon")!.FindControl<Button>("ButtonHost")!.Focus();
         app.Window.MouseMove(new Point(10, 10)); await Settle();
         app.Screenshot("extensions-info-light");
         app.Actions.PersistSharedValue("UiDarkMode", 1);
@@ -93,7 +93,7 @@ public sealed class ExtensionManagementE2E
             var start = surface.TranslatePoint(default, app.Window)!.Value;
             Assert.IsTrue(start.X >= 0 && start.Y >= 0 && start.X + surface.Bounds.Width <= app.Window.Bounds.Width
                 && start.Y + surface.Bounds.Height <= app.Window.Bounds.Height, "Extension information must fit the minimum window in " + locale);
-            var close = info.Find<PclButton>("CloseButton")!;
+            var close = info.Find<PclIconButton>("CloseIcon")!;
             var corner = close.TranslatePoint(new Point(close.Bounds.Width, close.Bounds.Height), surface)!.Value;
             Assert.IsTrue(corner.X <= surface.Bounds.Width && corner.Y <= surface.Bounds.Height,
                 "The close action must remain visible in " + locale);
@@ -115,7 +115,7 @@ public sealed class ExtensionManagementE2E
         Assert.IsFalse(logText.Text!.Contains("OTHER_EXTENSION_LOG", StringComparison.Ordinal));
         app.Session.Host.LogContributionError("pcl.desktop-pet", new InvalidOperationException("LIVE_LOG_UPDATE"));
         await Wait(() => logText.Text!.Contains("LIVE_LOG_UPDATE", StringComparison.Ordinal), "Logs must refresh while open.");
-        await Click(app.Window, logs.Find<PclButton>("CloseButton")!);
+        await Click(app.Window, logs.Find<PclIconButton>("CloseIcon")!);
         app.Actions.PersistSharedValue("UiDarkMode", 1);
         FrontendAppearanceService.ApplyStoredAppearance(global::Avalonia.Application.Current!, app.Paths);
         app.Window.Width = 1000; app.Window.Height = 840;
@@ -178,7 +178,7 @@ public sealed class ExtensionManagementE2E
             }
             if (i == 0)
             {
-                info.Find<PclButton>("CloseButton")!.FindControl<Button>("ButtonHost")!.Focus();
+                info.Find<PclIconButton>("CloseIcon")!.FindControl<Button>("ButtonHost")!.Focus();
                 app.Window.MouseMove(new Point(10, 10)); await Settle();
                 app.Screenshot("extensions-info-links-light");
                 app.Actions.PersistSharedValue("UiDarkMode", 1);
@@ -186,7 +186,7 @@ public sealed class ExtensionManagementE2E
                 await Settle();
                 app.Screenshot("extensions-info-links-dark");
             }
-            await Click(app.Window, info.Find<PclButton>("CloseButton")!);
+            await Click(app.Window, info.Find<PclIconButton>("CloseIcon")!);
         }
     });
 

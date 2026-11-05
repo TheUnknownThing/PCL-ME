@@ -28,7 +28,7 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
         ProjectLinkIcon.Data = Geometry.Parse(PclIcons.Link.Data);
         CopyIdIcon.Data = Geometry.Parse(PclIcons.Copy.Data);
         CloseIcon.IconData = PclIcons.Close.Data;
-        CloseIcon.Command = CloseButton.Command = new ActionCommand(Close);
+        CloseIcon.Command = new ActionCommand(Close);
         CopyIdButton.Command = new ActionCommand(CopyId);
         _timer.Tick += (_, _) => Refresh();
         _copyFeedbackTimer.Tick += (_, _) =>
@@ -51,7 +51,7 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
         {
             if (_disposed) return;
             if (_logs && LogText.IsVisible) LogText.Focus();
-            else CloseButton.FindControl<Button>("ButtonHost")!.Focus();
+            else CloseIcon.FindControl<Button>("ButtonHost")!.Focus();
         }, DispatcherPriority.Input);
     }
 
@@ -64,9 +64,8 @@ internal sealed partial class ExtensionDetailsView : UserControl, IDisposable
         SetLink(ExtensionLink, _info.Manifest.Website, _session.T("open_website") + " · " + NameText.Text);
         ToolTip.SetTip(ExtensionLink, _session.T("open_website"));
         global::Avalonia.Automation.AutomationProperties.SetName(this, NameText.Text + " · " + HeadingText.Text);
-        CloseButton.Text = _session.T("close");
-        ToolTip.SetTip(CloseIcon, CloseButton.Text);
-        global::Avalonia.Automation.AutomationProperties.SetName(CloseIcon, CloseButton.Text);
+        ToolTip.SetTip(CloseIcon, _session.T("close"));
+        global::Avalonia.Automation.AutomationProperties.SetName(CloseIcon, _session.T("close"));
         InfoPanel.IsVisible = !_logs;
         IdLabelText.Text = _session.T("metadata.id");
         IdValueText.Text = _info.Manifest.Id;

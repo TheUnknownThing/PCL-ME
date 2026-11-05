@@ -40,7 +40,7 @@
   <Border x:Name="DetailsSurface" CornerRadius="12" Background="{DynamicResource Pcl.Surface}"
           BorderBrush="{DynamicResource Pcl.Divider}" BorderThickness="1"
           BoxShadow="{DynamicResource ColorShadowPromptPanel}">
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16" Margin="24,20,16,0">
         <Border Width="56" Height="56" CornerRadius="12" VerticalAlignment="Top"
                 Background="{DynamicResource ColorBrushBg1}">
@@ -119,10 +119,6 @@
           </Border>
         </StackPanel>
       </ScrollViewer>
-      <Border Grid.Row="2" Padding="24,16" BorderThickness="0,1,0,0"
-              BorderBrush="{DynamicResource Pcl.Divider}">
-        <ui:PclButton x:Name="CloseButton" MinWidth="96" ColorType="Highlight" HorizontalAlignment="Right" />
-      </Border>
     </Grid>
   </Border>
 </UserControl>
