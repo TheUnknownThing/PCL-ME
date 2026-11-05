@@ -60,7 +60,7 @@ internal sealed class DesktopFixture : IAsyncDisposable
         await Wait(() => Launcher.IsTopLevelNavigationInteractive, "Startup prompt did not close");
     }
 
-    public async Task OpenExtensions()
+    public async Task OpenExtensions(bool dismissTrustWarning = true)
     {
         for (var i = 0; i < 4 && !Window.GetVisualDescendants().OfType<PclTabButton>().Any(tab => tab.IsEffectivelyVisible && tab.Text == "Tools"); i++)
             await Click(Window, Window.Find<PclIconButton>("BackButton")!);
@@ -68,7 +68,15 @@ internal sealed class DesktopFixture : IAsyncDisposable
         await Wait(() => Window.GetVisualDescendants().OfType<PclListItem>().Any(item => item.Title == "Extensions"), "Extensions sidebar missing: " + string.Join(",", Launcher.SidebarSections.SelectMany(section => section.Items).Select(item => item.Title)));
         await Click(Window, Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == "Extensions"));
         await Wait(() => Window.GetVisualDescendants().OfType<ExtensionManagerView>().Any(), "Extensions tools page did not open");
+        if (dismissTrustWarning) await DismissTrustWarning();
         Assert.IsFalse(Window.Find<ContentControl>("ExtensionWorkspace")!.IsVisible);
+    }
+
+    public async Task DismissTrustWarning()
+    {
+        if (Session.OverlayContent is not ExtensionTrustWarningView warning) return;
+        await Click(Window, warning.Find<PclButton>("AcknowledgeButton")!);
+        await Wait(() => Session.OverlayContent is null, "The trust warning did not close after acknowledging it.");
     }
 
     public string CreateInstance(string name)
@@ -90,7 +98,7 @@ internal sealed class DesktopFixture : IAsyncDisposable
         if (!card.IsChevronExpanded) await Click(Window, card.Find<Button>("HeaderButton")!);
         await Settle();
     }
-    public Task Toggle(string id) => Click(Window, Card(id).Find<CheckBox>("EnabledToggle")!);
+    public Task Toggle(string id) => Click(Window, Card(id).Find<PclIconButton>("ToggleEnabledButton")!);
     public async Task Search(string text)
     {
         Window.KeyPressQwerty(PhysicalKey.P, (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control) | RawInputModifiers.Shift);

@@ -3,11 +3,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using PCL.Extensions.Contracts;
 using PCL.Extensions.Runtime;
 using PCL.Frontend.Avalonia.Desktop.Controls;
 using PCL.Frontend.Avalonia.ViewModels;
+using PCL.UI.Icons;
 
 namespace PCL.Frontend.Avalonia.Desktop.Extensions;
 
@@ -16,10 +18,15 @@ internal sealed partial class ExtensionCardView : UserControl, IDisposable
     private readonly FrontendExtensionSession _session;
     private readonly ExtensionInfo _info;
     private readonly List<IDisposable> _nativeResources = [];
+    private readonly CancellationTokenSource _lifetime = new();
+    private readonly MenuItem _updateFile = new();
+    private readonly MenuItem _updateUrl = new();
     private string? _renderedState;
     private bool _updating;
     private bool _busy;
     private bool _disposed;
+    private ExtensionUrlInstallView? _updateInstaller;
+    private ExtensionDetailsView? _detailsView;
     internal ExtensionInfo Info => _info;
 
     public ExtensionCardView(FrontendExtensionSession session, ExtensionInfo info)
@@ -28,13 +35,26 @@ internal sealed partial class ExtensionCardView : UserControl, IDisposable
         _info = info;
         InitializeComponent();
         Name = "Extension_" + info.Manifest.Id.Replace('.', '_').Replace('-', '_');
-        EnabledToggle.IsCheckedChanged += (_, _) =>
+        ToggleEnabledButton.Command = new ActionCommand(() => Operate(() => session.Host.SetEnabledAsync(info.Manifest.Id, !info.IsEnabled)));
+        UpdateButton.ContextFlyout = new MenuFlyout { Items = { _updateFile, _updateUrl } };
+        UpdateButton.Command = new ActionCommand(() => UpdateButton.ContextFlyout?.ShowAt(UpdateButton));
+        _updateFile.Click += (_, _) => Operate(async () =>
         {
-            if (_updating) return;
-            var enabled = EnabledToggle.IsChecked == true;
-            Operate(() => session.Host.SetEnabledAsync(info.Manifest.Id, enabled));
+            var path = await session.PickFileAsync(session.T("update_file"), ["*.pclext", "*.zip"]);
+            if (path is not null && !_disposed) await session.Host.UpdateAsync(info.Manifest.Id, path, _lifetime.Token);
+        });
+        _updateUrl.Click += (_, _) =>
+        {
+            var installer = new ExtensionUrlInstallView();
+            _updateInstaller = installer;
+            installer.Installed += _ => { _renderedState = null; Refresh(); };
+            installer.BusyChanged += Refresh;
+            installer.Closed += () => { if (ReferenceEquals(_updateInstaller, installer)) _updateInstaller = null; };
+            installer.Open(session, info.Manifest.Id);
         };
         RetryButton.Command = new ActionCommand(() => Operate(() => session.Host.SetEnabledAsync(info.Manifest.Id, true)));
+        InfoButton.Command = new ActionCommand(() => ShowDetails(logs: false));
+        LogButton.Command = new ActionCommand(() => ShowDetails(logs: true));
         UninstallButton.Command = new ActionCommand(() => Operate(() => session.Host.UninstallAsync(info.Manifest.Id)));
         ResetButton.Command = new ActionCommand(() => Operate(() =>
         {
@@ -46,14 +66,13 @@ internal sealed partial class ExtensionCardView : UserControl, IDisposable
         void SizeHeader()
         {
             var title = Card.FindControl<TextBlock>("HeaderTextBlock")!;
-            title.MaxWidth = Math.Max(0, Bounds.Width - EnabledToggle.Bounds.Width - StatusText.Bounds.Width - 90);
+            title.MaxWidth = Math.Max(0, Bounds.Width - HeaderActions.Bounds.Width - 66);
             title.TextTrimming = TextTrimming.CharacterEllipsis;
             title.HorizontalAlignment = HorizontalAlignment.Left;
             ToolTip.SetTip(title, Card.Header);
         }
         SizeChanged += (_, _) => SizeHeader();
-        EnabledToggle.SizeChanged += (_, _) => SizeHeader();
-        StatusText.SizeChanged += (_, _) => SizeHeader();
+        HeaderActions.SizeChanged += (_, _) => SizeHeader();
     }
 
     internal void Expand() => Card.IsChevronExpanded = true;
@@ -65,33 +84,44 @@ internal sealed partial class ExtensionCardView : UserControl, IDisposable
         try
         {
             var info = _info;
+            var busy = _busy || _updateInstaller?.IsBusy == true;
             Card.Header = info.Text.Get("extension.name", info.Text.Get("title", info.Manifest.Name));
-            StatusText.Text = _session.T("states." + info.Status.ToString().ToLowerInvariant());
-            if (info.RestartRequired) StatusText.Text += " · " + _session.T("restart_required");
-            ToolTip.SetTip(StatusText, StatusText.Text);
-            EnabledToggle.Content = _session.T("enabled");
-            global::Avalonia.Automation.AutomationProperties.SetName(EnabledToggle, Card.Header + " · " + _session.T("enabled"));
-            EnabledToggle.IsChecked = info.IsEnabled;
-            EnabledToggle.IsEnabled = !_busy && !info.RemovalPending;
+            if (info.IsEnabled) Card.ClearValue(PclCard.HeaderForegroundProperty);
+            else Card.Bind(PclCard.HeaderForegroundProperty, new DynamicResourceExtension("ColorBrushEntrySecondaryIdle"));
+            var opacity = info.IsEnabled ? 1 : .56;
+            Card.FindControl<TextBlock>("HeaderTextBlock")!.Opacity = opacity;
+            DescriptionText.Opacity = opacity;
+            ConfigureAction(ToggleEnabledButton, info.IsEnabled ? "disable" : "enable", info.IsEnabled ? PclIcons.DisableCircle : PclIcons.EnableCircle);
+            ToggleEnabledButton.IsEnabled = !busy && !info.RemovalPending;
             DescriptionText.Text = info.Text.Get("extension.description", info.Manifest.Description);
-            MetadataText.Text = string.Join(" · ", new[] { info.Manifest.Author, info.Manifest.Version, info.IsBuiltIn ? _session.T("built_in") : info.Manifest.Id }.Where(value => !string.IsNullOrWhiteSpace(value)));
             ErrorText.Text = info.Error;
             ErrorText.IsVisible = !string.IsNullOrWhiteSpace(info.Error);
+            NoticeText.Text = _session.T(info.RemovalPending ? "pending_removal" : "restart_required");
+            NoticeText.IsVisible = info.RestartRequired;
             RetryButton.Text = _session.T("retry");
             RetryButton.IsVisible = info.IsEnabled && info.Status == ExtensionStatus.Faulted;
-            UninstallButton.Text = _session.T("uninstall");
-            UninstallButton.IsVisible = !info.IsBuiltIn;
-            UninstallButton.IsEnabled = !_busy && !info.RemovalPending;
-            ActionsPanel.IsVisible = RetryButton.IsVisible || UninstallButton.IsVisible;
+            ConfigureAction(UpdateButton, "update");
+            UpdateButton.IsEnabled = !info.IsBuiltIn && !busy && !info.RemovalPending && !info.RestartRequired;
+            if (info.IsBuiltIn) ToolTip.SetTip(UpdateButton, _session.T("built_in_update"));
+            else if (info.RestartRequired) ToolTip.SetTip(UpdateButton, _session.T("restart_required"));
+            _updateFile.Header = _session.T("update_file");
+            _updateUrl.Header = _session.T("update_url");
+            _updateInstaller?.RefreshText();
+            ConfigureAction(UninstallButton, "uninstall");
+            UninstallButton.IsEnabled = !info.IsBuiltIn && !busy && !info.RemovalPending;
+            if (info.IsBuiltIn) ToolTip.SetTip(UninstallButton, _session.T("built_in_remove"));
+            ConfigureAction(InfoButton, "info", PclIcons.InfoCircle);
+            ConfigureAction(LogButton, "logs");
+            if (info.Status == ExtensionStatus.Faulted) ToolTip.SetTip(LogButton, _session.T("logs") + " · " + _session.T("states.faulted"));
+            _detailsView?.Refresh();
             ResetButton.Text = _session.T("reset");
             ResetButton.IsVisible = info.Manifest.Settings.Length > 0;
-            RetryButton.IsEnabled = ResetButton.IsEnabled = !_busy;
-            SettingsPanel.IsEnabled = ShortcutsPanel.IsEnabled = NativeSettingsPanel.IsEnabled = !_busy;
-            if (Card.IsChevronExpanded) RefreshDiagnostics();
+            RetryButton.IsEnabled = ResetButton.IsEnabled = !busy;
+            SettingsPanel.IsEnabled = ShortcutsPanel.IsEnabled = NativeSettingsPanel.IsEnabled = !busy;
             // Lifecycle events for another extension must not replace focused editors or native views.
             var state = string.Join('|', info.Text.Locale, info.Manifest.Version, info.Status, _session.SettingsRevision(info.Manifest.Id),
                 string.Join(';', _session.Host.Commands.Where(command => command.OwnerId == info.Manifest.Id).Select(command => command.Definition.Id + ":" + command.Definition.Shortcut)));
-            if (Card.IsChevronExpanded && !_busy && state != _renderedState)
+            if (Card.IsChevronExpanded && !busy && state != _renderedState)
             {
                 ClearEditors();
                 RenderEditors();
@@ -101,13 +131,28 @@ internal sealed partial class ExtensionCardView : UserControl, IDisposable
         finally { _updating = false; }
     }
 
-    internal void RefreshDiagnostics()
+    private void ConfigureAction(PclIconButton button, string key, PclIcon icon)
+    {
+        button.IconData = icon.Data;
+        button.IconScale = icon.Scale;
+        ToolTip.SetTip(button, _session.T(key));
+        global::Avalonia.Automation.AutomationProperties.SetName(button, Card.Header + " · " + _session.T(key));
+    }
+
+    private void ConfigureAction(PclButton button, string key)
+    {
+        button.Text = _session.T(key);
+        ToolTip.SetTip(button, _session.T(key));
+        global::Avalonia.Automation.AutomationProperties.SetName(button, Card.Header + " · " + _session.T(key));
+    }
+
+    private void ShowDetails(bool logs)
     {
         if (_disposed) return;
-        var diagnostics = _session.Host.Diagnostics.Where(item => item.ExtensionId == _info.Manifest.Id).TakeLast(20).ToArray();
-        ExtensionDiagnosticsCard.Header = _session.T("diagnostics");
-        ExtensionDiagnosticsCard.IsVisible = diagnostics.Length > 0;
-        ExtensionDiagnosticsText.Text = string.Join('\n', diagnostics.Select(item => $"{item.Time:t} [{item.Level}] {item.Message}"));
+        var view = new ExtensionDetailsView(_session, _info, logs);
+        _detailsView = view;
+        view.Closed += () => { if (ReferenceEquals(_detailsView, view)) _detailsView = null; };
+        view.Open();
     }
 
     private void RenderEditors()
@@ -205,14 +250,14 @@ internal sealed partial class ExtensionCardView : UserControl, IDisposable
 
     private void Save(Action action)
     {
-        if (_updating || _disposed || _busy) return;
+        if (_updating || _disposed || _busy || _updateInstaller?.IsBusy == true) return;
         try { action(); OperationErrorText.IsVisible = false; }
         catch (Exception ex) { ShowError(ex); }
     }
 
     private async void Operate(Func<ValueTask> action)
     {
-        if (_updating || _disposed || _busy) return;
+        if (_updating || _disposed || _busy || _updateInstaller?.IsBusy == true) return;
         _busy = true;
         OperationErrorText.IsVisible = false;
         Refresh();
@@ -262,6 +307,11 @@ internal sealed partial class ExtensionCardView : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        _lifetime.Cancel();
+        _lifetime.Dispose();
+        UpdateButton.ContextFlyout?.Hide();
+        _updateInstaller?.Close();
+        _detailsView?.Close();
         ClearEditors();
     }
 }

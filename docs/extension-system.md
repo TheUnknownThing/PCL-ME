@@ -4,9 +4,15 @@ PCL-ME extensions are .NET 10 modules. They can contribute native Avalonia UI, c
 
 ## Using extensions
 
-Open **Tools → Extensions**. Global search also opens this page. Its Extension actions menu contains extension pages and registered menu actions. Each extension has a standard PCL card with an enable checkbox and expandable settings, shortcuts and diagnostics. Bundled extensions can be enabled or disabled. Global search opens with **Ctrl+Shift+P** on Windows/Linux or **Cmd+Shift+P** on macOS. Search is an in-launcher command palette with category filters, icons, shortcuts and keyboard navigation. It includes commands, launcher pages, settings, installed instances, help and extension providers. Click a result or press Enter to open it; Escape, clicking outside or pressing the shortcut again closes the palette and restores focus.
+Open **Tools → Extensions**. The search field filters installed extensions by their localized name, description, author or ID. The Extension actions menu contains extension pages and registered menu actions. Each extension has a standard PCL card with five header icons, ordered Update, Enable/Disable, Information, Uninstall and Logs. Disabled extensions use muted titles, descriptions and toggle icons instead of a persistent status label. Settings and shortcuts expand inside the card. Information and per-extension logs open in-window popups; logs refresh while open. Tooltips and accessible names describe each action. Bundled extensions can be enabled or disabled; their update and uninstall icons remain visible but unavailable, with tooltips explaining why.
 
-Install a `.pclext` archive in the manager. New external extensions are disabled until explicitly enabled. Installing a higher version updates an existing external extension. Updates or removals involving an already loaded assembly take effect after restart; the manager displays this state. Bundled extensions update with the launcher and can be disabled, rather than uninstalled. User settings and extension data survive disabling, updates and uninstalling.
+Choose **Install from file** for a local `.pclext` or `.zip` package, or **Install from URL** to open a centered popup inside the launcher for an HTTP(S) package link or repository URL. The popup blocks the background page, restores focus when dismissed, and closes with Escape, Cancel or its close icon. It uses the existing window overlay; menus and dropdowns also stay in the window for compatibility with tiling window managers. Repository URLs support GitHub releases, GitLab (including self-hosted instances and subgroups), and the Gitea/Forgejo releases API. Select **Release**, load the options, then choose a stable, beta or alpha channel and a package asset. Draft releases and automatically generated source archives are excluded. Alpha tags/names select the alpha channel; beta, rc, preview and other prereleases select beta. Other published packages use stable. Direct package links bypass repository selection.
+
+Select **Source** and load the options to choose a branch from any HTTP(S) Git repository. Source installation requires Git and a compatible .NET SDK on PATH. The launcher checks out the selected branch, publishes its extension project, validates the output and installs the resulting package. It discovers projects with an adjacent `extension.json`; repositories with multiple extensions need a relative `.csproj` path, or can automatically select the matching extension during an update. Source builds execute the repository's build logic, so only build repositories you trust. Network operations and builds can be canceled; temporary downloads/checkouts are removed afterward. Source repositories with private dependencies or custom build prerequisites must have those prerequisites configured locally.
+
+New external extensions are disabled until explicitly enabled. Use the update icon on an extension's card to choose a newer package from a file or URL; card updates reject packages with a different extension ID. Updates or removals involving an already loaded assembly take effect after restart; the manager displays this state. Bundled extensions update with the launcher and can be disabled, rather than uninstalled. User settings and extension data survive disabling, updates and uninstalling.
+
+Global search also opens this page. It opens with **Ctrl+Shift+P** on Windows/Linux or **Cmd+Shift+P** on macOS. Search is an in-launcher command palette with category filters, icons, shortcuts and keyboard navigation. It includes commands, launcher pages, settings, installed instances, help and extension providers. Click a result or press Enter to open it; Escape, clicking outside or pressing the shortcut again closes the palette and restores focus.
 
 To recover from an extension problem, run:
 
@@ -113,6 +119,16 @@ Install the resulting archive in the manager and enable it. `validate` accepts a
 ```
 
 IDs are lowercase namespaced identifiers, such as `author.feature`. Commands, UI contributions, search providers and published events use the extension ID plus a dot as their prefix. Versions use numeric .NET version syntax, for example `1.2.0`. `dependencies` contains `{ "id": "author.other", "minimumVersion": "1.0.0" }` records. Dependencies must already be installed and enabled; the host activates them first and prevents disabling a dependency while an enabled extension needs it. Cycles and incompatible versions fail activation with diagnostics.
+
+The information popup lets users click the extension ID or its adjacent copy icon to copy it. An optional `website` field adds a website icon beside the extension title; clicking the icon opens the project page. An optional `authorWebsite` field links the `author` name to their website. Use absolute HTTP(S) URLs; a missing or invalid project URL hides the icon, and an author without a valid URL displays as plain text. For example:
+
+```json
+{
+  "website": "https://example.com/hello",
+  "author": "Example author",
+  "authorWebsite": "https://example.com/about"
+}
+```
 
 `platforms` optionally restricts the package to `windows`, `linux` and/or `macos`. `architectures` optionally restricts process architectures, such as `x64` or `arm64`. Empty lists allow all. Include the correct native dependencies when distributing packages for several platforms.
 

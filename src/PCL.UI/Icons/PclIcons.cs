@@ -6,6 +6,7 @@ public static class PclIcons
 {
     public static PclIcon Search { get; } = new("M10 2a8 8 0 1 0 4.9 14.32L20.59 22 22 20.59l-5.68-5.69A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z");
     public static PclIcon Page { get; } = new("M5 2h10l5 5v15H5V2Zm2 2v16h11V8h-5V4H7Zm8 .83V6h1.17L15 4.83ZM9 11h7v2H9v-2Zm0 4h7v2H9v-2Z");
+    public static PclIcon Copy { get; } = new("M8 2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm0 2v12h12V4H8ZM2 6h2v14h14v2H4a2 2 0 0 1-2-2V6Z");
     public static PclIcon Command { get; } = new("M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5H4Zm2 3 4 4-4 4-1.4-1.4L7.2 12 4.6 9.4 6 8Zm6 6h6v2h-6v-2Z");
     public static PclIcon Back { get; } = new("M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z");
     public static PclIcon Minimize { get; } = new("M0,0 h0 M14,14 h0 M2,6 h10 v2 h-10 z");

@@ -200,6 +200,16 @@ internal sealed partial class LauncherActionService
         PersistSharedValue("HintDisableGamePathCheckTip", true);
     }
 
+    public bool HasAcknowledgedExtensionTrustWarning()
+    {
+        return ReadSharedValue("SystemExtensionTrustAcknowledged", false);
+    }
+
+    public void AcknowledgeExtensionTrustWarning()
+    {
+        PersistSharedValue("SystemExtensionTrustAcknowledged", true);
+    }
+
     public FrontendDownloadTransferOptions GetDownloadTransferOptions()
     {
         return FrontendDownloadSettingsService.ResolveTransferOptions(RuntimePaths);

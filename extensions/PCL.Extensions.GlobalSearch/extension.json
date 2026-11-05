@@ -3,7 +3,7 @@
   "name": "Global search",
   "description": "Search launcher commands, settings, instances and help.",
   "version": "1.0.0",
-  "author": "PCL Community",
+  "author": "PCL-ME Developers",
   "apiVersion": 1,
   "avaloniaMajorVersion": 11,
   "entryAssembly": "PCL.Extensions.GlobalSearch.dll",

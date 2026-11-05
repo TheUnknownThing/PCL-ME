@@ -58,7 +58,10 @@ public sealed class GlobalSearchE2E
         var result = Results(app).Items.OfType<ExtensionSearchResult>().Single(item => item.Route == "Tools/ToolsExtensions");
         var row = app.Window.GetVisualDescendants().OfType<PclListItem>().Single(item => item.Title == result.Title);
         await Click(app.Window, row);
-        await Wait(() => app.Session.OverlayContent is null, "Clicking a search result did not close the palette");
+        // The first visit to the extensions page opens the trust warning on top of the closed palette.
+        await Wait(() => app.Session.OverlayContent is Desktop.Extensions.ExtensionTrustWarningView, "Clicking a search result did not close the palette");
+        await app.DismissTrustWarning();
+        Assert.IsNull(app.Session.OverlayContent);
         Assert.IsTrue(app.Window.GetVisualDescendants().OfType<Desktop.Extensions.ExtensionManagerView>().Any());
         var focusTarget = app.Window.GetVisualDescendants().OfType<Desktop.Extensions.ExtensionManagerView>().Single().Find<PclButton>("InstallButton")!;
         focusTarget.GetVisualDescendants().OfType<Button>().First().Focus();
@@ -79,7 +82,7 @@ public sealed class GlobalSearchE2E
         await app.Session.Host.SetEnabledAsync("pcl.global-search", false);
         await Settle();
         Assert.IsNull(app.Session.OverlayContent, "Disabling an extension must dispose its overlay.");
-        Assert.IsFalse(app.Window.GetVisualDescendants().Any(control => control is PclSearchBox));
+        Assert.IsNull(app.Window.Find<PclSearchBox>("SearchQuery"));
     });
 
     [TestMethod]

@@ -1,0 +1,124 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Extensions.ExtensionDetailsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI">
+  <UserControl.Styles>
+    <Style Selector=":is(Button).detailAction">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="HyperlinkButton.detailAction TextBlock.linkText">
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.Accent}" />
+    </Style>
+    <Style Selector="HyperlinkButton.detailAction:pointerover TextBlock.linkText, HyperlinkButton.detailAction:focus-visible TextBlock.linkText">
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.Accent}" />
+      <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+    <Style Selector="TextBlock.metadataLabel">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.MutedForeground}" />
+    </Style>
+    <Style Selector="PathIcon.actionIcon">
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.MutedForeground}" />
+    </Style>
+    <Style Selector=":is(Button).detailAction:pointerover PathIcon.actionIcon, :is(Button).detailAction:focus-visible PathIcon.actionIcon">
+      <Setter Property="Foreground" Value="{DynamicResource Pcl.Accent}" />
+    </Style>
+  </UserControl.Styles>
+  <Border x:Name="DetailsSurface" CornerRadius="12" Background="{DynamicResource Pcl.Surface}"
+          BorderBrush="{DynamicResource Pcl.Divider}" BorderThickness="1"
+          BoxShadow="{DynamicResource ColorShadowPromptPanel}">
+    <Grid RowDefinitions="Auto,*">
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16" Margin="24,20,16,0">
+        <Border Width="56" Height="56" CornerRadius="12" VerticalAlignment="Top"
+                Background="{DynamicResource ColorBrushBg1}">
+          <PathIcon x:Name="ExtensionIcon" Width="28" Height="28"
+                    Foreground="{DynamicResource Pcl.Accent}" />
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+          <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+            <TextBlock x:Name="NameText" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <HyperlinkButton x:Name="ExtensionLink" Grid.Column="1" Classes="detailAction" IsVisible="False"
+                             Width="24" Height="24" VerticalAlignment="Top" Margin="0,3,0,0"
+                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+              <PathIcon x:Name="ProjectLinkIcon" Classes="actionIcon" Width="14" Height="14" />
+            </HyperlinkButton>
+            <Border x:Name="BuiltInBadge" Grid.Column="2" Padding="9,3" CornerRadius="5"
+                    VerticalAlignment="Top" Margin="0,6,0,0" Background="{DynamicResource ColorBrushBg1}">
+              <TextBlock x:Name="BuiltInText" FontSize="11" FontWeight="Medium"
+                         Foreground="{DynamicResource Pcl.Accent}" />
+            </Border>
+            <ui:PclIconButton x:Name="CloseIcon" Grid.Column="3" VerticalAlignment="Top" Margin="0,1,0,0"
+                              IconBrush="{DynamicResource Pcl.MutedForeground}"
+                              HoverBackgroundBrush="{DynamicResource Pcl.SubtleSurface}" />
+          </Grid>
+          <Button x:Name="CopyIdButton" Classes="detailAction" HorizontalAlignment="Left">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+              <TextBlock x:Name="IdLabelText" Classes="metadataLabel" />
+              <TextBlock x:Name="IdValueText" Grid.Column="1" Classes="metadataLabel" TextWrapping="Wrap" />
+              <PathIcon x:Name="CopyIdIcon" Grid.Column="2" Classes="actionIcon" Width="12" Height="12" />
+              <TextBlock x:Name="CopyFeedbackText" Grid.Column="3" FontSize="12" IsVisible="False"
+                         Foreground="{DynamicResource Pcl.Accent}" />
+            </Grid>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <ScrollViewer Grid.Row="1" Margin="24,20,24,24"
+                    HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="20">
+          <StackPanel x:Name="InfoPanel" Spacing="16">
+            <TextBlock x:Name="DescriptionText" FontSize="14" LineHeight="23" TextWrapping="Wrap" />
+            <WrapPanel x:Name="MetadataPanel" Margin="0,0,0,-6">
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Margin="0,0,20,6">
+                <TextBlock x:Name="VersionLabelText" Classes="metadataLabel" />
+                <TextBlock x:Name="VersionValueText" Grid.Column="1" Classes="metadataLabel" TextWrapping="Wrap" />
+              </Grid>
+              <Grid x:Name="AuthorMetadata" ColumnDefinitions="Auto,*" ColumnSpacing="6" Margin="0,0,0,6">
+                <TextBlock x:Name="AuthorLabelText" Classes="metadataLabel" />
+                <Grid Grid.Column="1">
+                  <TextBlock x:Name="AuthorValueText" Classes="metadataLabel" TextWrapping="Wrap" />
+                  <HyperlinkButton x:Name="AuthorLink" Classes="detailAction" IsVisible="False">
+                    <TextBlock x:Name="AuthorLinkText" Classes="metadataLabel linkText" TextWrapping="Wrap" />
+                  </HyperlinkButton>
+                </Grid>
+              </Grid>
+            </WrapPanel>
+            <Border x:Name="NoticePanel" Padding="14,12" CornerRadius="8" IsVisible="False"
+                    Background="{DynamicResource ColorBrushSemanticWarningBackground}">
+              <TextBlock x:Name="NoticeText" TextWrapping="Wrap"
+                         Foreground="{DynamicResource ColorBrushSemanticWarningForeground}" />
+            </Border>
+            <Border x:Name="ErrorPanel" Padding="14,12" CornerRadius="8" IsVisible="False"
+                    Background="{DynamicResource ColorBrushSemanticErrorBackground}">
+              <TextBlock x:Name="ErrorText" TextWrapping="Wrap"
+                         Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
+            </Border>
+          </StackPanel>
+          <TextBlock x:Name="HeadingText" FontSize="12" FontWeight="Medium"
+                     Foreground="{DynamicResource Pcl.MutedForeground}" TextWrapping="Wrap" />
+          <TextBox x:Name="LogText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                   MinHeight="160" MaxHeight="280" Padding="14" CornerRadius="8" VerticalContentAlignment="Top"
+                   Background="{DynamicResource Pcl.SubtleSurface}"
+                   BorderBrush="{DynamicResource Pcl.Divider}" />
+          <Border x:Name="EmptyPanel" Padding="24" CornerRadius="8" IsVisible="False"
+                  Background="{DynamicResource Pcl.SubtleSurface}">
+            <TextBlock x:Name="EmptyText" TextWrapping="Wrap" TextAlignment="Center"
+                       Foreground="{DynamicResource Pcl.MutedForeground}" />
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </Border>
+</UserControl>

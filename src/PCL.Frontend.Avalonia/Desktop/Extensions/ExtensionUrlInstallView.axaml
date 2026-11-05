@@ -1,0 +1,59 @@
+<UserControl
+    x:Class="PCL.Frontend.Avalonia.Desktop.Extensions.ExtensionUrlInstallView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:PCL.UI.Controls;assembly=PCL.UI"
+    IsVisible="False">
+  <Border x:Name="UrlInstallSurface" Padding="22" CornerRadius="7"
+          Background="{DynamicResource ColorBrushMsgBox}"
+          BoxShadow="{DynamicResource ColorShadowPromptPanel}">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+        <TextBlock x:Name="InstallTitle" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <ui:PclIconButton x:Name="CloseInstallButton" Grid.Column="1"
+                          IconBrush="{DynamicResource ColorBrushEntrySecondaryIdle}"
+                          HoverBackgroundBrush="{DynamicResource ColorBrushBg1}" />
+      </Grid>
+      <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <TextBox x:Name="UrlInput" VerticalContentAlignment="Center" />
+            <ui:PclButton x:Name="LoadButton" Grid.Column="1" />
+          </Grid>
+          <StackPanel x:Name="RepositoryOptions" Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="20">
+              <RadioButton x:Name="ReleaseChoice" GroupName="ExtensionInstallMode" IsChecked="True" />
+              <RadioButton x:Name="SourceChoice" GroupName="ExtensionInstallMode" />
+            </StackPanel>
+            <StackPanel x:Name="ReleaseOptions" Spacing="6">
+              <TextBlock x:Name="ReleaseLabel" FontSize="12" Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <ComboBox x:Name="ChannelInput" MinWidth="110" SelectedIndex="0" />
+                <ComboBox x:Name="ReleaseInput" Grid.Column="1" HorizontalAlignment="Stretch" />
+              </Grid>
+              <TextBlock x:Name="ReleaseEmptyText" IsVisible="False" FontSize="12" TextWrapping="Wrap"
+                         Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+            </StackPanel>
+            <StackPanel x:Name="SourceOptions" Spacing="6" IsVisible="False">
+              <TextBlock x:Name="BranchLabel" FontSize="12" Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+              <ComboBox x:Name="BranchInput" HorizontalAlignment="Stretch" />
+              <TextBox x:Name="ProjectInput" />
+              <TextBlock x:Name="SourceHint" FontSize="12" TextWrapping="Wrap"
+                         Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+            </StackPanel>
+          </StackPanel>
+          <TextBlock x:Name="InstallTrustText" FontSize="12" TextWrapping="Wrap"
+                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+          <TextBlock x:Name="ProgressText" IsVisible="False" TextWrapping="Wrap"
+                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}" />
+          <TextBlock x:Name="InstallErrorText" IsVisible="False" TextWrapping="Wrap"
+                     Foreground="{DynamicResource ColorBrushSemanticErrorForeground}" />
+        </StackPanel>
+      </ScrollViewer>
+      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <ui:PclButton x:Name="ConfirmInstallButton" ColorType="Highlight" />
+        <ui:PclButton x:Name="CancelInstallButton" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>
