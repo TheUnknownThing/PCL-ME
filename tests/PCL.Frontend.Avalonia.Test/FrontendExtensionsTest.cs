@@ -174,11 +174,13 @@ public sealed class FrontendExtensionsTest
                 zip.CreateEntryFromFile(typeof(HelloExtension.HelloExtension).Assembly.Location, "HelloExtension.dll");
             }
             var info = await fixture.Session.Host.InstallAsync(package);
-            await fixture.Session.Host.SetEnabledAsync(info.Manifest.Id, true);
             fixture.Launcher.DismissPromptOverlayCommand.Execute(null);
+            // Initialize selection before activation queues a refresh: this reflection
+            // write does not raise the selection notifications that would refresh it again.
             var composition = (Models.FrontendInstanceComposition)GetField(fixture.Launcher, "_instanceComposition")!;
             var selected = composition with { Selection = composition.Selection with { HasSelection = true, InstanceDirectory = "/test/instance" } };
             typeof(ViewModels.LauncherViewModel).GetField("_instanceComposition", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(fixture.Launcher, selected);
+            await fixture.Session.Host.SetEnabledAsync(info.Manifest.Id, true);
             Tick();
             var tabs = fixture.Launcher.ExtensionInstanceTabsContent as TabControl;
             Assert.IsNotNull(tabs);
