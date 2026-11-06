@@ -1060,6 +1060,10 @@ launch:
       navigation: 已从实例设置跳转到启动页，准备创建第三方验证档案。
       completed: "已跳转到启动页，为 {instance_name} 创建第三方验证档案。"
     authlib:
+      provider_label: "认证服务"
+      custom_server: "自定义服务器"
+      server_hint: "粘贴 Minecraft 服务器提供的认证地址。"
+      account_hint: "使用你在所选认证服务注册的账号登录。"
       actions:
         login: 登录
         use_littleskin: 使用 LittleSkin
@@ -1072,13 +1076,13 @@ launch:
         no_roles: 认证服务器未返回可用角色
         required_fields: 请输入服务器地址、用户名和密码
       password_watermark: 密码
-      server_watermark: 认证服务器地址
+      server_watermark: "认证服务器地址"
       title: 第三方登录
-      user_name_watermark: 用户名
+      user_name_watermark: "邮箱或用户名"
     chooser:
-      authlib: 第三方登录
-      microsoft: 微软账号
-      offline: 离线档案
+      authlib: "第三方"
+      microsoft: "Microsoft"
+      offline: "离线"
     delete:
       canceled: 已取消删除
       completed: 已删除档案 {profile_name}
@@ -1096,10 +1100,16 @@ launch:
       authlib_with_server: 第三方登录（{server_name}）
       microsoft: 微软账号
       offline: 离线档案
+    popup:
+      title: "添加账户"
     microsoft:
+      code_copied_hint: "请在浏览器中粘贴此验证码。"
+      copy_code_hint: "请在浏览器中输入此验证码。"
       actions:
+        copy_code: "复制验证码"
+        code_copied: "已复制"
         continue_after_auth: 继续
-        reopen_browser: 重新打开浏览器
+        reopen_browser: "打开网页"
         start: 开始登录
       completed: 已登录为 {user_name}
       device_code: 设备代码
@@ -1168,9 +1178,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "正在登录…"
         browser_opened: 浏览器已打开，请完成授权后返回这里。
         initial: 准备使用微软账号登录
-        requesting_device_code: 正在请求设备代码...
+        requesting_device_code: "正在打开登录页…"
         waiting_for_auth: 正在等待微软授权...
       title: 微软账号
     none_selected: 未选择档案

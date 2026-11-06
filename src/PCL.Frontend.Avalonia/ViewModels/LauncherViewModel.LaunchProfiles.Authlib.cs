@@ -15,11 +15,39 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 internal sealed partial class LauncherViewModel
 {
     private const string DefaultAuthlibServer = "https://littleskin.cn/api/yggdrasil";
+    private string _customLaunchAuthlibServer = string.Empty;
 
     public string LaunchAuthlibServer
     {
         get => _launchAuthlibServer;
-        set => SetProperty(ref _launchAuthlibServer, value);
+        set
+        {
+            if (!SetProperty(ref _launchAuthlibServer, value)) return;
+            RaisePropertyChanged(nameof(IsLaunchAuthlibLittleSkinSelected));
+            RaisePropertyChanged(nameof(IsLaunchAuthlibCustomServerSelected));
+        }
+    }
+
+    public bool IsLaunchAuthlibLittleSkinSelected
+    {
+        get => string.Equals(LaunchAuthlibServer.Trim().TrimEnd('/'), DefaultAuthlibServer, StringComparison.OrdinalIgnoreCase);
+        set
+        {
+            if (!value || IsLaunchAuthlibLittleSkinSelected) return;
+            _customLaunchAuthlibServer = LaunchAuthlibServer;
+            ApplyLittleSkinLaunchProfilePreset();
+        }
+    }
+
+    public bool IsLaunchAuthlibCustomServerSelected
+    {
+        get => !IsLaunchAuthlibLittleSkinSelected;
+        set
+        {
+            if (!value || IsLaunchAuthlibCustomServerSelected) return;
+            LaunchAuthlibServer = _customLaunchAuthlibServer;
+            LaunchAuthlibStatusText = string.Empty;
+        }
     }
 
     public string LaunchAuthlibLoginName
@@ -37,7 +65,11 @@ internal sealed partial class LauncherViewModel
     public string LaunchAuthlibStatusText
     {
         get => _launchAuthlibStatusText;
-        private set => SetProperty(ref _launchAuthlibStatusText, value);
+        private set
+        {
+            if (SetProperty(ref _launchAuthlibStatusText, value))
+                RaisePropertyChanged(nameof(HasLaunchAuthlibStatus));
+        }
     }
 
     public bool HasLaunchAuthlibStatus => !string.IsNullOrWhiteSpace(LaunchAuthlibStatusText);
@@ -61,17 +93,17 @@ internal sealed partial class LauncherViewModel
 
         try
         {
+            var loginName = LaunchAuthlibLoginName.Trim();
+            if (string.IsNullOrWhiteSpace(LaunchAuthlibServer) || string.IsNullOrWhiteSpace(loginName) || string.IsNullOrWhiteSpace(LaunchAuthlibPassword))
+            {
+                LaunchAuthlibStatusText = T("launch.profile.authlib.errors.required_fields");
+                return;
+            }
+
             var serverBaseUrl = NormalizeAuthlibServerBaseUrl(LaunchAuthlibServer);
             if (!Uri.TryCreate(serverBaseUrl, UriKind.Absolute, out _))
             {
                 LaunchAuthlibStatusText = T("launch.profile.authlib.errors.invalid_server");
-                return;
-            }
-
-            var loginName = LaunchAuthlibLoginName.Trim();
-            if (string.IsNullOrWhiteSpace(loginName) || string.IsNullOrWhiteSpace(LaunchAuthlibPassword))
-            {
-                LaunchAuthlibStatusText = T("launch.profile.authlib.errors.required_fields");
                 return;
             }
 

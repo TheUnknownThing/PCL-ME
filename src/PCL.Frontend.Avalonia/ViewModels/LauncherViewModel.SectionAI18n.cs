@@ -66,6 +66,14 @@ internal sealed partial class LauncherViewModel
 
     public string LaunchAuthlibServerWatermark => T("launch.profile.authlib.server_watermark");
 
+    public string LaunchAuthlibProviderLabel => T("launch.profile.authlib.provider_label");
+
+    public string LaunchAuthlibCustomServerText => T("launch.profile.authlib.custom_server");
+
+    public string LaunchAuthlibServerHint => T("launch.profile.authlib.server_hint");
+
+    public string LaunchAuthlibAccountHint => T("launch.profile.authlib.account_hint");
+
     public string LaunchAuthlibUserNameWatermark => T("launch.profile.authlib.user_name_watermark");
 
     public string LaunchAuthlibPasswordWatermark => T("launch.profile.authlib.password_watermark");
@@ -164,10 +172,17 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(LaunchOfflineCustomUuidWatermark));
         RaisePropertyChanged(nameof(LaunchOfflineCreateText));
         RaisePropertyChanged(nameof(LaunchMicrosoftEditorTitle));
+        RaisePropertyChanged(nameof(LaunchProfilePopupTitle));
+        RaisePropertyChanged(nameof(LaunchProfilePopupCancelText));
+        RaiseMicrosoftLoginProperties();
         RaisePropertyChanged(nameof(LaunchMicrosoftDeviceCodeLabel));
         RaisePropertyChanged(nameof(LaunchMicrosoftReopenBrowserText));
         RaisePropertyChanged(nameof(LaunchAuthlibEditorTitle));
         RaisePropertyChanged(nameof(LaunchAuthlibServerWatermark));
+        RaisePropertyChanged(nameof(LaunchAuthlibProviderLabel));
+        RaisePropertyChanged(nameof(LaunchAuthlibCustomServerText));
+        RaisePropertyChanged(nameof(LaunchAuthlibServerHint));
+        RaisePropertyChanged(nameof(LaunchAuthlibAccountHint));
         RaisePropertyChanged(nameof(LaunchAuthlibUserNameWatermark));
         RaisePropertyChanged(nameof(LaunchAuthlibPasswordWatermark));
         RaisePropertyChanged(nameof(LaunchAuthlibLittleSkinText));

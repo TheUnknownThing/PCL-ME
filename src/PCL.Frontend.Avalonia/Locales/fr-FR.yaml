@@ -1058,6 +1058,10 @@ launch:
       navigation: Ouverture de la route de lancement à partir des paramètres de l'instance pour la création du profil d'authentification.
       completed: Ouverture de la voie de lancement pour créer un profil d'authentification tiers pour {instance_name}.
     authlib:
+      provider_label: "Fournisseur d’authentification"
+      custom_server: "Serveur personnalisé"
+      server_hint: "Collez l’URL d’authentification fournie par votre serveur Minecraft."
+      account_hint: "Connectez-vous avec le compte créé chez ce fournisseur."
       actions:
         login: Connectez-vous
         use_littleskin: Utiliser LittleSkin
@@ -1070,13 +1074,13 @@ launch:
         no_roles: Le serveur d'authentification n'a renvoyé aucun rôle disponible
         required_fields: Entrez l'adresse du serveur, le nom d'utilisateur et le mot de passe
       password_watermark: Mot de passe
-      server_watermark: URL du serveur d'authentification
+      server_watermark: "URL du serveur d’authentification"
       title: Connexion tierce
-      user_name_watermark: Nom d'utilisateur
+      user_name_watermark: "E-mail ou nom d’utilisateur"
     chooser:
-      authlib: Connexion tierce
-      microsoft: Compte Microsoft
-      offline: Profil hors ligne
+      authlib: "Tiers"
+      microsoft: "Microsoft"
+      offline: "Hors ligne"
     delete:
       canceled: Suppression annulée
       completed: Profil supprimé {profile_name}
@@ -1094,10 +1098,16 @@ launch:
       authlib_with_server: Connexion tierce ({server_name})
       microsoft: Compte Microsoft
       offline: Profil hors ligne
+    popup:
+      title: "Ajouter un compte"
     microsoft:
+      code_copied_hint: "Collez ce code dans votre navigateur."
+      copy_code_hint: "Saisissez ce code dans votre navigateur."
       actions:
+        copy_code: "Copier le code"
+        code_copied: "Copié"
         continue_after_auth: Continuer
-        reopen_browser: Ouvrir à nouveau le navigateur
+        reopen_browser: "Ouvrir le navigateur"
         start: Commencer la connexion
       completed: Connecté en tant que {user_name}
       device_code: Code de l'appareil
@@ -1166,9 +1176,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "Connexion en cours…"
         browser_opened: Navigateur ouvert. Terminez l'autorisation et revenez ici.
         initial: Prêt à vous connecter avec Microsoft
-        requesting_device_code: Demande de code d'appareil...
+        requesting_device_code: "Ouverture de la connexion…"
         waiting_for_auth: En attente de l'autorisation de Microsoft...
       title: Compte Microsoft
     none_selected: Aucun profil sélectionné

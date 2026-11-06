@@ -1058,6 +1058,10 @@ launch:
       navigation: 已自實例設轉至啟動頁，以備建第三方驗證檔。
       completed: "已轉至啟動頁，為 {instance_name} 建第三方驗證檔。"
     authlib:
+      provider_label: "驗證之所"
+      custom_server: "自定伺服器"
+      server_hint: "請貼 Minecraft 伺服器所供之驗證網址。"
+      account_hint: "請以所選驗證之所已註之帳號登入。"
       actions:
         login: 入
         use_littleskin: 用 LittleSkin
@@ -1070,13 +1074,13 @@ launch:
         no_roles: 驗證伺服器未返可用角色
         required_fields: 請輸伺服器址、用者名與密碼
       password_watermark: 密碼
-      server_watermark: 驗證伺服器址
+      server_watermark: "驗證伺服器網址"
       title: "第三方登入"
-      user_name_watermark: 用者名稱
+      user_name_watermark: "郵箱或用戶名"
     chooser:
-      authlib: "第三方登入"
-      microsoft: 微軟帳號
-      offline: 離線檔
+      authlib: "第三方"
+      microsoft: "Microsoft"
+      offline: "離線"
     delete:
       canceled: 已取消刪
       completed: 已刪檔 {profile_name}
@@ -1094,10 +1098,16 @@ launch:
       authlib_with_server: 第三方登入（{server_name}）
       microsoft: 微軟帳號
       offline: 離線檔
+    popup:
+      title: "增帳戶"
     microsoft:
+      code_copied_hint: "請貼此驗碼於瀏覽器。"
+      copy_code_hint: "請於瀏覽器輸入此驗碼。"
       actions:
+        copy_code: "複製驗碼"
+        code_copied: "已複製"
         continue_after_auth: 續
-        reopen_browser: 復啟瀏覽器
+        reopen_browser: "開網頁"
         start: 始入
       completed: 已入為 {user_name}
       device_code: 裝置代碼
@@ -1166,9 +1176,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "正登入…"
         browser_opened: 瀏覽器已啟，請畢授權而後返此。
         initial: 備以微軟帳號登入
-        requesting_device_code: 方要求裝置代碼...
+        requesting_device_code: "正開登入頁…"
         waiting_for_auth: 方等待微軟授權...
       title: 微軟帳號
     none_selected: 未擇檔

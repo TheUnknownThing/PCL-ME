@@ -64,6 +64,7 @@ internal sealed partial class LauncherViewModel
     private readonly ActionCommand _backLaunchProfileCommand;
     private readonly ActionCommand _submitOfflineLaunchProfileCommand;
     private readonly ActionCommand _submitMicrosoftLaunchProfileCommand;
+    private readonly ActionCommand _copyMicrosoftDeviceCodeCommand;
     private readonly ActionCommand _openMicrosoftDeviceLinkCommand;
     private readonly ActionCommand _submitAuthlibLaunchProfileCommand;
     private readonly ActionCommand _useLittleSkinLaunchProfileCommand;
@@ -387,10 +388,11 @@ internal sealed partial class LauncherViewModel
         _loginAuthlibLaunchProfileCommand = new ActionCommand(() => _ = LoginAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _refreshLaunchProfileCommand = new ActionCommand(() => _ = RefreshSelectedLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress && !_isLaunchInProgress && CanRefreshLaunchProfile);
         _editLaunchProfileCommand = new ActionCommand(EditSelectedLaunchProfile, () => !_isLaunchProfileActionInProgress && !_isLaunchInProgress && CanEditLaunchProfile);
-        _backLaunchProfileCommand = new ActionCommand(BackLaunchProfileSurface, () => !_isLaunchProfileActionInProgress);
+        _backLaunchProfileCommand = new ActionCommand(BackLaunchProfileSurface, () => !_isLaunchProfileActionInProgress || IsLaunchMicrosoftLoginInProgress);
         _submitOfflineLaunchProfileCommand = new ActionCommand(() => _ = SubmitOfflineLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _submitMicrosoftLaunchProfileCommand = new ActionCommand(() => _ = SubmitMicrosoftLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
-        _openMicrosoftDeviceLinkCommand = new ActionCommand(OpenMicrosoftDeviceLink, () => !_isLaunchProfileActionInProgress);
+        _openMicrosoftDeviceLinkCommand = new ActionCommand(OpenMicrosoftDeviceLink, () => HasLaunchMicrosoftVerificationUrl);
+        _copyMicrosoftDeviceCodeCommand = new ActionCommand(() => _ = CopyMicrosoftDeviceCodeAsync(), () => HasLaunchMicrosoftDeviceCode);
         _submitAuthlibLaunchProfileCommand = new ActionCommand(() => _ = SubmitAuthlibLaunchProfileAsync(), () => !_isLaunchProfileActionInProgress);
         _useLittleSkinLaunchProfileCommand = new ActionCommand(ApplyLittleSkinLaunchProfilePreset, () => !_isLaunchProfileActionInProgress);
         _openFeedbackCommand = CreateLinkCommand("Open feedback", "https://github.com/TheUnknownThing/PCL-ME/issues");

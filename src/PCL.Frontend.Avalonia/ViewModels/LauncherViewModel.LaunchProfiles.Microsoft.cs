@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using Avalonia.Threading;
 using PCL.Core.App.I18n;
 using PCL.Core.Minecraft.Launch;
 using PCL.UI.Icons;
@@ -14,7 +15,11 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class LauncherViewModel
 {
-    private MinecraftLaunchMicrosoftDeviceCodePromptPlan? _launchMicrosoftPromptPlan;
+    private CancellationTokenSource? _microsoftLoginCancellation;
+    private bool _isMicrosoftWaitingForAuthorization;
+    private bool _microsoftCodeCopied;
+
+    internal Action<string>? MicrosoftLoginBrowserOpener { get; set; }
 
     public string LaunchMicrosoftStatusText
     {
@@ -22,9 +27,27 @@ internal sealed partial class LauncherViewModel
         private set => SetProperty(ref _launchMicrosoftStatusText, value);
     }
 
-    public string LaunchMicrosoftPrimaryButtonText => _launchMicrosoftPromptPlan is null
-        ? T("launch.profile.microsoft.actions.start")
-        : T("launch.profile.microsoft.actions.continue_after_auth");
+    public string LaunchMicrosoftPrimaryButtonText => T("launch.profile.microsoft.actions.start");
+
+    public bool IsLaunchMicrosoftLoginInProgress => _microsoftLoginCancellation is not null;
+
+    public bool CanStartLaunchMicrosoftLogin => !IsLaunchMicrosoftLoginInProgress;
+
+    public bool ShowLaunchMicrosoftDeviceCode => HasLaunchMicrosoftDeviceCode && _isMicrosoftWaitingForAuthorization;
+
+    public bool ShowLaunchMicrosoftStatus => !ShowLaunchMicrosoftDeviceCode;
+
+    public bool ShowLaunchMicrosoftProgress => IsLaunchMicrosoftLoginInProgress && !ShowLaunchMicrosoftDeviceCode;
+
+    public bool ShowLaunchMicrosoftRetry => ShowLaunchMicrosoftEditor && CanStartLaunchMicrosoftLogin;
+
+    public string LaunchMicrosoftCopyCodeText => T(_microsoftCodeCopied
+        ? "launch.profile.microsoft.actions.code_copied"
+        : "launch.profile.microsoft.actions.copy_code");
+
+    public string LaunchMicrosoftCodeHint => T(_microsoftCodeCopied
+        ? "launch.profile.microsoft.code_copied_hint"
+        : "launch.profile.microsoft.copy_code_hint");
 
     public string LaunchMicrosoftDeviceCode
     {
@@ -48,36 +71,46 @@ internal sealed partial class LauncherViewModel
         ResetMicrosoftDeviceFlow();
         LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.initial");
         SetLaunchProfileSurface(LaunchProfileSurfaceKind.MicrosoftEditor);
+        // Let the popup render and the selected account's edit context settle before starting I/O.
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ShowLaunchMicrosoftEditor && !_isLaunchProfileActionInProgress)
+                _ = SubmitMicrosoftLaunchProfileAsync();
+        }, DispatcherPriority.Loaded);
         return Task.CompletedTask;
     }
 
     private async Task SubmitMicrosoftLaunchProfileAsync()
     {
-        var microsoftClientId = ResolveMicrosoftClientId();
-        if (_launchMicrosoftPromptPlan is null)
-        {
-            await BeginMicrosoftDeviceLoginAsync(microsoftClientId);
-            return;
-        }
-
         if (!TryBeginLaunchProfileAction(T("launch.profile.activities.microsoft_login")))
         {
             return;
         }
 
+        using var cancellation = new CancellationTokenSource();
+        _microsoftLoginCancellation = cancellation;
+        var cancellationToken = cancellation.Token;
+        RaiseMicrosoftLoginProperties();
+        NotifyLaunchProfileCommandsChanged();
+
         try
         {
-            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.waiting_for_auth");
-            var oauthTokens = await PollMicrosoftOAuthTokensAsync(_launchMicrosoftPromptPlan, microsoftClientId);
+            var microsoftClientId = ResolveMicrosoftClientId();
+            var promptPlan = await BeginMicrosoftDeviceLoginAsync(microsoftClientId, cancellationToken);
+            var oauthTokens = await PollMicrosoftOAuthTokensAsync(promptPlan, microsoftClientId, cancellationToken);
+            _isMicrosoftWaitingForAuthorization = false;
+            RaiseMicrosoftLoginProperties();
+            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.signing_in");
             var xboxLiveResponseJson = await SendLaunchProfileRequestAsync(
-                MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(oauthTokens.AccessToken));
+                MinecraftLaunchMicrosoftRequestWorkflowService.BuildXboxLiveTokenRequest(oauthTokens.AccessToken),
+                cancellationToken);
 
             string xstsResponseJson;
             try
             {
                 xstsResponseJson = await SendLaunchProfileRequestAsync(
                     MinecraftLaunchMicrosoftRequestWorkflowService.BuildXstsTokenRequest(
-                        MinecraftLaunchMicrosoftProtocolService.ParseXboxLiveTokenResponseJson(xboxLiveResponseJson)));
+                        MinecraftLaunchMicrosoftProtocolService.ParseXboxLiveTokenResponseJson(xboxLiveResponseJson)), cancellationToken);
             }
             catch (LaunchProfileRequestException ex)
             {
@@ -102,10 +135,10 @@ internal sealed partial class LauncherViewModel
             var minecraftAccessTokenJson = await SendLaunchProfileRequestAsync(
                 MinecraftLaunchMicrosoftRequestWorkflowService.BuildMinecraftAccessTokenRequest(
                     xstsResponse.UserHash,
-                    xstsResponse.Token));
+                    xstsResponse.Token), cancellationToken);
             var minecraftAccessToken = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftAccessTokenResponseJson(minecraftAccessTokenJson);
             var ownershipJson = await SendLaunchProfileRequestAsync(
-                MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(minecraftAccessToken));
+                MinecraftLaunchMicrosoftRequestWorkflowService.BuildOwnershipRequest(minecraftAccessToken), cancellationToken);
             if (!MinecraftLaunchMicrosoftProtocolService.HasMinecraftOwnership(ownershipJson))
             {
                 LaunchMicrosoftStatusText = T(MinecraftLaunchAccountWorkflowService.GetOwnershipPrompt().MessageText);
@@ -117,7 +150,7 @@ internal sealed partial class LauncherViewModel
             try
             {
                 profileJson = await SendLaunchProfileRequestAsync(
-                    MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(minecraftAccessToken));
+                    MinecraftLaunchMicrosoftRequestWorkflowService.BuildProfileRequest(minecraftAccessToken), cancellationToken);
             }
             catch (LaunchProfileRequestException ex) when (ex.StatusCode == (int)HttpStatusCode.NotFound)
             {
@@ -133,6 +166,7 @@ internal sealed partial class LauncherViewModel
                 return;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             var profileResponse = MinecraftLaunchMicrosoftProtocolService.ParseMinecraftProfileResponseJson(profileJson);
             var profileDocument = FrontendProfileStorageService.Load(_launcherActionService.RuntimePaths).Document;
             var editIndex = GetLaunchProfileEditIndex(profileDocument);
@@ -167,59 +201,58 @@ internal sealed partial class LauncherViewModel
             await RefreshLaunchProfileCompositionAsync();
             AddActivity(T("launch.profile.activities.microsoft_login"), T("launch.profile.microsoft.completed", ("user_name", profileResponse.UserName)));
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Closing the popup cancels both polling and the remaining token exchange.
+        }
         catch (Exception ex)
         {
             var message = GetLaunchProfileFriendlyError(ex);
             LaunchMicrosoftStatusText = message;
             AddFailureActivity(T("launch.profile.activities.microsoft_login_failed"), message);
-            if (ex is TimeoutException || message.Contains(T("launch.profile.refresh.errors.expired_keyword"), StringComparison.Ordinal))
-            {
-                ResetMicrosoftDeviceFlow(keepStatus: true);
-            }
-        }
-        finally
-        {
-            EndLaunchProfileAction();
-        }
-    }
-
-    private async Task BeginMicrosoftDeviceLoginAsync(string microsoftClientId)
-    {
-        if (!TryBeginLaunchProfileAction(T("launch.profile.activities.microsoft_login")))
-        {
-            return;
-        }
-
-        try
-        {
-            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.requesting_device_code");
-            var deviceCodeJson = await SendLaunchProfileRequestAsync(
-                MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(microsoftClientId));
-            var promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(deviceCodeJson);
-            _launchMicrosoftPromptPlan = promptPlan;
-            LaunchMicrosoftDeviceCode = promptPlan.UserCode;
-            LaunchMicrosoftVerificationUrl = promptPlan.OpenBrowserUrl;
-            LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.browser_opened");
-            TryCopyLaunchProfileText(promptPlan.UserCode);
-            OpenExternalTarget(promptPlan.OpenBrowserUrl, T("launch.profile.microsoft.messages.opened_sign_in_page"));
-            RaiseLaunchProfileSurfaceProperties();
-        }
-        catch (Exception ex)
-        {
-            LaunchMicrosoftStatusText = GetLaunchProfileFriendlyError(ex);
-            AddFailureActivity(T("launch.profile.activities.microsoft_login_failed"), LaunchMicrosoftStatusText);
             ResetMicrosoftDeviceFlow(keepStatus: true);
         }
         finally
         {
+            _microsoftLoginCancellation = null;
+            _isMicrosoftWaitingForAuthorization = false;
+            RaiseMicrosoftLoginProperties();
             EndLaunchProfileAction();
         }
+    }
+
+    private async Task<MinecraftLaunchMicrosoftDeviceCodePromptPlan> BeginMicrosoftDeviceLoginAsync(
+        string microsoftClientId,
+        CancellationToken cancellationToken)
+    {
+        LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.requesting_device_code");
+        var deviceCodeJson = await SendLaunchProfileRequestAsync(
+            MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(microsoftClientId), cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        var promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(deviceCodeJson);
+        LaunchMicrosoftDeviceCode = promptPlan.UserCode;
+        LaunchMicrosoftVerificationUrl = promptPlan.OpenBrowserUrl;
+        _isMicrosoftWaitingForAuthorization = true;
+        RaiseLaunchProfileSurfaceProperties();
+        RaiseMicrosoftLoginProperties();
+        NotifyLaunchProfileCommandsChanged();
+        await CopyMicrosoftDeviceCodeAsync();
+        cancellationToken.ThrowIfCancellationRequested();
+        LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.waiting_for_auth");
+        OpenMicrosoftDeviceLink();
+        return promptPlan;
     }
 
     private void OpenMicrosoftDeviceLink()
     {
         if (!string.IsNullOrWhiteSpace(LaunchMicrosoftVerificationUrl))
         {
+            if (MicrosoftLoginBrowserOpener is not null)
+            {
+                MicrosoftLoginBrowserOpener(LaunchMicrosoftVerificationUrl);
+                return;
+            }
+
             OpenExternalTarget(LaunchMicrosoftVerificationUrl, T("launch.profile.microsoft.messages.opened_sign_in_page"));
         }
     }
@@ -355,7 +388,8 @@ internal sealed partial class LauncherViewModel
 
     private void ResetMicrosoftDeviceFlow(bool keepStatus = false)
     {
-        _launchMicrosoftPromptPlan = null;
+        _isMicrosoftWaitingForAuthorization = false;
+        _microsoftCodeCopied = false;
         LaunchMicrosoftDeviceCode = string.Empty;
         LaunchMicrosoftVerificationUrl = string.Empty;
         if (!keepStatus)
@@ -364,21 +398,42 @@ internal sealed partial class LauncherViewModel
         }
 
         RaiseLaunchProfileSurfaceProperties();
+        RaiseMicrosoftLoginProperties();
+        NotifyLaunchProfileCommandsChanged();
     }
 
     private async Task<MinecraftLaunchOAuthRefreshResponse> PollMicrosoftOAuthTokensAsync(
         MinecraftLaunchMicrosoftDeviceCodePromptPlan promptPlan,
-        string clientId)
+        string clientId,
+        CancellationToken cancellationToken)
+    {
+        using var expiry = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        expiry.CancelAfter(TimeSpan.FromSeconds(Math.Max(promptPlan.ExpiresInSeconds, 1)));
+        try
+        {
+            return await PollMicrosoftOAuthTokensCoreAsync(promptPlan, clientId, expiry.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException(T("launch.profile.microsoft.errors.authorization_timeout"));
+        }
+    }
+
+    private async Task<MinecraftLaunchOAuthRefreshResponse> PollMicrosoftOAuthTokensCoreAsync(
+        MinecraftLaunchMicrosoftDeviceCodePromptPlan promptPlan,
+        string clientId,
+        CancellationToken cancellationToken)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(Math.Max(promptPlan.ExpiresInSeconds, 1));
         var pollDelay = Math.Max(promptPlan.PollIntervalSeconds, 1);
 
         while (DateTimeOffset.UtcNow < deadline)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             try
             {
                 var responseJson = await SendLaunchProfileRequestAsync(
-                    BuildMicrosoftDeviceTokenPollRequest(promptPlan.DeviceCode, clientId));
+                    BuildMicrosoftDeviceTokenPollRequest(promptPlan.DeviceCode, clientId), cancellationToken);
                 return MinecraftLaunchMicrosoftProtocolService.ParseOAuthRefreshResponseJson(responseJson);
             }
             catch (LaunchProfileRequestException ex) when (ex.StatusCode == (int)HttpStatusCode.BadRequest)
@@ -386,14 +441,14 @@ internal sealed partial class LauncherViewModel
                 var errorCode = TryReadJsonField(ex.ResponseBody, "error");
                 if (string.Equals(errorCode, "authorization_pending", StringComparison.OrdinalIgnoreCase))
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(pollDelay));
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Min(pollDelay, Math.Max(0, (deadline - DateTimeOffset.UtcNow).TotalSeconds))), cancellationToken);
                     continue;
                 }
 
                 if (string.Equals(errorCode, "slow_down", StringComparison.OrdinalIgnoreCase))
                 {
                     pollDelay += 5;
-                    await Task.Delay(TimeSpan.FromSeconds(pollDelay));
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Min(pollDelay, Math.Max(0, (deadline - DateTimeOffset.UtcNow).TotalSeconds))), cancellationToken);
                     continue;
                 }
 
@@ -443,18 +498,39 @@ internal sealed partial class LauncherViewModel
         return clientId;
     }
 
-    private void TryCopyLaunchProfileText(string text)
+    private async Task CopyMicrosoftDeviceCodeAsync()
     {
-        _ = Task.Run(async () =>
+        var code = LaunchMicrosoftDeviceCode;
+        if (string.IsNullOrWhiteSpace(code)) return;
+
+        var copied = false;
+        try
         {
-            try
-            {
-                await _launcherActionService.SetClipboardTextAsync(text);
-            }
-            catch
-            {
-                // Ignore clipboard failures during login flows.
-            }
-        });
+            // Clipboard APIs belong to the UI thread. Finish copying before opening the browser.
+            await _launcherActionService.SetClipboardTextAsync(code);
+            copied = true;
+        }
+        catch
+        {
+            // The code remains selectable and the copy button allows another attempt.
+        }
+
+        if (code == LaunchMicrosoftDeviceCode)
+        {
+            _microsoftCodeCopied = copied;
+            RaiseMicrosoftLoginProperties();
+        }
+    }
+
+    private void RaiseMicrosoftLoginProperties()
+    {
+        RaisePropertyChanged(nameof(IsLaunchMicrosoftLoginInProgress));
+        RaisePropertyChanged(nameof(CanStartLaunchMicrosoftLogin));
+        RaisePropertyChanged(nameof(ShowLaunchMicrosoftDeviceCode));
+        RaisePropertyChanged(nameof(ShowLaunchMicrosoftStatus));
+        RaisePropertyChanged(nameof(ShowLaunchMicrosoftProgress));
+        RaisePropertyChanged(nameof(ShowLaunchMicrosoftRetry));
+        RaisePropertyChanged(nameof(LaunchMicrosoftCopyCodeText));
+        RaisePropertyChanged(nameof(LaunchMicrosoftCodeHint));
     }
 }

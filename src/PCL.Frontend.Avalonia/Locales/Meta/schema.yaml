@@ -1207,6 +1207,10 @@ launch:
       completed:
         - instance_name
     authlib:
+      provider_label: []
+      custom_server: []
+      server_hint: []
+      account_hint: []
       actions:
         login: []
         use_littleskin: []
@@ -1246,8 +1250,14 @@ launch:
         - server_name
       microsoft: []
       offline: []
+    popup:
+      title: []
     microsoft:
+      code_copied_hint: []
+      copy_code_hint: []
       actions:
+        copy_code: []
+        code_copied: []
         continue_after_auth: []
         reopen_browser: []
         start: []
@@ -1319,6 +1329,7 @@ launch:
             message: []
             title: []
       status:
+        signing_in: []
         browser_opened: []
         initial: []
         requesting_device_code: []
