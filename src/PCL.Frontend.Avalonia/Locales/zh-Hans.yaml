@@ -1103,11 +1103,10 @@ launch:
     popup:
       title: "添加账户"
     microsoft:
-      code_copied_hint: "请在浏览器中粘贴此验证码。"
-      copy_code_hint: "请在浏览器中输入此验证码。"
+      code_copied_hint: "请在浏览器中粘贴此验证码。点击验证码可再次复制。"
+      copy_code_hint: "点击验证码进行复制，然后在浏览器中粘贴。"
       actions:
         copy_code: "复制验证码"
-        code_copied: "已复制"
         continue_after_auth: 继续
         reopen_browser: "打开网页"
         start: 开始登录
@@ -1119,6 +1118,8 @@ launch:
         device_code_expired: 设备代码已过期，请重新开始。
         missing_client_id: 缺少内置微软客户端 ID。
       messages:
+        code_copied: "登录验证码已复制到剪贴板。"
+        code_copy_failed: "无法复制登录验证码，请在浏览器中手动输入。"
         opened_profile_create_page: 已打开微软账号创建页面
         opened_related_web: 已打开相关网页
         opened_sign_in_page: 已打开微软登录页面

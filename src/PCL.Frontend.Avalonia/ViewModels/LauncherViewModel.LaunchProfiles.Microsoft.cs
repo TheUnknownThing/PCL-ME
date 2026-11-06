@@ -41,9 +41,7 @@ internal sealed partial class LauncherViewModel
 
     public bool ShowLaunchMicrosoftRetry => ShowLaunchMicrosoftEditor && CanStartLaunchMicrosoftLogin;
 
-    public string LaunchMicrosoftCopyCodeText => T(_microsoftCodeCopied
-        ? "launch.profile.microsoft.actions.code_copied"
-        : "launch.profile.microsoft.actions.copy_code");
+    public string LaunchMicrosoftCopyCodeText => T("launch.profile.microsoft.actions.copy_code");
 
     public string LaunchMicrosoftCodeHint => T(_microsoftCodeCopied
         ? "launch.profile.microsoft.code_copied_hint"
@@ -52,8 +50,17 @@ internal sealed partial class LauncherViewModel
     public string LaunchMicrosoftDeviceCode
     {
         get => _launchMicrosoftDeviceCode;
-        private set => SetProperty(ref _launchMicrosoftDeviceCode, value);
+        private set
+        {
+            if (SetProperty(ref _launchMicrosoftDeviceCode, value))
+                RaisePropertyChanged(nameof(LaunchMicrosoftDeviceCodeDisplay));
+        }
     }
+
+    // The separator is only for readability; clipboard and protocol values stay unformatted.
+    public string LaunchMicrosoftDeviceCodeDisplay => LaunchMicrosoftDeviceCode.Length == 8
+        ? LaunchMicrosoftDeviceCode.Insert(4, "-")
+        : LaunchMicrosoftDeviceCode;
 
     public bool HasLaunchMicrosoftDeviceCode => !string.IsNullOrWhiteSpace(LaunchMicrosoftDeviceCode);
 
@@ -230,13 +237,13 @@ internal sealed partial class LauncherViewModel
             MinecraftLaunchMicrosoftRequestWorkflowService.BuildDeviceCodeRequest(microsoftClientId), cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         var promptPlan = MinecraftLaunchMicrosoftDeviceCodePromptService.BuildPromptPlan(deviceCodeJson);
-        LaunchMicrosoftDeviceCode = promptPlan.UserCode;
+        LaunchMicrosoftDeviceCode = promptPlan.UserCode.Replace("-", string.Empty, StringComparison.Ordinal);
         LaunchMicrosoftVerificationUrl = promptPlan.OpenBrowserUrl;
         _isMicrosoftWaitingForAuthorization = true;
         RaiseLaunchProfileSurfaceProperties();
         RaiseMicrosoftLoginProperties();
         NotifyLaunchProfileCommandsChanged();
-        await CopyMicrosoftDeviceCodeAsync();
+        await CopyMicrosoftDeviceCodeAsync(showFeedback: false);
         cancellationToken.ThrowIfCancellationRequested();
         LaunchMicrosoftStatusText = T("launch.profile.microsoft.status.waiting_for_auth");
         OpenMicrosoftDeviceLink();
@@ -498,7 +505,7 @@ internal sealed partial class LauncherViewModel
         return clientId;
     }
 
-    private async Task CopyMicrosoftDeviceCodeAsync()
+    private async Task CopyMicrosoftDeviceCodeAsync(bool showFeedback = true)
     {
         var code = LaunchMicrosoftDeviceCode;
         if (string.IsNullOrWhiteSpace(code)) return;
@@ -512,13 +519,21 @@ internal sealed partial class LauncherViewModel
         }
         catch
         {
-            // The code remains selectable and the copy button allows another attempt.
+            // Keep automatic sign-in usable when the clipboard is unavailable.
         }
 
         if (code == LaunchMicrosoftDeviceCode)
         {
             _microsoftCodeCopied = copied;
             RaiseMicrosoftLoginProperties();
+            if (showFeedback)
+            {
+                AvaloniaHintBus.Show(
+                    T(copied
+                        ? "launch.profile.microsoft.messages.code_copied"
+                        : "launch.profile.microsoft.messages.code_copy_failed"),
+                    copied ? AvaloniaHintTheme.Success : AvaloniaHintTheme.Error);
+            }
         }
     }
 

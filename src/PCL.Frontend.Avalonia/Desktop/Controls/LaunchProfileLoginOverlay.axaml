@@ -69,6 +69,17 @@
       <Setter Property="Foreground" Value="{DynamicResource ColorBrushEntrySecondaryIdle}" />
       <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
+    <Style Selector="Button.microsoft-device-code">
+      <Setter Property="Padding" Value="4" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Background="Transparent"
+                            Padding="{TemplateBinding Padding}"
+                            Content="{TemplateBinding Content}" />
+        </ControlTemplate>
+      </Setter>
+    </Style>
     <Style Selector="Button.login-method">
       <Setter Property="Padding" Value="10" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -311,14 +322,20 @@
                     Foreground="{DynamicResource ColorBrushEntrySecondaryIdle}"
                     Text="{Binding LaunchMicrosoftCodeHint}"
                     TextWrapping="Wrap" />
-                <SelectableTextBlock
-                    x:Name="MicrosoftDeviceCode"
+                <Button
+                    x:Name="MicrosoftDeviceCodeButton"
+                    Classes="microsoft-device-code"
                     Margin="0,4"
                     HorizontalAlignment="Center"
-                    FontFamily="Menlo, Monaco, Consolas"
-                    FontSize="28"
-                    Foreground="{DynamicResource ColorBrush2}"
-                    Text="{Binding LaunchMicrosoftDeviceCode}" />
+                    Command="{Binding CopyMicrosoftDeviceCodeCommand}"
+                    AutomationProperties.Name="{Binding LaunchMicrosoftCopyCodeText}">
+                  <TextBlock
+                      x:Name="MicrosoftDeviceCode"
+                      FontFamily="Menlo, Monaco, Consolas"
+                      FontSize="28"
+                      Foreground="{DynamicResource ColorBrush2}"
+                      Text="{Binding LaunchMicrosoftDeviceCodeDisplay}" />
+                </Button>
               </StackPanel>
               <ProgressBar
                   x:Name="MicrosoftLoginProgress"
@@ -416,14 +433,6 @@
               Command="{Binding OpenMicrosoftDeviceLinkCommand}"
               IsVisible="{Binding ShowLaunchMicrosoftDeviceCode}"
               Text="{Binding LaunchMicrosoftReopenBrowserText}" />
-          <ui:PclButton
-              x:Name="CopyMicrosoftCodeButton"
-              MinWidth="96"
-              ContentPadding="8,5"
-              TextMargin="0,-1,0,0"
-              Command="{Binding CopyMicrosoftDeviceCodeCommand}"
-              IsVisible="{Binding ShowLaunchMicrosoftDeviceCode}"
-              Text="{Binding LaunchMicrosoftCopyCodeText}" />
           <ui:PclButton
               MinWidth="96"
               ContentPadding="8,5"

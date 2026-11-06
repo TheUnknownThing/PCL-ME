@@ -1103,11 +1103,10 @@ launch:
     popup:
       title: "新增帳戶"
     microsoft:
-      code_copied_hint: "請在瀏覽器中貼上此驗證碼。"
-      copy_code_hint: "請在瀏覽器中輸入此驗證碼。"
+      code_copied_hint: "請在瀏覽器中貼上此驗證碼。點擊驗證碼可再次複製。"
+      copy_code_hint: "點擊驗證碼進行複製，然後在瀏覽器中貼上。"
       actions:
         copy_code: "複製驗證碼"
-        code_copied: "已複製"
         continue_after_auth: 繼續
         reopen_browser: "開啟網頁"
         start: 開始登入
@@ -1119,6 +1118,8 @@ launch:
         device_code_expired: 裝置代碼已過期，請重新開始。
         missing_client_id: 缺少內建微軟用戶端 ID。
       messages:
+        code_copied: "登入驗證碼已複製到剪貼簿。"
+        code_copy_failed: "無法複製登入驗證碼，請在瀏覽器中手動輸入。"
         opened_profile_create_page: 已開啟微軟帳號建立頁面
         opened_related_web: 已開啟相關網頁
         opened_sign_in_page: 已開啟微軟登入頁面

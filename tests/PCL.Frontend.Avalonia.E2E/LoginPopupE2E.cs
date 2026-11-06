@@ -158,17 +158,18 @@ public sealed class LoginPopupE2E
     });
 
     [TestMethod]
-    [DataRow("success")]
-    [DataRow("expired_token")]
-    [DataRow("authorization_declined")]
-    [DataRow("no-ownership")]
-    public Task MicrosoftLogin_CopiesCode_PollsAutomatically_AndAllowsRetry(string outcome) => Run(async () =>
+    [DataRow("success", "ABCDEFGH", false)]
+    [DataRow("success", "ABCD-EFGH", true)]
+    [DataRow("expired_token", "ABCDEFGH", false)]
+    [DataRow("authorization_declined", "ABCDEFGH", false)]
+    [DataRow("no-ownership", "ABCDEFGH", false)]
+    public Task MicrosoftLogin_CopiesCode_PollsAutomatically_AndAllowsRetry(string outcome, string userCode, bool keyboard) => Run(async () =>
     {
         using var clientId = new ClientIdScope();
         await using var app = new DesktopFixture();
         SaveOfflineProfile(app);
         await app.Start();
-        using var handler = new MicrosoftHandler { Outcome = outcome };
+        using var handler = new MicrosoftHandler { Outcome = outcome, UserCode = userCode };
         ConfigureMicrosoft(app, handler);
         app.Launcher.AddLaunchProfileCommand.Execute(null);
         await WaitForPopup(app);
@@ -182,7 +183,17 @@ public sealed class LoginPopupE2E
             "Waiting in the browser needs only the code and its prompt.");
         Assert.IsTrue(app.Window.Find<Border>("LoginCard")!.Bounds.Height < 300,
             "The login dialog must size to its content.");
-        Assert.AreEqual("ABCD-EFGH", await app.Window.Clipboard!.TryGetTextAsync());
+        Assert.AreEqual("ABCDEFGH", await app.Window.Clipboard!.TryGetTextAsync());
+        Assert.IsFalse(app.Launcher.IsPromptOverlayVisible, "Automatic copying must not interrupt sign-in with an alert.");
+        var code = app.Window.Find<TextBlock>("MicrosoftDeviceCode")!;
+        Assert.AreEqual("ABCD-EFGH", code.Text, "The separator must be present only in the displayed code.");
+        var copyCode = app.Window.Find<Button>("MicrosoftDeviceCodeButton")!;
+        Assert.IsFalse(copyCode.GetVisualDescendants().OfType<SelectableTextBlock>().Any(), "The code and its decorative separator must not be selectable.");
+        Assert.IsNull(ToolTip.GetTip(copyCode), "The code must not show a hover tooltip.");
+        app.Window.MouseMove(code.TranslatePoint(new Point(code.Bounds.Width / 2, code.Bounds.Height / 2), app.Window)!.Value);
+        await Settle();
+        Assert.AreEqual(0, code.TextDecorations?.Count ?? 0, "Hovering the code must not underline it.");
+        Assert.IsNull(app.Window.Find<PclButton>("CopyMicrosoftCodeButton"), "Copying must be offered through the code itself.");
         Assert.IsTrue(app.Launcher.BackLaunchProfileCommand.CanExecute(null), "Waiting for authorization must be cancellable.");
         Assert.IsTrue(app.Launcher.OpenMicrosoftDeviceLinkCommand.CanExecute(null), "Browser retry must remain available while polling.");
         Assert.IsFalse(app.Window.Find<PclButton>("MicrosoftSignInButton")!.IsVisible, "Waiting must not require another Continue click.");
@@ -195,8 +206,28 @@ public sealed class LoginPopupE2E
             app.Screenshot("login-popup-microsoft-dark");
         }
         await app.Window.Clipboard!.SetTextAsync("replaced clipboard");
-        await Click(app.Window, app.Window.Find<PclButton>("CopyMicrosoftCodeButton")!);
-        Assert.AreEqual("ABCD-EFGH", await app.Window.Clipboard!.TryGetTextAsync());
+        var lifetime = (IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!;
+        var windowCount = lifetime.Windows.Count;
+        if (keyboard)
+        {
+            copyCode.Focus();
+            app.Window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            app.Window.KeyReleaseQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            await Settle();
+        }
+        else await Click(app.Window, code);
+        Assert.AreEqual("ABCDEFGH", await app.Window.Clipboard!.TryGetTextAsync(), "The decorative hyphen must never be copied.");
+        var hints = app.Window.Find<StackPanel>("PanHint")!;
+        await Wait(() => hints.GetVisualDescendants().OfType<TextBlock>().Any(text => text.IsEffectivelyVisible
+            && text.Text == app.Text.T("launch.profile.microsoft.messages.code_copied")), "Copying the code must show a bottom-right notification.");
+        Assert.IsFalse(app.Launcher.IsPromptOverlayVisible, "Copy feedback must not open a modal popup.");
+        Assert.IsTrue(app.Launcher.IsLaunchProfilePopupVisible, "The login dialog must remain usable while copy feedback is visible.");
+        var loginOverlay = app.Window.Find<LaunchProfileLoginOverlay>("LoginOverlay")!;
+        Assert.AreSame(loginOverlay.Parent, hints.Parent);
+        Assert.IsTrue(hints.ZIndex > loginOverlay.ZIndex, "Copy notifications must appear above the login backdrop without dimming.");
+        Assert.AreEqual(windowCount, lifetime.Windows.Count, "The notification must stay inside the launcher window.");
+        Assert.AreEqual(0, code.TextDecorations?.Count ?? 0, "Activating the code must not underline it.");
+        app.Screenshot("login-popup-microsoft-code-copied");
         handler.Authorized = true;
         await Wait(() => !app.Launcher.IsLaunchMicrosoftLoginInProgress, "Microsoft login did not finish automatically.");
 
@@ -335,7 +366,7 @@ public sealed class LoginPopupE2E
             Assert.IsTrue(Dispatcher.UIThread.CheckAccess(), "Clipboard and browser operations must stay on the UI thread.");
             Assert.AreEqual("https://example.invalid/device", url);
             // The headless clipboard completes synchronously, so this also verifies ordering.
-            Assert.AreEqual("ABCD-EFGH", app.Window.Clipboard!.TryGetTextAsync().GetAwaiter().GetResult(),
+            Assert.AreEqual("ABCDEFGH", app.Window.Clipboard!.TryGetTextAsync().GetAwaiter().GetResult(),
                 "The code must already be copied when the browser opens.");
         };
     }
@@ -350,6 +381,7 @@ public sealed class LoginPopupE2E
     private sealed class MicrosoftHandler : HttpMessageHandler
     {
         public string Outcome { get; set; } = "success";
+        public string UserCode { get; set; } = "ABCDEFGH";
         public bool Authorized { get; set; }
         public string? BlockStage { get; set; }
         public bool Blocked { get; private set; }
@@ -381,7 +413,7 @@ public sealed class LoginPopupE2E
                 json = JsonSerializer.Serialize(new
                 {
                     device_code = "private-device-code-" + DeviceCodeCount,
-                    user_code = "ABCD-EFGH", verification_uri = "https://example.invalid/device", expires_in = ExpiresInSeconds, interval = 1
+                    user_code = UserCode, verification_uri = "https://example.invalid/device", expires_in = ExpiresInSeconds, interval = 1
                 });
             }
             else if (stage == "token")

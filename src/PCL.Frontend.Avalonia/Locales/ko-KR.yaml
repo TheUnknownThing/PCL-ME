@@ -1101,11 +1101,10 @@ launch:
     popup:
       title: "계정 추가"
     microsoft:
-      code_copied_hint: "브라우저에 이 코드를 붙여넣으세요."
-      copy_code_hint: "브라우저에 이 코드를 입력하세요."
+      code_copied_hint: "브라우저에 이 코드를 붙여넣으세요. 코드를 클릭하면 다시 복사됩니다."
+      copy_code_hint: "코드를 클릭하여 복사한 다음 브라우저에 붙여넣으세요."
       actions:
         copy_code: "코드 복사"
-        code_copied: "복사됨"
         continue_after_auth: 계속하다
         reopen_browser: "브라우저 열기"
         start: 로그인 시작
@@ -1117,6 +1116,8 @@ launch:
         device_code_expired: 장치 코드가 만료되었습니다. 다시 시작하세요.
         missing_client_id: 내장된 Microsoft 클라이언트 ID가 누락되었습니다.
       messages:
+        code_copied: "로그인 코드가 클립보드에 복사되었습니다."
+        code_copy_failed: "로그인 코드를 복사할 수 없습니다. 브라우저에 직접 입력하세요."
         opened_profile_create_page: Microsoft 계정 생성 페이지를 열었습니다.
         opened_related_web: 관련 웹페이지를 오픈했습니다
         opened_sign_in_page: Microsoft 로그인 페이지를 열었습니다.

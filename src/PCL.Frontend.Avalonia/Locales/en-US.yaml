@@ -1103,11 +1103,10 @@ launch:
     popup:
       title: "Add account"
     microsoft:
-      code_copied_hint: "Paste this code in your browser."
-      copy_code_hint: "Enter this code in your browser."
+      code_copied_hint: "Paste this code in your browser. Click the code to copy it again."
+      copy_code_hint: "Click the code to copy it, then paste it in your browser."
       actions:
         copy_code: "Copy code"
-        code_copied: "Copied"
         continue_after_auth: Continue
         reopen_browser: "Open browser"
         start: Start sign-in
@@ -1119,6 +1118,8 @@ launch:
         device_code_expired: The device code expired. Start again.
         missing_client_id: Missing embedded Microsoft client ID.
       messages:
+        code_copied: "Sign-in code copied to clipboard."
+        code_copy_failed: "Could not copy the sign-in code. Enter it manually in your browser."
         opened_profile_create_page: Opened the Microsoft account creation page
         opened_related_web: Opened the related web page
         opened_sign_in_page: Opened the Microsoft sign-in page

@@ -550,7 +550,7 @@
                 VerticalAlignment="Bottom"
                 IsHitTestVisible="False"
                 Spacing="6"
-                ZIndex="20" />
+                ZIndex="80" />
 
             <Border
                 x:Name="PromptOverlayBackdrop"

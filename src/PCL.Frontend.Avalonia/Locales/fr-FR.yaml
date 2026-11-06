@@ -1101,11 +1101,10 @@ launch:
     popup:
       title: "Ajouter un compte"
     microsoft:
-      code_copied_hint: "Collez ce code dans votre navigateur."
-      copy_code_hint: "Saisissez ce code dans votre navigateur."
+      code_copied_hint: "Collez ce code dans votre navigateur. Cliquez sur le code pour le copier à nouveau."
+      copy_code_hint: "Cliquez sur le code pour le copier, puis collez-le dans votre navigateur."
       actions:
         copy_code: "Copier le code"
-        code_copied: "Copié"
         continue_after_auth: Continuer
         reopen_browser: "Ouvrir le navigateur"
         start: Commencer la connexion
@@ -1117,6 +1116,8 @@ launch:
         device_code_expired: Le code de l'appareil a expiré. Recommencer.
         missing_client_id: ID client Microsoft intégré manquant.
       messages:
+        code_copied: "Code de connexion copié dans le presse-papiers."
+        code_copy_failed: "Impossible de copier le code de connexion. Saisissez-le manuellement dans votre navigateur."
         opened_profile_create_page: Ouverture de la page de création de compte Microsoft
         opened_related_web: J'ai ouvert la page Web correspondante
         opened_sign_in_page: Ouverture de la page de connexion Microsoft

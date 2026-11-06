@@ -1101,11 +1101,10 @@ launch:
     popup:
       title: "Konto hinzufügen"
     microsoft:
-      code_copied_hint: "Füge diesen Code im Browser ein."
-      copy_code_hint: "Gib diesen Code im Browser ein."
+      code_copied_hint: "Füge diesen Code im Browser ein. Klicke auf den Code, um ihn erneut zu kopieren."
+      copy_code_hint: "Klicke auf den Code, um ihn zu kopieren, und füge ihn dann im Browser ein."
       actions:
         copy_code: "Code kopieren"
-        code_copied: "Kopiert"
         continue_after_auth: Weiter
         reopen_browser: "Browser öffnen"
         start: Anmeldung starten
@@ -1117,6 +1116,8 @@ launch:
         device_code_expired: Der Gerätecode ist abgelaufen. Starte erneut.
         missing_client_id: Eingebettete Microsoft-Client-ID fehlt.
       messages:
+        code_copied: "Anmeldecode in die Zwischenablage kopiert."
+        code_copy_failed: "Der Anmeldecode konnte nicht kopiert werden. Gib ihn manuell im Browser ein."
         opened_profile_create_page: Die Microsoft-Konto-Erstellungsseite wurde geöffnet
         opened_related_web: Die zugehörige Webseite wurde geöffnet
         opened_sign_in_page: Die Microsoft-Anmeldeseite wurde geöffnet

@@ -1103,11 +1103,10 @@ launch:
     popup:
       title: "Añadir cuenta"
     microsoft:
-      code_copied_hint: "Pega este código en el navegador."
-      copy_code_hint: "Introduce este código en el navegador."
+      code_copied_hint: "Pega este código en el navegador. Haz clic en el código para copiarlo de nuevo."
+      copy_code_hint: "Haz clic en el código para copiarlo y luego pégalo en el navegador."
       actions:
         copy_code: "Copiar código"
-        code_copied: "Copiado"
         continue_after_auth: Continuar
         reopen_browser: "Abrir navegador"
         start: Iniciar sesión
@@ -1119,6 +1118,8 @@ launch:
         device_code_expired: El código del dispositivo expiró. Empezar de nuevo.
         missing_client_id: Falta el ID de cliente de Microsoft integrado.
       messages:
+        code_copied: "Código de inicio de sesión copiado al portapapeles."
+        code_copy_failed: "No se pudo copiar el código de inicio de sesión. Introdúcelo manualmente en el navegador."
         opened_profile_create_page: Abrió la página de creación de cuenta de Microsoft.
         opened_related_web: Abrió la página web relacionada.
         opened_sign_in_page: Abrió la página de inicio de sesión de Microsoft

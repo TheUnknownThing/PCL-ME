@@ -1257,7 +1257,6 @@ launch:
       copy_code_hint: []
       actions:
         copy_code: []
-        code_copied: []
         continue_after_auth: []
         reopen_browser: []
         start: []
@@ -1270,6 +1269,8 @@ launch:
         device_code_expired: []
         missing_client_id: []
       messages:
+        code_copied: []
+        code_copy_failed: []
         opened_profile_create_page: []
         opened_related_web: []
         opened_sign_in_page: []

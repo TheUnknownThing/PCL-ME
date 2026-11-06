@@ -1101,11 +1101,10 @@ launch:
     popup:
       title: "增帳戶"
     microsoft:
-      code_copied_hint: "請貼此驗碼於瀏覽器。"
-      copy_code_hint: "請於瀏覽器輸入此驗碼。"
+      code_copied_hint: "請貼此驗碼於瀏覽器。點之可復製。"
+      copy_code_hint: "點驗碼以複製，而後貼於瀏覽器。"
       actions:
         copy_code: "複製驗碼"
-        code_copied: "已複製"
         continue_after_auth: 續
         reopen_browser: "開網頁"
         start: 始入
@@ -1117,6 +1116,8 @@ launch:
         device_code_expired: 裝置代碼已過期，請復始之。
         missing_client_id: 闕內建微軟用戶端 ID。
       messages:
+        code_copied: "登入驗碼已複製。"
+        code_copy_failed: "驗碼未能複製，請於瀏覽器手輸之。"
         opened_profile_create_page: 已啟微軟帳號建立頁
         opened_related_web: 已啟相關網頁
         opened_sign_in_page: 已啟微軟登入頁
