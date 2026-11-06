@@ -28,6 +28,18 @@ internal static class FrontendVersionManifestInspector
             return FrontendVersionManifestProfile.Empty;
         }
 
+        if (string.Equals(Path.GetFileName(manifestPath), "mmc-pack.json", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                return ReadProfileFromMmcPack(manifestPath);
+            }
+            catch
+            {
+                return FrontendVersionManifestProfile.Empty;
+            }
+        }
+
         var versionDirectory = Path.GetDirectoryName(manifestPath);
         var versionsDirectory = versionDirectory is null ? null : Path.GetDirectoryName(versionDirectory);
         var launcherFolder = versionsDirectory is null ? null : Path.GetDirectoryName(versionsDirectory);
@@ -194,8 +206,14 @@ internal static class FrontendVersionManifestInspector
 
         foreach (var component in components.EnumerateArray())
         {
-            var uid = GetString(component, "uid");
-            var version = GetString(component, "version") ?? GetString(component, "cachedVersion");
+            if (component.ValueKind != JsonValueKind.Object ||
+                (component.TryGetProperty("disabled", out var disabled) && disabled.ValueKind == JsonValueKind.True))
+            {
+                continue;
+            }
+
+            var uid = GetString(component, "uid")?.Trim();
+            var version = FirstNonEmpty(GetString(component, "version"), GetString(component, "cachedVersion"))?.Trim();
             if (string.IsNullOrWhiteSpace(uid) || string.IsNullOrWhiteSpace(version))
             {
                 continue;

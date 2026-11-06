@@ -33,6 +33,12 @@ internal static class FrontendVersionManifestPathResolver
             }
         }
 
+        var mmcPackPath = Path.Combine(instanceDirectory, "mmc-pack.json");
+        if (File.Exists(mmcPackPath))
+        {
+            return mmcPackPath;
+        }
+
         var jsonFiles = Directory.EnumerateFiles(instanceDirectory, "*.json", SearchOption.TopDirectoryOnly)
             .ToArray();
         return jsonFiles.Length == 1 ? jsonFiles[0] : null;
