@@ -550,7 +550,7 @@
                 VerticalAlignment="Bottom"
                 IsHitTestVisible="False"
                 Spacing="6"
-                ZIndex="20" />
+                ZIndex="80" />
 
             <Border
                 x:Name="PromptOverlayBackdrop"
@@ -702,6 +702,8 @@
                 </Grid>
               </Border>
 	            </Border>
+
+	            <controls:LaunchProfileLoginOverlay x:Name="LoginOverlay" Grid.RowSpan="2" ZIndex="55" />
 
 	            <controls:WelcomeOnboardingOverlay Grid.RowSpan="2" ZIndex="60" />
 

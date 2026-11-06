@@ -61,8 +61,8 @@ public sealed class FrontendProfileEditingTest
             var document = CreateDocument();
             document = document with { Profiles = [document.Profiles[0], document.Profiles[1] with { SkinHeadId = "Alex" }] };
             await using var fixture = new ProfileFixture(document);
-            var view = new PclLaunchLeftPanel { DataContext = fixture.Launcher };
-            var window = new Window { Width = 320, Height = 800, Content = view };
+            var view = new LaunchProfileLoginOverlay { DataContext = fixture.Launcher };
+            var window = new Window { Width = 600, Height = 800, Content = view };
             try
             {
                 window.Show();

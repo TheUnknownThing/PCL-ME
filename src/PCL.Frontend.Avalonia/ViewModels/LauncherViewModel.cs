@@ -162,7 +162,7 @@ internal sealed partial class LauncherViewModel : ViewModelBase
 
     public bool ShowTopLevelNavigation => !CanGoBack;
 
-    public bool IsTopLevelNavigationInteractive => !IsWelcomeOverlayVisible && !IsPromptOverlayVisible && !IsLaunchDialogVisible;
+    public bool IsTopLevelNavigationInteractive => !IsWelcomeOverlayVisible && !IsPromptOverlayVisible && !IsLaunchDialogVisible && !IsLaunchProfilePopupVisible;
 
     public bool ShowInnerNavigation => CanGoBack;
 

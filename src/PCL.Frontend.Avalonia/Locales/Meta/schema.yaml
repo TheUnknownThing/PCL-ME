@@ -1207,6 +1207,10 @@ launch:
       completed:
         - instance_name
     authlib:
+      provider_label: []
+      custom_server: []
+      server_hint: []
+      account_hint: []
       actions:
         login: []
         use_littleskin: []
@@ -1246,8 +1250,13 @@ launch:
         - server_name
       microsoft: []
       offline: []
+    popup:
+      title: []
     microsoft:
+      code_copied_hint: []
+      copy_code_hint: []
       actions:
+        copy_code: []
         continue_after_auth: []
         reopen_browser: []
         start: []
@@ -1260,6 +1269,8 @@ launch:
         device_code_expired: []
         missing_client_id: []
       messages:
+        code_copied: []
+        code_copy_failed: []
         opened_profile_create_page: []
         opened_related_web: []
         opened_sign_in_page: []
@@ -1319,6 +1330,7 @@ launch:
             message: []
             title: []
       status:
+        signing_in: []
         browser_opened: []
         initial: []
         requesting_device_code: []

@@ -1058,6 +1058,10 @@ launch:
       navigation: 인증 프로필 생성을 위한 인스턴스 설정에서 시작 경로를 열었습니다.
       completed: "{instance_name}에 대한 타사 인증 프로필을 생성하기 위한 시작 경로를 열었습니다."
     authlib:
+      provider_label: "인증 서비스"
+      custom_server: "사용자 지정 서버"
+      server_hint: "Minecraft 서버에서 제공한 인증 URL을 붙여넣으세요."
+      account_hint: "선택한 인증 서비스에 등록한 계정으로 로그인하세요."
       actions:
         login: 로그인
         use_littleskin: LittleSkin 사용
@@ -1070,13 +1074,13 @@ launch:
         no_roles: 인증 서버가 사용 가능한 역할을 반환하지 않았습니다.
         required_fields: 서버 주소, 사용자 이름, 비밀번호를 입력하세요.
       password_watermark: 비밀번호
-      server_watermark: 인증 서버 URL
+      server_watermark: "인증 서버 URL"
       title: 서드파티 로그인
-      user_name_watermark: 사용자 이름
+      user_name_watermark: "이메일 또는 사용자 이름"
     chooser:
-      authlib: 서드파티 로그인
-      microsoft: Microsoft 계정
-      offline: 오프라인 프로필
+      authlib: "타사"
+      microsoft: "Microsoft"
+      offline: "오프라인"
     delete:
       canceled: 삭제가 취소되었습니다.
       completed: "{profile_name} 프로필이 삭제되었습니다."
@@ -1094,10 +1098,15 @@ launch:
       authlib_with_server: 서드파티 로그인({server_name})
       microsoft: 마이크로소프트 계정
       offline: 오프라인 프로필
+    popup:
+      title: "계정 추가"
     microsoft:
+      code_copied_hint: "브라우저에 이 코드를 붙여넣으세요. 코드를 클릭하면 다시 복사됩니다."
+      copy_code_hint: "코드를 클릭하여 복사한 다음 브라우저에 붙여넣으세요."
       actions:
+        copy_code: "코드 복사"
         continue_after_auth: 계속하다
-        reopen_browser: 브라우저를 다시 엽니다
+        reopen_browser: "브라우저 열기"
         start: 로그인 시작
       completed: "{user_name}(으)로 로그인됨"
       device_code: 장치 코드
@@ -1107,6 +1116,8 @@ launch:
         device_code_expired: 장치 코드가 만료되었습니다. 다시 시작하세요.
         missing_client_id: 내장된 Microsoft 클라이언트 ID가 누락되었습니다.
       messages:
+        code_copied: "로그인 코드가 클립보드에 복사되었습니다."
+        code_copy_failed: "로그인 코드를 복사할 수 없습니다. 브라우저에 직접 입력하세요."
         opened_profile_create_page: Microsoft 계정 생성 페이지를 열었습니다.
         opened_related_web: 관련 웹페이지를 오픈했습니다
         opened_sign_in_page: Microsoft 로그인 페이지를 열었습니다.
@@ -1166,9 +1177,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "로그인 중…"
         browser_opened: 브라우저가 열렸습니다. 승인을 완료하고 여기로 돌아오세요.
         initial: Microsoft에 로그인할 준비가 되었습니다.
-        requesting_device_code: 장치 코드 요청 중...
+        requesting_device_code: "로그인 페이지 여는 중…"
         waiting_for_auth: Microsoft 인증을 기다리는 중...
       title: 마이크로소프트 계정
     none_selected: 선택된 프로필 없음

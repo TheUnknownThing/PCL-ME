@@ -1058,6 +1058,10 @@ launch:
       navigation: Die Startroute aus den Instanzeinstellungen wurde zur Erstellung eines Auth-Profils geöffnet.
       completed: "Die Startroute zur Erstellung eines Drittanbieter-Auth-Profils für {instance_name} wurde geöffnet."
     authlib:
+      provider_label: "Anmeldedienst"
+      custom_server: "Eigener Server"
+      server_hint: "Füge die Authentifizierungs-URL deines Minecraft-Servers ein."
+      account_hint: "Melde dich mit deinem Konto bei diesem Anbieter an."
       actions:
         login: Anmelden
         use_littleskin: LittleSkin verwenden
@@ -1070,13 +1074,13 @@ launch:
         no_roles: Der Auth-Server hat keine verfügbaren Rollen zurückgegeben
         required_fields: Serveradresse, Benutzername und Passwort eingeben
       password_watermark: Passwort
-      server_watermark: Auth-Server-URL
+      server_watermark: "URL des Authentifizierungsservers"
       title: "Drittanbieter-Anmeldung"
-      user_name_watermark: Benutzername
+      user_name_watermark: "E-Mail oder Benutzername"
     chooser:
-      authlib: "Drittanbieter-Anmeldung"
-      microsoft: "Microsoft-Konto"
-      offline: "Offline-Profil"
+      authlib: "Drittanbieter"
+      microsoft: "Microsoft"
+      offline: "Offline"
     delete:
       canceled: Löschen abgebrochen
       completed: "Profil {profile_name} gelöscht"
@@ -1094,10 +1098,15 @@ launch:
       authlib_with_server: "Drittanbieter-Anmeldung ({server_name})"
       microsoft: Microsoft-Konto
       offline: Offline-Profil
+    popup:
+      title: "Konto hinzufügen"
     microsoft:
+      code_copied_hint: "Füge diesen Code im Browser ein. Klicke auf den Code, um ihn erneut zu kopieren."
+      copy_code_hint: "Klicke auf den Code, um ihn zu kopieren, und füge ihn dann im Browser ein."
       actions:
+        copy_code: "Code kopieren"
         continue_after_auth: Weiter
-        reopen_browser: Browser erneut öffnen
+        reopen_browser: "Browser öffnen"
         start: Anmeldung starten
       completed: "Angemeldet als {user_name}"
       device_code: Gerätecode
@@ -1107,6 +1116,8 @@ launch:
         device_code_expired: Der Gerätecode ist abgelaufen. Starte erneut.
         missing_client_id: Eingebettete Microsoft-Client-ID fehlt.
       messages:
+        code_copied: "Anmeldecode in die Zwischenablage kopiert."
+        code_copy_failed: "Der Anmeldecode konnte nicht kopiert werden. Gib ihn manuell im Browser ein."
         opened_profile_create_page: Die Microsoft-Konto-Erstellungsseite wurde geöffnet
         opened_related_web: Die zugehörige Webseite wurde geöffnet
         opened_sign_in_page: Die Microsoft-Anmeldeseite wurde geöffnet
@@ -1166,9 +1177,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "Anmeldung läuft…"
         browser_opened: Browser geöffnet. Schließe die Autorisierung ab und kehre hierher zurück.
         initial: Bereit zur Anmeldung mit Microsoft
-        requesting_device_code: Gerätecode wird angefordert...
+        requesting_device_code: "Anmeldung wird geöffnet…"
         waiting_for_auth: Warte auf Microsoft-Autorisierung...
       title: Microsoft-Konto
     none_selected: Kein Profil ausgewählt

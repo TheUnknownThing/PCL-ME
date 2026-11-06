@@ -48,6 +48,8 @@ internal sealed partial class LauncherViewModel
 
     public ActionCommand SubmitMicrosoftLaunchProfileCommand => _submitMicrosoftLaunchProfileCommand;
 
+    public ActionCommand CopyMicrosoftDeviceCodeCommand => _copyMicrosoftDeviceCodeCommand;
+
     public ActionCommand OpenMicrosoftDeviceLinkCommand => _openMicrosoftDeviceLinkCommand;
 
     public ActionCommand SubmitAuthlibLaunchProfileCommand => _submitAuthlibLaunchProfileCommand;

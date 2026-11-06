@@ -344,6 +344,8 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
+        if (launcherViewModel.IsLaunchProfilePopupVisible) return;
+
         if (launcherViewModel.ExtensionSession?.TryHandleShortcut(e) == true) return;
 
         if (e.Key == Key.F12)

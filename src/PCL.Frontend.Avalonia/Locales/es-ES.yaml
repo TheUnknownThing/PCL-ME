@@ -1060,6 +1060,10 @@ launch:
       navigation: Se abrió la ruta de inicio desde la configuración de la instancia para la creación del perfil de autenticación.
       completed: Se abrió la ruta de lanzamiento para crear un perfil de autenticación de terceros para {instance_name}.
     authlib:
+      provider_label: "Proveedor de autenticación"
+      custom_server: "Servidor personalizado"
+      server_hint: "Pega la URL de autenticación que te proporcionó tu servidor de Minecraft."
+      account_hint: "Inicia sesión con la cuenta que registraste en este proveedor."
       actions:
         login: Iniciar sesión
         use_littleskin: Usar LittleSkin
@@ -1072,13 +1076,13 @@ launch:
         no_roles: El servidor de autenticación no devolvió roles disponibles
         required_fields: Ingrese la dirección del servidor, nombre de usuario y contraseña
       password_watermark: Contraseña
-      server_watermark: URL del servidor de autenticación
+      server_watermark: "URL del servidor de autenticación"
       title: Inicio de sesión de terceros
-      user_name_watermark: Nombre de usuario
+      user_name_watermark: "Correo o nombre de usuario"
     chooser:
-      authlib: Inicio de sesión de terceros
-      microsoft: Cuenta de Microsoft
-      offline: Perfil sin conexión
+      authlib: "Terceros"
+      microsoft: "Microsoft"
+      offline: "Sin conexión"
     delete:
       canceled: Eliminación cancelada
       completed: Perfil eliminado {profile_name}
@@ -1096,10 +1100,15 @@ launch:
       authlib_with_server: Inicio de sesión de terceros ({server_name})
       microsoft: Cuenta de Microsoft
       offline: Perfil sin conexión
+    popup:
+      title: "Añadir cuenta"
     microsoft:
+      code_copied_hint: "Pega este código en el navegador. Haz clic en el código para copiarlo de nuevo."
+      copy_code_hint: "Haz clic en el código para copiarlo y luego pégalo en el navegador."
       actions:
+        copy_code: "Copiar código"
         continue_after_auth: Continuar
-        reopen_browser: Abrir el navegador nuevamente
+        reopen_browser: "Abrir navegador"
         start: Iniciar sesión
       completed: Inicia sesión como {user_name}
       device_code: Código de dispositivo
@@ -1109,6 +1118,8 @@ launch:
         device_code_expired: El código del dispositivo expiró. Empezar de nuevo.
         missing_client_id: Falta el ID de cliente de Microsoft integrado.
       messages:
+        code_copied: "Código de inicio de sesión copiado al portapapeles."
+        code_copy_failed: "No se pudo copiar el código de inicio de sesión. Introdúcelo manualmente en el navegador."
         opened_profile_create_page: Abrió la página de creación de cuenta de Microsoft.
         opened_related_web: Abrió la página web relacionada.
         opened_sign_in_page: Abrió la página de inicio de sesión de Microsoft
@@ -1168,9 +1179,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "Iniciando sesión…"
         browser_opened: Navegador abierto. Finaliza la autorización y regresa aquí.
         initial: Listo para iniciar sesión con Microsoft
-        requesting_device_code: Solicitando código de dispositivo...
+        requesting_device_code: "Abriendo inicio de sesión…"
         waiting_for_auth: Esperando autorización de Microsoft...
       title: Cuenta de Microsoft
     none_selected: Ningún perfil seleccionado

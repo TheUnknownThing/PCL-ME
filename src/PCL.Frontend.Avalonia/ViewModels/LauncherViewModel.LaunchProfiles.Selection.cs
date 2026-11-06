@@ -26,6 +26,23 @@ internal sealed partial class LauncherViewModel
 
     public bool ShowLaunchAuthlibEditor => GetEffectiveLaunchProfileSurface() == LaunchProfileSurfaceKind.AuthlibEditor;
 
+    public bool IsLaunchProfilePopupVisible => ShowLaunchProfileSelection || ShowLaunchProfileChooser || ShowLaunchOfflineEditor || ShowLaunchMicrosoftEditor || ShowLaunchAuthlibEditor;
+
+    public bool ShowLaunchProfileSidebarSummary => HasSelectedLaunchProfile;
+
+    public bool ShowLaunchProfileSidebarEmptyState => !HasSelectedLaunchProfile;
+
+    public string LaunchProfilePopupTitle => GetEffectiveLaunchProfileSurface() switch
+    {
+        LaunchProfileSurfaceKind.Selection => T("launch.profile.selection.prompt_title"),
+        LaunchProfileSurfaceKind.OfflineEditor => LaunchOfflineEditorTitle,
+        LaunchProfileSurfaceKind.MicrosoftEditor => LaunchMicrosoftEditorTitle,
+        LaunchProfileSurfaceKind.AuthlibEditor => LaunchAuthlibEditorTitle,
+        _ => T("launch.profile.popup.title")
+    };
+
+    public string LaunchProfilePopupCancelText => T("common.actions.cancel");
+
     public bool CanRefreshLaunchProfile => _launchComposition.SelectedProfile.Kind is MinecraftLaunchProfileKind.Microsoft or MinecraftLaunchProfileKind.Auth;
 
     public bool IsLaunchProfileRefreshInProgress => _isLaunchProfileRefreshInProgress;
@@ -122,6 +139,7 @@ internal sealed partial class LauncherViewModel
     {
         if (_launchProfileSurface == LaunchProfileSurfaceKind.MicrosoftEditor)
         {
+            _microsoftLoginCancellation?.Cancel();
             ResetMicrosoftDeviceFlow();
         }
 
@@ -163,6 +181,7 @@ internal sealed partial class LauncherViewModel
         _submitOfflineLaunchProfileCommand.NotifyCanExecuteChanged();
         _submitMicrosoftLaunchProfileCommand.NotifyCanExecuteChanged();
         _openMicrosoftDeviceLinkCommand.NotifyCanExecuteChanged();
+        _copyMicrosoftDeviceCodeCommand.NotifyCanExecuteChanged();
         _submitAuthlibLaunchProfileCommand.NotifyCanExecuteChanged();
         _useLittleSkinLaunchProfileCommand.NotifyCanExecuteChanged();
     }
@@ -294,18 +313,9 @@ internal sealed partial class LauncherViewModel
     private void NormalizeLaunchProfileSurface()
     {
         RefreshLaunchProfileEntries();
-        var effectiveSurface = GetEffectiveLaunchProfileSurface();
-        if (effectiveSurface == LaunchProfileSurfaceKind.Selection)
+        if (!HasSelectedLaunchProfile && _launchProfileSurface == LaunchProfileSurfaceKind.Summary)
         {
-            if (!HasLaunchProfileEntries)
-            {
-                _launchProfileSurface = HasSelectedLaunchProfile ? LaunchProfileSurfaceKind.Summary : LaunchProfileSurfaceKind.Selection;
-            }
-        }
-        else if (!HasSelectedLaunchProfile &&
-                 effectiveSurface == LaunchProfileSurfaceKind.Summary)
-        {
-            _launchProfileSurface = LaunchProfileSurfaceKind.Selection;
+            _launchProfileSurface = LaunchProfileSurfaceKind.Auto;
         }
 
         RaiseLaunchProfileSurfaceProperties();
@@ -320,11 +330,17 @@ internal sealed partial class LauncherViewModel
 
         return HasSelectedLaunchProfile
             ? LaunchProfileSurfaceKind.Summary
-            : LaunchProfileSurfaceKind.Selection;
+            : LaunchProfileSurfaceKind.Auto;
     }
 
     private void RaiseLaunchProfileSurfaceProperties()
     {
+        RaisePropertyChanged(nameof(IsLaunchProfilePopupVisible));
+        RaisePropertyChanged(nameof(ShowLaunchProfileSidebarSummary));
+        RaisePropertyChanged(nameof(ShowLaunchProfileSidebarEmptyState));
+        RaisePropertyChanged(nameof(LaunchProfilePopupTitle));
+        RaisePropertyChanged(nameof(LaunchProfilePopupCancelText));
+        RaisePropertyChanged(nameof(IsTopLevelNavigationInteractive));
         RaisePropertyChanged(nameof(ShowLaunchProfileSummaryCard));
         RaisePropertyChanged(nameof(ShowLaunchProfileChooser));
         RaisePropertyChanged(nameof(ShowLaunchProfileSelection));
@@ -339,6 +355,7 @@ internal sealed partial class LauncherViewModel
         RaisePropertyChanged(nameof(LaunchOfflineSkinLabel));
         RaisePropertyChanged(nameof(LaunchOfflineSkinHint));
         RaisePropertyChanged(nameof(ShowLaunchMicrosoftEditor));
+        RaisePropertyChanged(nameof(ShowLaunchMicrosoftRetry));
         RaisePropertyChanged(nameof(ShowLaunchAuthlibEditor));
         RaisePropertyChanged(nameof(ShowLaunchProfileBackButton));
         RaisePropertyChanged(nameof(HasLaunchProfileEntries));

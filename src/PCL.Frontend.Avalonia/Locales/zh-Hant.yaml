@@ -1060,6 +1060,10 @@ launch:
       navigation: 已從實例設定跳轉到啟動頁，準備建立第三方驗證檔案。
       completed: "已跳轉到啟動頁，為 {instance_name} 建立第三方驗證檔案。"
     authlib:
+      provider_label: "驗證服務"
+      custom_server: "自訂伺服器"
+      server_hint: "貼上 Minecraft 伺服器提供的驗證網址。"
+      account_hint: "使用你在所選驗證服務註冊的帳號登入。"
       actions:
         login: 登入
         use_littleskin: 使用 LittleSkin
@@ -1072,13 +1076,13 @@ launch:
         no_roles: 驗證伺服器未回傳可用角色
         required_fields: 請輸入伺服器位址、使用者名稱和密碼
       password_watermark: 密碼
-      server_watermark: 驗證伺服器位址
+      server_watermark: "驗證伺服器網址"
       title: 第三方登入
-      user_name_watermark: 使用者名稱
+      user_name_watermark: "電子郵件或使用者名稱"
     chooser:
-      authlib: 第三方登入
-      microsoft: 微軟帳號
-      offline: 離線檔案
+      authlib: "第三方"
+      microsoft: "Microsoft"
+      offline: "離線"
     delete:
       canceled: 已取消刪除
       completed: 已刪除檔案 {profile_name}
@@ -1096,10 +1100,15 @@ launch:
       authlib_with_server: 第三方登入（{server_name}）
       microsoft: 微軟帳號
       offline: 離線檔案
+    popup:
+      title: "新增帳戶"
     microsoft:
+      code_copied_hint: "請在瀏覽器中貼上此驗證碼。點擊驗證碼可再次複製。"
+      copy_code_hint: "點擊驗證碼進行複製，然後在瀏覽器中貼上。"
       actions:
+        copy_code: "複製驗證碼"
         continue_after_auth: 繼續
-        reopen_browser: 重新開啟瀏覽器
+        reopen_browser: "開啟網頁"
         start: 開始登入
       completed: 已登入為 {user_name}
       device_code: 裝置代碼
@@ -1109,6 +1118,8 @@ launch:
         device_code_expired: 裝置代碼已過期，請重新開始。
         missing_client_id: 缺少內建微軟用戶端 ID。
       messages:
+        code_copied: "登入驗證碼已複製到剪貼簿。"
+        code_copy_failed: "無法複製登入驗證碼，請在瀏覽器中手動輸入。"
         opened_profile_create_page: 已開啟微軟帳號建立頁面
         opened_related_web: 已開啟相關網頁
         opened_sign_in_page: 已開啟微軟登入頁面
@@ -1168,9 +1179,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "正在登入…"
         browser_opened: 瀏覽器已開啟，請完成授權後回到這裡。
         initial: 準備使用微軟帳號登入
-        requesting_device_code: 正在要求裝置代碼...
+        requesting_device_code: "正在開啟登入頁…"
         waiting_for_auth: 正在等待微軟授權...
       title: 微軟帳號
     none_selected: 未選擇檔案

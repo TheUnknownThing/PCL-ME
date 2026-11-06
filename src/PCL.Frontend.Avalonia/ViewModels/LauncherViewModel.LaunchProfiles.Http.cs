@@ -15,6 +15,8 @@ namespace PCL.Frontend.Avalonia.ViewModels;
 
 internal sealed partial class LauncherViewModel
 {
+    internal Func<HttpClient>? LaunchProfileHttpClientFactory { get; set; }
+
     private async Task<string> SendLaunchProfileRequestAsync(
         MinecraftLaunchHttpRequestPlan plan,
         CancellationToken cancellationToken = default)
@@ -103,7 +105,7 @@ internal sealed partial class LauncherViewModel
 
     private HttpClient CreateLaunchProfileHttpClient()
     {
-        var client = CreateToolHttpClient();
+        var client = LaunchProfileHttpClientFactory?.Invoke() ?? CreateToolHttpClient();
         client.Timeout = TimeSpan.FromSeconds(30);
         return client;
     }

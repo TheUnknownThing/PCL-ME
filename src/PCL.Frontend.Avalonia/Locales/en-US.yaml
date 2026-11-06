@@ -1060,6 +1060,10 @@ launch:
       navigation: Opened the launch route from instance settings for auth profile creation.
       completed: "Opened the launch route to create a third-party auth profile for {instance_name}."
     authlib:
+      provider_label: "Authentication provider"
+      custom_server: "Custom server"
+      server_hint: "Paste the authentication URL provided by your Minecraft server."
+      account_hint: "Sign in with the account you registered with this provider."
       actions:
         login: Sign In
         use_littleskin: Use LittleSkin
@@ -1072,13 +1076,13 @@ launch:
         no_roles: The auth server returned no available roles
         required_fields: Enter the server address, username, and password
       password_watermark: Password
-      server_watermark: Auth server URL
+      server_watermark: "Authentication server URL"
       title: Third-party sign-in
-      user_name_watermark: Username
+      user_name_watermark: "Email or username"
     chooser:
-      authlib: Third-party sign-in
-      microsoft: Microsoft account
-      offline: Offline profile
+      authlib: "Third-party"
+      microsoft: "Microsoft"
+      offline: "Offline"
     delete:
       canceled: Deletion canceled
       completed: Deleted profile {profile_name}
@@ -1096,10 +1100,15 @@ launch:
       authlib_with_server: Third-party sign-in ({server_name})
       microsoft: Microsoft account
       offline: Offline profile
+    popup:
+      title: "Add account"
     microsoft:
+      code_copied_hint: "Paste this code in your browser. Click the code to copy it again."
+      copy_code_hint: "Click the code to copy it, then paste it in your browser."
       actions:
+        copy_code: "Copy code"
         continue_after_auth: Continue
-        reopen_browser: Open browser again
+        reopen_browser: "Open browser"
         start: Start sign-in
       completed: Signed in as {user_name}
       device_code: Device code
@@ -1109,6 +1118,8 @@ launch:
         device_code_expired: The device code expired. Start again.
         missing_client_id: Missing embedded Microsoft client ID.
       messages:
+        code_copied: "Sign-in code copied to clipboard."
+        code_copy_failed: "Could not copy the sign-in code. Enter it manually in your browser."
         opened_profile_create_page: Opened the Microsoft account creation page
         opened_related_web: Opened the related web page
         opened_sign_in_page: Opened the Microsoft sign-in page
@@ -1168,9 +1179,10 @@ launch:
             message: This account is too young. You need to update the birth date before signing in. Is the age currently entered for this account over 13?
             title: Sign-in notice
       status:
+        signing_in: "Signing in…"
         browser_opened: Browser opened. Finish authorization and return here.
         initial: Ready to sign in with Microsoft
-        requesting_device_code: Requesting device code...
+        requesting_device_code: "Opening sign-in…"
         waiting_for_auth: Waiting for Microsoft authorization...
       title: Microsoft Account
     none_selected: No profile selected
